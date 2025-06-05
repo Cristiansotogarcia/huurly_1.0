@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { LoginForm } from './auth/LoginForm';
-import { SignupForm } from './auth/SignupForm';
+import { MultiStepSignupModal } from './auth/MultiStepSignupModal';
 
 export const Header = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -34,16 +34,17 @@ export const Header = () => {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={showSignup} onOpenChange={setShowSignup}>
-              <DialogTrigger asChild>
-                <Button className="bg-dutch-orange hover:bg-orange-600 text-white">
-                  Registreren
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <SignupForm onClose={() => setShowSignup(false)} />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="bg-dutch-orange hover:bg-orange-600 text-white"
+              onClick={() => setShowSignup(true)}
+            >
+              Registreren
+            </Button>
+            
+            <MultiStepSignupModal 
+              isOpen={showSignup} 
+              onClose={() => setShowSignup(false)} 
+            />
           </div>
         </div>
       </div>

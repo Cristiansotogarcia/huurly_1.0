@@ -9,6 +9,7 @@ export interface SignUpData {
   firstName: string;
   lastName: string;
   role: UserRole;
+  phone?: string;
 }
 
 export interface SignInData {

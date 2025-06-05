@@ -53,65 +53,41 @@ export const getStripe = (): Promise<Stripe | null> => {
 // Subscription plans configuration
 export const SUBSCRIPTION_PLANS = {
   huurder: {
-    basic: {
-      priceId: 'price_huurder_basic', // To be created in Stripe Dashboard
-      name: 'Huurder Basis',
-      price: 9.99,
+    yearly: {
+      priceId: 'price_huurder_yearly', // To be created in Stripe Dashboard
+      name: 'Huurder Jaarlijks',
+      price: 59.99, // Display price (excluding BTW)
+      priceWithTax: 72.59, // Actual charge price (including 21% BTW)
       currency: 'eur',
-      interval: 'month',
+      interval: 'year',
+      taxRate: 0.21, // 21% BTW
       features: [
         'Zoeken naar woningen',
         'Profiel aanmaken',
         'Documenten uploaden',
         'Bezichtigingen aanvragen',
-        'Basis ondersteuning'
-      ]
-    },
-    premium: {
-      priceId: 'price_huurder_premium', // To be created in Stripe Dashboard
-      name: 'Huurder Premium',
-      price: 19.99,
-      currency: 'eur',
-      interval: 'month',
-      features: [
-        'Alle basis functies',
-        'Prioriteit in zoekresultaten',
-        'Geavanceerde filters',
-        'Onbeperkte bezichtigingen',
+        'Matching algoritme',
         'Premium ondersteuning',
-        'Matching algoritme'
+        'Onbeperkte zoekresultaten'
       ]
     }
   },
   verhuurder: {
-    basic: {
-      priceId: 'price_verhuurder_basic', // To be created in Stripe Dashboard
-      name: 'Verhuurder Basis',
-      price: 29.99,
+    free: {
+      priceId: null, // Free plan
+      name: 'Verhuurder (Gratis)',
+      price: 0,
+      priceWithTax: 0,
       currency: 'eur',
-      interval: 'month',
+      interval: 'lifetime',
+      taxRate: 0,
+      requiresApproval: true, // Requires Beheerder approval
       features: [
-        'Tot 5 woningen adverteren',
-        'Basis huurder screening',
+        'Woningen adverteren',
+        'Huurder screening',
         'Bezichtigingen plannen',
         'Document verificatie',
         'Basis ondersteuning'
-      ]
-    },
-    premium: {
-      priceId: 'price_verhuurder_premium', // To be created in Stripe Dashboard
-      name: 'Verhuurder Premium',
-      price: 49.99,
-      currency: 'eur',
-      interval: 'month',
-      features: [
-        'Onbeperkt woningen adverteren',
-        'Geavanceerde huurder screening',
-        'Prioriteit in zoekresultaten',
-        'Uitgebreide analytics',
-        'Premium ondersteuning',
-        'Matching algoritme',
-        'Bulk operaties'
       ]
     }
   }

@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
+import { DemoCredentials } from '@/components/DemoCredentials';
 
 const Index = () => {
   return (
@@ -11,6 +12,13 @@ const Index = () => {
       <Hero />
       <Features />
       <CTA />
+      
+      {/* Demo Credentials Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <DemoCredentials />
+        </div>
+      </section>
       
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

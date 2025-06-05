@@ -1,22 +1,60 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { demoUsers, demoIssues, demoTenantProfiles } from '@/data/demoData';
+import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX } from 'lucide-react';
+import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserService } from '@/services/UserService';
+import { paymentService } from '@/services/PaymentService';
 
 const BeheerderDashboard = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
   const [issueNote, setIssueNote] = useState('');
+  
+  // State for user management
+  const [users, setUsers] = useState<any[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: '',
+    password: '',
+  });
+  
+  // Load real data
+  useEffect(() => {
+    loadUsers();
+    loadPendingApprovals();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      // For now, use empty array until UserService.getAllUsers is implemented
+      setUsers([]);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadPendingApprovals = async () => {
+    // Load pending verhuurder approvals
+    // This would be implemented with a proper service
+    setPendingApprovals([]);
+  };
 
   // Mock analytics data
   const monthlyRegistrations = [
@@ -232,43 +270,180 @@ const BeheerderDashboard = () => {
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gebruiker Beheer</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Gebruiker Beheer</CardTitle>
+                  <Dialog open={showCreateUserModal} onOpenChange={setShowCreateUserModal}>
+                    <DialogTrigger asChild>
+                      <Button className="flex items-center">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Nieuwe Gebruiker
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Nieuwe Gebruiker Aanmaken</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="firstName">Voornaam</Label>
+                            <Input
+                              id="firstName"
+                              value={newUserData.firstName}
+                              onChange={(e) => setNewUserData(prev => ({ ...prev, firstName: e.target.value }))}
+                              placeholder="Jan"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="lastName">Achternaam</Label>
+                            <Input
+                              id="lastName"
+                              value={newUserData.lastName}
+                              onChange={(e) => setNewUserData(prev => ({ ...prev, lastName: e.target.value }))}
+                              placeholder="Jansen"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="email">E-mailadres</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={newUserData.email}
+                            onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="jan@email.nl"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="role">Rol</Label>
+                          <Select value={newUserData.role} onValueChange={(value) => setNewUserData(prev => ({ ...prev, role: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecteer rol" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="huurder">Huurder</SelectItem>
+                              <SelectItem value="verhuurder">Verhuurder</SelectItem>
+                              <SelectItem value="beoordelaar">Beoordelaar</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="password">Tijdelijk Wachtwoord</Label>
+                          <Input
+                            id="password"
+                            type="password"
+                            value={newUserData.password}
+                            onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
+                            placeholder="Tijdelijk wachtwoord"
+                          />
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <Button 
+                            onClick={() => {
+                              // Handle user creation
+                              toast({
+                                title: "Gebruiker aangemaakt",
+                                description: "De nieuwe gebruiker is succesvol aangemaakt."
+                              });
+                              setShowCreateUserModal(false);
+                              setNewUserData({ firstName: '', lastName: '', email: '', role: '', password: '' });
+                            }}
+                            className="flex-1"
+                          >
+                            Aanmaken
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowCreateUserModal(false)}
+                            className="flex-1"
+                          >
+                            Annuleren
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {demoUsers.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <img 
-                          src={user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'} 
-                          alt={user.name}
-                          className="w-12 h-12 rounded-full"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{user.name}</h3>
-                          <p className="text-sm text-gray-600">{user.email}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline">{user.role}</Badge>
-                            <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                              {user.isActive ? 'Actief' : 'Inactief'}
-                            </Badge>
+                  {users.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>{EMPTY_STATE_MESSAGES.noUsers}</p>
+                    </div>
+                  ) : (
+                    users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-dutch-blue rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold">
+                              {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{user.name}</h3>
+                            <p className="text-sm text-gray-600">{user.email}</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="outline">{user.role}</Badge>
+                              <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                                {user.isActive ? 'Actief' : 'Inactief'}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">
+                            <UserCheck className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleSuspendUser(user.id)}
+                          >
+                            <UserX className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <UserCheck className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleSuspendUser(user.id)}
-                        >
-                          <UserX className="w-4 h-4" />
-                        </Button>
+                    ))
+                  )}
+                  
+                  {/* Pending Approvals Section */}
+                  {pendingApprovals.length > 0 && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center">
+                        <CheckCircle className="w-5 h-5 mr-2 text-orange-600" />
+                        Verhuurder Goedkeuringen ({pendingApprovals.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {pendingApprovals.map((approval) => (
+                          <div key={approval.id} className="flex items-center justify-between p-4 border border-orange-200 bg-orange-50 rounded-lg">
+                            <div>
+                              <h4 className="font-semibold">{approval.userName}</h4>
+                              <p className="text-sm text-gray-600">{approval.email}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Aangevraagd: {new Date(approval.createdAt).toLocaleDateString('nl-NL')}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Goedkeuren
+                              </Button>
+                              <Button size="sm" variant="destructive">
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Afwijzen
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -281,97 +456,14 @@ const BeheerderDashboard = () => {
                   <AlertTriangle className="w-5 h-5 mr-2" />
                   Issue Management
                   <Badge variant="destructive" className="ml-2">
-                    {demoIssues.filter(issue => issue.status === 'open').length} open
+                    0 open
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {demoIssues.map((issue) => (
-                    <div key={issue.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="font-semibold">{issue.title}</h3>
-                            <Badge variant={
-                              issue.status === 'open' ? 'destructive' :
-                              issue.status === 'in_progress' ? 'default' : 'secondary'
-                            }>
-                              {issue.status === 'open' ? 'Open' :
-                               issue.status === 'in_progress' ? 'In behandeling' : 'Gesloten'}
-                            </Badge>
-                            <Badge variant="outline">
-                              {issue.priority === 'high' ? 'Hoog' :
-                               issue.priority === 'medium' ? 'Middel' : 'Laag'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
-                          <p className="text-xs text-gray-500">
-                            Gemeld door: {issue.reporterRole} • {new Date(issue.createdAt).toLocaleDateString('nl-NL')}
-                          </p>
-                        </div>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" onClick={() => setSelectedIssue(issue)}>
-                              Beheren
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>{issue.title}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="font-semibold mb-2">Beschrijving:</h4>
-                                <p className="text-gray-600">{issue.description}</p>
-                              </div>
-                              
-                              {issue.notes.length > 0 && (
-                                <div>
-                                  <h4 className="font-semibold mb-2">Notities:</h4>
-                                  <div className="space-y-2">
-                                    {issue.notes.map((note) => (
-                                      <div key={note.id} className="bg-gray-50 p-3 rounded">
-                                        <p className="text-sm">{note.content}</p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                          {new Date(note.createdAt).toLocaleDateString('nl-NL')}
-                                        </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              <div>
-                                <h4 className="font-semibold mb-2">Notitie toevoegen:</h4>
-                                <Textarea
-                                  value={issueNote}
-                                  onChange={(e) => setIssueNote(e.target.value)}
-                                  placeholder="Voeg een notitie toe..."
-                                  rows={3}
-                                />
-                                <Button onClick={addIssueNote} className="mt-2" size="sm">
-                                  Notitie toevoegen
-                                </Button>
-                              </div>
-
-                              <div className="flex space-x-2">
-                                <Button 
-                                  onClick={() => handleCloseIssue(issue.id)}
-                                  className="flex-1"
-                                >
-                                  Issue sluiten
-                                </Button>
-                                <Button variant="outline" className="flex-1">
-                                  Status wijzigen
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8 text-gray-500">
+                  <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>{EMPTY_STATE_MESSAGES.noIssues}</p>
                 </div>
               </CardContent>
             </Card>
