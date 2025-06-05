@@ -22,10 +22,10 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Demo login logic
+    // Demo login logic with Admin123 password
     const user = demoUsers.find(u => u.email === email);
     
-    if (user && password === 'demo123') {
+    if (user && password === 'Admin123') {
       login(user);
       toast({
         title: "Succesvol ingelogd",
@@ -49,7 +49,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
     const user = demoUsers.find(u => u.role === role);
     if (user) {
       setEmail(user.email);
-      setPassword('demo123');
+      setPassword('Admin123');
     }
   };
 
@@ -91,7 +91,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       </form>
 
       <div className="border-t pt-4">
-        <p className="text-sm text-gray-600 mb-3">Demo accounts (wachtwoord: demo123):</p>
+        <p className="text-sm text-gray-600 mb-3">Demo accounts (wachtwoord: Admin123):</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
