@@ -8,26 +8,99 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { demoLandlordProfiles, demoTenantProfiles } from '@/data/demoData';
 import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
+import TenantProfileModal from '@/components/modals/TenantProfileModal';
+import NotificationBell from '@/components/NotificationBell';
+import { notifyViewingInvitation, notifyApplicationReceived } from '@/hooks/useNotifications';
 
 const VerhuurderDashboard = () => {
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const [searchFilters, setSearchFilters] = useState({
     city: '',
     maxBudget: '',
     minIncome: ''
   });
+  const [filteredTenants, setFilteredTenants] = useState(demoTenantProfiles.filter(tenant => tenant.isLookingForPlace));
+  const [showViewingModal, setShowViewingModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
   const landlordProfile = demoLandlordProfiles[0];
-  const availableTenants = demoTenantProfiles.filter(tenant => tenant.isLookingForPlace);
+  const availableTenants = filteredTenants;
 
   const handleLogout = () => {
     useAuthStore.getState().logout();
     window.location.href = '/';
   };
 
-  const sendViewingInvitation = (tenantId: string) => {
-    console.log(`Sending viewing invitation to tenant ${tenantId}`);
-    // Implementation for sending invitation
+  const handleSearch = () => {
+    let results = demoTenantProfiles.filter(tenant => tenant.isLookingForPlace);
+
+    // Apply filters
+    if (searchFilters.city) {
+      results = results.filter(tenant => 
+        tenant.preferences?.city?.toLowerCase().includes(searchFilters.city.toLowerCase())
+      );
+    }
+
+    if (searchFilters.maxBudget) {
+      const maxBudget = parseInt(searchFilters.maxBudget);
+      results = results.filter(tenant => 
+        tenant.preferences?.maxBudget <= maxBudget
+      );
+    }
+
+    if (searchFilters.minIncome) {
+      const minIncome = parseInt(searchFilters.minIncome);
+      results = results.filter(tenant => 
+        tenant.income >= minIncome
+      );
+    }
+
+    setFilteredTenants(results);
+    
+    toast({
+      title: "Zoekresultaten bijgewerkt",
+      description: `${results.length} huurder(s) gevonden die voldoen aan je criteria.`
+    });
+  };
+
+  const handleViewProfile = (tenant: any) => {
+    setSelectedTenant(tenant);
+    setShowProfileModal(true);
+  };
+
+  const handleInviteViewing = (tenant: any) => {
+    setSelectedTenant(tenant);
+    setSelectedProperty(landlordProfile.properties[0]); // Use first property for demo
+    setShowViewingModal(true);
+  };
+
+  const handleInvitationSent = (invitationData: any) => {
+    // Notify the huurder about the viewing invitation
+    if (selectedTenant && selectedProperty) {
+      notifyViewingInvitation(
+        user?.name || 'Verhuurder',
+        selectedProperty.address,
+        invitationData.date,
+        'huurder-demo-id' // In real app, this would be actual huurder ID
+      );
+    }
+    
+    toast({
+      title: "Uitnodiging verzonden!",
+      description: `${selectedTenant?.firstName} ${selectedTenant?.lastName} heeft een uitnodiging ontvangen.`
+    });
+  };
+
+  const handleReportIssue = () => {
+    toast({
+      title: "Issue gerapporteerd",
+      description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."
+    });
   };
 
   if (!user || user.role !== 'verhuurder') {
@@ -49,6 +122,7 @@ const VerhuurderDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationBell />
               <span className="text-sm text-gray-600">Welkom, {user.name}</span>
               <Button variant="outline" onClick={handleLogout}>
                 Uitloggen
@@ -148,7 +222,7 @@ const VerhuurderDashboard = () => {
                     />
                   </div>
                 </div>
-                <Button className="mt-4">
+                <Button className="mt-4" onClick={handleSearch}>
                   <Search className="w-4 h-4 mr-2" />
                   Zoeken
                 </Button>
@@ -187,10 +261,10 @@ const VerhuurderDashboard = () => {
                             <span>Kamers: {tenant.preferences.bedrooms}</span>
                           </div>
                           <div className="mt-3 flex space-x-2">
-                            <Button size="sm" onClick={() => sendViewingInvitation(tenant.id)}>
+                            <Button size="sm" onClick={() => handleInviteViewing(tenant)}>
                               Uitnodigen voor Bezichtiging
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => handleViewProfile(tenant)}>
                               Profiel Bekijken
                             </Button>
                           </div>
@@ -267,7 +341,7 @@ const VerhuurderDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button variant="outline" className="w-full text-sm" onClick={handleReportIssue}>
                     Probleem melden
                   </Button>
                   <Button variant="outline" className="w-full text-sm">
@@ -279,6 +353,22 @@ const VerhuurderDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ViewingInvitationModal
+        open={showViewingModal}
+        onOpenChange={setShowViewingModal}
+        tenant={selectedTenant}
+        property={selectedProperty}
+        onInvitationSent={handleInvitationSent}
+      />
+      
+      <TenantProfileModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        tenant={selectedTenant}
+        onInviteViewing={handleInviteViewing}
+      />
     </div>
   );
 };

@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { demoUsers } from '@/data/demoData';
+import { UserRole } from '@/types';
 
 interface LoginFormProps {
   onClose: () => void;
@@ -14,42 +15,59 @@ interface LoginFormProps {
 export const LoginForm = ({ onClose }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const login = useAuthStore((state) => state.login);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const { signIn, resetPassword, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Helper function to get dashboard route based on user role
+  const getDashboardRoute = (role: UserRole): string => {
+    switch (role) {
+      case 'huurder':
+        return '/huurder-dashboard';
+      case 'verhuurder':
+        return '/verhuurder-dashboard';
+      case 'beoordelaar':
+        return '/beoordelaar-dashboard';
+      case 'beheerder':
+        return '/beheerder-dashboard';
+      default:
+        return '/huurder-dashboard'; // Default fallback
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Demo login logic with Admin123 password
-    const user = demoUsers.find(u => u.email === email);
     
-    if (user && password === 'Admin123') {
-      login(user);
-      toast({
-        title: "Succesvol ingelogd",
-        description: `Welkom terug, ${user.name}!`
-      });
+    const result = await signIn({ email, password });
+    
+    if (result.success && result.user) {
       onClose();
-      // Redirect to appropriate dashboard
-      window.location.href = `/${user.role}-dashboard`;
-    } else {
-      toast({
-        title: "Inloggen mislukt",
-        description: "Controleer je e-mailadres en wachtwoord.",
-        variant: "destructive"
-      });
+      
+      // Navigate to appropriate dashboard based on user role
+      const dashboardRoute = getDashboardRoute(result.user.role);
+      navigate(dashboardRoute);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      return;
     }
 
-    setIsLoading(false);
+    const success = await resetPassword(email);
+    
+    if (success) {
+      setShowResetPassword(false);
+    }
   };
 
   const fillDemoCredentials = (role: string) => {
     const user = demoUsers.find(u => u.role === role);
     if (user) {
       setEmail(user.email);
-      setPassword('Admin123');
+      setPassword('demo123');
     }
   };
 
@@ -91,7 +109,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       </form>
 
       <div className="border-t pt-4">
-        <p className="text-sm text-gray-600 mb-3">Demo accounts (wachtwoord: Admin123):</p>
+        <p className="text-sm text-gray-600 mb-3">Demo accounts (wachtwoord: demo123):</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
