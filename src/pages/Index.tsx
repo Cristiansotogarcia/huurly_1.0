@@ -1,12 +1,65 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { Header } from '@/components/Header';
+import { Hero } from '@/components/Hero';
+import { Features } from '@/components/Features';
+import { CTA } from '@/components/CTA';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen">
+      <Header />
+      <Hero />
+      <Features />
+      <CTA />
+      
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">H</span>
+                </div>
+                <span className="ml-2 text-xl font-bold">Huurly</span>
+              </div>
+              <p className="text-gray-400">
+                Het Nederlandse platform waar verhuurders huurders vinden.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Voor Huurders</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Profiel aanmaken</li>
+                <li>Document verificatie</li>
+                <li>Matches ontvangen</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Voor Verhuurders</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Huurders zoeken</li>
+                <li>Geverifieerde profielen</li>
+                <li>Direct contact</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Help centrum</li>
+                <li>Contact</li>
+                <li>Veelgestelde vragen</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Huurly. Alle rechten voorbehouden.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
