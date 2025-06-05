@@ -9,6 +9,8 @@ import HuurderDashboard from "./pages/HuurderDashboard";
 import VerhuurderDashboard from "./pages/VerhuurderDashboard";
 import BeoordelaarDashboard from "./pages/BeoordelaarDashboard";
 import BeheerderDashboard from "./pages/BeheerderDashboard";
+import AlgemeneVoorwaarden from "./pages/AlgemeneVoorwaarden";
+import Privacybeleid from "./pages/Privacybeleid";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/verhuurder-dashboard" element={<VerhuurderDashboard />} />
           <Route path="/beoordelaar-dashboard" element={<BeoordelaarDashboard />} />
           <Route path="/beheerder-dashboard" element={<BeheerderDashboard />} />
+          <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
+          <Route path="/privacybeleid" element={<Privacybeleid />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
