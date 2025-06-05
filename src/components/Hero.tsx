@@ -34,10 +34,6 @@ export const Hero = () => {
                 <SignupForm onClose={() => setShowSignup(false)} />
               </DialogContent>
             </Dialog>
-            
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-dutch-blue px-8 py-4 text-lg">
-              Inloggen
-            </Button>
           </div>
         </div>
       </div>

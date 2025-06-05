@@ -18,7 +18,7 @@ export const CTA = () => {
           Maak vandaag nog je profiel aan en laat verhuurders jou als perfecte kandidaat vinden
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex justify-center">
           <Dialog open={showSignup} onOpenChange={setShowSignup}>
             <DialogTrigger asChild>
               <Button size="lg" className="bg-dutch-orange hover:bg-orange-600 text-white px-8 py-4">
@@ -29,10 +29,6 @@ export const CTA = () => {
               <SignupForm onClose={() => setShowSignup(false)} />
             </DialogContent>
           </Dialog>
-          
-          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-dutch-blue px-8 py-4">
-            Meer informatie
-          </Button>
         </div>
       </div>
     </section>

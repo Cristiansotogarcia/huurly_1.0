@@ -15,7 +15,7 @@ export const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-dutch-blue rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">H</span>
               </div>
               <span className="ml-2 text-xl font-bold text-dutch-blue">Huurly</span>
@@ -25,7 +25,7 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             <Dialog open={showLogin} onOpenChange={setShowLogin}>
               <DialogTrigger asChild>
-                <Button variant="ghost" className="text-dutch-blue hover:text-dutch-orange">
+                <Button variant="ghost" className="text-dutch-blue hover:text-dutch-orange hover:bg-gray-50">
                   Inloggen
                 </Button>
               </DialogTrigger>
