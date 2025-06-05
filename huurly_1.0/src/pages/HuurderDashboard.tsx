@@ -1,21 +1,27 @@
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { demoTenantProfiles, demoViewingInvitations, demoStatistics } from '@/data/demoData';
-import { Home, FileText, Calendar, User, Eye, TrendingUp } from 'lucide-react';
+import { EMPTY_STATE_MESSAGES, demoTenantProfiles, demoDocuments } from '@/data/demoData';
+import { Home, FileText, Calendar, User, Eye, TrendingUp, Upload, Search, ArrowLeft, Bell, Settings } from 'lucide-react';
+import ProfileCreationModal from '@/components/modals/ProfileCreationModal';
+import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
+import PropertySearchModal from '@/components/modals/PropertySearchModal';
+import NotificationBell from '@/components/NotificationBell';
+import { notifyDocumentUploaded } from '@/hooks/useNotifications';
 
 const HuurderDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuthStore();
   const [isLookingForPlace, setIsLookingForPlace] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [userDocuments, setUserDocuments] = useState(demoDocuments.filter(doc => doc.tenantId === user?.id) || []);
   const { toast } = useToast();
-
-  const tenantProfile = demoTenantProfiles.find(p => p.userId === user?.id) || demoTenantProfiles[0];
-  const viewingInvitations = demoViewingInvitations.filter(v => v.tenantId === user?.id);
-  const stats = demoStatistics.tenant;
 
   const toggleLookingStatus = () => {
     setIsLookingForPlace(!isLookingForPlace);
@@ -27,10 +33,87 @@ const HuurderDashboard = () => {
     });
   };
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleProfileComplete = (profileData: any) => {
+    setHasProfile(true);
+    toast({
+      title: "Profiel aangemaakt!",
+      description: "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
+    });
+  };
+
+  const handleDocumentUploadComplete = (documents: any[]) => {
+    setUserDocuments(prev => [...prev, ...documents.map(doc => ({
+      ...doc,
+      tenantId: user?.id || '',
+      type: doc.type,
+      status: doc.status
+    }))]);
+    
+    // Notify beoordelaars about new documents
+    documents.forEach(doc => {
+      notifyDocumentUploaded(
+        user?.name || 'Onbekende gebruiker',
+        doc.type === 'identity' ? 'identiteitsbewijs' :
+        doc.type === 'payslip' ? 'loonstrook' :
+        doc.type === 'employment' ? 'arbeidscontract' : 'document',
+        'beoordelaar-demo-id' // In real app, this would be actual beoordelaar ID
+      );
+    });
+    
+    toast({
+      title: "Documenten geüpload",
+      description: `${documents.length} document(en) zijn geüpload voor beoordeling.`
+    });
+  };
+
+  const handleStartSearch = () => {
+    if (!hasProfile) {
+      toast({
+        title: "Profiel vereist",
+        description: "Maak eerst je profiel aan voordat je kunt zoeken naar woningen.",
+        variant: "destructive"
+      });
+      setShowProfileModal(true);
+      return;
+    }
+    
+    setShowSearchModal(true);
+  };
+
+  const handleReportIssue = () => {
+    toast({
+      title: "Issue gerapporteerd",
+      description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."
+    });
+  };
+
+  const handleLogout = () => {
+    useAuthStore.getState().logout();
     window.location.href = '/';
   };
+
+  const handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  if (!user || user.role !== 'huurder') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
+              <p className="text-gray-600 mb-4">Je hebt geen toegang tot het huurder dashboard.</p>
+              <Button onClick={handleGoHome}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Terug naar home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,6 +122,14 @@ const HuurderDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                onClick={handleGoHome}
+                className="mr-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Home
+              </Button>
               <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">H</span>
               </div>
@@ -47,6 +138,10 @@ const HuurderDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationBell />
+              <Button variant="ghost" size="sm">
+                <Settings className="w-4 h-4" />
+              </Button>
               <span className="text-sm text-gray-600">Welkom, {user.name}</span>
               <Button variant="outline" onClick={handleLogout}>
                 Uitloggen
@@ -57,6 +152,25 @@ const HuurderDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Payment Status Alert */}
+        {user.hasPayment && (
+          <Card className="mb-8 border-green-200 bg-green-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-green-900">Account Actief</h3>
+                  <p className="text-green-700">
+                    Je hebt een actief abonnement (€59.99/jaar + BTW). Je profiel is zichtbaar voor verhuurders.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Status Toggle */}
         <Card className="mb-8">
           <CardContent className="pt-6">
@@ -83,16 +197,16 @@ const HuurderDashboard = () => {
 
         {/* Dashboard Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Profile Section */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Quick Stats */}
+            {/* Quick Stats - Clean for real testing */}
             <div className="grid md:grid-cols-4 gap-4 mb-6">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center">
                     <TrendingUp className="h-8 w-8 text-dutch-blue" />
                     <div className="ml-4">
-                      <p className="text-2xl font-bold">{stats.profileViews}</p>
+                      <p className="text-2xl font-bold">0</p>
                       <p className="text-xs text-muted-foreground">Profielweergaven</p>
                     </div>
                   </div>
@@ -103,7 +217,7 @@ const HuurderDashboard = () => {
                   <div className="flex items-center">
                     <Calendar className="h-8 w-8 text-dutch-orange" />
                     <div className="ml-4">
-                      <p className="text-2xl font-bold">{stats.invitationsReceived}</p>
+                      <p className="text-2xl font-bold">0</p>
                       <p className="text-xs text-muted-foreground">Uitnodigingen</p>
                     </div>
                   </div>
@@ -114,7 +228,7 @@ const HuurderDashboard = () => {
                   <div className="flex items-center">
                     <FileText className="h-8 w-8 text-green-600" />
                     <div className="ml-4">
-                      <p className="text-2xl font-bold">{stats.applicationsSubmitted}</p>
+                      <p className="text-2xl font-bold">0</p>
                       <p className="text-xs text-muted-foreground">Aanmeldingen</p>
                     </div>
                   </div>
@@ -125,7 +239,7 @@ const HuurderDashboard = () => {
                   <div className="flex items-center">
                     <Home className="h-8 w-8 text-purple-600" />
                     <div className="ml-4">
-                      <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
+                      <p className="text-2xl font-bold">0</p>
                       <p className="text-xs text-muted-foreground">Geaccepteerd</p>
                     </div>
                   </div>
@@ -133,7 +247,7 @@ const HuurderDashboard = () => {
               </Card>
             </div>
 
-            {/* Profile Summary */}
+            {/* Profile Setup */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -142,67 +256,48 @@ const HuurderDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-start space-x-4">
-                  <img 
-                    src={tenantProfile.profilePicture} 
-                    alt="Profielfoto"
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold">
-                      {tenantProfile.firstName} {tenantProfile.lastName}
-                    </h3>
-                    <p className="text-gray-600">{tenantProfile.profession}</p>
-                    <p className="text-sm text-gray-500 mt-2">{tenantProfile.bio}</p>
-                    <div className="mt-4 flex space-x-2">
-                      <Badge variant={tenantProfile.verificationStatus === 'approved' ? 'default' : 'secondary'}>
-                        {tenantProfile.verificationStatus === 'approved' ? 'Geverifieerd' : 'In behandeling'}
-                      </Badge>
-                      <Badge variant="outline">
-                        Inkomstenverificatie: €{tenantProfile.monthlyIncome?.toLocaleString() || tenantProfile.income?.toLocaleString()}
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button variant="outline">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Bewerken
+                <div className="text-center py-8">
+                  <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-semibold mb-2">Profiel nog niet compleet</h3>
+                  <p className="text-gray-600 mb-4">
+                    Vul je profiel aan om zichtbaar te worden voor verhuurders
+                  </p>
+                  <Button 
+                    className="mr-2"
+                    onClick={() => setShowProfileModal(true)}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Profiel aanmaken
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowDocumentModal(true)}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Documenten uploaden
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Documents */}
+            {/* Property Search */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Documenten
+                  <Search className="w-5 h-5 mr-2" />
+                  Woningen Zoeken
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {tenantProfile.documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{doc.fileName}</p>
-                        <p className="text-sm text-gray-500">
-                          {doc.type === 'id' ? 'Identiteitsbewijs' : 
-                           doc.type === 'income' ? 'Inkomensverklaring' :
-                           doc.type === 'employment' ? 'Arbeidscontract' : 'Referentie'}
-                        </p>
-                        {doc.rejectionReason && (
-                          <p className="text-sm text-red-600 mt-1">{doc.rejectionReason}</p>
-                        )}
-                      </div>
-                      <Badge variant={doc.status === 'approved' ? 'default' : 
-                                    doc.status === 'rejected' ? 'destructive' : 'secondary'}>
-                        {doc.status === 'approved' ? 'Goedgekeurd' :
-                         doc.status === 'rejected' ? 'Afgewezen' : 'In behandeling'}
-                      </Badge>
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    Document toevoegen
+                <div className="text-center py-8">
+                  <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-semibold mb-2">Zoek je droomwoning</h3>
+                  <p className="text-gray-600 mb-4">
+                    Doorzoek duizenden woningen en vind je perfecte match
+                  </p>
+                  <Button onClick={handleStartSearch}>
+                    <Search className="w-4 h-4 mr-2" />
+                    Start zoeken
                   </Button>
                 </div>
               </CardContent>
@@ -216,68 +311,37 @@ const HuurderDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Calendar className="w-5 h-5 mr-2" />
-                  Bezichtigingen ({viewingInvitations.length})
+                  Bezichtigingen (0)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {viewingInvitations.length > 0 ? (
-                  <div className="space-y-3">
-                    {viewingInvitations.map((invitation) => (
-                      <div key={invitation.id} className="p-3 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-sm">Bezichtiging uitnodiging</h4>
-                          <Badge variant={
-                            invitation.status === 'accepted' ? 'default' :
-                            invitation.status === 'rejected' ? 'destructive' : 'secondary'
-                          }>
-                            {invitation.status === 'accepted' ? 'Geaccepteerd' :
-                             invitation.status === 'rejected' ? 'Afgewezen' : 'In afwachting'}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Datum: {new Date(invitation.scheduledDate).toLocaleDateString('nl-NL')}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Deadline: {new Date(invitation.deadline).toLocaleDateString('nl-NL')}
-                        </p>
-                        {invitation.status === 'pending' && (
-                          <div className="flex space-x-2 mt-3">
-                            <Button size="sm" className="text-xs">Accepteren</Button>
-                            <Button size="sm" variant="outline" className="text-xs">Afwijzen</Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Geen uitnodigingen</p>
-                )}
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-sm">{EMPTY_STATE_MESSAGES.noViewings}</p>
+                </div>
               </CardContent>
             </Card>
 
-            {/* My Preferences */}
+            {/* Documents */}
             <Card>
               <CardHeader>
-                <CardTitle>Mijn Voorkeuren</CardTitle>
+                <CardTitle className="flex items-center">
+                  <FileText className="w-5 h-5 mr-2" />
+                  Documenten
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Budget:</span>
-                    <span className="font-semibold">€{tenantProfile.preferences?.minBudget} - €{tenantProfile.preferences?.maxBudget}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stad:</span>
-                    <span className="font-semibold">{tenantProfile.preferences?.city}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Kamers:</span>
-                    <span className="font-semibold">{tenantProfile.preferences?.bedrooms}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Type:</span>
-                    <span className="font-semibold">{tenantProfile.preferences?.propertyType}</span>
-                  </div>
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-sm mb-4">{EMPTY_STATE_MESSAGES.noDocuments}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDocumentModal(true)}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload document
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -289,13 +353,52 @@ const HuurderDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={handleStartSearch}
+                  >
+                    <Search className="w-4 h-4 mr-2" />
                     Zoek woningen
                   </Button>
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={() => setShowDocumentModal(true)}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload documenten
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={handleReportIssue}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
                     Probleem melden
                   </Button>
-                  <Button variant="outline" className="w-full text-sm">
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Help Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Hulp nodig?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <p className="text-gray-600">
+                    Als huurder kun je:
+                  </p>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• Je profiel aanmaken en verifiëren</li>
+                    <li>• Documenten uploaden voor verificatie</li>
+                    <li>• Woningen zoeken en bekijken</li>
+                    <li>• Bezichtigingen aanvragen</li>
+                    <li>• Contact opnemen met verhuurders</li>
+                  </ul>
+                  <Button variant="outline" size="sm" className="w-full mt-3">
                     Help & Support
                   </Button>
                 </div>
@@ -304,6 +407,24 @@ const HuurderDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ProfileCreationModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        onComplete={handleProfileComplete}
+      />
+      
+      <DocumentUploadModal
+        open={showDocumentModal}
+        onOpenChange={setShowDocumentModal}
+        onUploadComplete={handleDocumentUploadComplete}
+      />
+      
+      <PropertySearchModal
+        open={showSearchModal}
+        onOpenChange={setShowSearchModal}
+      />
     </div>
   );
 };

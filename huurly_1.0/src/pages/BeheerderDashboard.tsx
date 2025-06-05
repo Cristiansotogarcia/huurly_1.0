@@ -16,6 +16,9 @@ import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX,
 import { useToast } from '@/hooks/use-toast';
 import { UserService } from '@/services/UserService';
 import { paymentService } from '@/services/PaymentService';
+import UserManagementModal from '@/components/modals/UserManagementModal';
+import IssueManagementModal from '@/components/modals/IssueManagementModal';
+import NotificationBell from '@/components/NotificationBell';
 
 const BeheerderDashboard = () => {
   const { user } = useAuthStore();
@@ -27,6 +30,10 @@ const BeheerderDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issues, setIssues] = useState<any[]>([]);
   const [newUserData, setNewUserData] = useState({
     firstName: '',
     lastName: '',
@@ -39,21 +46,132 @@ const BeheerderDashboard = () => {
   useEffect(() => {
     loadUsers();
     loadPendingApprovals();
+    loadIssues();
   }, []);
 
   const loadUsers = async () => {
     try {
-      // For now, use empty array until UserService.getAllUsers is implemented
-      setUsers([]);
+      // Demo users for testing
+      const demoUsers = [
+        {
+          id: 'user-1',
+          name: 'Emma Bakker',
+          email: 'emma.bakker@email.nl',
+          role: 'huurder',
+          status: 'active',
+          isActive: true,
+          createdAt: '2024-01-15T10:00:00Z',
+          lastLogin: '2024-01-20T14:30:00Z'
+        },
+        {
+          id: 'user-2',
+          name: 'Jan de Vries',
+          email: 'jan.devries@email.nl',
+          role: 'verhuurder',
+          status: 'active',
+          isActive: true,
+          createdAt: '2024-01-10T09:00:00Z',
+          lastLogin: '2024-01-20T11:15:00Z'
+        },
+        {
+          id: 'user-3',
+          name: 'Lisa van der Berg',
+          email: 'lisa.vandenberg@email.nl',
+          role: 'beoordelaar',
+          status: 'active',
+          isActive: true,
+          createdAt: '2024-01-05T08:00:00Z',
+          lastLogin: '2024-01-20T16:45:00Z'
+        },
+        {
+          id: 'user-4',
+          name: 'Mark Jansen',
+          email: 'mark.jansen@email.nl',
+          role: 'huurder',
+          status: 'suspended',
+          isActive: false,
+          createdAt: '2024-01-12T12:00:00Z',
+          lastLogin: '2024-01-18T10:20:00Z'
+        }
+      ];
+      setUsers(demoUsers);
     } catch (error) {
       console.error('Error loading users:', error);
     }
   };
 
   const loadPendingApprovals = async () => {
-    // Load pending verhuurder approvals
-    // This would be implemented with a proper service
-    setPendingApprovals([]);
+    // Demo pending approvals
+    const demoApprovals = [
+      {
+        id: 'approval-1',
+        userName: 'Sophie Hendriks',
+        email: 'sophie.hendriks@email.nl',
+        createdAt: '2024-01-19T14:00:00Z',
+        role: 'verhuurder'
+      },
+      {
+        id: 'approval-2',
+        userName: 'Tom van Dijk',
+        email: 'tom.vandijk@email.nl',
+        createdAt: '2024-01-18T16:30:00Z',
+        role: 'verhuurder'
+      }
+    ];
+    setPendingApprovals(demoApprovals);
+  };
+
+  const loadIssues = async () => {
+    // Demo issues
+    const demoIssues = [
+      {
+        id: 'issue-1',
+        title: 'Document upload niet werkend',
+        description: 'Gebruikers kunnen geen documenten uploaden via de drag & drop interface.',
+        category: 'technical',
+        priority: 'high',
+        status: 'open',
+        reportedBy: 'Emma Bakker',
+        createdAt: '2024-01-20T10:00:00Z',
+        assignedTo: 'Support Team',
+        userInfo: {
+          name: 'Emma Bakker',
+          email: 'emma.bakker@email.nl',
+          role: 'huurder',
+          browser: 'Chrome 120.0',
+          os: 'Windows 11',
+          lastActivity: '2024-01-20T09:45:00Z'
+        },
+        steps: [
+          'Ga naar huurder dashboard',
+          'Klik op "Documenten Uploaden"',
+          'Probeer een PDF bestand te slepen naar de upload zone',
+          'Bestand wordt niet geaccepteerd'
+        ],
+        expectedBehavior: 'PDF bestanden zouden geaccepteerd moeten worden',
+        actualBehavior: 'Upload zone reageert niet op PDF bestanden'
+      },
+      {
+        id: 'issue-2',
+        title: 'Verificatie proces te traag',
+        description: 'Gebruikers klagen over lange wachttijden bij document verificatie.',
+        category: 'user_complaint',
+        priority: 'medium',
+        status: 'in_progress',
+        reportedBy: 'Jan de Vries',
+        createdAt: '2024-01-19T14:30:00Z',
+        assignedTo: 'Verificatie Team',
+        userInfo: {
+          name: 'Jan de Vries',
+          email: 'jan.devries@email.nl',
+          role: 'verhuurder',
+          browser: 'Firefox 121.0',
+          os: 'macOS 14',
+          lastActivity: '2024-01-19T14:15:00Z'
+        }
+      }
+    ];
+    setIssues(demoIssues);
   };
 
   // Mock analytics data
@@ -72,29 +190,106 @@ const BeheerderDashboard = () => {
     { name: 'Afgewezen', value: 12, color: '#ef4444' }
   ];
 
-  const handleSuspendUser = (userId: string) => {
+  // User management handlers
+  const handleUserClick = (user: any) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  const handleUpdateUser = (userId: string, updates: any) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, ...updates } : user
+    ));
+    toast({
+      title: "Gebruiker bijgewerkt",
+      description: "De gebruiker gegevens zijn succesvol bijgewerkt."
+    });
+  };
+
+  const handleSuspendUser = (userId: string, reason: string) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, status: 'suspended', isActive: false } : user
+    ));
     toast({
       title: "Gebruiker geschorst",
       description: "De gebruiker is tijdelijk geschorst voor onderzoek."
     });
   };
 
-  const handleCloseIssue = (issueId: string) => {
+  const handleActivateUser = (userId: string) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, status: 'active', isActive: true } : user
+    ));
     toast({
-      title: "Issue gesloten",
-      description: "Het issue is succesvol gesloten en gearchiveerd."
+      title: "Gebruiker geactiveerd",
+      description: "De gebruiker is weer geactiveerd."
     });
-    setSelectedIssue(null);
   };
 
-  const addIssueNote = () => {
-    if (!issueNote.trim()) return;
-    
+  // Issue management handlers
+  const handleIssueClick = (issue: any) => {
+    setSelectedIssue(issue);
+    setShowIssueModal(true);
+  };
+
+  const handleResolveIssue = (issueId: string, resolution: string) => {
+    setIssues(prev => prev.map(issue => 
+      issue.id === issueId ? { ...issue, status: 'resolved' } : issue
+    ));
+    toast({
+      title: "Issue opgelost",
+      description: "Het issue is succesvol opgelost en gearchiveerd."
+    });
+  };
+
+  const handleEscalateIssue = (issueId: string, escalationNote: string) => {
+    setIssues(prev => prev.map(issue => 
+      issue.id === issueId ? { ...issue, status: 'escalated' } : issue
+    ));
+    toast({
+      title: "Issue geëscaleerd",
+      description: "Het issue is geëscaleerd naar management."
+    });
+  };
+
+  const handleAddIssueNote = (issueId: string, note: string) => {
+    // In a real app, this would add to the issue's notes array
     toast({
       title: "Notitie toegevoegd",
       description: "Je notitie is toegevoegd aan het issue."
     });
-    setIssueNote('');
+  };
+
+  // Approval handlers
+  const handleApproveUser = (approvalId: string) => {
+    setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
+    toast({
+      title: "Gebruiker goedgekeurd",
+      description: "De verhuurder is goedgekeurd en kan nu panden toevoegen."
+    });
+  };
+
+  const handleRejectUser = (approvalId: string) => {
+    setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
+    toast({
+      title: "Gebruiker afgewezen",
+      description: "De aanvraag is afgewezen en de gebruiker is op de hoogte gesteld."
+    });
+  };
+
+  // Export handlers
+  const handleExportUserData = () => {
+    toast({
+      title: "Export gestart",
+      description: "Gebruiker data wordt geëxporteerd naar CSV bestand."
+    });
+  };
+
+  const handleExportPlatformData = () => {
+    toast({
+      title: "Export gestart",
+      description: "Platform statistieken worden geëxporteerd naar Excel bestand."
+    });
   };
 
   const handleLogout = () => {
@@ -121,6 +316,7 @@ const BeheerderDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationBell />
               <Button variant="outline" className="flex items-center">
                 <Download className="w-4 h-4 mr-2" />
                 Export Data
@@ -397,13 +593,17 @@ const BeheerderDashboard = () => {
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleUserClick(user)}
+                          >
                             <UserCheck className="w-4 h-4" />
                           </Button>
                           <Button 
                             size="sm" 
                             variant="destructive"
-                            onClick={() => handleSuspendUser(user.id)}
+                            onClick={() => handleSuspendUser(user.id, 'Verdachte activiteit gedetecteerd')}
                           >
                             <UserX className="w-4 h-4" />
                           </Button>
@@ -456,15 +656,62 @@ const BeheerderDashboard = () => {
                   <AlertTriangle className="w-5 h-5 mr-2" />
                   Issue Management
                   <Badge variant="destructive" className="ml-2">
-                    0 open
+                    {issues.filter(issue => issue.status === 'open').length} open
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>{EMPTY_STATE_MESSAGES.noIssues}</p>
-                </div>
+                {issues.length > 0 ? (
+                  <div className="space-y-4">
+                    {issues.map((issue) => (
+                      <div key={issue.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleIssueClick(issue)}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3">
+                            <AlertTriangle className={`w-6 h-6 mt-1 ${
+                              issue.priority === 'high' ? 'text-red-600' :
+                              issue.priority === 'medium' ? 'text-orange-600' : 'text-green-600'
+                            }`} />
+                            <div>
+                              <h4 className="font-semibold">{issue.title}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{issue.description}</p>
+                              <div className="flex items-center space-x-2 mt-2">
+                                <Badge variant="outline">
+                                  {issue.category === 'technical' ? 'Technisch' :
+                                   issue.category === 'user_complaint' ? 'Gebruiker Klacht' :
+                                   issue.category === 'payment' ? 'Betaling' : 'Verificatie'}
+                                </Badge>
+                                <Badge className={
+                                  issue.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                  issue.priority === 'medium' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+                                }>
+                                  {issue.priority === 'high' ? 'Hoog' :
+                                   issue.priority === 'medium' ? 'Gemiddeld' : 'Laag'}
+                                </Badge>
+                                <Badge className={
+                                  issue.status === 'open' ? 'bg-red-100 text-red-800' :
+                                  issue.status === 'in_progress' ? 'bg-orange-100 text-orange-800' :
+                                  issue.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                                }>
+                                  {issue.status === 'open' ? 'Open' :
+                                   issue.status === 'in_progress' ? 'In behandeling' :
+                                   issue.status === 'resolved' ? 'Opgelost' : 'Geëscaleerd'}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Gemeld door: {issue.reportedBy} • {new Date(issue.createdAt).toLocaleDateString('nl-NL')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>{EMPTY_STATE_MESSAGES.noIssues}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -493,7 +740,7 @@ const BeheerderDashboard = () => {
                       <span>Succesvol gematcht</span>
                       <span className="font-bold">156</span>
                     </div>
-                    <Button className="w-full mt-4">
+                    <Button className="w-full mt-4" onClick={handleExportUserData}>
                       <Download className="w-4 h-4 mr-2" />
                       Export Gebruiker Data
                     </Button>
@@ -523,7 +770,7 @@ const BeheerderDashboard = () => {
                       <span>Platform uptime</span>
                       <span className="font-bold">99.9%</span>
                     </div>
-                    <Button className="w-full mt-4">
+                    <Button className="w-full mt-4" onClick={handleExportPlatformData}>
                       <Download className="w-4 h-4 mr-2" />
                       Export Platform Data
                     </Button>
@@ -534,6 +781,26 @@ const BeheerderDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* User Management Modal */}
+      <UserManagementModal
+        open={showUserModal}
+        onOpenChange={setShowUserModal}
+        user={selectedUser}
+        onUpdateUser={handleUpdateUser}
+        onSuspendUser={handleSuspendUser}
+        onActivateUser={handleActivateUser}
+      />
+
+      {/* Issue Management Modal */}
+      <IssueManagementModal
+        open={showIssueModal}
+        onOpenChange={setShowIssueModal}
+        issue={selectedIssue}
+        onResolveIssue={handleResolveIssue}
+        onEscalateIssue={handleEscalateIssue}
+        onAddNote={handleAddIssueNote}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
 import { DemoCredentials } from '@/components/DemoCredentials';
+import { DatabaseAdmin } from '@/components/DatabaseAdmin';
 
 const Index = () => {
   return (
@@ -17,6 +18,19 @@ const Index = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <DemoCredentials />
+        </div>
+      </section>
+      
+      {/* Database Admin Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Database Setup</h2>
+            <p className="text-lg text-gray-600">
+              Create real database records for demo accounts to enable full functionality
+            </p>
+          </div>
+          <DatabaseAdmin />
         </div>
       </section>
       

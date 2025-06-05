@@ -74,13 +74,13 @@ export const withProtectedRoute = (
 
 // Specific role-based route components
 export const HuurderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['huurder']} requirePayment={true}>
+  <ProtectedRoute allowedRoles={['huurder']}>
     {children}
   </ProtectedRoute>
 );
 
 export const VerhuurderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['verhuurder']} requirePayment={true}>
+  <ProtectedRoute allowedRoles={['verhuurder']}>
     {children}
   </ProtectedRoute>
 );

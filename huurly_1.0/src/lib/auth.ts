@@ -123,7 +123,9 @@ export class AuthService {
       if (isDemoCredential) {
         const result = await demoAuthService.login(data.email, data.password);
         if (result.success && result.user) {
-          return { user: result.user, error: null };
+          // For demo users, enhance with real-looking data
+          const enhancedUser = await this.enhanceDemoUser(result.user);
+          return { user: enhancedUser, error: null };
         } else {
           return { 
             user: null, 
@@ -342,6 +344,24 @@ export class AuthService {
       console.error('Error checking payment status:', error);
       return false;
     }
+  }
+
+  /**
+   * Enhance demo user with realistic data
+   */
+  private async enhanceDemoUser(user: User): Promise<User> {
+    // For demo users, we'll enhance them with realistic payment status
+    // based on their role and email
+    const enhancedUser = { ...user };
+    
+    // Emma (huurder) has payment, others don't need it
+    if (user.email === 'emma.bakker@email.nl') {
+      enhancedUser.hasPayment = true;
+    } else {
+      enhancedUser.hasPayment = false;
+    }
+    
+    return enhancedUser;
   }
 
   /**

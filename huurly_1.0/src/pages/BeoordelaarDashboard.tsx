@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -6,53 +5,116 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { demoTenantProfiles } from '@/data/demoData';
-import { FileText, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
+import { FileText, CheckCircle, XCircle, Clock, Eye, ArrowLeft, Bell, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
+import NotificationBell from '@/components/NotificationBell';
+import { notifyDocumentApproved, notifyDocumentRejected } from '@/hooks/useNotifications';
 
 const BeoordelaarDashboard = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [pendingDocuments, setPendingDocuments] = useState([
+    {
+      id: 'doc-1',
+      fileName: 'ID_Emma_Bakker.pdf',
+      type: 'identity',
+      tenantName: 'Emma Bakker',
+      uploadedAt: '2024-01-20T10:00:00Z',
+      fileSize: 2.5 * 1024 * 1024, // 2.5MB
+      status: 'pending'
+    },
+    {
+      id: 'doc-2',
+      fileName: 'Payslip_December_2023.pdf',
+      type: 'payslip',
+      tenantName: 'Emma Bakker',
+      uploadedAt: '2024-01-20T10:15:00Z',
+      fileSize: 1.8 * 1024 * 1024, // 1.8MB
+      status: 'pending'
+    },
+    {
+      id: 'doc-3',
+      fileName: 'Contract_TechCorp.pdf',
+      type: 'employment',
+      tenantName: 'Jan de Vries',
+      uploadedAt: '2024-01-20T14:30:00Z',
+      fileSize: 3.2 * 1024 * 1024, // 3.2MB
+      status: 'pending'
+    }
+  ]);
 
-  // Get all documents from all tenant profiles
-  const allDocuments = demoTenantProfiles.flatMap(tenant => 
-    tenant.documents.map(doc => ({
-      ...doc,
-      tenantName: `${tenant.firstName} ${tenant.lastName}`,
-      tenantEmail: tenant.email
-    }))
-  );
+  const handleReviewDocument = (document: any) => {
+    setSelectedDocument(document);
+    setShowReviewModal(true);
+  };
 
-  const pendingDocuments = allDocuments.filter(doc => doc.status === 'pending');
-  const recentlyReviewed = allDocuments.filter(doc => doc.status !== 'pending').slice(0, 5);
-
-  const handleApprove = (documentId: string) => {
+  const handleApprove = (documentId: string, notes?: string) => {
+    const document = pendingDocuments.find(doc => doc.id === documentId);
+    if (document) {
+      // Notify the huurder about approval
+      notifyDocumentApproved(
+        document.tenantName,
+        document.type === 'identity' ? 'identiteitsbewijs' :
+        document.type === 'payslip' ? 'loonstrook' :
+        document.type === 'employment' ? 'arbeidscontract' : 'document',
+        'huurder-demo-id' // In real app, this would be actual huurder ID
+      );
+    }
+    
+    setPendingDocuments(prev => prev.filter(doc => doc.id !== documentId));
     toast({
       title: "Document goedgekeurd",
       description: "Het document is succesvol goedgekeurd en de huurder is op de hoogte gesteld."
     });
-    // Update document status logic here
   };
 
-  const handleReject = (documentId: string) => {
-    if (!rejectionReason.trim()) {
-      toast({
-        title: "Reden vereist",
-        description: "Voer een reden in voor afwijzing van het document.",
-        variant: "destructive"
-      });
-      return;
+  const handleReject = (documentId: string, reason: string) => {
+    const document = pendingDocuments.find(doc => doc.id === documentId);
+    if (document) {
+      // Notify the huurder about rejection
+      notifyDocumentRejected(
+        document.tenantName,
+        document.type === 'identity' ? 'identiteitsbewijs' :
+        document.type === 'payslip' ? 'loonstrook' :
+        document.type === 'employment' ? 'arbeidscontract' : 'document',
+        reason,
+        'huurder-demo-id' // In real app, this would be actual huurder ID
+      );
     }
     
+    setPendingDocuments(prev => prev.filter(doc => doc.id !== documentId));
     toast({
       title: "Document afgewezen",
       description: "Het document is afgewezen en de huurder is op de hoogte gesteld van de reden."
     });
-    setRejectionReason('');
-    setSelectedDocument(null);
-    // Update document status logic here
+  };
+
+  const handleBulkApproval = () => {
+    const selectedDocs = pendingDocuments.slice(0, 2); // Approve first 2 for demo
+    setPendingDocuments(prev => prev.slice(2));
+    toast({
+      title: "Bulk goedkeuring voltooid",
+      description: `${selectedDocs.length} documenten zijn goedgekeurd.`
+    });
+  };
+
+  const handleGenerateReport = () => {
+    toast({
+      title: "Rapport gegenereerd",
+      description: "Het verificatie rapport is gegenereerd en gedownload."
+    });
+  };
+
+  const handleReportIssue = () => {
+    toast({
+      title: "Issue gerapporteerd",
+      description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."
+    });
   };
 
   const handleLogout = () => {
@@ -60,8 +122,27 @@ const BeoordelaarDashboard = () => {
     window.location.href = '/';
   };
 
+  const handleGoHome = () => {
+    window.location.href = '/';
+  };
+
   if (!user || user.role !== 'beoordelaar') {
-    return <div>Toegang geweigerd</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
+              <p className="text-gray-600 mb-4">Je hebt geen toegang tot het beoordelaar dashboard.</p>
+              <Button onClick={handleGoHome}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Terug naar home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -71,6 +152,14 @@ const BeoordelaarDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                onClick={handleGoHome}
+                className="mr-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Home
+              </Button>
               <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">H</span>
               </div>
@@ -79,6 +168,10 @@ const BeoordelaarDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationBell />
+              <Button variant="ghost" size="sm">
+                <Settings className="w-4 h-4" />
+              </Button>
               <span className="text-sm text-gray-600">Welkom, {user.name}</span>
               <Button variant="outline" onClick={handleLogout}>
                 Uitloggen
@@ -89,7 +182,7 @@ const BeoordelaarDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
+        {/* Stats Cards - Clean for real testing */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="pt-6">
@@ -108,7 +201,7 @@ const BeoordelaarDashboard = () => {
               <div className="flex items-center">
                 <CheckCircle className="w-8 h-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">23</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-gray-600">Goedgekeurd Vandaag</p>
                 </div>
               </div>
@@ -120,7 +213,7 @@ const BeoordelaarDashboard = () => {
               <div className="flex items-center">
                 <XCircle className="w-8 h-8 text-red-600" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-gray-600">Afgewezen Vandaag</p>
                 </div>
               </div>
@@ -132,7 +225,7 @@ const BeoordelaarDashboard = () => {
               <div className="flex items-center">
                 <FileText className="w-8 h-8 text-dutch-blue" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-gray-600">Openstaande Portfolio's</p>
                 </div>
               </div>
@@ -154,85 +247,55 @@ const BeoordelaarDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {pendingDocuments.map((doc) => (
-                    <div key={doc.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="font-semibold">{doc.tenantName}</h3>
-                            <Badge variant="outline">
-                              {doc.type === 'id' ? 'Identiteitsbewijs' : 
-                               doc.type === 'income' ? 'Inkomensverklaring' :
-                               doc.type === 'employment' ? 'Arbeidscontract' : 'Referentie'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">{doc.tenantEmail}</p>
-                          <p className="text-sm text-gray-500">
-                            Geüpload: {new Date(doc.uploadedAt).toLocaleDateString('nl-NL')}
-                          </p>
-                          <p className="text-sm font-medium mt-2">{doc.fileName}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline">
-                                <Eye className="w-4 h-4 mr-1" />
-                                Bekijken
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Document: {doc.fileName}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="bg-gray-100 h-96 rounded-lg flex items-center justify-center">
-                                  <p className="text-gray-500">Document preview - {doc.fileName}</p>
-                                </div>
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    className="flex-1 bg-green-600 hover:bg-green-700"
-                                    onClick={() => handleApprove(doc.id)}
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Goedkeuren
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    className="flex-1"
-                                    onClick={() => setSelectedDocument(doc)}
-                                  >
-                                    <XCircle className="w-4 h-4 mr-2" />
-                                    Afwijzen
-                                  </Button>
-                                </div>
+                {pendingDocuments.length > 0 ? (
+                  <div className="space-y-4">
+                    {pendingDocuments.map((document) => (
+                      <div key={document.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3">
+                            <FileText className="w-8 h-8 text-dutch-blue mt-1" />
+                            <div>
+                              <h4 className="font-semibold">{document.fileName}</h4>
+                              <p className="text-sm text-gray-600">Van: {document.tenantName}</p>
+                              <p className="text-sm text-gray-500">
+                                Geüpload: {new Date(document.uploadedAt).toLocaleDateString('nl-NL')}
+                              </p>
+                              <div className="flex items-center space-x-2 mt-2">
+                                <Badge variant="outline">
+                                  {document.type === 'identity' ? 'Identiteitsbewijs' :
+                                   document.type === 'payslip' ? 'Loonstrook' :
+                                   document.type === 'employment' ? 'Arbeidscontract' : 'Referentie'}
+                                </Badge>
+                                <Badge className="bg-orange-100 text-orange-800">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  In behandeling
+                                </Badge>
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleApprove(doc.id)}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => setSelectedDocument(doc)}
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </Button>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleReviewDocument(document)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Beoordelen
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {pendingDocuments.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Geen documenten wachtend op verificatie
-                    </div>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-semibold mb-2">Geen documenten te beoordelen</h3>
+                    <p className="text-sm">{EMPTY_STATE_MESSAGES.noDocuments}</p>
+                    <p className="text-sm mt-2">
+                      Wanneer huurders documenten uploaden, verschijnen ze hier voor beoordeling.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -245,18 +308,9 @@ const BeoordelaarDashboard = () => {
                 <CardTitle>Recent Beoordeeld</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {recentlyReviewed.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{doc.tenantName}</p>
-                        <p className="text-xs text-gray-500">{doc.fileName}</p>
-                      </div>
-                      <Badge variant={doc.status === 'approved' ? 'default' : 'destructive'}>
-                        {doc.status === 'approved' ? 'Goedgekeurd' : 'Afgewezen'}
-                      </Badge>
-                    </div>
-                  ))}
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-sm">Nog geen documenten beoordeeld</p>
                 </div>
               </CardContent>
             </Card>
@@ -267,19 +321,9 @@ const BeoordelaarDashboard = () => {
                 <CardTitle>Portfolio Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Emma Bakker</span>
-                    <Badge variant="secondary">1/4 compleet</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Jan de Vries</span>
-                    <Badge variant="default">Compleet</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Marie van Dam</span>
-                    <Badge variant="secondary">2/4 compleet</Badge>
-                  </div>
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-sm">Geen portfolio's in behandeling</p>
                 </div>
               </CardContent>
             </Card>
@@ -291,14 +335,59 @@ const BeoordelaarDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={handleBulkApproval}
+                    disabled={pendingDocuments.length === 0}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
                     Bulk Goedkeuring
                   </Button>
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={handleGenerateReport}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
                     Rapport Genereren
                   </Button>
-                  <Button variant="outline" className="w-full text-sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-sm"
+                    onClick={handleReportIssue}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
                     Probleem Melden
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Help Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Hulp nodig?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <p className="text-gray-600">
+                    Als beoordelaar kun je:
+                  </p>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• Documenten van huurders beoordelen</li>
+                    <li>• Identiteitsbewijzen verifiëren</li>
+                    <li>• Inkomensverklaringen controleren</li>
+                    <li>• Portfolio's goedkeuren of afwijzen</li>
+                    <li>• Feedback geven aan huurders</li>
+                  </ul>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-3"
+                    onClick={() => toast({ title: "Functie komt binnenkort", description: "Help & Support wordt nog ontwikkeld." })}
+                  >
+                    Help & Support
                   </Button>
                 </div>
               </CardContent>
@@ -335,7 +424,7 @@ const BeoordelaarDashboard = () => {
               </Button>
               <Button 
                 variant="destructive" 
-                onClick={() => handleReject(selectedDocument?.id)}
+                onClick={() => handleReject(selectedDocument?.id, rejectionReason)}
                 className="flex-1"
               >
                 Document Afwijzen
@@ -344,6 +433,15 @@ const BeoordelaarDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Document Review Modal */}
+      <DocumentReviewModal
+        open={showReviewModal}
+        onOpenChange={setShowReviewModal}
+        document={selectedDocument}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </div>
   );
 };
