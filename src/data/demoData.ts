@@ -76,6 +76,7 @@ export const demoTenantProfiles: TenantProfile[] = [
     dateOfBirth: '1995-03-15',
     profession: 'Software Developer',
     income: 4500,
+    monthlyIncome: 4500,
     bio: 'Rustige, nette huurder die van een schone en georganiseerde leefomgeving houdt.',
     motivation: 'Ik zoek een fijne plek in Amsterdam voor de lange termijn. Ik werk vanuit huis en heb daarom behoefte aan een rustige omgeving.',
     profilePicture: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop&crop=face',
@@ -132,6 +133,7 @@ export const demoTenantProfiles: TenantProfile[] = [
     dateOfBirth: '1993-07-22',
     profession: 'Marketing Manager',
     income: 3800,
+    monthlyIncome: 3800,
     bio: 'Sociale en verantwoordelijke huurder op zoek naar een gezellige woonplek.',
     motivation: 'Na 3 jaar in het buitenland wonen, ben ik terug in Nederland en zoek ik een mooie plek om te wonen.',
     profilePicture: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop&crop=face',
@@ -284,7 +286,7 @@ export const demoViewingInvitations: ViewingInvitation[] = [
     landlordId: '6',
     scheduledDate: '2024-06-20T10:00:00Z',
     deadline: '2024-06-15T23:59:59Z',
-    status: 'declined',
+    status: 'rejected',
     message: 'Uitnodiging voor bezichtiging van het Utrecht appartement.',
     createdAt: '2024-06-07T09:15:00Z'
   }
@@ -366,7 +368,7 @@ export const demoIssues: Issue[] = [
     reporterRole: 'verhuurder',
     title: 'Betalingsproblemen',
     description: 'Mijn betaling voor premium account is niet verwerkt.',
-    category: 'billing',
+    category: 'payment',
     status: 'open',
     priority: 'high',
     notes: [

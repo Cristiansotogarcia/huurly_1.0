@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -164,7 +163,7 @@ const HuurderDashboard = () => {
                         {tenantProfile.verificationStatus === 'approved' ? 'Geverifieerd' : 'In behandeling'}
                       </Badge>
                       <Badge variant="outline">
-                        Inkomstenverificatie: €{tenantProfile.monthlyIncome?.toLocaleString()}
+                        Inkomstenverificatie: €{tenantProfile.monthlyIncome?.toLocaleString() || tenantProfile.income?.toLocaleString()}
                       </Badge>
                     </div>
                   </div>
@@ -233,10 +232,10 @@ const HuurderDashboard = () => {
                           <h4 className="font-medium text-sm">Bezichtiging uitnodiging</h4>
                           <Badge variant={
                             invitation.status === 'accepted' ? 'default' :
-                            invitation.status === 'declined' ? 'destructive' : 'secondary'
+                            invitation.status === 'rejected' ? 'destructive' : 'secondary'
                           }>
                             {invitation.status === 'accepted' ? 'Geaccepteerd' :
-                             invitation.status === 'declined' ? 'Afgewezen' : 'In afwachting'}
+                             invitation.status === 'rejected' ? 'Afgewezen' : 'In afwachting'}
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-600 mt-1">

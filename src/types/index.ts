@@ -22,6 +22,7 @@ export interface TenantProfile {
   dateOfBirth: string;
   profession: string;
   income: number;
+  monthlyIncome?: number;
   bio: string;
   motivation: string;
   profilePicture?: string;
@@ -65,6 +66,9 @@ export interface Property {
     allowPets: boolean;
   };
   isActive: boolean;
+  availableFrom?: string;
+  deposit?: number;
+  utilities?: number;
 }
 
 export interface Document {
