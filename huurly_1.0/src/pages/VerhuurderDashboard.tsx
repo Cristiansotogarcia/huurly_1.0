@@ -1,0 +1,286 @@
+
+import { useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { demoLandlordProfiles, demoTenantProfiles } from '@/data/demoData';
+import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
+
+const VerhuurderDashboard = () => {
+  const { user } = useAuthStore();
+  const [searchFilters, setSearchFilters] = useState({
+    city: '',
+    maxBudget: '',
+    minIncome: ''
+  });
+
+  const landlordProfile = demoLandlordProfiles[0];
+  const availableTenants = demoTenantProfiles.filter(tenant => tenant.isLookingForPlace);
+
+  const handleLogout = () => {
+    useAuthStore.getState().logout();
+    window.location.href = '/';
+  };
+
+  const sendViewingInvitation = (tenantId: string) => {
+    console.log(`Sending viewing invitation to tenant ${tenantId}`);
+    // Implementation for sending invitation
+  };
+
+  if (!user || user.role !== 'verhuurder') {
+    return <div>Toegang geweigerd</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">H</span>
+              </div>
+              <span className="ml-2 text-xl font-bold text-dutch-blue">Huurly</span>
+              <span className="ml-4 text-gray-500">| Verhuurder Dashboard</span>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welkom, {user.name}</span>
+              <Button variant="outline" onClick={handleLogout}>
+                Uitloggen
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Stats */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <Home className="w-8 h-8 text-dutch-blue" />
+                <div className="ml-4">
+                  <p className="text-2xl font-bold">{landlordProfile.properties.length}</p>
+                  <p className="text-gray-600">Actieve Objecten</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <Users className="w-8 h-8 text-dutch-orange" />
+                <div className="ml-4">
+                  <p className="text-2xl font-bold">{availableTenants.length}</p>
+                  <p className="text-gray-600">Beschikbare Huurders</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <Calendar className="w-8 h-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-gray-600">Geplande Bezichtigingen</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <Search className="w-8 h-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-gray-600">Matches Deze Week</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Search Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Search className="w-5 h-5 mr-2" />
+                  Huurders Zoeken
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Stad</label>
+                    <Input 
+                      placeholder="Amsterdam" 
+                      value={searchFilters.city}
+                      onChange={(e) => setSearchFilters({...searchFilters, city: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Max Budget</label>
+                    <Input 
+                      placeholder="€2000" 
+                      value={searchFilters.maxBudget}
+                      onChange={(e) => setSearchFilters({...searchFilters, maxBudget: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Min Inkomen</label>
+                    <Input 
+                      placeholder="€4000" 
+                      value={searchFilters.minIncome}
+                      onChange={(e) => setSearchFilters({...searchFilters, minIncome: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <Button className="mt-4">
+                  <Search className="w-4 h-4 mr-2" />
+                  Zoeken
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Available Tenants */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Beschikbare Huurders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {availableTenants.map((tenant) => (
+                    <div key={tenant.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start space-x-4">
+                        <img 
+                          src={tenant.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face'} 
+                          alt={`${tenant.firstName} ${tenant.lastName}`}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">
+                              {tenant.firstName} {tenant.lastName}
+                            </h3>
+                            <Badge variant={tenant.verificationStatus === 'approved' ? 'default' : 'secondary'}>
+                              {tenant.verificationStatus === 'approved' ? 'Geverifieerd' : 'In behandeling'}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-600">{tenant.profession}</p>
+                          <p className="text-sm text-gray-500 mt-1">{tenant.bio}</p>
+                          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+                            <span>Inkomen: €{tenant.income.toLocaleString()}</span>
+                            <span>Budget: €{tenant.preferences.minBudget} - €{tenant.preferences.maxBudget}</span>
+                            <span>Kamers: {tenant.preferences.bedrooms}</span>
+                          </div>
+                          <div className="mt-3 flex space-x-2">
+                            <Button size="sm" onClick={() => sendViewingInvitation(tenant.id)}>
+                              Uitnodigen voor Bezichtiging
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              Profiel Bekijken
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* My Properties */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <Home className="w-5 h-5 mr-2" />
+                    Mijn Objecten
+                  </span>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Nieuw
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {landlordProfile.properties.map((property) => (
+                    <div key={property.id} className="p-3 border rounded-lg">
+                      <h4 className="font-medium text-sm">{property.title}</h4>
+                      <p className="text-xs text-gray-600">{property.address}, {property.city}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-sm font-semibold">€{property.rent}/maand</span>
+                        <Badge variant={property.isActive ? 'default' : 'secondary'}>
+                          {property.isActive ? 'Actief' : 'Inactief'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recente Activiteit</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Emma Bakker heeft interesse getoond</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Nieuwe bezichtiging ingepland</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span>Document goedgekeurd voor Jan de Vries</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Snelle Acties</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full text-sm">
+                    Probleem melden
+                  </Button>
+                  <Button variant="outline" className="w-full text-sm">
+                    Help & Support
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VerhuurderDashboard;
