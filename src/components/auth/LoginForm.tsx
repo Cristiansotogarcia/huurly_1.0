@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { demoUsers } from '@/data/demoData';
 import { UserRole } from '@/types';
 
 interface LoginFormProps {
@@ -16,7 +15,8 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const { signIn, resetPassword, isLoading, user } = useAuth();
+  const [resetEmail, setResetEmail] = useState('');
+  const { signIn, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   // Helper function to get dashboard route based on user role
@@ -31,7 +31,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       case 'beheerder':
         return '/beheerder-dashboard';
       default:
-        return '/huurder-dashboard'; // Default fallback
+        return '/huurder-dashboard';
     }
   };
 
@@ -52,24 +52,55 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
+    if (!resetEmail) {
       return;
     }
 
-    const success = await resetPassword(email);
+    const success = await resetPassword(resetEmail);
     
     if (success) {
       setShowResetPassword(false);
+      setResetEmail('');
     }
   };
 
-  const fillDemoCredentials = (role: string) => {
-    const user = demoUsers.find(u => u.role === role);
-    if (user) {
-      setEmail(user.email);
-      setPassword('demo123');
-    }
-  };
+  if (showResetPassword) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-dutch-blue">Wachtwoord vergeten?</h2>
+          <p className="text-gray-600 mt-2">Voer je e-mailadres in om je wachtwoord te resetten</p>
+        </div>
+
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <div>
+            <Label htmlFor="resetEmail">E-mailadres</Label>
+            <Input
+              id="resetEmail"
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="jouw@email.nl"
+              required
+            />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Bezig met verzenden...' : 'Reset wachtwoord'}
+          </Button>
+
+          <Button 
+            type="button" 
+            variant="ghost" 
+            className="w-full"
+            onClick={() => setShowResetPassword(false)}
+          >
+            Terug naar inloggen
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -108,44 +139,14 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
         </Button>
       </form>
 
-      <div className="border-t pt-4">
-        <p className="text-sm text-gray-600 mb-3">Demo accounts (wachtwoord: demo123):</p>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fillDemoCredentials('huurder')}
-          >
-            Huurder Demo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fillDemoCredentials('verhuurder')}
-          >
-            Verhuurder Demo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fillDemoCredentials('beoordelaar')}
-          >
-            Beoordelaar Demo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fillDemoCredentials('beheerder')}
-          >
-            Beheerder Demo
-          </Button>
-        </div>
-      </div>
-
       <div className="text-center">
         <p className="text-sm text-gray-600">
           Wachtwoord vergeten?{' '}
-          <button className="text-dutch-orange hover:underline">
+          <button 
+            type="button"
+            className="text-dutch-orange hover:underline"
+            onClick={() => setShowResetPassword(true)}
+          >
             Reset hier
           </button>
         </p>

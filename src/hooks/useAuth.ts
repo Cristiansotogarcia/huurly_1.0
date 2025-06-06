@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
 import { authService, SignUpData, SignInData } from '@/lib/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { demoAuthService } from '@/lib/demoAuth';
 
 export interface UseAuthReturn {
   user: User | null;
@@ -39,7 +39,7 @@ export const useAuth = (): UseAuthReturn => {
 
     initializeAuth();
 
-    // Listen to auth state changes (both Supabase and demo)
+    // Listen to auth state changes
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
         login(user);

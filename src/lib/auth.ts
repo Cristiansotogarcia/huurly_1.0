@@ -1,7 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
-import { demoAuthService, DEMO_CREDENTIALS } from '@/lib/demoAuth';
 
 export interface SignUpData {
   email: string;
@@ -65,6 +65,7 @@ export class AuthService {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
@@ -115,30 +116,6 @@ export class AuthService {
    */
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
-      // First check if this is a demo credential
-      const isDemoCredential = Object.values(DEMO_CREDENTIALS).some(
-        cred => cred.email.toLowerCase() === data.email.toLowerCase()
-      );
-
-      if (isDemoCredential) {
-        const result = await demoAuthService.login(data.email, data.password);
-        if (result.success && result.user) {
-          // For demo users, enhance with real-looking data
-          const enhancedUser = await this.enhanceDemoUser(result.user);
-          return { user: enhancedUser, error: null };
-        } else {
-          return { 
-            user: null, 
-            error: { 
-              message: result.error || 'Demo login failed',
-              name: 'AuthError',
-              status: 400
-            } as AuthError 
-          };
-        }
-      }
-
-      // If not demo credential, try Supabase
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -164,14 +141,6 @@ export class AuthService {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      // Check if demo user is logged in
-      const demoUser = demoAuthService.getCurrentUser();
-      if (demoUser) {
-        await demoAuthService.logout();
-        return { error: null };
-      }
-
-      // Otherwise sign out from Supabase
       const { error } = await supabase.auth.signOut();
       return { error };
     } catch (error) {
@@ -212,13 +181,6 @@ export class AuthService {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      // First check for demo user
-      const demoUser = demoAuthService.getCurrentUser();
-      if (demoUser) {
-        return demoUser;
-      }
-
-      // Then check Supabase
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -236,36 +198,14 @@ export class AuthService {
    * Listen to auth state changes
    */
   onAuthStateChange(callback: (user: User | null) => void) {
-    // Listen to Supabase auth changes
-    const supabaseSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+    return supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const user = await this.mapSupabaseUserToUser(session.user);
         callback(user);
       } else {
-        // Only call callback with null if no demo user is logged in
-        const demoUser = demoAuthService.getCurrentUser();
-        if (!demoUser) {
-          callback(null);
-        }
+        callback(null);
       }
     });
-
-    // Listen to demo auth changes
-    const demoUnsubscribe = demoAuthService.addListener((user) => {
-      callback(user);
-    });
-
-    // Return a combined unsubscribe function
-    return {
-      data: {
-        subscription: {
-          unsubscribe: () => {
-            supabaseSubscription.data.subscription.unsubscribe();
-            demoUnsubscribe();
-          }
-        }
-      }
-    };
   }
 
   /**
@@ -344,24 +284,6 @@ export class AuthService {
       console.error('Error checking payment status:', error);
       return false;
     }
-  }
-
-  /**
-   * Enhance demo user with realistic data
-   */
-  private async enhanceDemoUser(user: User): Promise<User> {
-    // For demo users, we'll enhance them with realistic payment status
-    // based on their role and email
-    const enhancedUser = { ...user };
-    
-    // Emma (huurder) has payment, others don't need it
-    if (user.email === 'emma.bakker@email.nl') {
-      enhancedUser.hasPayment = true;
-    } else {
-      enhancedUser.hasPayment = false;
-    }
-    
-    return enhancedUser;
   }
 
   /**

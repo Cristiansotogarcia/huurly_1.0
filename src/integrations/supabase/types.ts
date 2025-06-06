@@ -749,7 +749,12 @@ export type Database = {
     Enums: {
       document_status: "pending" | "approved" | "rejected"
       document_type: "identity" | "payslip"
-      user_role: "Huurder" | "Verhuurder" | "Manager"
+      user_role:
+        | "Huurder"
+        | "Verhuurder"
+        | "Manager"
+        | "Beheerder"
+        | "Beordelaar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -867,7 +872,13 @@ export const Constants = {
     Enums: {
       document_status: ["pending", "approved", "rejected"],
       document_type: ["identity", "payslip"],
-      user_role: ["Huurder", "Verhuurder", "Manager"],
+      user_role: [
+        "Huurder",
+        "Verhuurder",
+        "Manager",
+        "Beheerder",
+        "Beordelaar",
+      ],
     },
   },
 } as const
