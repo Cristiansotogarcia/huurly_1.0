@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyDocumentApproved, notifyDocumentRejected } from '@/hooks/useNotifications';
+import { Logo } from '@/components/Logo';
 
 const BeoordelaarDashboard = () => {
   const { user } = useAuthStore();
@@ -160,11 +161,8 @@ const BeoordelaarDashboard = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Home
               </Button>
-              <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-dutch-blue">Huurly</span>
-              <span className="ml-4 text-gray-500">| Beoordelaar Dashboard</span>
+                <Logo />
+                <span className="ml-4 text-gray-500">| Beoordelaar Dashboard</span>
             </div>
             
             <div className="flex items-center space-x-4">
