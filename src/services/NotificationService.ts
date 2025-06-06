@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
 
@@ -7,29 +8,15 @@ export interface CreateNotificationData {
   title: string;
   message: string;
   relatedId?: string;
-  actionUrl?: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  relatedType?: string;
 }
 
 export interface NotificationFilters {
   userId?: string;
   type?: string;
-  isRead?: boolean;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  read?: boolean;
   dateFrom?: string;
   dateTo?: string;
-}
-
-export interface NotificationPreferences {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  smsNotifications: boolean;
-  profileMatches: boolean;
-  viewingInvitations: boolean;
-  paymentUpdates: boolean;
-  documentUpdates: boolean;
-  systemAnnouncements: boolean;
-  marketingEmails: boolean;
 }
 
 export class NotificationService extends DatabaseService {
@@ -68,9 +55,8 @@ export class NotificationService extends DatabaseService {
           title: sanitizedData.title,
           message: sanitizedData.message,
           related_id: sanitizedData.relatedId,
-          action_url: sanitizedData.actionUrl,
-          priority: sanitizedData.priority || 'medium',
-          is_read: false,
+          related_type: sanitizedData.relatedType,
+          read: false,
         })
         .select()
         .single();
@@ -80,9 +66,6 @@ export class NotificationService extends DatabaseService {
       }
 
       await this.createAuditLog('CREATE', 'notifications', data?.id, null, data);
-
-      // Check if user wants to receive this type of notification
-      await this.processNotificationDelivery(data);
 
       return { data, error: null };
     });
@@ -108,14 +91,16 @@ export class NotificationService extends DatabaseService {
 
     const targetUserId = userId || currentUserId;
 
-    // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze notificaties'),
-        success: false,
-      };
+    // Check permissions - users can only see their own notifications unless they're a manager
+    if (targetUserId !== currentUserId) {
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      if (!hasPermission) {
+        return {
+          data: null,
+          error: new Error('Geen toegang tot deze notificaties'),
+          success: false,
+        };
+      }
     }
 
     return this.executeQuery(async () => {
@@ -129,12 +114,8 @@ export class NotificationService extends DatabaseService {
         query = query.eq('type', filters.type);
       }
 
-      if (filters?.isRead !== undefined) {
-        query = query.eq('is_read', filters.isRead);
-      }
-
-      if (filters?.priority) {
-        query = query.eq('priority', filters.priority);
+      if (filters?.read !== undefined) {
+        query = query.eq('read', filters.read);
       }
 
       if (filters?.dateFrom) {
@@ -183,16 +164,18 @@ export class NotificationService extends DatabaseService {
       }
 
       // Check if user owns this notification
-      const hasPermission = await this.checkUserPermission(notification.user_id, ['Manager']);
-      if (!hasPermission) {
-        throw new Error('Geen toegang tot deze notificatie');
+      if (notification.user_id !== currentUserId) {
+        const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+        if (!hasPermission) {
+          throw new Error('Geen toegang tot deze notificatie');
+        }
       }
 
       const { data, error } = await supabase
         .from('notifications')
         .update({
-          is_read: true,
-          read_at: new Date().toISOString(),
+          read: true,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', notificationId)
         .select()
@@ -224,24 +207,26 @@ export class NotificationService extends DatabaseService {
     const targetUserId = userId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze notificaties'),
-        success: false,
-      };
+    if (targetUserId !== currentUserId) {
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      if (!hasPermission) {
+        return {
+          data: null,
+          error: new Error('Geen toegang tot deze notificaties'),
+          success: false,
+        };
+      }
     }
 
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('notifications')
         .update({
-          is_read: true,
-          read_at: new Date().toISOString(),
+          read: true,
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', targetUserId)
-        .eq('is_read', false)
+        .eq('read', false)
         .select('id');
 
       if (error) {
@@ -285,9 +270,11 @@ export class NotificationService extends DatabaseService {
       }
 
       // Check if user owns this notification
-      const hasPermission = await this.checkUserPermission(notification.user_id, ['Manager']);
-      if (!hasPermission) {
-        throw new Error('Geen toegang tot deze notificatie');
+      if (notification.user_id !== currentUserId) {
+        const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+        if (!hasPermission) {
+          throw new Error('Geen toegang tot deze notificatie');
+        }
       }
 
       const { error } = await supabase
@@ -321,13 +308,15 @@ export class NotificationService extends DatabaseService {
     const targetUserId = userId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze gegevens'),
-        success: false,
-      };
+    if (targetUserId !== currentUserId) {
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      if (!hasPermission) {
+        return {
+          data: null,
+          error: new Error('Geen toegang tot deze gegevens'),
+          success: false,
+        };
+      }
     }
 
     return this.executeQuery(async () => {
@@ -335,148 +324,13 @@ export class NotificationService extends DatabaseService {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', targetUserId)
-        .eq('is_read', false);
+        .eq('read', false);
 
       if (error) {
         throw this.handleDatabaseError(error);
       }
 
       return { data: count || 0, error: null };
-    });
-  }
-
-  /**
-   * Get notification preferences for a user
-   */
-  async getNotificationPreferences(userId?: string): Promise<DatabaseResponse<NotificationPreferences>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const targetUserId = userId || currentUserId;
-
-    // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze voorkeuren'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .maybeSingle();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      // Return default preferences if none exist
-      const defaultPreferences: NotificationPreferences = {
-        emailNotifications: true,
-        pushNotifications: true,
-        smsNotifications: false,
-        profileMatches: true,
-        viewingInvitations: true,
-        paymentUpdates: true,
-        documentUpdates: true,
-        systemAnnouncements: true,
-        marketingEmails: false,
-      };
-
-      const preferences = data ? {
-        emailNotifications: data.email_notifications ?? defaultPreferences.emailNotifications,
-        pushNotifications: data.push_notifications ?? defaultPreferences.pushNotifications,
-        smsNotifications: data.sms_notifications ?? defaultPreferences.smsNotifications,
-        profileMatches: data.profile_matches ?? defaultPreferences.profileMatches,
-        viewingInvitations: data.viewing_invitations ?? defaultPreferences.viewingInvitations,
-        paymentUpdates: data.payment_updates ?? defaultPreferences.paymentUpdates,
-        documentUpdates: data.document_updates ?? defaultPreferences.documentUpdates,
-        systemAnnouncements: data.system_announcements ?? defaultPreferences.systemAnnouncements,
-        marketingEmails: data.marketing_emails ?? defaultPreferences.marketingEmails,
-      } : defaultPreferences;
-
-      return { data: preferences, error: null };
-    });
-  }
-
-  /**
-   * Update notification preferences
-   */
-  async updateNotificationPreferences(
-    preferences: Partial<NotificationPreferences>,
-    userId?: string
-  ): Promise<DatabaseResponse<NotificationPreferences>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const targetUserId = userId || currentUserId;
-
-    // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze voorkeuren'),
-        success: false,
-      };
-    }
-
-    const sanitizedPreferences = this.sanitizeInput(preferences);
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .upsert({
-          user_id: targetUserId,
-          email_notifications: sanitizedPreferences.emailNotifications,
-          push_notifications: sanitizedPreferences.pushNotifications,
-          sms_notifications: sanitizedPreferences.smsNotifications,
-          profile_matches: sanitizedPreferences.profileMatches,
-          viewing_invitations: sanitizedPreferences.viewingInvitations,
-          payment_updates: sanitizedPreferences.paymentUpdates,
-          document_updates: sanitizedPreferences.documentUpdates,
-          system_announcements: sanitizedPreferences.systemAnnouncements,
-          marketing_emails: sanitizedPreferences.marketingEmails,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      const updatedPreferences: NotificationPreferences = {
-        emailNotifications: data.email_notifications,
-        pushNotifications: data.push_notifications,
-        smsNotifications: data.sms_notifications,
-        profileMatches: data.profile_matches,
-        viewingInvitations: data.viewing_invitations,
-        paymentUpdates: data.payment_updates,
-        documentUpdates: data.document_updates,
-        systemAnnouncements: data.system_announcements,
-        marketingEmails: data.marketing_emails,
-      };
-
-      await this.createAuditLog('UPDATE', 'notification_preferences', data?.id, null, updatedPreferences);
-
-      return { data: updatedPreferences, error: null };
     });
   }
 
@@ -515,9 +369,8 @@ export class NotificationService extends DatabaseService {
         title: sanitizedData.title,
         message: sanitizedData.message,
         related_id: sanitizedData.relatedId,
-        action_url: sanitizedData.actionUrl,
-        priority: sanitizedData.priority || 'medium',
-        is_read: false,
+        related_type: sanitizedData.relatedType,
+        read: false,
       }));
 
       const { data, error } = await supabase
@@ -566,25 +419,19 @@ export class NotificationService extends DatabaseService {
     return this.executeQuery(async () => {
       const { data: notifications, error } = await supabase
         .from('notifications')
-        .select('type, is_read, priority, created_at');
+        .select('type, read, created_at');
 
       if (error) {
         throw this.handleDatabaseError(error);
       }
 
       const totalNotifications = notifications?.length || 0;
-      const readNotifications = notifications?.filter(n => n.is_read).length || 0;
+      const readNotifications = notifications?.filter(n => n.read).length || 0;
       const unreadNotifications = totalNotifications - readNotifications;
 
       // Notifications by type
       const notificationsByType = notifications?.reduce((acc: any, notification: any) => {
         acc[notification.type] = (acc[notification.type] || 0) + 1;
-        return acc;
-      }, {}) || {};
-
-      // Notifications by priority
-      const notificationsByPriority = notifications?.reduce((acc: any, notification: any) => {
-        acc[notification.priority] = (acc[notification.priority] || 0) + 1;
         return acc;
       }, {}) || {};
 
@@ -594,123 +441,9 @@ export class NotificationService extends DatabaseService {
         unreadNotifications,
         readRate: totalNotifications > 0 ? (readNotifications / totalNotifications) * 100 : 0,
         notificationsByType,
-        notificationsByPriority,
       };
 
       return { data: statistics, error: null };
-    });
-  }
-
-  /**
-   * Process notification delivery based on user preferences
-   */
-  private async processNotificationDelivery(notification: any): Promise<void> {
-    try {
-      // Get user preferences
-      const preferencesResult = await this.getNotificationPreferences(notification.user_id);
-      
-      if (!preferencesResult.success || !preferencesResult.data) {
-        return; // Use default behavior if preferences can't be retrieved
-      }
-
-      const preferences = preferencesResult.data;
-
-      // Check if user wants this type of notification
-      const shouldSend = this.shouldSendNotification(notification.type, preferences);
-      
-      if (!shouldSend) {
-        // Mark as read immediately if user doesn't want this type
-        await supabase
-          .from('notifications')
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .eq('id', notification.id);
-        return;
-      }
-
-      // Here you would integrate with email/SMS/push notification services
-      // For now, we'll just log the delivery intent
-      console.log(`Notification delivery planned for user ${notification.user_id}:`, {
-        email: preferences.emailNotifications,
-        push: preferences.pushNotifications,
-        sms: preferences.smsNotifications,
-        type: notification.type,
-        title: notification.title
-      });
-
-    } catch (error) {
-      console.error('Error processing notification delivery:', error);
-    }
-  }
-
-  /**
-   * Check if notification should be sent based on user preferences
-   */
-  private shouldSendNotification(type: string, preferences: NotificationPreferences): boolean {
-    switch (type) {
-      case 'profile_match':
-        return preferences.profileMatches;
-      case 'viewing_invitation':
-        return preferences.viewingInvitations;
-      case 'payment_success':
-      case 'payment_failed':
-      case 'subscription_cancelled':
-        return preferences.paymentUpdates;
-      case 'document_approved':
-      case 'document_rejected':
-        return preferences.documentUpdates;
-      case 'system_announcement':
-        return preferences.systemAnnouncements;
-      default:
-        return true; // Send by default for unknown types
-    }
-  }
-
-  /**
-   * Clean up old notifications
-   */
-  async cleanupOldNotifications(daysOld: number = 90): Promise<DatabaseResponse<number>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze functie'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .delete()
-        .lt('created_at', cutoffDate.toISOString())
-        .eq('is_read', true)
-        .select('id');
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      const deletedCount = data?.length || 0;
-
-      await this.createAuditLog('CLEANUP', 'notifications', null, null, {
-        daysOld,
-        deletedCount,
-        cutoffDate: cutoffDate.toISOString()
-      });
-
-      return { data: deletedCount, error: null };
     });
   }
 }

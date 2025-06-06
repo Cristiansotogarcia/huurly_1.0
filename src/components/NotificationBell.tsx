@@ -1,19 +1,61 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { notificationService } from '@/services/NotificationService';
 import { Bell, Check, CheckCheck, Trash2, FileText, Calendar, AlertTriangle, UserCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { useAuth } from '@/hooks/useAuth';
+
+interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  related_id?: string;
+  related_type?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const NotificationBell = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const loadNotifications = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await notificationService.getUserNotifications();
+      if (result.success && result.data) {
+        setNotifications(result.data);
+        
+        // Count unread notifications
+        const unread = result.data.filter((n: Notification) => !n.read).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [user]);
+
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'document_uploaded':
       case 'document_approved':
@@ -21,31 +63,61 @@ const NotificationBell = () => {
         return <FileText className="w-4 h-4" />;
       case 'viewing_invitation':
         return <Calendar className="w-4 h-4" />;
-      case 'application_received':
+      case 'property_application':
         return <UserCheck className="w-4 h-4" />;
-      case 'user_suspended':
-      case 'issue_resolved':
+      case 'system_announcement':
         return <AlertTriangle className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
     }
   };
 
-  const getNotificationColor = (type: Notification['type']) => {
+  const getNotificationColor = (type: string) => {
     switch (type) {
       case 'document_approved':
-      case 'issue_resolved':
         return 'text-green-600 bg-green-100';
       case 'document_rejected':
-      case 'user_suspended':
         return 'text-red-600 bg-red-100';
       case 'document_uploaded':
-      case 'application_received':
+      case 'property_application':
         return 'text-blue-600 bg-blue-100';
       case 'viewing_invitation':
         return 'text-orange-600 bg-orange-100';
       default:
         return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const result = await notificationService.markAsRead(notificationId);
+      if (result.success) {
+        await loadNotifications(); // Reload to update the list
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const result = await notificationService.markAllAsRead();
+      if (result.success) {
+        await loadNotifications(); // Reload to update the list
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const result = await notificationService.deleteNotification(notificationId);
+      if (result.success) {
+        await loadNotifications(); // Reload to update the list
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
     }
   };
 
@@ -56,8 +128,12 @@ const NotificationBell = () => {
   };
 
   const sortedNotifications = [...notifications].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -85,6 +161,7 @@ const NotificationBell = () => {
                     variant="ghost"
                     size="sm"
                     onClick={markAllAsRead}
+                    disabled={isLoading}
                     className="text-xs"
                   >
                     <CheckCheck className="w-3 h-3 mr-1" />
@@ -147,7 +224,7 @@ const NotificationBell = () => {
                             {notification.message}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {formatDistanceToNow(new Date(notification.createdAt), { 
+                            {formatDistanceToNow(new Date(notification.created_at), { 
                               addSuffix: true, 
                               locale: nl 
                             })}

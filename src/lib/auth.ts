@@ -311,10 +311,16 @@ export class AuthService {
     const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
     const name = `${firstName} ${lastName}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
 
+    // Safely map the role, ensuring it's one of the expected database values
+    let mappedRole: UserRole = 'huurder';
+    if (roleData?.role && ['Huurder', 'Verhuurder', 'Manager'].includes(roleData.role)) {
+      mappedRole = this.mapRoleFromDatabase(roleData.role as 'Huurder' | 'Verhuurder' | 'Manager');
+    }
+
     return {
       id: supabaseUser.id,
       email: supabaseUser.email || '',
-      role: roleData?.role ? this.mapRoleFromDatabase(roleData.role) : 'huurder',
+      role: mappedRole,
       name,
       avatar: supabaseUser.user_metadata?.avatar_url,
       isActive: supabaseUser.email_confirmed_at !== null,
