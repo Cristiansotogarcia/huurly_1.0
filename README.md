@@ -71,3 +71,25 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Stripe Setup
+
+This project includes a small Node server for Stripe payment processing.
+Create a `.env` file in the project root with your keys:
+
+```env
+STRIPE_SECRET_KEY=<your-secret-key>
+STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
+```
+
+Start the Stripe server alongside the Vite dev server:
+
+```sh
+npm run server
+```
+
+Then in a separate terminal run:
+
+```sh
+npm run dev
+```
