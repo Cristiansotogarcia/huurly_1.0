@@ -12,6 +12,7 @@ import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
 import PropertySearchModal from '@/components/modals/PropertySearchModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyDocumentUploaded } from '@/hooks/useNotifications';
+import { Logo } from '@/components/Logo';
 
 const HuurderDashboard = () => {
   const { user } = useAuthStore();
@@ -121,21 +122,18 @@ const HuurderDashboard = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                onClick={handleGoHome}
-                className="mr-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Home
-              </Button>
-              <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-dutch-blue">Huurly</span>
-              <span className="ml-4 text-gray-500">| Huurder Dashboard</span>
-            </div>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              onClick={handleGoHome}
+              className="mr-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Home
+            </Button>
+            <Logo />
+            <span className="ml-4 text-gray-500">| Huurder Dashboard</span>
+          </div>
             
             <div className="flex items-center space-x-4">
               <NotificationBell />

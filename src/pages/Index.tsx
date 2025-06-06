@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
+import { Logo } from '@/components/Logo';
 
 const Index = () => {
   return (
@@ -16,12 +17,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-dutch-blue to-dutch-orange rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">H</span>
-                </div>
-                <span className="ml-2 text-xl font-bold">Huurly</span>
-              </div>
+              <Logo className="mb-4" />
               <p className="text-gray-400">
                 Het Nederlandse platform waar verhuurders huurders vinden.
               </p>
