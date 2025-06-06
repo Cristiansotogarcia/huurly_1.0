@@ -43,14 +43,18 @@ export class AuthService {
   /**
    * Map database role to frontend role
    */
-  private mapRoleFromDatabase(dbRole: 'Huurder' | 'Verhuurder' | 'Manager'): UserRole {
+  private mapRoleFromDatabase(dbRole: 'Huurder' | 'Verhuurder' | 'Manager', email?: string): UserRole {
     switch (dbRole) {
       case 'Huurder':
         return 'huurder';
       case 'Verhuurder':
         return 'verhuurder';
       case 'Manager':
-        return 'beheerder'; // Default manager role
+        // For Manager role, check email domain to determine if beoordelaar or beheerder
+        if (email && (email.includes('@beoordelaar.') || email.includes('bert@'))) {
+          return 'beoordelaar';
+        }
+        return 'beheerder';
       default:
         return 'huurder';
     }
@@ -314,8 +318,10 @@ export class AuthService {
     // Safely map the role, ensuring it's one of the expected database values
     let mappedRole: UserRole = 'huurder';
     if (roleData?.role && ['Huurder', 'Verhuurder', 'Manager'].includes(roleData.role)) {
-      mappedRole = this.mapRoleFromDatabase(roleData.role as 'Huurder' | 'Verhuurder' | 'Manager');
+      mappedRole = this.mapRoleFromDatabase(roleData.role as 'Huurder' | 'Verhuurder' | 'Manager', supabaseUser.email);
     }
+
+    console.log('Auth mapping - Email:', supabaseUser.email, 'DB Role:', roleData?.role, 'Mapped Role:', mappedRole);
 
     return {
       id: supabaseUser.id,
