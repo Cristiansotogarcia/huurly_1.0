@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HuurderRoute, VerhuurderRoute, BeoordelaarRoute, BeheerderRoute } from "@/components/auth/ProtectedRoute";
 import { config } from "@/lib/config";
 import { Skeleton } from "@/components/ui/skeleton";
+import CookieConsent from "@/components/CookieConsent";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <CookieConsent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
