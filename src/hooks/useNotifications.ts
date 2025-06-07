@@ -1,97 +1,118 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { notificationService } from '@/services/NotificationService';
 
 export interface Notification {
   id: string;
-  userId: string;
-  type: 'document_uploaded' | 'document_approved' | 'document_rejected' | 'viewing_invitation' | 'application_received' | 'user_suspended' | 'issue_resolved';
+  user_id: string;
+  type: string;
   title: string;
   message: string;
   read: boolean;
-  createdAt: string;
-  data?: any;
+  created_at: string;
+  updated_at?: string;
+  related_id?: string;
+  related_type?: string;
 }
-
-// Global notification store
-let globalNotifications: Notification[] = [];
-let notificationListeners: ((notifications: Notification[]) => void)[] = [];
-
-const notifyListeners = () => {
-  notificationListeners.forEach(listener => listener([...globalNotifications]));
-};
 
 export const useNotifications = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const loadNotifications = async () => {
+    if (!user) return;
+
+    const result = await notificationService.getUserNotifications();
+    if (result.success && result.data) {
+      setNotifications(result.data);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
-    // Filter notifications for current user
-    const userNotifications = globalNotifications.filter(n => n.userId === user.id);
-    setNotifications(userNotifications);
+    loadNotifications();
 
-    // Add listener for real-time updates
-    const listener = (allNotifications: Notification[]) => {
-      const userNotifications = allNotifications.filter(n => n.userId === user.id);
-      setNotifications(userNotifications);
-    };
-
-    notificationListeners.push(listener);
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        payload => {
+          if (payload.eventType === 'INSERT') {
+            const newNotif = payload.new as Notification;
+            setNotifications(current => [newNotif, ...current]);
+            toast({ title: newNotif.title, description: newNotif.message });
+          }
+          if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Notification;
+            setNotifications(current =>
+              current.map(n => (n.id === updated.id ? updated : n))
+            );
+          }
+          if (payload.eventType === 'DELETE') {
+            const oldId = (payload.old as Notification).id;
+            setNotifications(current => current.filter(n => n.id !== oldId));
+          }
+        }
+      )
+      .subscribe();
 
     return () => {
-      const index = notificationListeners.indexOf(listener);
-      if (index > -1) {
-        notificationListeners.splice(index, 1);
-      }
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
-  const createNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
-      read: false
-    };
-
-    globalNotifications.unshift(newNotification);
-    notifyListeners();
-
-    // Show toast for real-time feedback
-    if (notification.userId === user?.id) {
-      toast({
-        title: notification.title,
-        description: notification.message
-      });
+  const createNotification = async (
+    data: {
+      userId: string;
+      type: string;
+      title: string;
+      message: string;
+      relatedId?: string;
+      relatedType?: string;
     }
+  ) => {
+    const result = await notificationService.createNotification({
+      userId: data.userId,
+      type: data.type,
+      title: data.title,
+      message: data.message,
+      relatedId: data.relatedId,
+      relatedType: data.relatedType,
+    });
 
-    return newNotification;
+    if (result.success && result.data) {
+      if (data.userId === user?.id) {
+        toast({ title: data.title, description: data.message });
+        setNotifications(current => [result.data as Notification, ...current]);
+      }
+      return result.data as Notification;
+    }
+    return null;
   };
 
-  const markAsRead = (notificationId: string) => {
-    const notification = globalNotifications.find(n => n.id === notificationId);
-    if (notification) {
-      notification.read = true;
-      notifyListeners();
-    }
+  const markAsRead = async (notificationId: string) => {
+    await notificationService.markAsRead(notificationId);
+    await loadNotifications();
   };
 
-  const markAllAsRead = () => {
-    globalNotifications
-      .filter(n => n.userId === user?.id)
-      .forEach(n => n.read = true);
-    notifyListeners();
+  const markAllAsRead = async () => {
+    await notificationService.markAllAsRead();
+    await loadNotifications();
   };
 
-  const deleteNotification = (notificationId: string) => {
-    const index = globalNotifications.findIndex(n => n.id === notificationId);
-    if (index > -1) {
-      globalNotifications.splice(index, 1);
-      notifyListeners();
-    }
+  const deleteNotification = async (notificationId: string) => {
+    await notificationService.deleteNotification(notificationId);
+    await loadNotifications();
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -102,147 +123,100 @@ export const useNotifications = () => {
     createNotification,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
   };
 };
 
 // Cross-dashboard notification helpers
-export const notifyDocumentUploaded = (uploaderName: string, documentType: string, beoordelaarId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
+export const notifyDocumentUploaded = async (
+  uploaderName: string,
+  documentType: string,
+  beoordelaarId: string
+) => {
+  await notificationService.createNotification({
     userId: beoordelaarId,
     type: 'document_uploaded',
     title: 'Nieuw document te beoordelen',
     message: `${uploaderName} heeft een ${documentType} document geüpload.`,
-    data: { uploaderName, documentType }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyDocumentApproved = (huurderName: string, documentType: string, huurderUserId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
+export const notifyDocumentApproved = async (
+  huurderName: string,
+  documentType: string,
+  huurderUserId: string
+) => {
+  await notificationService.createNotification({
     userId: huurderUserId,
     type: 'document_approved',
     title: 'Document goedgekeurd!',
     message: `Je ${documentType} document is goedgekeurd en geverifieerd.`,
-    data: { documentType }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyDocumentRejected = (huurderName: string, documentType: string, reason: string, huurderUserId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
+export const notifyDocumentRejected = async (
+  huurderName: string,
+  documentType: string,
+  reason: string,
+  huurderUserId: string
+) => {
+  await notificationService.createNotification({
     userId: huurderUserId,
     type: 'document_rejected',
     title: 'Document afgewezen',
     message: `Je ${documentType} document is afgewezen. Reden: ${reason}`,
-    data: { documentType, reason }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyViewingInvitation = (verhuurderName: string, propertyAddress: string, viewingDate: string, huurderUserId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
+export const notifyViewingInvitation = async (
+  verhuurderName: string,
+  propertyAddress: string,
+  viewingDate: string,
+  huurderUserId: string
+) => {
+  await notificationService.createNotification({
     userId: huurderUserId,
     type: 'viewing_invitation',
     title: 'Uitnodiging voor bezichtiging',
     message: `${verhuurderName} nodigt je uit voor een bezichtiging van ${propertyAddress} op ${viewingDate}.`,
-    data: { verhuurderName, propertyAddress, viewingDate }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyApplicationReceived = (huurderName: string, propertyAddress: string, verhuurderUserId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
+export const notifyApplicationReceived = async (
+  huurderName: string,
+  propertyAddress: string,
+  verhuurderUserId: string
+) => {
+  await notificationService.createNotification({
     userId: verhuurderUserId,
     type: 'application_received',
     title: 'Nieuwe huuranvraag',
     message: `${huurderName} heeft een aanvraag ingediend voor ${propertyAddress}.`,
-    data: { huurderName, propertyAddress }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyUserSuspended = (userName: string, reason: string, userId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
-    userId: userId,
+export const notifyUserSuspended = async (
+  userName: string,
+  reason: string,
+  userId: string
+) => {
+  await notificationService.createNotification({
+    userId,
     type: 'user_suspended',
     title: 'Account geschorst',
     message: `Je account is tijdelijk geschorst. Reden: ${reason}`,
-    data: { reason }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };
 
-export const notifyIssueResolved = (issueTitle: string, resolution: string, userId: string) => {
-  const notification: Omit<Notification, 'id' | 'createdAt' | 'read'> = {
-    userId: userId,
+export const notifyIssueResolved = async (
+  issueTitle: string,
+  resolution: string,
+  userId: string
+) => {
+  await notificationService.createNotification({
+    userId,
     type: 'issue_resolved',
     title: 'Issue opgelost',
     message: `Je gemelde issue "${issueTitle}" is opgelost. ${resolution}`,
-    data: { issueTitle, resolution }
-  };
-
-  const newNotification: Notification = {
-    ...notification,
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    read: false
-  };
-
-  globalNotifications.unshift(newNotification);
-  notifyListeners();
+  });
 };

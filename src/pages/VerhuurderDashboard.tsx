@@ -30,7 +30,14 @@ const VerhuurderDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
   const landlordProfile = demoLandlordProfiles[0];
+  const [properties, setProperties] = useState(landlordProfile.properties);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const availableTenants = filteredTenants;
+
+  const handlePropertyCreated = (property: any) => {
+    setProperties(prev => [...prev, property]);
+    toast({ title: "Woning toegevoegd", description: "Je woning is opgeslagen." });
+  };
 
   const handleLogout = () => {
     useAuthStore.getState().logout();
@@ -76,7 +83,7 @@ const VerhuurderDashboard = () => {
 
   const handleInviteViewing = (tenant: any) => {
     setSelectedTenant(tenant);
-    setSelectedProperty(landlordProfile.properties[0]); // Use first property for demo
+    setSelectedProperty(properties[0]); // Use first property for demo
     setShowViewingModal(true);
   };
 
@@ -138,7 +145,7 @@ const VerhuurderDashboard = () => {
               <div className="flex items-center">
                 <Home className="w-8 h-8 text-dutch-blue" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">{landlordProfile.properties.length}</p>
+                  <p className="text-2xl font-bold">{properties.length}</p>
                   <p className="text-gray-600">Actieve Objecten</p>
                 </div>
               </div>
@@ -285,7 +292,7 @@ const VerhuurderDashboard = () => {
                     <Home className="w-5 h-5 mr-2" />
                     Mijn Objecten
                   </span>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setShowAddPropertyModal(true)}>
                     <Plus className="w-4 h-4 mr-1" />
                     Nieuw
                   </Button>
@@ -293,7 +300,7 @@ const VerhuurderDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {landlordProfile.properties.map((property) => (
+                  {properties.map((property) => (
                     <div key={property.id} className="p-3 border rounded-lg">
                       <h4 className="font-medium text-sm">{property.title}</h4>
                       <p className="text-xs text-gray-600">{property.address}, {property.city}</p>
@@ -366,6 +373,12 @@ const VerhuurderDashboard = () => {
         onOpenChange={setShowProfileModal}
         tenant={selectedTenant}
         onInviteViewing={handleInviteViewing}
+      />
+
+      <AddPropertyModal
+        open={showAddPropertyModal}
+        onOpenChange={setShowAddPropertyModal}
+        onCreated={handlePropertyCreated}
       />
     </div>
   );
