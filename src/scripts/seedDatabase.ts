@@ -215,7 +215,7 @@ export class DatabaseSeeder {
       
       logger.info('✅ Database seeding completed successfully!');
     } catch (error) {
-      console.error('❌ Database seeding failed:', error);
+      logger.error({ error }, '❌ Database seeding failed');
       throw error;
     }
   }
@@ -234,7 +234,7 @@ export class DatabaseSeeder {
       .upsert(profiles, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding profiles:', error);
+      logger.error({ error }, 'Error seeding profiles');
       throw error;
     }
     
@@ -255,7 +255,7 @@ export class DatabaseSeeder {
       .upsert(roles, { onConflict: 'user_id' });
 
     if (error) {
-      console.error('Error seeding user roles:', error);
+      logger.error({ error }, 'Error seeding user roles');
       throw error;
     }
     
@@ -279,9 +279,9 @@ export class DatabaseSeeder {
         .from('tenant_profiles')
         .upsert(tenantProfiles, { onConflict: 'user_id' });
 
-      if (error) {
-        console.error('Error seeding tenant profiles:', error);
-        throw error;
+        if (error) {
+          logger.error({ error }, 'Error seeding tenant profiles');
+          throw error;
       }
     }
     
@@ -296,7 +296,7 @@ export class DatabaseSeeder {
       .upsert(DEMO_PROPERTIES, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding properties:', error);
+      logger.error({ error }, 'Error seeding properties');
       throw error;
     }
     
@@ -311,7 +311,7 @@ export class DatabaseSeeder {
       .upsert(DEMO_DOCUMENTS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding documents:', error);
+      logger.error({ error }, 'Error seeding documents');
       throw error;
     }
     
@@ -326,7 +326,7 @@ export class DatabaseSeeder {
       .upsert(DEMO_APPLICATIONS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding applications:', error);
+      logger.error({ error }, 'Error seeding applications');
       throw error;
     }
     
@@ -341,7 +341,7 @@ export class DatabaseSeeder {
       .upsert(DEMO_VIEWINGS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding viewings:', error);
+      logger.error({ error }, 'Error seeding viewings');
       throw error;
     }
     
@@ -356,7 +356,7 @@ export class DatabaseSeeder {
       .upsert(DEMO_PAYMENTS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding payments:', error);
+      logger.error({ error }, 'Error seeding payments');
       throw error;
     }
     
@@ -379,7 +379,7 @@ export class DatabaseSeeder {
       
       logger.info('✅ Cleared existing demo data');
     } catch (error) {
-      console.error('Error clearing demo data:', error);
+      logger.error({ error }, 'Error clearing demo data');
       throw error;
     }
   }
@@ -391,5 +391,5 @@ export const databaseSeeder = new DatabaseSeeder();
 // If running directly, execute seeding
 if (typeof window === 'undefined') {
   // This is running in Node.js context
-  databaseSeeder.seedAll().catch(console.error);
+  databaseSeeder.seedAll().catch(error => logger.error({ error }));
 }

@@ -1,5 +1,6 @@
 import { demoUsers } from '@/data/demoData';
 import { User } from '@/types';
+import logger from './logger';
 
 // Demo credentials for easy testing
 export const DEMO_CREDENTIALS = {
@@ -41,7 +42,7 @@ class DemoAuthService {
         this.notifyListeners();
       }
     } catch (error) {
-      console.error('Error loading stored demo session:', error);
+      logger.error({ error }, 'Error loading stored demo session');
       localStorage.removeItem('huurly_demo_user');
     }
   }
@@ -50,7 +51,7 @@ class DemoAuthService {
     try {
       localStorage.setItem('huurly_demo_user', JSON.stringify(user));
     } catch (error) {
-      console.error('Error storing demo session:', error);
+      logger.error({ error }, 'Error storing demo session');
     }
   }
 
@@ -58,7 +59,7 @@ class DemoAuthService {
     try {
       localStorage.removeItem('huurly_demo_user');
     } catch (error) {
-      console.error('Error clearing demo session:', error);
+      logger.error({ error }, 'Error clearing demo session');
     }
   }
 

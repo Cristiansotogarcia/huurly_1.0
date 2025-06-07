@@ -195,13 +195,14 @@ export class ErrorHandler {
   static log(error: unknown, context?: string): void {
     const normalizedError = this.normalize(error);
     
-    console.error(`[${context || 'ERROR'}]`, {
+    logger.error({
+      context: context || 'ERROR',
       code: normalizedError.code,
       message: normalizedError.message,
       statusCode: normalizedError.statusCode,
       details: normalizedError.details,
       timestamp: normalizedError.timestamp,
-      stack: normalizedError.stack
+      stack: normalizedError.stack,
     });
   }
 

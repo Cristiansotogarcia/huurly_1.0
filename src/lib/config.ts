@@ -279,7 +279,7 @@ if (getConfig.isDevelopment()) {
   // Validate configuration
   const validation = validateConfig();
   if (!validation.isValid) {
-    console.error('❌ Configuration errors:', validation.errors);
+    logger.error({ errors: validation.errors }, '❌ Configuration errors');
   } else {
     logger.debug('✅ Configuration is valid');
   }

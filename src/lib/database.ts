@@ -29,7 +29,7 @@ export class DatabaseService {
       const { data, error } = await queryFn();
       
       if (error) {
-        console.error('Database error:', error);
+        logger.error({ error }, 'Database error');
         return {
           data: null,
           error,
@@ -43,7 +43,7 @@ export class DatabaseService {
         success: true,
       };
     } catch (error) {
-      console.error('Unexpected database error:', error);
+      logger.error({ error }, 'Unexpected database error');
       return {
         data: null,
         error: error as Error,

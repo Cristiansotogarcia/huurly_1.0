@@ -70,7 +70,7 @@ export class AuthService {
             return 'verhuurder';
           }
         }
-        console.warn('Unknown database role:', dbRole, 'defaulting to huurder');
+        logger.warn({ dbRole }, 'Unknown database role, defaulting to huurder');
         return 'huurder';
     }
   }
@@ -117,7 +117,7 @@ export class AuthService {
           });
 
         if (profileError || roleError) {
-          console.error('Profile creation error:', profileError || roleError);
+          logger.error({ error: profileError || roleError }, 'Profile creation error');
           return { user: null, error: (profileError || roleError) as AuthError };
         }
 
@@ -209,7 +209,7 @@ export class AuthService {
       
       return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      logger.error({ error }, 'Error getting current user');
       return null;
     }
   }
@@ -295,13 +295,13 @@ export class AuthService {
         .limit(1);
 
       if (error) {
-        console.error('Error checking payment status:', error);
+        logger.error({ error }, 'Error checking payment status');
         return false;
       }
 
       return data && data.length > 0;
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      logger.error({ error }, 'Error checking payment status');
       return false;
     }
   }
@@ -320,7 +320,7 @@ export class AuthService {
         .single();
 
       if (roleError) {
-        console.error('Error fetching user role:', roleError);
+        logger.error({ error: roleError }, 'Error fetching user role');
         // If we can't get the role, create a default one
         await this.createDefaultRole(supabaseUser.id, supabaseUser.email);
       }
@@ -356,7 +356,7 @@ export class AuthService {
         hasPayment,
       };
     } catch (error) {
-      console.error('Error mapping user:', error);
+      logger.error({ error }, 'Error mapping user');
       // Fallback mapping in case of any errors
       return {
         id: supabaseUser.id,
@@ -413,10 +413,10 @@ export class AuthService {
         });
 
       if (error) {
-        console.error('Error creating default role:', error);
+        logger.error({ error }, 'Error creating default role');
       }
     } catch (error) {
-      console.error('Error in createDefaultRole:', error);
+      logger.error({ error }, 'Error in createDefaultRole');
     }
   }
 }

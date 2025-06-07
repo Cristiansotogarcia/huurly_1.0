@@ -32,7 +32,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       case 'beheerder':
         return '/beheerder-dashboard';
       default:
-        console.warn('Unknown role:', role, 'defaulting to huurder dashboard');
+        logger.warn({ role }, 'Unknown role, defaulting to huurder dashboard');
         return '/huurder-dashboard';
     }
   };
@@ -54,7 +54,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
         navigate(dashboardRoute);
       }, 100);
     } else {
-      console.error('Login failed:', result);
+      logger.error({ result }, 'Login failed');
     }
   };
 

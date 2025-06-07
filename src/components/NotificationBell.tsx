@@ -10,6 +10,7 @@ import { Bell, Check, CheckCheck, Trash2, FileText, Calendar, AlertTriangle, Use
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
+import logger from '@/lib/logger';
 
 interface Notification {
   id: string;
@@ -45,7 +46,7 @@ const NotificationBell = () => {
         setUnreadCount(unread);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      logger.error({ error }, 'Error loading notifications');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +96,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error({ error }, 'Error marking notification as read');
     }
   };
 
@@ -106,7 +107,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error({ error }, 'Error marking all notifications as read');
     }
   };
 
@@ -117,7 +118,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error({ error }, 'Error deleting notification');
     }
   };
 

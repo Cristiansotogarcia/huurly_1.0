@@ -1,4 +1,5 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import logger from './logger';
 
 // Stripe configuration derived from environment variables
 export const STRIPE_CONFIG = {
@@ -20,7 +21,7 @@ export const getStripe = (): Promise<Stripe | null> => {
     const publishableKey = getStripePublishableKey();
     
     if (!publishableKey) {
-      console.error('Stripe publishable key not found');
+      logger.error('Stripe publishable key not found');
       return Promise.resolve(null);
     }
     

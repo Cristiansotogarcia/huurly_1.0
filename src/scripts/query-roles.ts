@@ -12,13 +12,13 @@ async function queryUserRoles() {
       .select('*');
     
     if (error) {
-      console.error('Error fetching user roles:', error);
+      logger.error({ error }, 'Error fetching user roles');
       return;
     }
     
     logger.info({ data }, 'User Roles Data');
   } catch (error) {
-    console.error('An error occurred:', error);
+    logger.error({ error }, 'An error occurred');
   }
 }
 

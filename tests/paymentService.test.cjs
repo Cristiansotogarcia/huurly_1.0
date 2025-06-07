@@ -1,6 +1,7 @@
 require('ts-node/register');
 const assert = require('node:assert');
 const { paymentService } = require('../src/services/PaymentService');
+const logger = require('../src/lib/logger').default;
 
 try {
   const infoHuurder = paymentService.getPricingInfo('huurder');
@@ -9,8 +10,8 @@ try {
   const infoVerhuurder = paymentService.getPricingInfo('verhuurder');
   assert.equal(infoVerhuurder.displayPrice, 'Gratis');
   assert.equal(infoVerhuurder.actualPrice, 'Gratis');
-  console.log('paymentService tests passed');
+  logger.info('paymentService tests passed');
 } catch (err) {
-  console.error(err);
+  logger.error({ err });
   process.exit(1);
 }

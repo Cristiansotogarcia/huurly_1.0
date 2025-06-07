@@ -15,7 +15,7 @@ async function executeRawSQL(sql: string): Promise<{ data: any; error: Postgrest
     if (error) throw error;
     return { data, error };
   } catch (error) {
-    console.error('Error executing SQL:', error);
+    logger.error({ error }, 'Error executing SQL');
     throw error;
   }
 }
@@ -29,12 +29,12 @@ async function main() {
   try {
     const { error } = await executeRawSQL(sql);
     if (error) {
-      console.error('Error altering enum:', error.message);
+      logger.error({ error }, 'Error altering enum');
       return;
     }
     logger.info('Enum updated successfully');
   } catch (error) {
-    console.error('Unexpected error:', error);
+    logger.error({ error }, 'Unexpected error');
   }
 }
 
