@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
   CheckCircle, 
+import { documentService } from "@/services/DocumentService";
   XCircle, 
   User, 
   Calendar,
@@ -44,16 +45,20 @@ const DocumentReviewModal = ({
 
   const handleApprove = async () => {
     setIsSubmitting(true);
-    
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onApprove(document.id, reviewNotes);
-      onOpenChange(false);
-      
-      toast({
-        title: "Document goedgekeurd",
-        description: `Het document van ${document.tenantName} is goedgekeurd.`
-      });
+      const result = await documentService.approveDocument(document.id);
+      if (result.success) {
+        onApprove(document.id, reviewNotes);
+        onOpenChange(false);
+
+        toast({
+          title: "Document goedgekeurd",
+          description: `Het document van ${document.tenantName} is goedgekeurd.`
+        });
+      } else {
+        throw result.error;
+      }
       
       // Reset form
       setReviewNotes('');
@@ -63,7 +68,7 @@ const DocumentReviewModal = ({
     } catch (error) {
       toast({
         title: "Fout bij goedkeuring",
-        description: "Er is iets misgegaan. Probeer het opnieuw.",
+        description: (error as Error).message || "Er is iets misgegaan.",
         variant: "destructive"
       });
     } finally {
@@ -82,16 +87,20 @@ const DocumentReviewModal = ({
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onReject(document.id, rejectionReason);
-      onOpenChange(false);
-      
-      toast({
-        title: "Document afgewezen",
-        description: `Het document van ${document.tenantName} is afgewezen.`
-      });
+      const result = await documentService.rejectDocument(document.id, rejectionReason);
+      if (result.success) {
+        onReject(document.id, rejectionReason);
+        onOpenChange(false);
+
+        toast({
+          title: "Document afgewezen",
+          description: `Het document van ${document.tenantName} is afgewezen.`
+        });
+      } else {
+        throw result.error;
+      }
       
       // Reset form
       setReviewNotes('');
@@ -101,7 +110,7 @@ const DocumentReviewModal = ({
     } catch (error) {
       toast({
         title: "Fout bij afwijzing",
-        description: "Er is iets misgegaan. Probeer het opnieuw.",
+        description: (error as Error).message || "Er is iets misgegaan.",
         variant: "destructive"
       });
     } finally {
