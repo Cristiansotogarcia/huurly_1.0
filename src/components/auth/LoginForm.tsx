@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,10 +46,14 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       console.log('Login successful for user:', result.user.email, 'with role:', result.user.role);
       onClose();
       
-      // Navigate to appropriate dashboard based on user role
-      const dashboardRoute = getDashboardRoute(result.user.role);
-      console.log('Redirecting to:', dashboardRoute);
-      navigate(dashboardRoute);
+      // Add a small delay to ensure state is updated
+      setTimeout(() => {
+        const dashboardRoute = getDashboardRoute(result.user!.role);
+        console.log('Redirecting to:', dashboardRoute);
+        navigate(dashboardRoute);
+      }, 100);
+    } else {
+      console.error('Login failed:', result);
     }
   };
 

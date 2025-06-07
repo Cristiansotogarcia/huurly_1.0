@@ -26,15 +26,16 @@ export class AuthService {
   /**
    * Map frontend role to database role
    */
-  private mapRoleToDatabase(role: UserRole): 'Huurder' | 'Verhuurder' | 'Manager' {
+  private mapRoleToDatabase(role: UserRole): 'Huurder' | 'Verhuurder' | 'Beheerder' | 'Beoordelaar' {
     switch (role) {
       case 'huurder':
         return 'Huurder';
       case 'verhuurder':
         return 'Verhuurder';
       case 'beoordelaar':
+        return 'Beoordelaar';
       case 'beheerder':
-        return 'Manager';
+        return 'Beheerder';
       default:
         return 'Huurder';
     }
@@ -43,19 +44,32 @@ export class AuthService {
   /**
    * Map database role to frontend role
    */
-  private mapRoleFromDatabase(dbRole: 'Huurder' | 'Verhuurder' | 'Manager', email?: string): UserRole {
+  private mapRoleFromDatabase(dbRole: string, email?: string): UserRole {
+    console.log('Mapping database role:', dbRole, 'for email:', email);
+    
     switch (dbRole) {
       case 'Huurder':
         return 'huurder';
       case 'Verhuurder':
         return 'verhuurder';
-      case 'Manager':
-        // For Manager role, check email domain to determine if beoordelaar or beheerder
-        if (email && (email.includes('@beoordelaar.') || email.includes('bert@'))) {
-          return 'beoordelaar';
-        }
+      case 'Beoordelaar':
+        return 'beoordelaar';
+      case 'Beheerder':
         return 'beheerder';
       default:
+        // Fallback logic based on email if role is unclear
+        if (email) {
+          if (email.includes('@beoordelaar.') || email.includes('bert@')) {
+            return 'beoordelaar';
+          }
+          if (email.includes('admin') || email.includes('beheerder') || email.includes('@huurly.nl')) {
+            return 'beheerder';
+          }
+          if (email.includes('verhuurder') || email.includes('landlord')) {
+            return 'verhuurder';
+          }
+        }
+        console.warn('Unknown database role:', dbRole, 'defaulting to huurder');
         return 'huurder';
     }
   }
@@ -294,45 +308,114 @@ export class AuthService {
    * Map Supabase user to our User type
    */
   private async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
-    // Get user role
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role, subscription_status')
-      .eq('user_id', supabaseUser.id)
-      .single();
+    try {
+      // Get user role with better error handling
+      console.log('Fetching role for user:', supabaseUser.email);
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role, subscription_status')
+        .eq('user_id', supabaseUser.id)
+        .single();
 
-    // Get profile data
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', supabaseUser.id)
-      .single();
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
+        // If we can't get the role, create a default one
+        await this.createDefaultRole(supabaseUser.id, supabaseUser.email);
+      }
 
-    // Check payment status
-    const hasPayment = await this.checkPaymentStatus(supabaseUser.id);
+      // Get profile data
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', supabaseUser.id)
+        .single();
 
-    const firstName = profileData?.first_name || supabaseUser.user_metadata?.first_name || '';
-    const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
-    const name = `${firstName} ${lastName}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
+      // Check payment status
+      const hasPayment = await this.checkPaymentStatus(supabaseUser.id);
 
-    // Safely map the role, ensuring it's one of the expected database values
-    let mappedRole: UserRole = 'huurder';
-    if (roleData?.role && ['Huurder', 'Verhuurder', 'Manager'].includes(roleData.role)) {
-      mappedRole = this.mapRoleFromDatabase(roleData.role as 'Huurder' | 'Verhuurder' | 'Manager', supabaseUser.email);
+      const firstName = profileData?.first_name || supabaseUser.user_metadata?.first_name || '';
+      const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
+      const name = `${firstName} ${lastName}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
+
+      // Map the role with fallback
+      const dbRole = roleData?.role || this.determineRoleFromEmail(supabaseUser.email);
+      const mappedRole = this.mapRoleFromDatabase(dbRole, supabaseUser.email);
+
+      console.log('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
+
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        role: mappedRole,
+        name,
+        avatar: supabaseUser.user_metadata?.avatar_url,
+        isActive: supabaseUser.email_confirmed_at !== null,
+        createdAt: supabaseUser.created_at,
+        hasPayment,
+      };
+    } catch (error) {
+      console.error('Error mapping user:', error);
+      // Fallback mapping in case of any errors
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        role: this.determineRoleFromEmail(supabaseUser.email),
+        name: supabaseUser.email?.split('@')[0] || 'User',
+        avatar: supabaseUser.user_metadata?.avatar_url,
+        isActive: supabaseUser.email_confirmed_at !== null,
+        createdAt: supabaseUser.created_at,
+        hasPayment: false,
+      };
     }
+  }
 
-    console.log('Auth mapping - Email:', supabaseUser.email, 'DB Role:', roleData?.role, 'Mapped Role:', mappedRole);
+  /**
+   * Determine role from email address
+   */
+  private determineRoleFromEmail(email?: string): UserRole {
+    if (!email) return 'huurder';
+    
+    const lowerEmail = email.toLowerCase();
+    
+    if (lowerEmail.includes('@beoordelaar.') || lowerEmail.includes('bert@')) {
+      return 'beoordelaar';
+    }
+    
+    if (lowerEmail.includes('admin') || lowerEmail.includes('beheerder') || lowerEmail.includes('@huurly.nl')) {
+      return 'beheerder';
+    }
+    
+    if (lowerEmail.includes('verhuurder') || lowerEmail.includes('landlord')) {
+      return 'verhuurder';
+    }
+    
+    return 'huurder';
+  }
 
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      role: mappedRole,
-      name,
-      avatar: supabaseUser.user_metadata?.avatar_url,
-      isActive: supabaseUser.email_confirmed_at !== null,
-      createdAt: supabaseUser.created_at,
-      hasPayment,
-    };
+  /**
+   * Create default role for user if none exists
+   */
+  private async createDefaultRole(userId: string, email?: string): Promise<void> {
+    try {
+      const role = this.determineRoleFromEmail(email);
+      const dbRole = this.mapRoleToDatabase(role);
+      
+      console.log('Creating default role for user:', email, 'Role:', dbRole);
+      
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: userId,
+          role: dbRole,
+          subscription_status: 'inactive',
+        });
+
+      if (error) {
+        console.error('Error creating default role:', error);
+      }
+    } catch (error) {
+      console.error('Error in createDefaultRole:', error);
+    }
   }
 }
 
