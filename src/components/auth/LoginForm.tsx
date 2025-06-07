@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types';
+import logger from '@/lib/logger';
 
 interface LoginFormProps {
   onClose: () => void;
@@ -20,7 +21,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
 
   // Helper function to get dashboard route based on user role
   const getDashboardRoute = (role: UserRole): string => {
-    console.log('Getting dashboard route for role:', role);
+    logger.debug({ role }, 'Getting dashboard route for role');
     switch (role) {
       case 'huurder':
         return '/huurder-dashboard';
@@ -39,17 +40,17 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Login attempt for email:', email);
+    logger.debug({ email }, 'Login attempt');
     const result = await signIn({ email, password });
     
     if (result.success && result.user) {
-      console.log('Login successful for user:', result.user.email, 'with role:', result.user.role);
+      logger.info({ email: result.user.email, role: result.user.role }, 'Login successful');
       onClose();
       
       // Add a small delay to ensure state is updated
       setTimeout(() => {
         const dashboardRoute = getDashboardRoute(result.user!.role);
-        console.log('Redirecting to:', dashboardRoute);
+        logger.debug({ dashboardRoute }, 'Redirecting to dashboard');
         navigate(dashboardRoute);
       }, 100);
     } else {

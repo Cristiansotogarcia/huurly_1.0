@@ -1,6 +1,7 @@
 const http = require('http');
 const Stripe = require('stripe');
 require('dotenv').config();
+const logger = require('./src/lib/logger').default;
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -52,7 +53,7 @@ const server = http.createServer(async (req, res) => {
     let event;
     try {
       event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
-      console.log('Received Stripe event:', event.type);
+      logger.info({ eventType: event.type }, 'Received Stripe event');
       // TODO: handle event types and update your database
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ received: true }));
@@ -68,4 +69,4 @@ const server = http.createServer(async (req, res) => {
 });
 
 const PORT = process.env.PORT || 4242;
-server.listen(PORT, () => console.log(`Stripe server listening on ${PORT}`));
+server.listen(PORT, () => logger.info(`Stripe server listening on ${PORT}`));

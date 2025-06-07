@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
+import logger from './logger';
 
 export interface DatabaseResponse<T> {
   data: T | null;
@@ -132,7 +133,7 @@ export class DatabaseService {
     newValues?: any
   ): Promise<void> {
     // TODO: Implement audit logging when audit_logs table is created
-    console.log('Audit log:', { action, tableName, recordId, oldValues, newValues });
+    logger.debug({ action, tableName, recordId, oldValues, newValues }, 'Audit log');
   }
 
   /**

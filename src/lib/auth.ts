@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
+import logger from './logger';
 
 export interface SignUpData {
   email: string;
@@ -45,7 +46,7 @@ export class AuthService {
    * Map database role to frontend role
    */
   private mapRoleFromDatabase(dbRole: string, email?: string): UserRole {
-    console.log('Mapping database role:', dbRole, 'for email:', email);
+    logger.debug({ dbRole, email }, 'Mapping database role');
     
     switch (dbRole) {
       case 'Huurder':
@@ -311,7 +312,7 @@ export class AuthService {
   private async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
       // Get user role with better error handling
-      console.log('Fetching role for user:', supabaseUser.email);
+      logger.debug({ email: supabaseUser.email }, 'Fetching role for user');
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role, subscription_status')
@@ -342,7 +343,7 @@ export class AuthService {
       const dbRole = roleData?.role || this.determineRoleFromEmail(supabaseUser.email);
       const mappedRole = this.mapRoleFromDatabase(dbRole, supabaseUser.email);
 
-      console.log('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
+      logger.debug({ email: supabaseUser.email, dbRole, mappedRole }, 'Auth mapping');
 
       return {
         id: supabaseUser.id,
@@ -401,7 +402,7 @@ export class AuthService {
       const role = this.determineRoleFromEmail(email);
       const dbRole = this.mapRoleToDatabase(role);
       
-      console.log('Creating default role for user:', email, 'Role:', dbRole);
+      logger.debug({ email, dbRole }, 'Creating default role for user');
       
       const { error } = await supabase
         .from('user_roles')

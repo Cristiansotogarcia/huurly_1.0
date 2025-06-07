@@ -3,6 +3,8 @@
  * Handles environment variables and application settings
  */
 
+import logger from './logger';
+
 export interface AppConfig {
   app: {
     name: string;
@@ -272,14 +274,14 @@ export type Province = typeof CONSTANTS.PROVINCES[number];
 // Development helpers
 if (getConfig.isDevelopment()) {
   // Log configuration in development
-  console.log('🔧 Huurly Configuration:', config);
-  
+  logger.debug({ config }, '🔧 Huurly Configuration');
+
   // Validate configuration
   const validation = validateConfig();
   if (!validation.isValid) {
     console.error('❌ Configuration errors:', validation.errors);
   } else {
-    console.log('✅ Configuration is valid');
+    logger.debug('✅ Configuration is valid');
   }
   
   // Make config available globally for debugging
