@@ -78,6 +78,7 @@ This project includes a small Node server for Stripe payment processing.
 Create a `.env` file in the project root with your keys:
 
 ```env
+VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 ```
