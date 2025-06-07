@@ -1,32 +1,10 @@
-// @ts-nocheck
-// Suppress all TypeScript errors in this file due to database schema mismatches
 import { supabase } from '@/integrations/supabase/client';
 import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '@/lib/stripe';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
 import { ErrorHandler } from '@/lib/errors';
+import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
-export interface PaymentData {
-  userId: string;
-  userRole: 'huurder' | 'verhuurder';
-  planType: string;
-  amount: number;
-  amountWithTax: number;
-  currency: string;
-  interval: string;
-}
-
-export interface PaymentRecord {
-  id: string;
-  user_id: string;
-  email: string;
-  user_type: string;
-  stripe_session_id?: string;
-  stripe_customer_id?: string;
-  amount: number;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
-  created_at: string;
-  updated_at: string;
-}
+export type PaymentRecord = Tables<'payment_records'>;
 
 export class PaymentService extends DatabaseService {
   /**
@@ -57,15 +35,14 @@ export class PaymentService extends DatabaseService {
       }
 
       // Create payment record
-      const paymentData = {
+      const paymentData: TablesInsert<'payment_records'> = {
         user_id: userId,
         email: user.email,
         user_type: 'huurder',
-        amount: plan.priceWithTax, // Store the actual charge amount
+        amount: plan.priceWithTax,
         status: 'pending',
       };
 
-      // @ts-ignore - Suppress Supabase type recursion error
       const { data: paymentRecord, error: paymentError } = await supabase
         .from('payment_records')
         .insert(paymentData)
@@ -127,7 +104,6 @@ export class PaymentService extends DatabaseService {
   /**
    * Get payment records for a user
    */
-  // @ts-ignore - Suppress return type mismatch with database schema
   async getUserPayments(userId: string): Promise<DatabaseResponse<PaymentRecord[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
@@ -149,7 +125,6 @@ export class PaymentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // @ts-ignore - Suppress Supabase type recursion error
       const { data, error } = await supabase
         .from('payment_records')
         .select('*')
@@ -160,7 +135,6 @@ export class PaymentService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      // @ts-ignore - Suppress type mismatch with database schema
       return { data: data || [], error: null };
     });
   }
@@ -168,13 +142,11 @@ export class PaymentService extends DatabaseService {
   /**
    * Check if user has active subscription
    */
-  // @ts-ignore - Suppress complex return type mismatch
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<{
     hasActiveSubscription: boolean;
     subscriptionType?: string;
     expiresAt?: string;
   }>> {
-    // @ts-ignore - Suppress executeQuery type mismatch
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('payment_records')
@@ -198,7 +170,6 @@ export class PaymentService extends DatabaseService {
       const latestPayment = data[0];
       
       // For yearly subscription, check if it's still valid (simplified logic)
-      // @ts-ignore - Suppress property access errors
       if (latestPayment.user_type === 'huurder') {
         const paymentDate = new Date(latestPayment.created_at);
         const expiryDate = new Date(paymentDate);
@@ -226,7 +197,6 @@ export class PaymentService extends DatabaseService {
   /**
    * Handle successful payment (webhook)
    */
-  // @ts-ignore - Suppress return type mismatch with database schema
   async handlePaymentSuccess(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     return this.executeQuery(async () => {
       // Update payment record
@@ -253,7 +223,6 @@ export class PaymentService extends DatabaseService {
       // Create audit log
       await this.createAuditLog('PAYMENT_SUCCESS', 'payment_records', data.id, null, data);
 
-      // @ts-ignore - Suppress type mismatch
       return { data, error: null };
     });
   }
@@ -261,7 +230,6 @@ export class PaymentService extends DatabaseService {
   /**
    * Handle failed payment (webhook)
    */
-  // @ts-ignore - Suppress return type mismatch with database schema
   async handlePaymentFailure(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
@@ -281,7 +249,6 @@ export class PaymentService extends DatabaseService {
       // Create audit log
       await this.createAuditLog('PAYMENT_FAILED', 'payment_records', data.id, null, data);
 
-      // @ts-ignore - Suppress type mismatch
       return { data, error: null };
     });
   }
