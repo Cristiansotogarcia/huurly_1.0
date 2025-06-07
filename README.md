@@ -82,7 +82,7 @@ STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 ```
 
-Start the Stripe server alongside the Vite dev server:
+Start the API server alongside the Vite dev server:
 
 ```sh
 npm run server
@@ -92,4 +92,11 @@ Then in a separate terminal run:
 
 ```sh
 npm run dev
+```
+
+For production builds run:
+
+```sh
+npm run build
+NODE_ENV=production npm start
 ```
