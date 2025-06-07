@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { 
   Upload, 
+import { documentService } from "@/services/DocumentService";
   FileText, 
   CheckCircle, 
   XCircle, 
@@ -21,15 +22,16 @@ import {
 interface DocumentUploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploadComplete: (documents: UploadedDocument[]) => void;
+  onUploadComplete: (documents: any[]) => void;
 }
 
 interface UploadedDocument {
   id: string;
+  file: File;
   fileName: string;
   fileSize: number;
   type: 'identity' | 'payslip' | 'employment' | 'reference';
-  status: 'uploading' | 'pending' | 'approved' | 'rejected';
+  status: 'ready' | 'uploading' | 'pending' | 'approved' | 'rejected';
   uploadProgress: number;
   uploadedAt: string;
   rejectionReason?: string;
@@ -100,7 +102,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const handleFiles = async (files: File[]) => {
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "Bestand te groot",
           description: `${file.name} is groter dan 10MB. Kies een kleiner bestand.`,
@@ -118,70 +120,22 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
         continue;
       }
 
-      await uploadFile(file);
+      const documentId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newDocument: UploadedDocument = {
+        id: documentId,
+        file,
+        fileName: file.name,
+        fileSize: file.size,
+        type: 'identity',
+        status: 'ready',
+        uploadProgress: 0,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      setDocuments(prev => [...prev, newDocument]);
     }
   };
 
-  const uploadFile = async (file: File) => {
-    const documentId = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    const newDocument: UploadedDocument = {
-      id: documentId,
-      fileName: file.name,
-      fileSize: file.size,
-      type: 'identity', // Default type, user can change later
-      status: 'uploading',
-      uploadProgress: 0,
-      uploadedAt: new Date().toISOString(),
-    };
-
-    setDocuments(prev => [...prev, newDocument]);
-
-    // Simulate file upload with progress
-    try {
-      for (let progress = 0; progress <= 100; progress += 10) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        setDocuments(prev => 
-          prev.map(doc => 
-            doc.id === documentId 
-              ? { ...doc, uploadProgress: progress }
-              : doc
-          )
-        );
-      }
-
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === documentId 
-            ? { ...doc, status: 'pending', uploadProgress: 100 }
-            : doc
-        )
-      );
-
-      toast({
-        title: "Document geüpload",
-        description: `${file.name} is succesvol geüpload en wordt nu beoordeeld.`
-      });
-
-    } catch (error) {
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === documentId 
-            ? { ...doc, status: 'rejected', uploadProgress: 0 }
-            : doc
-        )
-      );
-
-      toast({
-        title: "Upload mislukt",
-        description: `Er is een fout opgetreden bij het uploaden van ${file.name}.`,
-        variant: "destructive"
-      });
-    }
-  };
 
   const updateDocumentType = (documentId: string, type: UploadedDocument['type']) => {
     setDocuments(prev => 
@@ -201,6 +155,8 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const getStatusIcon = (status: UploadedDocument['status']) => {
     switch (status) {
+      case 'ready':
+        return <FileText className="w-4 h-4 text-gray-500" />;
       case 'uploading':
         return <Clock className="w-4 h-4 text-blue-500" />;
       case 'pending':
@@ -216,6 +172,8 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const getStatusText = (status: UploadedDocument['status']) => {
     switch (status) {
+      case 'ready':
+        return 'Klaar voor upload';
       case 'uploading':
         return 'Uploaden...';
       case 'pending':
@@ -231,6 +189,8 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const getStatusColor = (status: UploadedDocument['status']) => {
     switch (status) {
+      case 'ready':
+        return 'bg-gray-100 text-gray-800';
       case 'uploading':
         return 'bg-blue-100 text-blue-800';
       case 'pending':
@@ -252,13 +212,29 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleComplete = () => {
-    onUploadComplete(documents);
-    onOpenChange(false);
-    toast({
-      title: "Documenten ingediend",
-      description: "Je documenten zijn ingediend voor beoordeling. Je ontvangt een melding zodra ze zijn beoordeeld."
-    });
+  const handleComplete = async () => {
+    const uploaded: any[] = [];
+    for (const doc of documents) {
+      setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'uploading' } : d));
+      const result = await documentService.uploadDocument(doc.file, doc.type === 'identity' ? 'identity' : 'payslip');
+      if (result.success && result.data) {
+        uploaded.push(result.data);
+        setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'pending', uploadProgress: 100 } : d));
+      } else {
+        setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'rejected' } : d));
+        toast({ title: 'Upload mislukt', description: result.error?.message || 'Er is iets misgegaan', variant: 'destructive' });
+      }
+    }
+
+    if (uploaded.length > 0) {
+      onUploadComplete(uploaded);
+      onOpenChange(false);
+      toast({
+        title: 'Documenten geüpload',
+        description: `${uploaded.length} document(en) zijn geüpload voor beoordeling.`
+      });
+      setDocuments([]);
+    }
   };
 
   const requiredDocuments = documentTypes.filter(type => type.required);
