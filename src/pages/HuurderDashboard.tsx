@@ -1,18 +1,35 @@
-import { useState } from 'react';
-import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { EMPTY_STATE_MESSAGES, demoTenantProfiles, demoDocuments } from '@/data/demoData';
-import { Home, FileText, Calendar, User, Eye, TrendingUp, Upload, Search, ArrowLeft, Bell, Settings } from 'lucide-react';
-import ProfileCreationModal from '@/components/modals/ProfileCreationModal';
-import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
-import PropertySearchModal from '@/components/modals/PropertySearchModal';
-import NotificationBell from '@/components/NotificationBell';
-import { notifyDocumentUploaded } from '@/hooks/useNotifications';
-import { Logo } from '@/components/Logo';
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import {
+  EMPTY_STATE_MESSAGES,
+  demoTenantProfiles,
+  demoDocuments,
+} from "@/data/demoData";
+import {
+  Home,
+  FileText,
+  Calendar,
+  User,
+  Eye,
+  TrendingUp,
+  Upload,
+  Search,
+  ArrowLeft,
+  Bell,
+  Settings,
+} from "lucide-react";
+import ProfileCreationModal from "@/components/modals/ProfileCreationModal";
+import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
+import PropertySearchModal from "@/components/modals/PropertySearchModal";
+import NotificationBell from "@/components/NotificationBell";
+import { notifyDocumentUploaded } from "@/hooks/useNotifications";
+import { Logo } from "@/components/Logo";
+import { PaymentModal } from "@/components/PaymentModal";
 
 const HuurderDashboard = () => {
   const { user } = useAuthStore();
@@ -20,17 +37,24 @@ const HuurderDashboard = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(!user?.hasPayment);
   const [hasProfile, setHasProfile] = useState(false);
-  const [userDocuments, setUserDocuments] = useState(demoDocuments.filter(doc => doc.tenantId === user?.id) || []);
+  const [userDocuments, setUserDocuments] = useState(
+    demoDocuments.filter((doc) => doc.tenantId === user?.id) || [],
+  );
   const { toast } = useToast();
+
+  useEffect(() => {
+    setShowPaymentModal(!user?.hasPayment);
+  }, [user?.hasPayment]);
 
   const toggleLookingStatus = () => {
     setIsLookingForPlace(!isLookingForPlace);
     toast({
       title: "Status bijgewerkt",
-      description: isLookingForPlace 
+      description: isLookingForPlace
         ? "Je profiel is nu niet zichtbaar voor verhuurders"
-        : "Je profiel is nu zichtbaar voor verhuurders"
+        : "Je profiel is nu zichtbaar voor verhuurders",
     });
   };
 
@@ -38,32 +62,40 @@ const HuurderDashboard = () => {
     setHasProfile(true);
     toast({
       title: "Profiel aangemaakt!",
-      description: "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
+      description:
+        "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders.",
     });
   };
 
   const handleDocumentUploadComplete = (documents: any[]) => {
-    setUserDocuments(prev => [...prev, ...documents.map(doc => ({
-      ...doc,
-      tenantId: user?.id || '',
-      type: doc.type,
-      status: doc.status
-    }))]);
-    
+    setUserDocuments((prev) => [
+      ...prev,
+      ...documents.map((doc) => ({
+        ...doc,
+        tenantId: user?.id || "",
+        type: doc.type,
+        status: doc.status,
+      })),
+    ]);
+
     // Notify beoordelaars about new documents
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       notifyDocumentUploaded(
-        user?.name || 'Onbekende gebruiker',
-        doc.type === 'identity' ? 'identiteitsbewijs' :
-        doc.type === 'payslip' ? 'loonstrook' :
-        doc.type === 'employment' ? 'arbeidscontract' : 'document',
-        'beoordelaar-demo-id' // In real app, this would be actual beoordelaar ID
+        user?.name || "Onbekende gebruiker",
+        doc.type === "identity"
+          ? "identiteitsbewijs"
+          : doc.type === "payslip"
+            ? "loonstrook"
+            : doc.type === "employment"
+              ? "arbeidscontract"
+              : "document",
+        "beoordelaar-demo-id", // In real app, this would be actual beoordelaar ID
       );
     });
-    
+
     toast({
       title: "Documenten geüpload",
-      description: `${documents.length} document(en) zijn geüpload voor beoordeling.`
+      description: `${documents.length} document(en) zijn geüpload voor beoordeling.`,
     });
   };
 
@@ -71,40 +103,44 @@ const HuurderDashboard = () => {
     if (!hasProfile) {
       toast({
         title: "Profiel vereist",
-        description: "Maak eerst je profiel aan voordat je kunt zoeken naar woningen.",
-        variant: "destructive"
+        description:
+          "Maak eerst je profiel aan voordat je kunt zoeken naar woningen.",
+        variant: "destructive",
       });
       setShowProfileModal(true);
       return;
     }
-    
+
     setShowSearchModal(true);
   };
 
   const handleReportIssue = () => {
     toast({
       title: "Issue gerapporteerd",
-      description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."
+      description:
+        "Je probleem is gerapporteerd en wordt onderzocht door ons team.",
     });
   };
 
   const handleLogout = () => {
     useAuthStore.getState().logout();
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
-  if (!user || user.role !== 'huurder') {
+  if (!user || user.role !== "huurder") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
-              <p className="text-gray-600 mb-4">Je hebt geen toegang tot het huurder dashboard.</p>
+              <p className="text-gray-600 mb-4">
+                Je hebt geen toegang tot het huurder dashboard.
+              </p>
               <Button onClick={handleGoHome}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Terug naar home
@@ -117,313 +153,339 @@ const HuurderDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              onClick={handleGoHome}
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Home
-            </Button>
-            <Logo />
-            <span className="ml-4 text-gray-500">| Huurder Dashboard</span>
-          </div>
-            
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <Button variant="ghost" size="sm">
-                <Settings className="w-4 h-4" />
-              </Button>
-              <span className="text-sm text-gray-600">Welkom, {user.name}</span>
-              <Button variant="outline" onClick={handleLogout}>
-                Uitloggen
-              </Button>
+    <>
+      <div
+        className={
+          showPaymentModal
+            ? "min-h-screen bg-gray-50 filter blur-sm pointer-events-none select-none"
+            : "min-h-screen bg-gray-50"
+        }
+      >
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <Button variant="ghost" onClick={handleGoHome} className="mr-4">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Home
+                </Button>
+                <Logo />
+                <span className="ml-4 text-gray-500">| Huurder Dashboard</span>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <NotificationBell />
+                <Button variant="ghost" size="sm">
+                  <Settings className="w-4 h-4" />
+                </Button>
+                <span className="text-sm text-gray-600">
+                  Welkom, {user.name}
+                </span>
+                <Button variant="outline" onClick={handleLogout}>
+                  Uitloggen
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Payment Status Alert */}
-        {user.hasPayment && (
-          <Card className="mb-8 border-green-200 bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Payment Status Alert */}
+          {user.hasPayment && (
+            <Card className="mb-8 border-green-200 bg-green-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-green-900">
+                      Account Actief
+                    </h3>
+                    <p className="text-green-700">
+                      Je hebt een actief abonnement (€59.99/jaar + BTW). Je
+                      profiel is zichtbaar voor verhuurders.
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-semibold text-green-900">Account Actief</h3>
-                  <p className="text-green-700">
-                    Je hebt een actief abonnement (€59.99/jaar + BTW). Je profiel is zichtbaar voor verhuurders.
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Status Toggle */}
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Zoekstatus</h3>
+                  <p className="text-gray-600">
+                    {isLookingForPlace
+                      ? "Je profiel is zichtbaar voor verhuurders"
+                      : "Je profiel is niet zichtbaar voor verhuurders"}
                   </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm">Niet zoekend</span>
+                  <Switch
+                    checked={isLookingForPlace}
+                    onCheckedChange={toggleLookingStatus}
+                  />
+                  <span className="text-sm">Actief zoekend</span>
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Status Toggle */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Zoekstatus</h3>
-                <p className="text-gray-600">
-                  {isLookingForPlace 
-                    ? "Je profiel is zichtbaar voor verhuurders" 
-                    : "Je profiel is niet zichtbaar voor verhuurders"}
-                </p>
+          {/* Dashboard Grid */}
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Quick Stats - Clean for real testing */}
+              <div className="grid md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center">
+                      <TrendingUp className="h-8 w-8 text-dutch-blue" />
+                      <div className="ml-4">
+                        <p className="text-2xl font-bold">0</p>
+                        <p className="text-xs text-muted-foreground">
+                          Profielweergaven
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center">
+                      <Calendar className="h-8 w-8 text-dutch-orange" />
+                      <div className="ml-4">
+                        <p className="text-2xl font-bold">0</p>
+                        <p className="text-xs text-muted-foreground">
+                          Uitnodigingen
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center">
+                      <FileText className="h-8 w-8 text-green-600" />
+                      <div className="ml-4">
+                        <p className="text-2xl font-bold">0</p>
+                        <p className="text-xs text-muted-foreground">
+                          Aanmeldingen
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center">
+                      <Home className="h-8 w-8 text-purple-600" />
+                      <div className="ml-4">
+                        <p className="text-2xl font-bold">0</p>
+                        <p className="text-xs text-muted-foreground">
+                          Geaccepteerd
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="flex items-center space-x-3">
-                <span className="text-sm">Niet zoekend</span>
-                <Switch 
-                  checked={isLookingForPlace}
-                  onCheckedChange={toggleLookingStatus}
-                />
-                <span className="text-sm">Actief zoekend</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Dashboard Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Quick Stats - Clean for real testing */}
-            <div className="grid md:grid-cols-4 gap-4 mb-6">
+              {/* Profile Setup */}
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center">
-                    <TrendingUp className="h-8 w-8 text-dutch-blue" />
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-xs text-muted-foreground">Profielweergaven</p>
-                    </div>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Mijn Profiel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Profiel nog niet compleet
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Vul je profiel aan om zichtbaar te worden voor verhuurders
+                    </p>
+                    <Button
+                      className="mr-2"
+                      onClick={() => setShowProfileModal(true)}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profiel aanmaken
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowDocumentModal(true)}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Documenten uploaden
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Property Search */}
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center">
-                    <Calendar className="h-8 w-8 text-dutch-orange" />
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-xs text-muted-foreground">Uitnodigingen</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center">
-                    <FileText className="h-8 w-8 text-green-600" />
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-xs text-muted-foreground">Aanmeldingen</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center">
-                    <Home className="h-8 w-8 text-purple-600" />
-                    <div className="ml-4">
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-xs text-muted-foreground">Geaccepteerd</p>
-                    </div>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Search className="w-5 h-5 mr-2" />
+                    Woningen Zoeken
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Zoek je droomwoning
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Doorzoek duizenden woningen en vind je perfecte match
+                    </p>
+                    <Button onClick={handleStartSearch}>
+                      <Search className="w-4 h-4 mr-2" />
+                      Start zoeken
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Profile Setup */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Mijn Profiel
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold mb-2">Profiel nog niet compleet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Vul je profiel aan om zichtbaar te worden voor verhuurders
-                  </p>
-                  <Button 
-                    className="mr-2"
-                    onClick={() => setShowProfileModal(true)}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profiel aanmaken
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowDocumentModal(true)}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Documenten uploaden
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Viewing Invitations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="w-5 h-5 mr-2" />
+                    Bezichtigingen (0)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-sm">{EMPTY_STATE_MESSAGES.noViewings}</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Property Search */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Search className="w-5 h-5 mr-2" />
-                  Woningen Zoeken
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold mb-2">Zoek je droomwoning</h3>
-                  <p className="text-gray-600 mb-4">
-                    Doorzoek duizenden woningen en vind je perfecte match
-                  </p>
-                  <Button onClick={handleStartSearch}>
-                    <Search className="w-4 h-4 mr-2" />
-                    Start zoeken
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Documents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    Documenten
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-sm mb-4">
+                      {EMPTY_STATE_MESSAGES.noDocuments}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDocumentModal(true)}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload document
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Viewing Invitations */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Bezichtigingen (0)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm">{EMPTY_STATE_MESSAGES.noViewings}</p>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Snelle Acties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full text-sm"
+                      onClick={handleStartSearch}
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Zoek woningen
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full text-sm"
+                      onClick={() => setShowDocumentModal(true)}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload documenten
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full text-sm"
+                      onClick={handleReportIssue}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Probleem melden
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Documents */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Documenten
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm mb-4">{EMPTY_STATE_MESSAGES.noDocuments}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowDocumentModal(true)}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload document
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Snelle Acties</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-sm"
-                    onClick={handleStartSearch}
-                  >
-                    <Search className="w-4 h-4 mr-2" />
-                    Zoek woningen
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-sm"
-                    onClick={() => setShowDocumentModal(true)}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload documenten
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-sm"
-                    onClick={handleReportIssue}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Probleem melden
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Help Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Hulp nodig?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <p className="text-gray-600">
-                    Als huurder kun je:
-                  </p>
-                  <ul className="space-y-1 text-gray-600">
-                    <li>• Je profiel aanmaken en verifiëren</li>
-                    <li>• Documenten uploaden voor verificatie</li>
-                    <li>• Woningen zoeken en bekijken</li>
-                    <li>• Bezichtigingen aanvragen</li>
-                    <li>• Contact opnemen met verhuurders</li>
-                  </ul>
-                  <Button variant="outline" size="sm" className="w-full mt-3">
-                    Help & Support
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Help Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hulp nodig?</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm">
+                    <p className="text-gray-600">Als huurder kun je:</p>
+                    <ul className="space-y-1 text-gray-600">
+                      <li>• Je profiel aanmaken en verifiëren</li>
+                      <li>• Documenten uploaden voor verificatie</li>
+                      <li>• Woningen zoeken en bekijken</li>
+                      <li>• Bezichtigingen aanvragen</li>
+                      <li>• Contact opnemen met verhuurders</li>
+                    </ul>
+                    <Button variant="outline" size="sm" className="w-full mt-3">
+                      Help & Support
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Modals */}
-      <ProfileCreationModal
-        open={showProfileModal}
-        onOpenChange={setShowProfileModal}
-        onComplete={handleProfileComplete}
+        {/* Modals */}
+        <ProfileCreationModal
+          open={showProfileModal}
+          onOpenChange={setShowProfileModal}
+          onComplete={handleProfileComplete}
+        />
+
+        <DocumentUploadModal
+          open={showDocumentModal}
+          onOpenChange={setShowDocumentModal}
+          onUploadComplete={handleDocumentUploadComplete}
+        />
+
+        <PropertySearchModal
+          open={showSearchModal}
+          onOpenChange={setShowSearchModal}
+        />
+      </div>
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        persistent
       />
-      
-      <DocumentUploadModal
-        open={showDocumentModal}
-        onOpenChange={setShowDocumentModal}
-        onUploadComplete={handleDocumentUploadComplete}
-      />
-      
-      <PropertySearchModal
-        open={showSearchModal}
-        onOpenChange={setShowSearchModal}
-      />
-    </div>
+    </>
   );
 };
 
