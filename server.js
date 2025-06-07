@@ -1,11 +1,17 @@
 const http = require('http');
 const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  auth: { persistSession: false }
+});
 
 function parseJson(req) {
   return new Promise((resolve, reject) => {
@@ -53,7 +59,42 @@ const server = http.createServer(async (req, res) => {
     try {
       event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
       console.log('Received Stripe event:', event.type);
-      // TODO: handle event types and update your database
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const { userId, paymentRecordId } = session.metadata || {};
+
+        // Update payment record status
+        if (paymentRecordId) {
+          await supabase
+            .from('payment_records')
+            .update({
+              status: 'completed',
+              stripe_customer_id: session.customer,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', paymentRecordId);
+        }
+
+        // Update user subscription status
+        if (userId) {
+          await supabase
+            .from('user_roles')
+            .update({ subscription_status: 'active' })
+            .eq('user_id', userId);
+
+          const expiry = new Date();
+          expiry.setFullYear(expiry.getFullYear() + 1);
+
+          await supabase.from('subscribers').upsert({
+            user_id: userId,
+            email: session.customer_details?.email || session.customer_email,
+            stripe_customer_id: session.customer,
+            subscribed: true,
+            subscription_tier: 'huurder_yearly',
+            subscription_end: expiry.toISOString(),
+          }, { onConflict: 'user_id' });
+        }
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ received: true }));
     } catch (err) {
