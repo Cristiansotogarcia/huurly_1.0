@@ -1,36 +1,16 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-// Environment configuration for Stripe keys
+// Stripe configuration derived from environment variables
 export const STRIPE_CONFIG = {
-  // Sandbox/Test keys (default)
-  test: {
-    publishableKey: 'pk_test_51RVFSSGadpjzVmLhDTISKngfxbFZkvwC2ZnuGIoH6GOWGBXnrtL40bQhPMp5mXY3QRCEdc4oUYmQ8XP51hEIlTvi00Hjel2rmB',
-    secretKey: 'sk_test_51RVFSSGadpjzVmLhpOgJLjgNBZxFDQCTnd92Id9GeZXQOpfuqpgLe2ShxNLmOh2jZxJ0GgBpIGTKqOkhc4iusUb800GWt9JLAu',
-    webhookSecret: 'whsec_hRCeos1p0nxmE5TViRMxslpBXq66NOmO'
-  },
-  // Production keys (to be set manually when going live)
-  production: {
-    publishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
-    secretKey: process.env.STRIPE_SECRET_KEY || '',
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || ''
-  }
+  publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
 };
 
-// Determine if we're in production based on environment
-const isProduction = process.env.NODE_ENV === 'production' && 
-                    process.env.VITE_STRIPE_PUBLISHABLE_KEY && 
-                    process.env.STRIPE_SECRET_KEY;
-
-// Get current configuration
-export const getCurrentStripeConfig = () => {
-  return isProduction ? STRIPE_CONFIG.production : STRIPE_CONFIG.test;
-};
+// Server-side secrets (not exposed in the client bundle)
+export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 // Get publishable key for frontend
-export const getStripePublishableKey = (): string => {
-  const config = getCurrentStripeConfig();
-  return config.publishableKey;
-};
+export const getStripePublishableKey = (): string => STRIPE_CONFIG.publishableKey;
 
 // Initialize Stripe instance
 let stripePromise: Promise<Stripe | null>;

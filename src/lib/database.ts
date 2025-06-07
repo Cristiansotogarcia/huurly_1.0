@@ -132,8 +132,20 @@ export class DatabaseService {
     oldValues?: any,
     newValues?: any
   ): Promise<void> {
-    // TODO: Implement audit logging when audit_logs table is created
-    logger.debug({ action, tableName, recordId, oldValues, newValues }, 'Audit log');
+    try {
+      const userId = await this.getCurrentUserId();
+
+      await supabase.from('audit_logs').insert({
+        user_id: userId,
+        action,
+        table_name: tableName,
+        record_id: recordId || null,
+        old_values: oldValues ? JSON.stringify(oldValues) : null,
+        new_values: newValues ? JSON.stringify(newValues) : null,
+      });
+    } catch (error) {
+      logger.error({ error }, 'Failed to create audit log');
+    }
   }
 
   /**
