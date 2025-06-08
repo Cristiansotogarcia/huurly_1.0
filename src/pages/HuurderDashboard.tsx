@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -46,14 +47,23 @@ const HuurderDashboard = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(!user?.hasPayment);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  console.log("HuurderDashboard: Current user:", user);
+  console.log("HuurderDashboard: User role:", user?.role);
+  console.log("HuurderDashboard: Is loading:", isLoading);
+
+  // Initialize loading state
   useEffect(() => {
-    setShowPaymentModal(!user?.hasPayment);
-  }, [user?.hasPayment]);
+    if (user !== null) {
+      setIsLoading(false);
+      setShowPaymentModal(!user?.hasPayment);
+    }
+  }, [user]);
 
   // Check payment result in URL
   useEffect(() => {
@@ -87,11 +97,13 @@ const HuurderDashboard = () => {
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
+      console.log("Loading profile and documents for user:", user.id);
       // Get tenant profile data - since is_looking_for_place doesn't exist in the schema,
       // we'll default to true and allow the user to toggle it
       const tenantProfileResult = await userService.getTenantProfile(user.id);
       if (tenantProfileResult.success && tenantProfileResult.data) {
         setHasProfile(true);
+        console.log("Tenant profile loaded:", tenantProfileResult.data);
         // Since is_looking_for_place doesn't exist in the database schema,
         // we'll keep the default state value
         // If this field should exist, it needs to be added to the database schema first
@@ -100,12 +112,14 @@ const HuurderDashboard = () => {
         const profileResult = await userService.getProfile(user.id);
         if (profileResult.success && profileResult.data) {
           setHasProfile(true);
+          console.log("Basic profile loaded:", profileResult.data);
         }
       }
 
       const docsResult = await documentService.getDocumentsByUser(user.id);
       if (docsResult.success && docsResult.data) {
         setUserDocuments(docsResult.data);
+        console.log("Documents loaded:", docsResult.data);
       }
     })();
   }, [user?.id]);
@@ -209,7 +223,48 @@ const HuurderDashboard = () => {
     window.location.href = "/";
   };
 
-  if (!user || user.role !== "huurder") {
+  // Show loading state while checking authentication
+  if (isLoading) {
+    console.log("Showing loading state");
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">Laden...</h2>
+              <p className="text-gray-600">Dashboard wordt geladen...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show access denied if no user or wrong role
+  if (!user) {
+    console.log("No user found, showing access denied");
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
+              <p className="text-gray-600 mb-4">
+                Je moet ingelogd zijn om het huurder dashboard te bekijken.
+              </p>
+              <Button onClick={handleGoHome}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Terug naar home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (user.role !== "huurder") {
+    console.log("Wrong role, showing access denied. User role:", user.role);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -229,6 +284,8 @@ const HuurderDashboard = () => {
       </div>
     );
   }
+
+  console.log("Rendering main dashboard content");
 
   return (
     <>
