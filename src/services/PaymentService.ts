@@ -315,7 +315,7 @@ export class PaymentService extends DatabaseService {
       const { data: managers } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'Manager');
+        .eq('role', 'Beheerder');
 
       if (managers) {
         const notifications = managers.map(manager => ({
