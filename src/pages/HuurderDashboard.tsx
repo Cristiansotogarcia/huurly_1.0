@@ -6,11 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import {
-  EMPTY_STATE_MESSAGES,
-  demoTenantProfiles,
-  demoDocuments,
-} from "@/data/demoData";
+import { EMPTY_STATE_MESSAGES } from "@/data/demoData";
+import { userService } from "@/services/UserService";
+import { documentService } from "@/services/DocumentService";
 import {
   Home,
   FileText,
@@ -42,9 +40,7 @@ const HuurderDashboard = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(!user?.hasPayment);
   const [hasProfile, setHasProfile] = useState(false);
-  const [userDocuments, setUserDocuments] = useState(
-    demoDocuments.filter((doc) => doc.tenantId === user?.id) || [],
-  );
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +75,25 @@ const HuurderDashboard = () => {
     }
   }, [location.search, login, toast, location.pathname]);
 
+  // Load profile and documents
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const profileResult = await userService.getProfile(user.id);
+      if (profileResult.success && profileResult.data) {
+        setHasProfile(true);
+        setIsLookingForPlace(
+          profileResult.data.is_looking_for_place ?? isLookingForPlace,
+        );
+      }
+
+      const docsResult = await documentService.getDocumentsByUser(user.id);
+      if (docsResult.success && docsResult.data) {
+        setUserDocuments(docsResult.data);
+      }
+    })();
+  }, [user?.id]);
+
   const toggleLookingStatus = () => {
     setIsLookingForPlace(!isLookingForPlace);
     toast({
@@ -89,13 +104,28 @@ const HuurderDashboard = () => {
     });
   };
 
-  const handleProfileComplete = (profileData: any) => {
-    setHasProfile(true);
-    toast({
-      title: "Profiel aangemaakt!",
-      description:
-        "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders.",
+  const handleProfileComplete = async (profileData: any) => {
+    if (!user?.id) return;
+    const result = await userService.createProfile(user.id, {
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      phone: profileData.phone,
     });
+    if (result.success) {
+      setHasProfile(true);
+      toast({
+        title: "Profiel aangemaakt!",
+        description:
+          "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders.",
+      });
+    } else {
+      toast({
+        title: "Fout bij aanmaken profiel",
+        description: result.error?.message || 'Er is iets misgegaan.',
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDocumentUploadComplete = (documents: any[]) => {
@@ -146,6 +176,7 @@ const HuurderDashboard = () => {
   };
 
   const handleReportIssue = () => {
+    // TODO: connect with IssueService
     toast({
       title: "Issue gerapporteerd",
       description:

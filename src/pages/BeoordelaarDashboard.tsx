@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
+import { documentService } from '@/services/DocumentService';
 import { FileText, CheckCircle, XCircle, Clock, Eye, ArrowLeft, Bell, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
@@ -19,54 +20,35 @@ const BeoordelaarDashboard = () => {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [pendingDocuments, setPendingDocuments] = useState([
-    {
-      id: 'doc-1',
-      fileName: 'ID_Emma_Bakker.pdf',
-      type: 'identity',
-      tenantName: 'Emma Bakker',
-      uploadedAt: '2024-01-20T10:00:00Z',
-      fileSize: 2.5 * 1024 * 1024, // 2.5MB
-      status: 'pending'
-    },
-    {
-      id: 'doc-2',
-      fileName: 'Payslip_December_2023.pdf',
-      type: 'payslip',
-      tenantName: 'Emma Bakker',
-      uploadedAt: '2024-01-20T10:15:00Z',
-      fileSize: 1.8 * 1024 * 1024, // 1.8MB
-      status: 'pending'
-    },
-    {
-      id: 'doc-3',
-      fileName: 'Contract_TechCorp.pdf',
-      type: 'employment',
-      tenantName: 'Jan de Vries',
-      uploadedAt: '2024-01-20T14:30:00Z',
-      fileSize: 3.2 * 1024 * 1024, // 3.2MB
-      status: 'pending'
-    }
-  ]);
+  const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const result = await documentService.getPendingDocuments();
+      if (result.success && result.data) {
+        setPendingDocuments(result.data);
+      }
+    })();
+  }, []);
 
   const handleReviewDocument = (document: any) => {
     setSelectedDocument(document);
     setShowReviewModal(true);
   };
 
-  const handleApprove = (documentId: string, notes?: string) => {
+  const handleApprove = async (documentId: string, notes?: string) => {
+    await documentService.approveDocument(documentId);
     const document = pendingDocuments.find(doc => doc.id === documentId);
     if (document) {
-      // Notify the huurder about approval
       notifyDocumentApproved(
         document.tenantName,
         document.type === 'identity' ? 'identiteitsbewijs' :
         document.type === 'payslip' ? 'loonstrook' :
         document.type === 'employment' ? 'arbeidscontract' : 'document',
-        'huurder-demo-id' // In real app, this would be actual huurder ID
+        document.tenantId || 'unknown'
       );
     }
-    
+
     setPendingDocuments(prev => prev.filter(doc => doc.id !== documentId));
     toast({
       title: "Document goedgekeurd",
@@ -74,20 +56,20 @@ const BeoordelaarDashboard = () => {
     });
   };
 
-  const handleReject = (documentId: string, reason: string) => {
+  const handleReject = async (documentId: string, reason: string) => {
+    await documentService.rejectDocument(documentId, reason);
     const document = pendingDocuments.find(doc => doc.id === documentId);
     if (document) {
-      // Notify the huurder about rejection
       notifyDocumentRejected(
         document.tenantName,
         document.type === 'identity' ? 'identiteitsbewijs' :
         document.type === 'payslip' ? 'loonstrook' :
         document.type === 'employment' ? 'arbeidscontract' : 'document',
         reason,
-        'huurder-demo-id' // In real app, this would be actual huurder ID
+        document.tenantId || 'unknown'
       );
     }
-    
+
     setPendingDocuments(prev => prev.filter(doc => doc.id !== documentId));
     toast({
       title: "Document afgewezen",
@@ -95,9 +77,12 @@ const BeoordelaarDashboard = () => {
     });
   };
 
-  const handleBulkApproval = () => {
-    const selectedDocs = pendingDocuments.slice(0, 2); // Approve first 2 for demo
-    setPendingDocuments(prev => prev.slice(2));
+  const handleBulkApproval = async () => {
+    const selectedDocs = pendingDocuments.slice(0, 2);
+    for (const doc of selectedDocs) {
+      await documentService.approveDocument(doc.id);
+    }
+    setPendingDocuments(prev => prev.slice(selectedDocs.length));
     toast({
       title: "Bulk goedkeuring voltooid",
       description: `${selectedDocs.length} documenten zijn goedgekeurd.`
@@ -112,6 +97,7 @@ const BeoordelaarDashboard = () => {
   };
 
   const handleReportIssue = () => {
+    // TODO: connect with IssueService
     toast({
       title: "Issue gerapporteerd",
       description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."

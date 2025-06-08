@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { demoLandlordProfiles, demoTenantProfiles } from '@/data/demoData';
+import { propertyService } from '@/services/PropertyService';
+import { userService } from '@/services/UserService';
+import { viewingService } from '@/services/ViewingService';
 import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
@@ -24,16 +26,34 @@ const VerhuurderDashboard = () => {
     maxBudget: '',
     minIncome: ''
   });
-  const [filteredTenants, setFilteredTenants] = useState(demoTenantProfiles.filter(tenant => tenant.isLookingForPlace));
+  const [allTenants, setAllTenants] = useState<any[]>([]);
+  const [filteredTenants, setFilteredTenants] = useState<any[]>([]);
   const [showViewingModal, setShowViewingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const landlordProfile = demoLandlordProfiles[0];
-  const [properties, setProperties] = useState(landlordProfile.properties);
+  const [properties, setProperties] = useState<any[]>([]);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const availableTenants = filteredTenants;
+
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const propsResult = await propertyService.getPropertiesByLandlord(user.id);
+      if (propsResult.success && propsResult.data) {
+        setProperties(propsResult.data);
+      }
+
+      const tenantsResult = await userService.getUsers({ role: 'huurder' });
+      if (tenantsResult.success && tenantsResult.data) {
+        setAllTenants(tenantsResult.data);
+        setFilteredTenants(
+          tenantsResult.data.filter((t: any) => t.is_looking_for_place),
+        );
+      }
+    })();
+  }, [user?.id]);
 
   const handlePropertyCreated = (property: any) => {
     setProperties(prev => [...prev, property]);
@@ -46,7 +66,7 @@ const VerhuurderDashboard = () => {
   };
 
   const handleSearch = () => {
-    let results = demoTenantProfiles.filter(tenant => tenant.isLookingForPlace);
+    let results = allTenants.filter(tenant => tenant.is_looking_for_place);
 
     // Apply filters
     if (searchFilters.city) {
@@ -84,28 +104,36 @@ const VerhuurderDashboard = () => {
 
   const handleInviteViewing = (tenant: any) => {
     setSelectedTenant(tenant);
-    setSelectedProperty(properties[0]); // Use first property for demo
+    setSelectedProperty(properties[0]);
     setShowViewingModal(true);
   };
 
-  const handleInvitationSent = (invitationData: any) => {
-    // Notify the huurder about the viewing invitation
+  const handleInvitationSent = async (invitationData: any) => {
     if (selectedTenant && selectedProperty) {
+      await viewingService.createViewingInvitation({
+        propertyId: selectedProperty.id,
+        tenantId: selectedTenant.id || selectedTenant.userId,
+        scheduledDate: invitationData.date,
+        deadline: invitationData.date,
+        message: invitationData.message,
+      });
+
       notifyViewingInvitation(
         user?.name || 'Verhuurder',
         selectedProperty.address,
         invitationData.date,
-        'huurder-demo-id' // In real app, this would be actual huurder ID
+        selectedTenant.id
       );
+
+      toast({
+        title: 'Uitnodiging verzonden!',
+        description: `${selectedTenant?.firstName} ${selectedTenant?.lastName} heeft een uitnodiging ontvangen.`
+      });
     }
-    
-    toast({
-      title: "Uitnodiging verzonden!",
-      description: `${selectedTenant?.firstName} ${selectedTenant?.lastName} heeft een uitnodiging ontvangen.`
-    });
   };
 
   const handleReportIssue = () => {
+    // TODO: connect with IssueService
     toast({
       title: "Issue gerapporteerd",
       description: "Je probleem is gerapporteerd en wordt onderzocht door ons team."
