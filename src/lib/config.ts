@@ -3,7 +3,7 @@
  * Handles environment variables and application settings
  */
 import { logger } from '@/lib/logger';
-import { getEnv } from '@/lib/env';
+import { getEnvVar, isBrowser } from '@/lib/env';
 
 export interface AppConfig {
   app: {
@@ -87,24 +87,24 @@ const defaultConfig: AppConfig = {
 function getEnvironmentConfig(): Partial<AppConfig> {
   return {
     app: {
-      name: getEnv('VITE_APP_NAME') || defaultConfig.app.name,
-      version: getEnv('VITE_APP_VERSION') || defaultConfig.app.version,
-      environment: (getEnv('VITE_APP_ENV') as any) || defaultConfig.app.environment,
-      baseUrl: getEnv('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
+      name: getEnvVar('VITE_APP_NAME') || defaultConfig.app.name,
+      version: getEnvVar('VITE_APP_VERSION') || defaultConfig.app.version,
+      environment: (getEnvVar('VITE_APP_ENV') as any) || defaultConfig.app.environment,
+      baseUrl: getEnvVar('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
     },
     supabase: {
-      url: getEnv('VITE_SUPABASE_URL') || '',
-      anonKey: getEnv('VITE_SUPABASE_ANON_KEY') || ''
+      url: getEnvVar('VITE_SUPABASE_URL') || '',
+      anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY') || ''
     },
     stripe: {
-      publishableKey: getEnv('VITE_STRIPE_PUBLISHABLE_KEY') || '',
-      webhookSecret: getEnv('VITE_STRIPE_WEBHOOK_SECRET')
+      publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
+      webhookSecret: getEnvVar('VITE_STRIPE_WEBHOOK_SECRET')
     },
     features: {
-      enableDemo: getEnv('VITE_ENABLE_DEMO') === 'true',
-      enablePayments: getEnv('VITE_ENABLE_PAYMENTS') !== 'false',
-      enableNotifications: getEnv('VITE_ENABLE_NOTIFICATIONS') !== 'false',
-      enableAnalytics: getEnv('VITE_ENABLE_ANALYTICS') === 'true'
+      enableDemo: getEnvVar('VITE_ENABLE_DEMO') === 'true',
+      enablePayments: getEnvVar('VITE_ENABLE_PAYMENTS') !== 'false',
+      enableNotifications: getEnvVar('VITE_ENABLE_NOTIFICATIONS') !== 'false',
+      enableAnalytics: getEnvVar('VITE_ENABLE_ANALYTICS') === 'true'
     }
   };
 }
@@ -284,6 +284,8 @@ if (getConfig.isDevelopment()) {
      logger.info('✅ Configuration is valid');
   }
   
-  // Make config available globally for debugging
-  (window as any).__HUURLY_CONFIG__ = config;
+  // Make config available globally for debugging when in the browser
+  if (isBrowser) {
+    (window as any).__HUURLY_CONFIG__ = config;
+  }
 }
