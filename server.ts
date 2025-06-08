@@ -63,39 +63,72 @@ const server = http.createServer(async (req, res) => {
       event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
       logger.info('Received Stripe event:', event.type);
       if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
+        const session = event.data.object as Stripe.Checkout.Session;
         const { userId, paymentRecordId } = session.metadata || {};
 
+        const paymentRecordUUID = paymentRecordId ? String(paymentRecordId) : null;
+        const userUUID = userId ? String(userId) : null;
+        const stripeCustomerId = session.customer ? String(session.customer) : null;
+
+        logger.info('Webhook session metadata', {
+          paymentRecordUUID,
+          userUUID,
+          stripeCustomerId,
+        });
+
         // Update payment record status
-        if (paymentRecordId) {
-          await supabase
+        if (paymentRecordUUID) {
+          const { error: paymentUpdateError } = await supabase
             .from('payment_records')
             .update({
               status: 'completed',
-              stripe_customer_id: session.customer,
+              stripe_customer_id: stripeCustomerId,
               updated_at: new Date().toISOString(),
             })
-            .eq('id', paymentRecordId);
+            .eq('id', paymentRecordUUID);
+
+          if (paymentUpdateError) {
+            logger.error('Failed to update payment record', {
+              paymentRecordUUID,
+              stripeCustomerId,
+              error: paymentUpdateError,
+            });
+          }
         }
 
         // Update user subscription status
-        if (userId) {
-          await supabase
+        if (userUUID) {
+          const { error: userRoleError } = await supabase
             .from('user_roles')
             .update({ subscription_status: 'active' })
-            .eq('user_id', userId);
+            .eq('user_id', userUUID);
+
+          if (userRoleError) {
+            logger.error('Failed to update user role', { userUUID, error: userRoleError });
+          }
 
           const expiry = new Date();
           expiry.setFullYear(expiry.getFullYear() + 1);
 
-          await supabase.from('subscribers').upsert({
-            user_id: userId,
-            email: session.customer_details?.email || session.customer_email,
-            stripe_customer_id: session.customer,
-            subscribed: true,
-            subscription_tier: 'huurder_yearly',
-            subscription_end: expiry.toISOString(),
-          }, { onConflict: 'user_id' });
+          const { error: subError } = await supabase.from('subscribers').upsert(
+            {
+              user_id: userUUID,
+              email: session.customer_details?.email || session.customer_email,
+              stripe_customer_id: stripeCustomerId,
+              subscribed: true,
+              subscription_tier: 'huurder_yearly',
+              subscription_end: expiry.toISOString(),
+            },
+            { onConflict: 'user_id' }
+          );
+
+          if (subError) {
+            logger.error('Failed to upsert subscriber', {
+              userUUID,
+              stripeCustomerId,
+              error: subError,
+            });
+          }
         }
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
