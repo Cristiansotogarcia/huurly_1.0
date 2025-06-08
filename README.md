@@ -60,6 +60,17 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Build and Test
+
+Install all dependencies first:
+
+```sh
+npm install
+```
+
+Ensure every variable in `.env.example` is set. Missing values can render the site blank. Tests may also fail if `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are absent.
+
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/a34df531-6d73-49f2-a598-55dce02e8cba) and click on Share -> Publish.
