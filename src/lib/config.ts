@@ -2,8 +2,8 @@
  * Centralized configuration management
  * Handles environment variables and application settings
  */
-import { logger } from '@/lib/logger';
-import { getEnvVar, isBrowser } from '@/lib/env';
+import { logger } from './logger';
+import { getEnvVar, isBrowser } from './env';
 
 export interface AppConfig {
   app: {
