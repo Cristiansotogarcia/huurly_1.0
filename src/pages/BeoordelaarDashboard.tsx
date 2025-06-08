@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
 import { documentService } from '@/services/DocumentService';
 import { FileText, CheckCircle, XCircle, Clock, Eye, ArrowLeft, Bell, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,15 @@ import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyDocumentApproved, notifyDocumentRejected } from '@/hooks/useNotifications';
 import { Logo } from '@/components/Logo';
+
+const EMPTY_STATE_MESSAGES = {
+  noUsers: 'Nog geen gebruikers geregistreerd',
+  noProperties: 'Nog geen woningen toegevoegd',
+  noDocuments: 'Nog geen documenten ge\u00fpload',
+  noViewings: 'Nog geen bezichtigingen gepland',
+  noIssues: 'Geen openstaande issues',
+  noNotifications: 'Geen nieuwe notificaties',
+};
 
 const BeoordelaarDashboard = () => {
   const { user } = useAuthStore();
