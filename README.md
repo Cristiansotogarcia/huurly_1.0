@@ -44,10 +44,12 @@ expect the following environment variables to be set before running:
 ```env
 SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
 ```
 
 Place these variables in a `.env` file or export them in your shell so that
-`update-db.ts` and `query-roles.ts` can authenticate properly.
+`update-db.ts` (uses `SUPABASE_SERVICE_KEY`) and `query-roles.ts` (uses
+`SUPABASE_PUBLISHABLE_KEY`) can authenticate properly.
 
 
 **Edit a file directly in GitHub**
@@ -131,7 +133,9 @@ expect the following environment variables to be set before running:
 ```env
 SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
 ```
 
 Place these variables in a `.env` file or export them in your shell so that
-`update-db.ts` and `query-roles.ts` can authenticate properly.
+`update-db.ts` (uses `SUPABASE_SERVICE_KEY`) and `query-roles.ts` (uses
+`SUPABASE_PUBLISHABLE_KEY`) can authenticate properly.
