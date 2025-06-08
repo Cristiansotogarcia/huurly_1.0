@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -88,12 +87,19 @@ const HuurderDashboard = () => {
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      const profileResult = await userService.getProfile(user.id);
-      if (profileResult.success && profileResult.data) {
+      // Get tenant profile data which has the is_looking_for_place field
+      const tenantProfileResult = await userService.getTenantProfile(user.id);
+      if (tenantProfileResult.success && tenantProfileResult.data) {
         setHasProfile(true);
         setIsLookingForPlace(
-          profileResult.data.is_looking_for_place ?? isLookingForPlace,
+          tenantProfileResult.data.is_looking_for_place ?? isLookingForPlace,
         );
+      } else {
+        // Fallback to check basic profile
+        const profileResult = await userService.getProfile(user.id);
+        if (profileResult.success && profileResult.data) {
+          setHasProfile(true);
+        }
       }
 
       const docsResult = await documentService.getDocumentsByUser(user.id);
