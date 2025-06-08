@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,9 +31,11 @@ import NotificationBell from "@/components/NotificationBell";
 import { notifyDocumentUploaded } from "@/hooks/useNotifications";
 import { Logo } from "@/components/Logo";
 import { PaymentModal } from "@/components/PaymentModal";
+import { authService } from "@/lib/auth";
 
 const HuurderDashboard = () => {
-  const { user } = useAuthStore();
+  const { user, login } = useAuthStore();
+  const location = useLocation();
   const [isLookingForPlace, setIsLookingForPlace] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -47,6 +50,34 @@ const HuurderDashboard = () => {
   useEffect(() => {
     setShowPaymentModal(!user?.hasPayment);
   }, [user?.hasPayment]);
+
+  // Check payment result in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const result = params.get('payment');
+    if (result === 'success') {
+      (async () => {
+        const refreshed = await authService.getCurrentUser();
+        if (refreshed) {
+          login(refreshed);
+          toast({
+            title: 'Betaling succesvol!',
+            description: 'Je account is nu actief.',
+          });
+        }
+        params.delete('payment');
+        window.history.replaceState({}, '', location.pathname);
+      })();
+    } else if (result === 'cancelled') {
+      toast({
+        title: 'Betaling geannuleerd',
+        description: 'De betaling is geannuleerd.',
+        variant: 'destructive',
+      });
+      params.delete('payment');
+      window.history.replaceState({}, '', location.pathname);
+    }
+  }, [location.search, login, toast, location.pathname]);
 
   const toggleLookingStatus = () => {
     setIsLookingForPlace(!isLookingForPlace);

@@ -9,6 +9,7 @@ import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
+import { paymentService } from "@/services/PaymentService";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -24,31 +25,22 @@ export const PaymentModal = ({
 }: PaymentModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const updateUser = useAuthStore((state) => state.updateUser);
+  const { user } = useAuthStore();
 
   const handlePayment = async () => {
+    if (!user) return;
     setIsLoading(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      updateUser({ hasPayment: true });
-      toast({
-        title: "Betaling succesvol!",
-        description:
-          "Je account is nu actief en je kunt gebruik maken van alle functies.",
-      });
-      onClose();
-      setIsLoading(false);
-    }, 2000);
-  };
+    const { error } = await paymentService.createCheckoutSession(user.id);
 
-  const simulatePayment = () => {
-    updateUser({ hasPayment: true });
-    toast({
-      title: "Demo betaling gesimuleerd",
-      description: "Je account is nu actief voor demonstratie doeleinden.",
-    });
-    onClose();
+    if (error) {
+      toast({
+        title: "Betaling mislukt",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const Content = persistent ? PersistentDialogContent : DialogContent;
@@ -96,14 +88,6 @@ export const PaymentModal = ({
               disabled={isLoading}
             >
               {isLoading ? "Bezig met verwerken..." : "Abonnement afsluiten"}
-            </Button>
-
-            <Button
-              onClick={simulatePayment}
-              variant="outline"
-              className="w-full text-dutch-orange border-dutch-orange hover:bg-orange-50"
-            >
-              Demo: Betaling simuleren
             </Button>
           </div>
 
