@@ -93,3 +93,7 @@ Then in a separate terminal run:
 ```sh
 npm run dev
 ```
+
+## Data retention cleanup
+
+A daily cron job executes `npm run cleanup-deleted-accounts` to permanently remove accounts that have been marked for deletion for more than 30 days. The script deletes related records, removes uploaded files from storage and logs actions via the audit log. Schedule the command using your server's cron or a Supabase scheduled function.
