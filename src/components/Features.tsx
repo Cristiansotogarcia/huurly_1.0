@@ -1,5 +1,5 @@
 
-import { CheckCircle, Shield, Clock, Users } from 'lucide-react';
+import { CheckCircle, Shield, Clock } from 'lucide-react';
 
 export const Features = () => {
   const features = [
@@ -16,12 +16,7 @@ export const Features = () => {
     {
       icon: <Shield className="h-8 w-8 text-dutch-orange" />,
       title: "Veilige Transacties",
-      description: "Beveiligde betalingen en documentverificatie voor zorgeloze verhuur."
-    },
-    {
-      icon: <Users className="h-8 w-8 text-dutch-orange" />,
-      title: "Persoonlijke Begeleiding",
-      description: "Ons team staat klaar om je te helpen bij elke stap van het huurproces."
+      description: "Beveiligde documentverificatie voor zorgeloze verhuur."
     }
   ];
 
@@ -37,7 +32,7 @@ export const Features = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {features.map((feature, index) => (
             <div key={index} className="text-center">
               <div className="flex justify-center mb-4">

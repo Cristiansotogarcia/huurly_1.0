@@ -30,7 +30,7 @@ export const Hero = () => {
                   Profiel aanmaken
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md bg-white">
                 <SignupForm onClose={() => setShowSignup(false)} />
               </DialogContent>
             </Dialog>
