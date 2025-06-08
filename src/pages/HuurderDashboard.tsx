@@ -339,8 +339,8 @@ const HuurderDashboard = () => {
                       Account Actief
                     </h3>
                     <p className="text-green-700">
-                      Je hebt een actief abonnement (€59.99/jaar + BTW). Je
-                      profiel is zichtbaar voor verhuurders.
+                      Je hebt een actief abonnement (€65/jaar inclusief BTW).
+                      Je profiel is zichtbaar voor verhuurders.
                     </p>
                   </div>
                 </div>
