@@ -204,7 +204,7 @@ export class PropertyService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Manager']);
+    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -304,7 +304,7 @@ export class PropertyService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Manager']);
+    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -444,7 +444,7 @@ export class PropertyService extends DatabaseService {
     }
 
     // Check if user can access this landlord's properties
-    const hasPermission = await this.checkUserPermission(landlordId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(landlordId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -509,7 +509,7 @@ export class PropertyService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Manager']);
+    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -578,7 +578,7 @@ export class PropertyService extends DatabaseService {
 
     const hasPermission = await this.checkUserPermission(
       (image as any).properties.landlord_id,
-      ['Manager']
+      ['Beheerder']
     );
     if (!hasPermission) {
       return {
@@ -619,7 +619,7 @@ export class PropertyService extends DatabaseService {
 
     // If landlordId is provided, check permissions
     if (landlordId) {
-      const hasPermission = await this.checkUserPermission(landlordId, ['Manager']);
+      const hasPermission = await this.checkUserPermission(landlordId, ['Beheerder']);
       if (!hasPermission) {
         return {
           data: null,

@@ -93,7 +93,7 @@ export class NotificationService extends DatabaseService {
 
     // Check permissions - users can only see their own notifications unless they're a manager
     if (targetUserId !== currentUserId) {
-      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
       if (!hasPermission) {
         return {
           data: null,
@@ -165,7 +165,7 @@ export class NotificationService extends DatabaseService {
 
       // Check if user owns this notification
       if (notification.user_id !== currentUserId) {
-        const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+        const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
         if (!hasPermission) {
           throw new Error('Geen toegang tot deze notificatie');
         }
@@ -208,7 +208,7 @@ export class NotificationService extends DatabaseService {
 
     // Check permissions
     if (targetUserId !== currentUserId) {
-      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
       if (!hasPermission) {
         return {
           data: null,
@@ -271,7 +271,7 @@ export class NotificationService extends DatabaseService {
 
       // Check if user owns this notification
       if (notification.user_id !== currentUserId) {
-        const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+        const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
         if (!hasPermission) {
           throw new Error('Geen toegang tot deze notificatie');
         }
@@ -309,7 +309,7 @@ export class NotificationService extends DatabaseService {
 
     // Check permissions
     if (targetUserId !== currentUserId) {
-      const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+      const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
       if (!hasPermission) {
         return {
           data: null,
@@ -351,7 +351,7 @@ export class NotificationService extends DatabaseService {
     }
 
     // Check if user is a manager
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -407,7 +407,7 @@ export class NotificationService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,

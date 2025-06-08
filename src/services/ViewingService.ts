@@ -56,7 +56,7 @@ export class ViewingService extends DatabaseService {
     }
 
     // Check if user owns this property
-    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Manager']);
+    const hasPermission = await this.checkUserPermission(property.landlord_id, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -180,8 +180,8 @@ export class ViewingService extends DatabaseService {
       }
 
       // Check if user can access this invitation
-      const hasPermission = await this.checkUserPermission(data.tenant_id, ['Manager']) ||
-                           await this.checkUserPermission(data.landlord_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(data.tenant_id, ['Beheerder']) ||
+                           await this.checkUserPermission(data.landlord_id, ['Beheerder']);
       
       if (!hasPermission) {
         throw new Error('Geen toegang tot deze uitnodiging');
@@ -388,7 +388,7 @@ export class ViewingService extends DatabaseService {
       }
 
       // Check if user is the landlord
-      const hasPermission = await this.checkUserPermission(invitation.landlord_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(invitation.landlord_id, ['Beheerder']);
       if (!hasPermission) {
         throw new Error('Alleen de verhuurder kan uitnodigingen annuleren');
       }
@@ -454,8 +454,8 @@ export class ViewingService extends DatabaseService {
       }
 
       // Check if user is involved in this viewing
-      const hasPermission = await this.checkUserPermission(invitation.tenant_id, ['Manager']) ||
-                           await this.checkUserPermission(invitation.landlord_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(invitation.tenant_id, ['Beheerder']) ||
+                           await this.checkUserPermission(invitation.landlord_id, ['Beheerder']);
       
       if (!hasPermission) {
         throw new Error('Geen toegang tot deze bezichtiging');
@@ -503,7 +503,7 @@ export class ViewingService extends DatabaseService {
 
     // If userId is provided, check permissions
     if (userId) {
-      const hasPermission = await this.checkUserPermission(userId, ['Manager']);
+      const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
       if (!hasPermission) {
         return {
           data: null,
@@ -563,7 +563,7 @@ export class ViewingService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,

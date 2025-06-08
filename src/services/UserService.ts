@@ -102,7 +102,7 @@ export class UserService extends DatabaseService {
     userId: string,
     updates: UpdateUserProfileData
   ): Promise<DatabaseResponse<Tables<'profiles'>>> {
-    const hasPermission = await this.checkUserPermission(userId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -180,7 +180,7 @@ export class UserService extends DatabaseService {
     userId: string,
     role: 'Huurder' | 'Verhuurder' | 'Manager'
   ): Promise<DatabaseResponse<Tables<'user_roles'>>> {
-    const hasPermission = await this.checkUserPermission(userId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -231,7 +231,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -303,7 +303,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -342,7 +342,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -381,7 +381,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -427,7 +427,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
