@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
@@ -118,16 +117,11 @@ export class AuthService {
 
         if (profileError || roleError) {
            logger.error('Profile creation error:', profileError || roleError);
-          // Convert to proper AuthError format
+          // Create a proper error that extends Error and satisfies AuthError interface
           const errorMessage = (profileError || roleError)?.message || 'Profile creation failed';
-          const authError: AuthError = {
-            name: 'AuthError',
-            message: errorMessage,
-            status: 400,
-            code: 'profile_creation_failed',
-            __isAuthError: true as const
-          };
-          return { user: null, error: authError };
+          const error = new Error(errorMessage) as AuthError;
+          error.status = 400;
+          return { user: null, error };
         }
 
         const user = await this.mapSupabaseUserToUser(authData.user);

@@ -166,7 +166,7 @@ export class PaymentService extends DatabaseService {
 
       if (!data || data.length === 0) {
         return {
-          data: { hasActiveSubscription: false },
+          data: { hasActiveSubscription: false } as SubscriptionStatus,
           error: null
         };
       }
@@ -186,7 +186,7 @@ export class PaymentService extends DatabaseService {
             hasActiveSubscription: isActive,
             subscriptionType: 'huurder_yearly',
             expiresAt: expiryDate.toISOString()
-          },
+          } as SubscriptionStatus,
           error: null
         };
       }
@@ -195,7 +195,7 @@ export class PaymentService extends DatabaseService {
         data: { 
           hasActiveSubscription: true, 
           subscriptionType: 'huurder_yearly' 
-        },
+        } as SubscriptionStatus,
         error: null
       };
     });
