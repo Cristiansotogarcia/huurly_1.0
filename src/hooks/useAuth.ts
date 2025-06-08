@@ -4,6 +4,7 @@ import { User } from '@/types';
 import { authService, SignUpData, SignInData } from '@/lib/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export interface UseAuthReturn {
   user: User | null;
@@ -31,7 +32,7 @@ export const useAuth = (): UseAuthReturn => {
           login(currentUser);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+         logger.error('Error initializing auth:', error);
       } finally {
         setIsLoading(false);
       }
@@ -79,7 +80,7 @@ export const useAuth = (): UseAuthReturn => {
 
       return { success: false };
     } catch (error) {
-      console.error('Sign up error:', error);
+       logger.error('Sign up error:', error);
       toast({
         title: "Registratie mislukt",
         description: "Er is een onverwachte fout opgetreden.",
@@ -116,7 +117,7 @@ export const useAuth = (): UseAuthReturn => {
 
       return { success: false };
     } catch (error) {
-      console.error('Sign in error:', error);
+       logger.error('Sign in error:', error);
       toast({
         title: "Inloggen mislukt",
         description: "Er is een onverwachte fout opgetreden.",
@@ -147,7 +148,7 @@ export const useAuth = (): UseAuthReturn => {
         });
       }
     } catch (error) {
-      console.error('Sign out error:', error);
+       logger.error('Sign out error:', error);
       toast({
         title: "Uitloggen mislukt",
         description: "Er is een onverwachte fout opgetreden.",
@@ -178,7 +179,7 @@ export const useAuth = (): UseAuthReturn => {
       });
       return true;
     } catch (error) {
-      console.error('Reset password error:', error);
+       logger.error('Reset password error:', error);
       toast({
         title: "Wachtwoord reset mislukt",
         description: "Er is een onverwachte fout opgetreden.",
@@ -210,7 +211,7 @@ export const useAuth = (): UseAuthReturn => {
       });
       return true;
     } catch (error) {
-      console.error('Update password error:', error);
+       logger.error('Update password error:', error);
       toast({
         title: "Wachtwoord wijzigen mislukt",
         description: "Er is een onverwachte fout opgetreden.",
@@ -245,7 +246,7 @@ export const useAuth = (): UseAuthReturn => {
       });
       return true;
     } catch (error) {
-      console.error('Update profile error:', error);
+       logger.error('Update profile error:', error);
       toast({
         title: "Profiel wijzigen mislukt",
         description: "Er is een onverwachte fout opgetreden.",

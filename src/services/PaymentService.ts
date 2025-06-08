@@ -4,6 +4,7 @@ import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '@/lib/stripe';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
 import { ErrorHandler } from '@/lib/errors';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
 
 export type PaymentRecord = Tables<'payment_records'>;
 
@@ -299,7 +300,7 @@ export class PaymentService extends DatabaseService {
 
     return this.executeQuery(async () => {
       // Log the approval request for now since approval_requests table doesn't exist
-      console.log('Verhuurder approval request:', {
+       logger.info('Verhuurder approval request:', {
         user_id: userId,
         motivation: motivation,
         timestamp: new Date().toISOString()

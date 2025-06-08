@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +21,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
 
   // Helper function to get dashboard route based on user role
   const getDashboardRoute = (role: UserRole): string => {
-    console.log('Getting dashboard route for role:', role);
+     logger.info('Getting dashboard route for role:', role);
     switch (role) {
       case 'huurder':
         return '/huurder-dashboard';
@@ -31,7 +32,7 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       case 'beheerder':
         return '/beheerder-dashboard';
       default:
-        console.warn('Unknown role:', role, 'defaulting to huurder dashboard');
+         logger.warn('Unknown role:', role, 'defaulting to huurder dashboard');
         return '/huurder-dashboard';
     }
   };
@@ -39,21 +40,21 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Login attempt for email:', email);
+     logger.info('Login attempt for email:', email);
     const result = await signIn({ email, password });
     
     if (result.success && result.user) {
-      console.log('Login successful for user:', result.user.email, 'with role:', result.user.role);
+       logger.info('Login successful for user:', result.user.email, 'with role:', result.user.role);
       onClose();
       
       // Add a small delay to ensure state is updated
       setTimeout(() => {
         const dashboardRoute = getDashboardRoute(result.user!.role);
-        console.log('Redirecting to:', dashboardRoute);
+         logger.info('Redirecting to:', dashboardRoute);
         navigate(dashboardRoute);
       }, 100);
     } else {
-      console.error('Login failed:', result);
+       logger.error('Login failed:', result);
     }
   };
 
