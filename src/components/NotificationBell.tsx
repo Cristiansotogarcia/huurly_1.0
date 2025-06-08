@@ -9,6 +9,7 @@ import { notificationService } from '@/services/NotificationService';
 import { Bell, Check, CheckCheck, Trash2, FileText, Calendar, AlertTriangle, UserCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {
@@ -45,7 +46,7 @@ const NotificationBell = () => {
         setUnreadCount(unread);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
+       logger.error('Error loading notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +96,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+       logger.error('Error marking notification as read:', error);
     }
   };
 
@@ -106,7 +107,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+       logger.error('Error marking all notifications as read:', error);
     }
   };
 
@@ -117,7 +118,7 @@ const NotificationBell = () => {
         await loadNotifications(); // Reload to update the list
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
+       logger.error('Error deleting notification:', error);
     }
   };
 

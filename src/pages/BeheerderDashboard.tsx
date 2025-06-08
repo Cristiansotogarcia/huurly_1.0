@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,7 +98,7 @@ const BeheerderDashboard = () => {
       ];
       setUsers(demoUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
+       logger.error('Error loading users:', error);
     }
   };
 

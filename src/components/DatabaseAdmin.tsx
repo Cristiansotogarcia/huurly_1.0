@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { databaseSeeder } from '@/scripts/seedDatabase';
 import { Database, Trash2, RefreshCw } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export const DatabaseAdmin = () => {
   const [isSeeding, setIsSeeding] = useState(false);
@@ -19,7 +20,7 @@ export const DatabaseAdmin = () => {
         description: "All demo accounts and data have been created in the database.",
       });
     } catch (error) {
-      console.error('Seeding error:', error);
+       logger.error('Seeding error:', error);
       toast({
         title: "Seeding Failed",
         description: "There was an error seeding the database. Check the console for details.",
@@ -39,7 +40,7 @@ export const DatabaseAdmin = () => {
         description: "All demo data has been removed from the database.",
       });
     } catch (error) {
-      console.error('Clearing error:', error);
+       logger.error('Clearing error:', error);
       toast({
         title: "Clearing Failed",
         description: "There was an error clearing the database. Check the console for details.",

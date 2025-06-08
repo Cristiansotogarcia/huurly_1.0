@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
 import { demoStatistics } from '@/data/demoData';
+import { logger } from '@/lib/logger';
 
 export interface PlatformAnalytics {
   totalUsers: number;
@@ -369,7 +370,7 @@ export class AnalyticsService extends DatabaseService {
     return this.executeQuery(async () => {
       // In a real implementation, this would store activity in a database table
       // For demo purposes, we'll just log it
-      console.log('Activity tracked:', {
+       logger.info('Activity tracked:', {
         userId: currentUserId,
         type,
         description,
