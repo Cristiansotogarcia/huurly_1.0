@@ -36,6 +36,20 @@ npm i
 npm run dev
 ```
 
+## Database Scripts
+
+The scripts in `src/scripts` interact directly with your Supabase project. They
+expect the following environment variables to be set before running:
+
+```env
+SUPABASE_URL=<your-supabase-url>
+SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+```
+
+Place these variables in a `.env` file or export them in your shell so that
+`update-db.ts` and `query-roles.ts` can authenticate properly.
+
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
@@ -107,3 +121,17 @@ Then in a separate terminal run:
 ```sh
 npm run dev
 ```
+
+
+## Database Scripts
+
+The scripts in `src/scripts` interact directly with your Supabase project. They
+expect the following environment variables to be set before running:
+
+```env
+SUPABASE_URL=<your-supabase-url>
+SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+```
+
+Place these variables in a `.env` file or export them in your shell so that
+`update-db.ts` and `query-roles.ts` can authenticate properly.
