@@ -1,9 +1,10 @@
-require('ts-node/register');
-const http = require('http');
-const Stripe = require('stripe');
-const { createClient } = require('@supabase/supabase-js');
-const { logger } = require('./src/lib/logger.ts');
-require('dotenv').config();
+import http from 'http';
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+import { logger } from './src/lib/logger.ts';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
