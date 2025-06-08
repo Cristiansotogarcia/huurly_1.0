@@ -74,7 +74,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -152,7 +152,7 @@ export class AnalyticsService extends DatabaseService {
     const targetUserId = userId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(targetUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -223,7 +223,7 @@ export class AnalyticsService extends DatabaseService {
     const targetLandlordId = landlordId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetLandlordId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(targetLandlordId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -278,7 +278,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -325,7 +325,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -401,7 +401,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -444,7 +444,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,

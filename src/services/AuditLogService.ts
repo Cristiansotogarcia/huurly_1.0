@@ -27,7 +27,7 @@ export class AuditLogService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -57,7 +57,7 @@ export class AuditLogService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,

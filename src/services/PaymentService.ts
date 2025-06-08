@@ -123,7 +123,7 @@ export class PaymentService extends DatabaseService {
     }
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(userId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
