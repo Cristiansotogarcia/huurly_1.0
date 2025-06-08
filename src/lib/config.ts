@@ -3,6 +3,7 @@
  * Handles environment variables and application settings
  */
 import { logger } from '@/lib/logger';
+import { getEnv } from '@/lib/env';
 
 export interface AppConfig {
   app: {
@@ -86,24 +87,24 @@ const defaultConfig: AppConfig = {
 function getEnvironmentConfig(): Partial<AppConfig> {
   return {
     app: {
-      name: import.meta.env.VITE_APP_NAME || defaultConfig.app.name,
-      version: import.meta.env.VITE_APP_VERSION || defaultConfig.app.version,
-      environment: (import.meta.env.VITE_APP_ENV as any) || defaultConfig.app.environment,
-      baseUrl: import.meta.env.VITE_APP_BASE_URL || defaultConfig.app.baseUrl
+      name: getEnv('VITE_APP_NAME') || defaultConfig.app.name,
+      version: getEnv('VITE_APP_VERSION') || defaultConfig.app.version,
+      environment: (getEnv('VITE_APP_ENV') as any) || defaultConfig.app.environment,
+      baseUrl: getEnv('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
     },
     supabase: {
-      url: import.meta.env.VITE_SUPABASE_URL || '',
-      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+      url: getEnv('VITE_SUPABASE_URL') || '',
+      anonKey: getEnv('VITE_SUPABASE_ANON_KEY') || ''
     },
     stripe: {
-      publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
-      webhookSecret: import.meta.env.VITE_STRIPE_WEBHOOK_SECRET
+      publishableKey: getEnv('VITE_STRIPE_PUBLISHABLE_KEY') || '',
+      webhookSecret: getEnv('VITE_STRIPE_WEBHOOK_SECRET')
     },
     features: {
-      enableDemo: import.meta.env.VITE_ENABLE_DEMO === 'true',
-      enablePayments: import.meta.env.VITE_ENABLE_PAYMENTS !== 'false',
-      enableNotifications: import.meta.env.VITE_ENABLE_NOTIFICATIONS !== 'false',
-      enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true'
+      enableDemo: getEnv('VITE_ENABLE_DEMO') === 'true',
+      enablePayments: getEnv('VITE_ENABLE_PAYMENTS') !== 'false',
+      enableNotifications: getEnv('VITE_ENABLE_NOTIFICATIONS') !== 'false',
+      enableAnalytics: getEnv('VITE_ENABLE_ANALYTICS') === 'true'
     }
   };
 }
