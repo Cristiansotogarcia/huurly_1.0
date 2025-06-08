@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from '@/types';
 import { authService, SignUpData, SignInData } from '@/lib/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -22,6 +22,7 @@ export const useAuth = (): UseAuthReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Initialize auth state
@@ -44,6 +45,23 @@ export const useAuth = (): UseAuthReturn => {
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
         login(user);
+        // Auto-redirect to correct dashboard when auth state changes
+        setTimeout(() => {
+          switch (user.role) {
+            case 'huurder':
+              navigate('/huurder-dashboard');
+              break;
+            case 'verhuurder':
+              navigate('/verhuurder-dashboard');
+              break;
+            case 'beoordelaar':
+              navigate('/beoordelaar-dashboard');
+              break;
+            case 'beheerder':
+              navigate('/beheerder-dashboard');
+              break;
+          }
+        }, 100);
       } else {
         logout();
       }
@@ -53,7 +71,7 @@ export const useAuth = (): UseAuthReturn => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [login, logout]);
+  }, [login, logout, navigate]);
 
   const signUp = async (data: SignUpData): Promise<{ success: boolean; user?: User }> => {
     setIsLoading(true);

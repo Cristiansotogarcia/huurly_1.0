@@ -1,9 +1,12 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
   onClose: () => void;
@@ -14,15 +17,35 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      const result = await signIn({ email, password });
-      if (result.success) {
+      const { success, user } = await signIn({ email, password });
+      
+      if (success && user) {
         onClose();
+        
+        // Route based on user role
+        switch (user.role) {
+          case 'huurder':
+            navigate('/huurder-dashboard');
+            break;
+          case 'verhuurder':
+            navigate('/verhuurder-dashboard');
+            break;
+          case 'beoordelaar':
+            navigate('/beoordelaar-dashboard');
+            break;
+          case 'beheerder':
+            navigate('/beheerder-dashboard');
+            break;
+          default:
+            navigate('/');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -32,15 +55,12 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Inloggen</h2>
-        <p className="text-gray-600 mt-2">
-          Welkom terug bij Huurly
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      <DialogHeader>
+        <DialogTitle>Inloggen</DialogTitle>
+      </DialogHeader>
+      
+      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
         <div>
           <Label htmlFor="email">E-mailadres</Label>
           <Input
@@ -49,10 +69,10 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="je@email.nl"
+            placeholder="jouw@email.nl"
           />
         </div>
-
+        
         <div>
           <Label htmlFor="password">Wachtwoord</Label>
           <Input
@@ -61,18 +81,21 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            placeholder="Je wachtwoord"
+            placeholder="••••••••"
           />
         </div>
-
-        <Button 
-          type="submit" 
-          className="w-full bg-dutch-orange hover:bg-orange-600"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Inloggen...' : 'Inloggen'}
+        
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Inloggen...
+            </>
+          ) : (
+            'Inloggen'
+          )}
         </Button>
       </form>
-    </div>
+    </>
   );
 };
