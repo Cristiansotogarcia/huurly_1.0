@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
-import { demoStatistics } from '@/data/demoData';
 import { logger } from '@/lib/logger';
 
 export interface PlatformAnalytics {
@@ -84,52 +83,49 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // For demo purposes, return demo statistics
-      // In production, this would query actual database tables
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const [{ count: totalUsers }, { count: activeUsers }, { count: totalProperties }, { count: successfulMatches }, { count: pendingDocuments }, { data: payments }, { count: totalApplications }] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase
+          .from('user_roles')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('subscription_status', 'active'),
+        supabase.from('properties').select('id', { count: 'exact', head: true }),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'accepted'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+        supabase
+          .from('payment_records')
+          .select('amount, created_at')
+          .gte('created_at', startOfMonth.toISOString()),
+        supabase.from('property_applications').select('id', { count: 'exact', head: true })
+      ]);
+
+      const monthlyRevenue =
+        (payments?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0) / 100;
+
+      const matchSuccessRate = totalApplications
+        ? ((successfulMatches || 0) / totalApplications) * 100
+        : 0;
+
       const analytics: PlatformAnalytics = {
-        ...demoStatistics.platform,
-        recentActivity: [
-          {
-            id: '1',
-            type: 'user_registration',
-            description: 'Nieuwe huurder geregistreerd: Sarah van der Berg',
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            userId: '5',
-            userName: 'Sarah van der Berg'
-          },
-          {
-            id: '2',
-            type: 'property_listed',
-            description: 'Nieuwe woning toegevoegd in Amsterdam Noord',
-            timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-            userId: '2',
-            userName: 'Bas Verhuur BV'
-          },
-          {
-            id: '3',
-            type: 'document_uploaded',
-            description: 'Document geüpload voor verificatie',
-            timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-            userId: '1',
-            userName: 'Emma Bakker'
-          },
-          {
-            id: '4',
-            type: 'viewing_scheduled',
-            description: 'Bezichtiging gepland voor morgen 14:00',
-            timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-            userId: '5',
-            userName: 'Sarah van der Berg'
-          },
-          {
-            id: '5',
-            type: 'payment_completed',
-            description: 'Premium abonnement geactiveerd',
-            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-            userId: '6',
-            userName: 'Marco Huizenbeheer'
-          }
-        ]
+        totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
+        totalProperties: totalProperties || 0,
+        successfulMatches: successfulMatches || 0,
+        pendingDocuments: pendingDocuments || 0,
+        monthlyRevenue,
+        userGrowth: 0,
+        matchSuccessRate,
+        recentActivity: []
       };
 
       return { data: analytics, error: null };
@@ -162,46 +158,73 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // For demo purposes, return demo statistics based on user role
       const { data: userRole } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', targetUserId)
         .single();
 
-      let analytics: UserAnalytics;
-
-      if (userRole?.role === 'Huurder' || targetUserId === '1' || targetUserId === '5') {
-        analytics = {
-          ...demoStatistics.tenant,
-          monthlyStats: [
-            { month: 'Jan', value: 12, change: 5 },
-            { month: 'Feb', value: 18, change: 50 },
-            { month: 'Mar', value: 25, change: 39 },
-            { month: 'Apr', value: 32, change: 28 },
-            { month: 'May', value: 45, change: 41 },
-            { month: 'Jun', value: 89, change: 98 }
-          ]
-        };
-      } else {
-        analytics = {
-          profileViews: 156,
-          invitationsReceived: 0,
-          applicationsSubmitted: 0,
-          acceptedApplications: 12,
-          pendingApplications: 8,
-          documentsApproved: 0,
-          documentsPending: 0,
-          monthlyStats: [
-            { month: 'Jan', value: 8500, change: 12 },
-            { month: 'Feb', value: 9200, change: 8 },
-            { month: 'Mar', value: 10100, change: 10 },
-            { month: 'Apr', value: 11200, change: 11 },
-            { month: 'May', value: 11800, change: 5 },
-            { month: 'Jun', value: 12450, change: 6 }
-          ]
+      if (userRole?.role !== 'Huurder') {
+        return {
+          data: null,
+          error: new Error('Niet geïmplementeerd voor deze rol'),
         };
       }
+
+      const [
+        { data: tenantProfile },
+        { count: invitationsReceived },
+        { count: applicationsSubmitted },
+        { count: acceptedApplications },
+        { count: pendingApplications },
+        { count: documentsApproved },
+        { count: documentsPending }
+      ] = await Promise.all([
+        supabase
+          .from('tenant_profiles')
+          .select('profile_views')
+          .eq('user_id', targetUserId)
+          .single(),
+        supabase
+          .from('viewing_invitations')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', targetUserId),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', targetUserId),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', targetUserId)
+          .eq('status', 'accepted'),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', targetUserId)
+          .eq('status', 'pending'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', targetUserId)
+          .eq('status', 'approved'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', targetUserId)
+          .eq('status', 'pending')
+      ]);
+
+      const analytics: UserAnalytics = {
+        profileViews: tenantProfile?.profile_views || 0,
+        invitationsReceived: invitationsReceived || 0,
+        applicationsSubmitted: applicationsSubmitted || 0,
+        acceptedApplications: acceptedApplications || 0,
+        pendingApplications: pendingApplications || 0,
+        documentsApproved: documentsApproved || 0,
+        documentsPending: documentsPending || 0,
+        monthlyStats: []
+      };
 
       return { data: analytics, error: null };
     });
@@ -233,32 +256,69 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // For demo purposes, return demo statistics
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('id, title, status')
+        .eq('landlord_id', targetLandlordId);
+
+      if (!properties) {
+        return { data: null, error: new Error('Geen gegevens gevonden') };
+      }
+
+      const propertyIds = properties.map(p => p.id);
+
+      const [
+        { count: totalApplications },
+        { count: acceptedApplications },
+        { count: pendingApplications }
+      ] = await Promise.all([
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .in('property_id', propertyIds),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .in('property_id', propertyIds)
+          .eq('status', 'accepted'),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .in('property_id', propertyIds)
+          .eq('status', 'pending')
+      ]);
+
+      const totalProperties = properties.length;
+      const activeProperties = properties.filter(p => p.status === 'active').length;
+
+      const topPerformingProperties: PropertyPerformance[] = [];
+
+      for (const prop of properties) {
+        const { count: appCount } = await supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('property_id', prop.id);
+
+        topPerformingProperties.push({
+          id: prop.id,
+          title: prop.title,
+          views: 0,
+          applications: appCount || 0,
+          conversionRate: 0
+        });
+      }
+
+      topPerformingProperties.sort((a, b) => b.applications - a.applications);
+
       const analytics: PropertyAnalytics = {
-        ...demoStatistics.landlord,
-        topPerformingProperties: [
-          {
-            id: '1',
-            title: 'Modern 2-kamer appartement in Amsterdam Noord',
-            views: 156,
-            applications: 23,
-            conversionRate: 14.7
-          },
-          {
-            id: '2',
-            title: 'Gezellige studio in het centrum van Amsterdam',
-            views: 89,
-            applications: 12,
-            conversionRate: 13.5
-          },
-          {
-            id: '3',
-            title: 'Ruim 3-kamer appartement in Utrecht Centrum',
-            views: 67,
-            applications: 8,
-            conversionRate: 11.9
-          }
-        ]
+        totalProperties,
+        activeProperties,
+        totalViews: 0,
+        totalApplications: totalApplications || 0,
+        acceptedApplications: acceptedApplications || 0,
+        pendingApplications: pendingApplications || 0,
+        monthlyRevenue: 0,
+        topPerformingProperties: topPerformingProperties.slice(0, 3)
       };
 
       return { data: analytics, error: null };
@@ -288,24 +348,54 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // For demo purposes, return demo statistics
+      const [
+        { count: approved },
+        { count: rejected },
+        { count: pending },
+        { count: weeklyCompleted },
+        { data: typeData }
+      ] = await Promise.all([
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'approved'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'rejected'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+        supabase
+          .from('user_documents')
+          .select('id', { count: 'exact', head: true })
+          .gte('updated_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .in('status', ['approved', 'rejected']),
+        supabase.from('user_documents').select('document_type, status')
+      ]);
+
+      const typeMap: Record<string, { type: string; count: number; approved: number }> = {};
+      typeData?.forEach((d: any) => {
+        if (!typeMap[d.document_type]) {
+          typeMap[d.document_type] = { type: d.document_type, count: 0, approved: 0 };
+        }
+        typeMap[d.document_type].count += 1;
+        if (d.status === 'approved') {
+          typeMap[d.document_type].approved += 1;
+        }
+      });
+
       const analytics = {
-        ...demoStatistics.reviewer,
-        weeklyProgress: [
-          { day: 'Ma', completed: 8, target: 7 },
-          { day: 'Di', completed: 6, target: 7 },
-          { day: 'Wo', completed: 9, target: 7 },
-          { day: 'Do', completed: 7, target: 7 },
-          { day: 'Vr', completed: 8, target: 7 },
-          { day: 'Za', completed: 0, target: 0 },
-          { day: 'Zo', completed: 0, target: 0 }
-        ],
-        documentTypes: [
-          { type: 'Identiteitsbewijs', count: 45, approved: 42 },
-          { type: 'Inkomensverklaring', count: 38, approved: 35 },
-          { type: 'Arbeidscontract', count: 32, approved: 28 },
-          { type: 'Referenties', count: 41, approved: 29 }
-        ]
+        documentsReviewed: (approved || 0) + (rejected || 0),
+        documentsApproved: approved || 0,
+        documentsRejected: rejected || 0,
+        avgReviewTime: 'N/A',
+        pendingReviews: pending || 0,
+        weeklyGoal: 50,
+        weeklyCompleted: weeklyCompleted || 0,
+        weeklyProgress: [],
+        documentTypes: Object.values(typeMap)
       };
 
       return { data: analytics, error: null };
