@@ -36,7 +36,7 @@ export const getStripe = (): Promise<Stripe | null> => {
 const getStripeConfig = () => {
   const huurderPriceId = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRIPE_HUURDER_PRICE_ID) || 
                          process.env.VITE_STRIPE_HUURDER_PRICE_ID || 
-                         'price_1QVFSSGadpjzVmLhDTISKngf'; // Default test price ID
+                         'price_1RXr0rGadpjzVmLhApRe12j2'; // Default test price ID
 
   return {
     huurderPriceId
@@ -49,8 +49,9 @@ export const SUBSCRIPTION_PLANS = {
     yearly: {
       priceId: getStripeConfig().huurderPriceId,
       name: 'Huurder Jaarlijks',
-      price: 59.99, // Display price (excluding BTW)
-      priceWithTax: 72.59, // Actual charge price (including 21% BTW)
+      // 65 euros including 21% BTW => ~53.72 excluding tax
+      price: 53.72, // Display price (excluding BTW)
+      priceWithTax: 65, // Actual charge price (including 21% BTW)
       currency: 'eur',
       interval: 'jaar',
       taxRate: 0.21, // 21% BTW
