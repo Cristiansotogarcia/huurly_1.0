@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface SignUpData {
   email: string;
@@ -45,7 +46,7 @@ export class AuthService {
    * Map database role to frontend role
    */
   private mapRoleFromDatabase(dbRole: string, email?: string): UserRole {
-    console.log('Mapping database role:', dbRole, 'for email:', email);
+     logger.info('Mapping database role:', dbRole, 'for email:', email);
     
     switch (dbRole) {
       case 'Huurder':
@@ -69,7 +70,7 @@ export class AuthService {
             return 'verhuurder';
           }
         }
-        console.warn('Unknown database role:', dbRole, 'defaulting to huurder');
+         logger.warn('Unknown database role:', dbRole, 'defaulting to huurder');
         return 'huurder';
     }
   }
@@ -116,7 +117,7 @@ export class AuthService {
           });
 
         if (profileError || roleError) {
-          console.error('Profile creation error:', profileError || roleError);
+           logger.error('Profile creation error:', profileError || roleError);
           return { user: null, error: (profileError || roleError) as AuthError };
         }
 
@@ -208,7 +209,7 @@ export class AuthService {
       
       return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
+       logger.error('Error getting current user:', error);
       return null;
     }
   }
@@ -294,13 +295,13 @@ export class AuthService {
         .limit(1);
 
       if (error) {
-        console.error('Error checking payment status:', error);
+         logger.error('Error checking payment status:', error);
         return false;
       }
 
       return data && data.length > 0;
     } catch (error) {
-      console.error('Error checking payment status:', error);
+       logger.error('Error checking payment status:', error);
       return false;
     }
   }
@@ -311,7 +312,7 @@ export class AuthService {
   private async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
       // Get user role with better error handling
-      console.log('Fetching role for user:', supabaseUser.email);
+       logger.info('Fetching role for user:', supabaseUser.email);
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role, subscription_status')
@@ -319,7 +320,7 @@ export class AuthService {
         .single();
 
       if (roleError) {
-        console.error('Error fetching user role:', roleError);
+         logger.error('Error fetching user role:', roleError);
         // If we can't get the role, create a default one
         await this.createDefaultRole(supabaseUser.id, supabaseUser.email);
       }
@@ -342,7 +343,7 @@ export class AuthService {
       const dbRole = roleData?.role || this.determineRoleFromEmail(supabaseUser.email);
       const mappedRole = this.mapRoleFromDatabase(dbRole, supabaseUser.email);
 
-      console.log('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
+       logger.info('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
 
       return {
         id: supabaseUser.id,
@@ -355,7 +356,7 @@ export class AuthService {
         hasPayment,
       };
     } catch (error) {
-      console.error('Error mapping user:', error);
+       logger.error('Error mapping user:', error);
       // Fallback mapping in case of any errors
       return {
         id: supabaseUser.id,
@@ -401,7 +402,7 @@ export class AuthService {
       const role = this.determineRoleFromEmail(email);
       const dbRole = this.mapRoleToDatabase(role);
       
-      console.log('Creating default role for user:', email, 'Role:', dbRole);
+       logger.info('Creating default role for user:', email, 'Role:', dbRole);
       
       const { error } = await supabase
         .from('user_roles')
@@ -412,10 +413,10 @@ export class AuthService {
         });
 
       if (error) {
-        console.error('Error creating default role:', error);
+         logger.error('Error creating default role:', error);
       }
     } catch (error) {
-      console.error('Error in createDefaultRole:', error);
+       logger.error('Error in createDefaultRole:', error);
     }
   }
 }

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '../lib/logger';
 
 // Demo account data that will be inserted into the database
 const DEMO_ACCOUNTS = [
@@ -200,7 +201,7 @@ const DEMO_PAYMENTS = [
 
 export class DatabaseSeeder {
   async seedAll() {
-    console.log('🌱 Starting database seeding...');
+     logger.info('🌱 Starting database seeding...');
     
     try {
       await this.seedProfiles();
@@ -212,15 +213,15 @@ export class DatabaseSeeder {
       await this.seedViewings();
       await this.seedPayments();
       
-      console.log('✅ Database seeding completed successfully!');
+       logger.info('✅ Database seeding completed successfully!');
     } catch (error) {
-      console.error('❌ Database seeding failed:', error);
+       logger.error('❌ Database seeding failed:', error);
       throw error;
     }
   }
 
   private async seedProfiles() {
-    console.log('📝 Seeding profiles...');
+     logger.info('📝 Seeding profiles...');
     
     const profiles = DEMO_ACCOUNTS.map(account => ({
       id: account.id,
@@ -233,15 +234,15 @@ export class DatabaseSeeder {
       .upsert(profiles, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding profiles:', error);
+       logger.error('Error seeding profiles:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${profiles.length} profiles`);
+     logger.info(`✅ Seeded ${profiles.length} profiles`);
   }
 
   private async seedUserRoles() {
-    console.log('👥 Seeding user roles...');
+     logger.info('👥 Seeding user roles...');
     
     const roles = DEMO_ACCOUNTS.map(account => ({
       user_id: account.id,
@@ -254,15 +255,15 @@ export class DatabaseSeeder {
       .upsert(roles, { onConflict: 'user_id' });
 
     if (error) {
-      console.error('Error seeding user roles:', error);
+       logger.error('Error seeding user roles:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${roles.length} user roles`);
+     logger.info(`✅ Seeded ${roles.length} user roles`);
   }
 
   private async seedTenantProfiles() {
-    console.log('🏠 Seeding tenant profiles...');
+     logger.info('🏠 Seeding tenant profiles...');
     
     const tenantProfiles = DEMO_ACCOUNTS
       .filter(account => account.role === 'Huurder' && account.profileData)
@@ -279,91 +280,91 @@ export class DatabaseSeeder {
         .upsert(tenantProfiles, { onConflict: 'user_id' });
 
       if (error) {
-        console.error('Error seeding tenant profiles:', error);
+         logger.error('Error seeding tenant profiles:', error);
         throw error;
       }
     }
     
-    console.log(`✅ Seeded ${tenantProfiles.length} tenant profiles`);
+     logger.info(`✅ Seeded ${tenantProfiles.length} tenant profiles`);
   }
 
   private async seedProperties() {
-    console.log('🏢 Seeding properties...');
+     logger.info('🏢 Seeding properties...');
     
     const { error } = await supabase
       .from('properties')
       .upsert(DEMO_PROPERTIES, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding properties:', error);
+       logger.error('Error seeding properties:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${DEMO_PROPERTIES.length} properties`);
+     logger.info(`✅ Seeded ${DEMO_PROPERTIES.length} properties`);
   }
 
   private async seedDocuments() {
-    console.log('📄 Seeding documents...');
+     logger.info('📄 Seeding documents...');
     
     const { error } = await supabase
       .from('user_documents')
       .upsert(DEMO_DOCUMENTS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding documents:', error);
+       logger.error('Error seeding documents:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${DEMO_DOCUMENTS.length} documents`);
+     logger.info(`✅ Seeded ${DEMO_DOCUMENTS.length} documents`);
   }
 
   private async seedApplications() {
-    console.log('📋 Seeding applications...');
+     logger.info('📋 Seeding applications...');
     
     const { error } = await supabase
       .from('property_applications')
       .upsert(DEMO_APPLICATIONS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding applications:', error);
+       logger.error('Error seeding applications:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${DEMO_APPLICATIONS.length} applications`);
+     logger.info(`✅ Seeded ${DEMO_APPLICATIONS.length} applications`);
   }
 
   private async seedViewings() {
-    console.log('👁️ Seeding viewings...');
+     logger.info('👁️ Seeding viewings...');
     
     const { error } = await supabase
       .from('viewing_invitations')
       .upsert(DEMO_VIEWINGS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding viewings:', error);
+       logger.error('Error seeding viewings:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${DEMO_VIEWINGS.length} viewings`);
+     logger.info(`✅ Seeded ${DEMO_VIEWINGS.length} viewings`);
   }
 
   private async seedPayments() {
-    console.log('💳 Seeding payments...');
+     logger.info('💳 Seeding payments...');
     
     const { error } = await supabase
       .from('payment_records')
       .upsert(DEMO_PAYMENTS, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error seeding payments:', error);
+       logger.error('Error seeding payments:', error);
       throw error;
     }
     
-    console.log(`✅ Seeded ${DEMO_PAYMENTS.length} payments`);
+     logger.info(`✅ Seeded ${DEMO_PAYMENTS.length} payments`);
   }
 
   async clearAll() {
-    console.log('🧹 Clearing existing demo data...');
+     logger.info('🧹 Clearing existing demo data...');
     
     try {
       // Clear in reverse order due to foreign key constraints
@@ -376,9 +377,9 @@ export class DatabaseSeeder {
       await supabase.from('user_roles').delete().in('user_id', DEMO_ACCOUNTS.map(a => a.id));
       await supabase.from('profiles').delete().in('id', DEMO_ACCOUNTS.map(a => a.id));
       
-      console.log('✅ Cleared existing demo data');
+       logger.info('✅ Cleared existing demo data');
     } catch (error) {
-      console.error('Error clearing demo data:', error);
+       logger.error('Error clearing demo data:', error);
       throw error;
     }
   }
@@ -390,5 +391,5 @@ export const databaseSeeder = new DatabaseSeeder();
 // If running directly, execute seeding
 if (typeof window === 'undefined') {
   // This is running in Node.js context
-  databaseSeeder.seedAll().catch(console.error);
+  databaseSeeder.seedAll().catch(logger.error);
 }

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface DatabaseResponse<T> {
   data: T | null;
@@ -28,7 +29,7 @@ export class DatabaseService {
       const { data, error } = await queryFn();
       
       if (error) {
-        console.error('Database error:', error);
+         logger.error('Database error:', error);
         return {
           data: null,
           error,
@@ -42,7 +43,7 @@ export class DatabaseService {
         success: true,
       };
     } catch (error) {
-      console.error('Unexpected database error:', error);
+       logger.error('Unexpected database error:', error);
       return {
         data: null,
         error: error as Error,
@@ -135,7 +136,7 @@ export class DatabaseService {
       const userId = await this.getCurrentUserId();
       
       // Log to console for now since audit_logs table doesn't exist
-      console.log('Audit Log:', {
+       logger.info('Audit Log:', {
         user_id: userId,
         action,
         table_name: tableName,
@@ -144,7 +145,7 @@ export class DatabaseService {
         new_values: newValues ? JSON.stringify(newValues) : null,
       });
     } catch (error) {
-      console.error('Failed to create audit log:', error);
+       logger.error('Failed to create audit log:', error);
     }
   }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { PostgrestError } from '@supabase/supabase-js';
+import { logger } from '../lib/logger';
 
 const SUPABASE_URL = "https://lxtkotgfsnahwncgcfnl.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4dGtvdGdmc25haHduY2djZm5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMjU4MjgsImV4cCI6MjA2NDYwMTgyOH0.3ukJCXs7f1HOO7y7ZgfpnSIalolB1LYbFpRtLd6ZyNE";
@@ -14,7 +15,7 @@ async function executeRawSQL(sql: string): Promise<{ data: any; error: Postgrest
     if (error) throw error;
     return { data, error };
   } catch (error) {
-    console.error('Error executing SQL:', error);
+     logger.error('Error executing SQL:', error);
     throw error;
   }
 }
@@ -28,12 +29,12 @@ async function main() {
   try {
     const { error } = await executeRawSQL(sql);
     if (error) {
-      console.error('Error altering enum:', error.message);
+       logger.error('Error altering enum:', error.message);
       return;
     }
-    console.log('Enum updated successfully');
+     logger.info('Enum updated successfully');
   } catch (error) {
-    console.error('Unexpected error:', error);
+     logger.error('Unexpected error:', error);
   }
 }
 
