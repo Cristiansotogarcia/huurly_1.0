@@ -1,104 +1,53 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+
+import { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  allowedRoles?: UserRole[];
-  requirePayment?: boolean;
-  fallbackPath?: string;
+  requiredRole?: UserRole;
 }
 
-export const ProtectedRoute = ({ 
-  children, 
-  allowedRoles, 
-  requirePayment = false,
-  fallbackPath = '/' 
-}: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const location = useLocation();
-  const [isChecking, setIsChecking] = useState(true);
 
-  useEffect(() => {
-    // Give a moment for auth to initialize
-    const timer = setTimeout(() => {
-      setIsChecking(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Show loading spinner while checking authentication
-  if (isLoading || isChecking) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-dutch-blue" />
-          <p className="text-gray-600">Laden...</p>
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
         </div>
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-
-  // Check role-based access
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (!isAuthenticated) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Check payment requirement
-  if (requirePayment && !user.hasPayment) {
-    return <Navigate to="/payment-required" replace />;
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
 };
 
-// Higher-order component for easier usage
-export const withProtectedRoute = (
-  Component: React.ComponentType,
-  options?: Omit<ProtectedRouteProps, 'children'>
-) => {
-  return (props: any) => (
-    <ProtectedRoute {...options}>
-      <Component {...props} />
-    </ProtectedRoute>
-  );
-};
-
-// Specific role-based route components
 export const HuurderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['huurder']}>
-    {children}
-  </ProtectedRoute>
+  <ProtectedRoute requiredRole="huurder">{children}</ProtectedRoute>
 );
 
 export const VerhuurderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['verhuurder']}>
-    {children}
-  </ProtectedRoute>
+  <ProtectedRoute requiredRole="verhuurder">{children}</ProtectedRoute>
 );
 
 export const BeoordelaarRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['beoordelaar']}>
-    {children}
-  </ProtectedRoute>
+  <ProtectedRoute requiredRole="beoordelaar">{children}</ProtectedRoute>
 );
 
 export const BeheerderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['beheerder']}>
-    {children}
-  </ProtectedRoute>
-);
-
-export const AdminRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute allowedRoles={['beoordelaar', 'beheerder']}>
-    {children}
-  </ProtectedRoute>
+  <ProtectedRoute requiredRole="beheerder">{children}</ProtectedRoute>
 );

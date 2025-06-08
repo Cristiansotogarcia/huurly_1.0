@@ -1,4 +1,5 @@
-import { cn } from "@/lib/utils";
+
+import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
@@ -7,12 +8,23 @@ interface LogoProps {
 export const Logo = ({ className }: LogoProps) => {
   return (
     <div className={cn("flex items-center", className)}>
-      <div className="w-8 h-8 bg-dutch-blue rounded-lg flex items-center justify-center">
-        <span className="text-white font-bold text-lg">H</span>
-      </div>
-      <span className="ml-2 text-xl font-bold text-dutch-blue">Huurly</span>
+      <img 
+        src="/huurly-logo.svg" 
+        alt="Huurly" 
+        className="h-8 w-auto"
+        onError={(e) => {
+          // Fallback to text if SVG fails to load
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          const parent = target.parentElement;
+          if (parent && !parent.querySelector('.logo-text')) {
+            const textLogo = document.createElement('span');
+            textLogo.className = 'logo-text text-2xl font-bold text-dutch-blue';
+            textLogo.textContent = 'Huurly';
+            parent.appendChild(textLogo);
+          }
+        }}
+      />
     </div>
   );
 };
-
-export default Logo;
