@@ -1,14 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
-const { logger } = require('../lib/logger');
-const dotenv = require('dotenv');
+import { createClient } from '@supabase/supabase-js';
+import { logger } from '../lib/logger';
+import dotenv from 'dotenv';
 
-// This script requires SUPABASE_URL and SUPABASE_SERVICE_KEY in the environment.
+// This script requires SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in the environment.
 dotenv.config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || '';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 async function queryUserRoles() {
   try {
