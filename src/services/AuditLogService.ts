@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
 
 export interface AuditLogFilters {
@@ -11,7 +11,7 @@ export interface AuditLogFilters {
 
 export class AuditLogService extends DatabaseService {
   /**
-   * Retrieve audit logs (admin only)
+   * Retrieve audit logs (placeholder - logs to console for now)
    */
   async getAuditLogs(
     filters?: AuditLogFilters,
@@ -36,25 +36,16 @@ export class AuditLogService extends DatabaseService {
       };
     }
 
-    return this.executeQuery(async () => {
-      let query = supabase.from('audit_logs').select('*');
-
-      if (filters?.userId) query = query.eq('user_id', filters.userId);
-      if (filters?.action) query = query.eq('action', filters.action);
-      if (filters?.tableName) query = query.eq('table_name', filters.tableName);
-      if (filters?.dateFrom) query = query.gte('created_at', filters.dateFrom);
-      if (filters?.dateTo) query = query.lte('created_at', filters.dateTo);
-
-      query = this.applySorting(query, sort || { column: 'created_at', ascending: false });
-      query = this.applyPagination(query, pagination);
-
-      const { data, error } = await query;
-      return { data, error };
-    });
+    // Return empty array for now since audit_logs table doesn't exist
+    return {
+      data: [],
+      error: null,
+      success: true,
+    };
   }
 
   /**
-   * Retrieve a single audit log by ID (admin only)
+   * Retrieve a single audit log by ID (placeholder)
    */
   async getAuditLog(logId: string): Promise<DatabaseResponse<any>> {
     const currentUserId = await this.getCurrentUserId();
@@ -75,15 +66,12 @@ export class AuditLogService extends DatabaseService {
       };
     }
 
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .eq('id', logId)
-        .single();
-
-      return { data, error };
-    });
+    // Return null for now since audit_logs table doesn't exist
+    return {
+      data: null,
+      error: new Error('Audit log niet gevonden'),
+      success: false,
+    };
   }
 }
 

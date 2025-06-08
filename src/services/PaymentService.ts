@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '@/lib/stripe';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
@@ -284,7 +285,7 @@ export class PaymentService extends DatabaseService {
   }
 
   /**
-   * Request verhuurder account approval
+   * Request verhuurder account approval (simplified without approval_requests table)
    */
   async requestVerhuurderApproval(userId: string, motivation?: string): Promise<DatabaseResponse<any>> {
     const currentUserId = await this.getCurrentUserId();
@@ -297,22 +298,12 @@ export class PaymentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // Create approval request
-      const { data, error } = await supabase
-        .from('approval_requests')
-        .insert({
-          user_id: userId,
-          request_type: 'verhuurder_activation',
-          status: 'pending',
-          motivation: motivation,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
-      }
+      // Log the approval request for now since approval_requests table doesn't exist
+      console.log('Verhuurder approval request:', {
+        user_id: userId,
+        motivation: motivation,
+        timestamp: new Date().toISOString()
+      });
 
       // Create notification for all managers/beheerders
       const { data: managers } = await supabase
@@ -323,20 +314,27 @@ export class PaymentService extends DatabaseService {
       if (managers) {
         const notifications = managers.map(manager => ({
           user_id: manager.user_id,
-          type: 'approval_request',
+          type: 'system_announcement',
           title: 'Nieuwe verhuurder goedkeuring',
           message: 'Een nieuwe verhuurder vraagt om account activatie.',
-          related_id: data.id,
-          is_read: false,
+          read: false,
           created_at: new Date().toISOString()
         }));
 
         await supabase.from('notifications').insert(notifications);
       }
 
-      await this.createAuditLog('APPROVAL_REQUEST', 'approval_requests', data.id, null, data);
+      const requestData = {
+        user_id: userId,
+        request_type: 'verhuurder_activation',
+        status: 'pending',
+        motivation: motivation,
+        created_at: new Date().toISOString()
+      };
 
-      return { data, error: null };
+      await this.createAuditLog('APPROVAL_REQUEST', 'approval_requests', null, null, requestData);
+
+      return { data: requestData, error: null };
     });
   }
 }
