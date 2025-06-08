@@ -4,7 +4,7 @@ import { paymentService } from '../src/services/PaymentService.ts';
 // Basic unit tests for getPricingInfo
 try {
   const infoHuurder = paymentService.getPricingInfo('huurder');
-  assert.equal(infoHuurder.interval, 'year');
+  assert.equal(infoHuurder.interval, 'jaar');
   assert.ok(infoHuurder.displayPrice.includes('€'));
   const infoVerhuurder = paymentService.getPricingInfo('verhuurder');
   assert.equal(infoVerhuurder.displayPrice, 'Gratis');
