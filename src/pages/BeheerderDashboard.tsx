@@ -24,7 +24,7 @@ import NotificationBell from '@/components/NotificationBell';
 const EMPTY_STATE_MESSAGES = {
   noUsers: 'Nog geen gebruikers geregistreerd',
   noProperties: 'Nog geen woningen toegevoegd',
-  noDocuments: 'Nog geen documenten ge\u00fpload',
+  noDocuments: 'Nog geen documenten geüpload',
   noViewings: 'Nog geen bezichtigingen gepland',
   noIssues: 'Geen openstaande issues',
   noNotifications: 'Geen nieuwe notificaties',
