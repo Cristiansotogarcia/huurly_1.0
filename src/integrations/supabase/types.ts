@@ -732,39 +732,6 @@ export type Database = {
           },
         ]
       }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          action: string
-          table_name: string
-          record_id: string | null
-          old_values: Json | null
-          new_values: Json | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          action: string
-          table_name: string
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          action?: string
-          table_name?: string
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
