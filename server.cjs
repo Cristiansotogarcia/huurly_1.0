@@ -1,6 +1,8 @@
+require('ts-node/register');
 const http = require('http');
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
+const { logger } = require('./src/lib/logger.ts');
 require('dotenv').config();
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
@@ -48,7 +50,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ sessionId: session.id }));
     } catch (err) {
-      console.error('Error creating Stripe session:', err);
+      logger.error('Error creating Stripe session:', err);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Unable to create session' }));
     }
@@ -58,7 +60,7 @@ const server = http.createServer(async (req, res) => {
     let event;
     try {
       event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
-      console.log('Received Stripe event:', event.type);
+      logger.info('Received Stripe event:', event.type);
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const { userId, paymentRecordId } = session.metadata || {};
@@ -98,7 +100,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ received: true }));
     } catch (err) {
-      console.error('Webhook error:', err);
+      logger.error('Webhook error:', err);
       res.writeHead(400, { 'Content-Type': 'text/plain' });
       res.end(`Webhook Error: ${err.message}`);
     }
@@ -109,4 +111,4 @@ const server = http.createServer(async (req, res) => {
 });
 
 const PORT = process.env.PORT || 4242;
-server.listen(PORT, () => console.log(`Stripe server listening on ${PORT}`));
+server.listen(PORT, () => logger.info(`Stripe server listening on ${PORT}`));
