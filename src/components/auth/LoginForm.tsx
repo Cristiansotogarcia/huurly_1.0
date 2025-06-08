@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +16,6 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,24 +26,6 @@ export const LoginForm = ({ onClose }: LoginFormProps) => {
       
       if (success && user) {
         onClose();
-        
-        // Route based on user role
-        switch (user.role) {
-          case 'huurder':
-            navigate('/huurder-dashboard');
-            break;
-          case 'verhuurder':
-            navigate('/verhuurder-dashboard');
-            break;
-          case 'beoordelaar':
-            navigate('/beoordelaar-dashboard');
-            break;
-          case 'beheerder':
-            navigate('/beheerder-dashboard');
-            break;
-          default:
-            navigate('/');
-        }
       }
     } catch (error) {
       console.error('Login error:', error);
