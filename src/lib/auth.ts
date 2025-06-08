@@ -118,7 +118,14 @@ export class AuthService {
 
         if (profileError || roleError) {
            logger.error('Profile creation error:', profileError || roleError);
-          return { user: null, error: (profileError || roleError) as AuthError };
+          // Convert to AuthError format
+          const errorMessage = (profileError || roleError)?.message || 'Profile creation failed';
+          const authError: AuthError = {
+            message: errorMessage,
+            status: 400,
+            __isAuthError: true as const
+          };
+          return { user: null, error: authError };
         }
 
         const user = await this.mapSupabaseUserToUser(authData.user);

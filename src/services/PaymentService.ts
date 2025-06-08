@@ -8,6 +8,12 @@ import { logger } from '../lib/logger.ts';
 
 export type PaymentRecord = Tables<'payment_records'>;
 
+export interface SubscriptionStatus {
+  hasActiveSubscription: boolean;
+  subscriptionType?: string;
+  expiresAt?: string;
+}
+
 export class PaymentService extends DatabaseService {
   /**
    * Create Stripe checkout session for Huurder subscription
@@ -144,11 +150,7 @@ export class PaymentService extends DatabaseService {
   /**
    * Check if user has active subscription
    */
-  async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<{
-    hasActiveSubscription: boolean;
-    subscriptionType?: string;
-    expiresAt?: string;
-  }>> {
+  async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('payment_records')
@@ -190,7 +192,10 @@ export class PaymentService extends DatabaseService {
       }
 
       return {
-        data: { hasActiveSubscription: true, subscriptionType: 'huurder_yearly' },
+        data: { 
+          hasActiveSubscription: true, 
+          subscriptionType: 'huurder_yearly' 
+        },
         error: null
       };
     });
