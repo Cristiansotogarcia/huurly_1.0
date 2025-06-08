@@ -178,7 +178,7 @@ export class UserService extends DatabaseService {
    */
   async updateUserRole(
     userId: string,
-    role: 'Huurder' | 'Verhuurder' | 'Manager'
+    role: 'Huurder' | 'Verhuurder' | 'Beoordelaar' | 'Beheerder'
   ): Promise<DatabaseResponse<Tables<'user_roles'>>> {
     const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
     if (!hasPermission) {
@@ -252,7 +252,7 @@ export class UserService extends DatabaseService {
       // Apply filters
       if (filters?.role) {
         // Map frontend role to database role
-        let dbRole: 'Huurder' | 'Verhuurder' | 'Manager';
+        let dbRole: 'Huurder' | 'Verhuurder' | 'Beoordelaar' | 'Beheerder';
         switch (filters.role) {
           case 'huurder':
             dbRole = 'Huurder';
@@ -261,8 +261,10 @@ export class UserService extends DatabaseService {
             dbRole = 'Verhuurder';
             break;
           case 'beoordelaar':
+            dbRole = 'Beoordelaar';
+            break;
           case 'beheerder':
-            dbRole = 'Manager';
+            dbRole = 'Beheerder';
             break;
           default:
             dbRole = 'Huurder';
