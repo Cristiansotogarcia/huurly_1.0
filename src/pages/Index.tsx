@@ -4,8 +4,33 @@ import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
 import { Logo } from '@/components/Logo';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'huurder':
+          navigate('/huurder-dashboard');
+          break;
+        case 'verhuurder':
+          navigate('/verhuurder-dashboard');
+          break;
+        case 'beoordelaar':
+          navigate('/beoordelaar-dashboard');
+          break;
+        case 'beheerder':
+          navigate('/beheerder-dashboard');
+          break;
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
   return (
     <div className="min-h-screen">
       <Header />
