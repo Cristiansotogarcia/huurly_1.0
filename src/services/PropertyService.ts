@@ -78,7 +78,7 @@ export class PropertyService extends DatabaseService {
     }
 
     // Check if user is a landlord
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Verhuurder', 'Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Verhuurder', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,

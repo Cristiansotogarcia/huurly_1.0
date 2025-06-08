@@ -252,7 +252,7 @@ export class ViewingService extends DatabaseService {
         .eq('user_id', currentUserId)
         .single();
 
-      if (userRole?.role !== 'Manager') {
+      if (userRole?.role !== 'Beheerder') {
         query = query.or(`tenant_id.eq.${currentUserId},landlord_id.eq.${currentUserId}`);
       }
 
