@@ -1,4 +1,6 @@
-export function getEnv(key: string): string | undefined {
+export const isBrowser = typeof window !== 'undefined';
+
+export function getEnvVar(key: string): string | undefined {
   const maybeMeta = typeof import.meta !== 'undefined' ? (import.meta as any) : undefined;
   if (maybeMeta && maybeMeta.env && typeof maybeMeta.env[key] !== 'undefined') {
     return maybeMeta.env[key];
