@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { paymentService } from '../src/services/PaymentService';
+import { paymentService } from '../src/services/PaymentService.ts';
 
 // Basic unit tests for getPricingInfo
 try {

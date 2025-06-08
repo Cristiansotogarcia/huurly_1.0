@@ -1,7 +1,7 @@
 /**
  * Centralized error handling and custom error types
  */
-import { logger } from '@/lib/logger';
+import { logger } from '../lib/logger.ts';
 
 export enum ErrorCode {
   // Authentication errors

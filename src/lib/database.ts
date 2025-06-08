@@ -1,6 +1,6 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client.ts';
 import { PostgrestError } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
+import { logger } from '../lib/logger.ts';
 
 export interface DatabaseResponse<T> {
   data: T | null;
