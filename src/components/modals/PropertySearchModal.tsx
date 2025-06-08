@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { demoProperties } from '@/data/demoData';
 import { Search, MapPin, Euro, Home, Heart, Eye, Calendar } from 'lucide-react';
 
 interface PropertySearchModalProps {
@@ -33,7 +32,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
     propertyType: '',
   });
 
-  const [searchResults, setSearchResults] = useState(demoProperties);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
@@ -41,7 +40,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
   };
 
   const handleSearch = () => {
-    let results = demoProperties;
+    let results: any[] = [];
 
     // Apply filters
     if (filters.city) {
@@ -101,7 +100,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
       bedrooms: '',
       propertyType: '',
     });
-    setSearchResults(demoProperties);
+    setSearchResults([]);
   };
 
   return (

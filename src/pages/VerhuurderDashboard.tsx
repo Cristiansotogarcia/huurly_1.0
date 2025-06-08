@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { demoLandlordProfiles, demoTenantProfiles } from '@/data/demoData';
 import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
@@ -24,14 +23,14 @@ const VerhuurderDashboard = () => {
     maxBudget: '',
     minIncome: ''
   });
-  const [filteredTenants, setFilteredTenants] = useState(demoTenantProfiles.filter(tenant => tenant.isLookingForPlace));
+  const [filteredTenants, setFilteredTenants] = useState<any[]>([]);
   const [showViewingModal, setShowViewingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const landlordProfile = demoLandlordProfiles[0];
-  const [properties, setProperties] = useState(landlordProfile.properties);
+  const landlordProfile = { properties: [] } as any;
+  const [properties, setProperties] = useState<any[]>(landlordProfile.properties);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const availableTenants = filteredTenants;
 
@@ -46,7 +45,7 @@ const VerhuurderDashboard = () => {
   };
 
   const handleSearch = () => {
-    let results = demoTenantProfiles.filter(tenant => tenant.isLookingForPlace);
+    let results: any[] = [];
 
     // Apply filters
     if (searchFilters.city) {

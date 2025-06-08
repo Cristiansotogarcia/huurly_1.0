@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import {
-  EMPTY_STATE_MESSAGES,
-  demoTenantProfiles,
-  demoDocuments,
-} from "@/data/demoData";
+const EMPTY_STATE_MESSAGES = {
+  noViewings: 'Nog geen bezichtigingen gepland',
+  noDocuments: 'Nog geen documenten geüpload'
+};
 import {
   Home,
   FileText,
@@ -42,9 +41,7 @@ const HuurderDashboard = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(!user?.hasPayment);
   const [hasProfile, setHasProfile] = useState(false);
-  const [userDocuments, setUserDocuments] = useState(
-    demoDocuments.filter((doc) => doc.tenantId === user?.id) || [],
-  );
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {

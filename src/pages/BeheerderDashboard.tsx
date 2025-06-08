@@ -11,7 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
+const EMPTY_STATE_MESSAGES = {
+  noUsers: 'Nog geen gebruikers geregistreerd',
+  noIssues: 'Geen openstaande issues'
+};
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

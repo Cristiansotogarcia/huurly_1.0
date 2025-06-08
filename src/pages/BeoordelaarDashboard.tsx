@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
+const EMPTY_STATE_MESSAGES = {
+  noDocuments: 'Nog geen documenten geüpload'
+};
 import { FileText, CheckCircle, XCircle, Clock, Eye, ArrowLeft, Bell, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import DocumentReviewModal from '@/components/modals/DocumentReviewModal';

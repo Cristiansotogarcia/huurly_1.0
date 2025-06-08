@@ -1,7 +1,46 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
-import { demoStatistics } from '@/data/demoData';
 import { logger } from '@/lib/logger';
+
+const EMPTY_STATS = {
+  platform: {
+    totalUsers: 0,
+    activeUsers: 0,
+    totalProperties: 0,
+    successfulMatches: 0,
+    pendingDocuments: 0,
+    monthlyRevenue: 0,
+    userGrowth: 0,
+    matchSuccessRate: 0
+  },
+  tenant: {
+    profileViews: 0,
+    invitationsReceived: 0,
+    applicationsSubmitted: 0,
+    acceptedApplications: 0,
+    pendingApplications: 0,
+    documentsApproved: 0,
+    documentsPending: 0
+  },
+  landlord: {
+    totalProperties: 0,
+    activeProperties: 0,
+    totalViews: 0,
+    totalApplications: 0,
+    acceptedApplications: 0,
+    pendingApplications: 0,
+    monthlyRevenue: 0
+  },
+  reviewer: {
+    documentsReviewed: 0,
+    documentsApproved: 0,
+    documentsRejected: 0,
+    avgReviewTime: '0',
+    pendingReviews: 0,
+    weeklyGoal: 0,
+    weeklyCompleted: 0
+  }
+};
 
 export interface PlatformAnalytics {
   totalUsers: number;
@@ -87,7 +126,7 @@ export class AnalyticsService extends DatabaseService {
       // For demo purposes, return demo statistics
       // In production, this would query actual database tables
       const analytics: PlatformAnalytics = {
-        ...demoStatistics.platform,
+        ...EMPTY_STATS.platform,
         recentActivity: [
           {
             id: '1',
@@ -173,7 +212,7 @@ export class AnalyticsService extends DatabaseService {
 
       if (userRole?.role === 'Huurder' || targetUserId === '1' || targetUserId === '5') {
         analytics = {
-          ...demoStatistics.tenant,
+          ...EMPTY_STATS.tenant,
           monthlyStats: [
             { month: 'Jan', value: 12, change: 5 },
             { month: 'Feb', value: 18, change: 50 },
@@ -235,7 +274,7 @@ export class AnalyticsService extends DatabaseService {
     return this.executeQuery(async () => {
       // For demo purposes, return demo statistics
       const analytics: PropertyAnalytics = {
-        ...demoStatistics.landlord,
+        ...EMPTY_STATS.landlord,
         topPerformingProperties: [
           {
             id: '1',
@@ -290,7 +329,7 @@ export class AnalyticsService extends DatabaseService {
     return this.executeQuery(async () => {
       // For demo purposes, return demo statistics
       const analytics = {
-        ...demoStatistics.reviewer,
+        ...EMPTY_STATS.reviewer,
         weeklyProgress: [
           { day: 'Ma', completed: 8, target: 7 },
           { day: 'Di', completed: 6, target: 7 },
