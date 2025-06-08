@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { EMPTY_STATE_MESSAGES } from "@/data/demoData";
 import { userService } from "@/services/UserService";
 import { documentService } from "@/services/DocumentService";
 import {
@@ -29,6 +28,15 @@ import NotificationBell from "@/components/NotificationBell";
 import { notifyDocumentUploaded } from "@/hooks/useNotifications";
 import { Logo } from "@/components/Logo";
 import { PaymentModal } from "@/components/PaymentModal";
+
+const EMPTY_STATE_MESSAGES = {
+  noUsers: 'Nog geen gebruikers geregistreerd',
+  noProperties: 'Nog geen woningen toegevoegd',
+  noDocuments: 'Nog geen documenten ge\u00fpload',
+  noViewings: 'Nog geen bezichtigingen gepland',
+  noIssues: 'Geen openstaande issues',
+  noNotifications: 'Geen nieuwe notificaties',
+};
 import { authService } from "@/lib/auth";
 
 const HuurderDashboard = () => {
