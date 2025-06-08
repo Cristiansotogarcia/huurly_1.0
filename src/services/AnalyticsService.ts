@@ -165,7 +165,7 @@ export class AnalyticsService extends DatabaseService {
         .eq('user_id', targetUserId)
         .single();
 
-      if (userRole?.role !== 'huurder') {
+      if (userRole?.role !== 'Huurder') {
         return {
           data: null,
           error: null,
