@@ -65,10 +65,10 @@ const defaultConfig: AppConfig = {
     bucketName: 'documents'
   },
   features: {
-    enableDemo: true,
+    enableDemo: false,
     enablePayments: true,
     enableNotifications: true,
-    enableAnalytics: false
+    enableAnalytics: true
   },
   ui: {
     itemsPerPage: 20,

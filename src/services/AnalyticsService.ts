@@ -74,7 +74,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -149,7 +149,7 @@ export class AnalyticsService extends DatabaseService {
     const targetUserId = userId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetUserId, ['Beheerder']);
+    const hasPermission = await this.checkUserPermission(targetUserId, ['beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -247,7 +247,7 @@ export class AnalyticsService extends DatabaseService {
     const targetLandlordId = landlordId || currentUserId;
 
     // Check permissions
-    const hasPermission = await this.checkUserPermission(targetLandlordId, ['Beheerder']);
+    const hasPermission = await this.checkUserPermission(targetLandlordId, ['beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -339,7 +339,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -416,7 +416,7 @@ export class AnalyticsService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -426,14 +426,47 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // For demo purposes, return simulated real-time metrics
+      // Get real system metrics from database
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      
+      const [
+        { count: activeUsers },
+        { count: totalUsers },
+        { count: recentActivity },
+        { data: storageData }
+      ] = await Promise.all([
+        // Active users in last hour (users with recent activity)
+        supabase
+          .from('audit_logs')
+          .select('user_id', { count: 'exact', head: true })
+          .gte('created_at', oneHourAgo.toISOString())
+          .not('user_id', 'is', null),
+        
+        // Total registered users
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        
+        // Recent activity count
+        supabase
+          .from('audit_logs')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', oneHourAgo.toISOString()),
+        
+        // Storage usage from documents
+        supabase.from('user_documents').select('file_size')
+      ]);
+
+      const totalStorageBytes = storageData?.reduce((sum: number, doc: any) => sum + (doc.file_size || 0), 0) || 0;
+      const storageUsageMB = Math.round(totalStorageBytes / (1024 * 1024));
+
       const metrics = {
-        activeUsers: Math.floor(Math.random() * 50) + 20,
-        serverLoad: Math.floor(Math.random() * 30) + 10,
-        responseTime: Math.floor(Math.random() * 100) + 50,
-        errorRate: Math.random() * 2,
-        databaseConnections: Math.floor(Math.random() * 20) + 5,
-        storageUsage: Math.floor(Math.random() * 20) + 60,
+        activeUsers: activeUsers || 0,
+        totalUsers: totalUsers || 0,
+        recentActivity: recentActivity || 0,
+        storageUsageMB,
+        responseTime: 'N/A', // Would need application monitoring for real data
+        errorRate: 0, // Would need error tracking for real data
+        databaseConnections: 'N/A', // Would need database monitoring
         lastUpdated: new Date().toISOString()
       };
 
@@ -459,20 +492,20 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // In a real implementation, this would store activity in a database table
-      // For demo purposes, we'll just log it
-       logger.info('Activity tracked:', {
+      // Store activity in audit logs for real tracking
+      await this.createAuditLog('ACTIVITY', 'user_activity', relatedId, null, {
+        type,
+        description,
+        userId: currentUserId,
+        timestamp: new Date().toISOString()
+      });
+
+      logger.info('Activity tracked:', {
         userId: currentUserId,
         type,
         description,
         relatedId,
         timestamp: new Date().toISOString()
-      });
-
-      await this.createAuditLog('ACTIVITY', 'user_activity', relatedId, null, {
-        type,
-        description,
-        userId: currentUserId
       });
 
       return { data: true, error: null };
@@ -502,17 +535,64 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // Demo conversion funnel data
+      // Get real conversion funnel data from database
+      const [
+        { count: totalUsers },
+        { count: profilesCompleted },
+        { count: documentsUploaded },
+        { count: firstViewings },
+        { count: successfulMatches }
+      ] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('tenant_profiles').select('id', { count: 'exact', head: true }),
+        supabase
+          .from('user_documents')
+          .select('user_id', { count: 'exact', head: true }),
+        supabase
+          .from('viewing_invitations')
+          .select('tenant_id', { count: 'exact', head: true }),
+        supabase
+          .from('property_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'accepted')
+      ]);
+
+      const registrations = totalUsers || 0;
+      const profiles = profilesCompleted || 0;
+      const documents = documentsUploaded || 0;
+      const viewings = firstViewings || 0;
+      const contracts = successfulMatches || 0;
+
+      // Calculate percentages based on registrations as baseline
       const funnelData = {
         steps: [
-          { name: 'Bezoekers', value: 1000, percentage: 100 },
-          { name: 'Registraties', value: 250, percentage: 25 },
-          { name: 'Profiel voltooid', value: 180, percentage: 18 },
-          { name: 'Documenten geüpload', value: 120, percentage: 12 },
-          { name: 'Eerste bezichtiging', value: 80, percentage: 8 },
-          { name: 'Huurcontract', value: 35, percentage: 3.5 }
+          { 
+            name: 'Registraties', 
+            value: registrations, 
+            percentage: 100 
+          },
+          { 
+            name: 'Profiel voltooid', 
+            value: profiles, 
+            percentage: registrations > 0 ? Math.round((profiles / registrations) * 100) : 0 
+          },
+          { 
+            name: 'Documenten geüpload', 
+            value: documents, 
+            percentage: registrations > 0 ? Math.round((documents / registrations) * 100) : 0 
+          },
+          { 
+            name: 'Eerste bezichtiging', 
+            value: viewings, 
+            percentage: registrations > 0 ? Math.round((viewings / registrations) * 100) : 0 
+          },
+          { 
+            name: 'Huurcontract', 
+            value: contracts, 
+            percentage: registrations > 0 ? Math.round((contracts / registrations) * 100) : 0 
+          }
         ],
-        timeframe: 'Afgelopen 30 dagen'
+        timeframe: 'Totaal (alle tijd)'
       };
 
       return { data: funnelData, error: null };
