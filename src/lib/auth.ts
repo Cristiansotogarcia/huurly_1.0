@@ -118,11 +118,13 @@ export class AuthService {
 
         if (profileError || roleError) {
            logger.error('Profile creation error:', profileError || roleError);
-          // Convert to AuthError format
+          // Convert to proper AuthError format
           const errorMessage = (profileError || roleError)?.message || 'Profile creation failed';
           const authError: AuthError = {
+            name: 'AuthError',
             message: errorMessage,
             status: 400,
+            code: 'profile_creation_failed',
             __isAuthError: true as const
           };
           return { user: null, error: authError };
