@@ -61,7 +61,7 @@ VITE_ENABLE_DEMO=false
 ### Current Test Configuration
 ```bash
 # Current .env file contains test keys
-VITE_STRIPE_HUURDER_PRICE_ID=price_1QVFSSGadpjzVmLhDTISKngf
+VITE_STRIPE_HUURDER_PRICE_ID=price_1RXr0rGadpjzVmLhApRe12j2
 ```
 
 ## 🚀 Deployment Steps
@@ -74,7 +74,7 @@ Run the new migration to add performance indexes:
 ```
 
 ### 2. Stripe Setup
-1. **Create Production Price**: In Stripe Dashboard, create a new price for €72.59 (including 21% BTW)
+1. **Create Production Price**: In Stripe Dashboard, create a new price for €65 (including 21% BTW)
 2. **Update Environment**: Replace `VITE_STRIPE_HUURDER_PRICE_ID` with the production price ID
 3. **Configure Webhook**: Set up webhook endpoint at `your-domain.com/api/stripe-webhook`
 4. **Update Keys**: Replace all test keys with production keys

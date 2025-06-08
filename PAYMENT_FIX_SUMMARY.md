@@ -10,13 +10,13 @@
 
 ### Problem 1: Database Type Mismatch
 - **Issue**: PaymentService was storing `plan.priceWithTax` (72.59) as a decimal in the database
-- **Database Expected**: Integer (cents) - 7259
+- **Database Expected**: Integer (cents) - 6500
 - **Code Sent**: Decimal (euros) - 72.59
 - **Result**: PostgreSQL type conversion error
 
 ### Problem 2: UI Pricing Inconsistency  
 - **Issue**: PaymentModal showed hardcoded "€19,99/maand" (monthly)
-- **Actual Config**: €72.59/year (yearly subscription)
+- **Actual Config**: €65/year (yearly subscription)
 - **Result**: User confusion about pricing
 
 ## 🛠️ Fixes Applied
@@ -27,7 +27,7 @@
 amount: plan.priceWithTax, // 72.59 (decimal)
 
 // AFTER (Line 48)  
-amount: Math.round(plan.priceWithTax * 100), // 7259 (cents as integer)
+amount: Math.round(plan.priceWithTax * 100), // 6500 (cents as integer)
 ```
 
 ### 2. Updated PaymentModal.tsx to Use Dynamic Pricing
@@ -60,12 +60,12 @@ When user `cristiansotogarcia@gmail.com` (or any user) tries to pay now:
 
 1. **Payment Modal** will show:
    - "Jaarlijks abonnement"
-   - "€72,59/year" 
+   - "€65/year" 
    - Proper tax breakdown
    - Actual feature list from configuration
 
 2. **Database Storage** will receive:
-   - `amount: 7259` (cents as integer)
+   - `amount: 6500` (cents as integer)
    - No more type conversion errors
 
 3. **Stripe Integration** will work correctly:
