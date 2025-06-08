@@ -1,9 +1,10 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { logger } from '@/lib/logger';
+import { logger } from '../lib/logger.ts';
 
 // Stripe configuration derived from environment variables
+const publishableKey = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY) || process.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
 export const STRIPE_CONFIG = {
-  publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
+  publishableKey,
 };
 
 // Server-side secrets (not exposed in the client bundle)

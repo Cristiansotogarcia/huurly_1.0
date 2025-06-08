@@ -1,10 +1,10 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '@/lib/stripe';
-import { DatabaseService, DatabaseResponse } from '@/lib/database';
-import { ErrorHandler } from '@/lib/errors';
-import { Tables, TablesInsert } from '@/integrations/supabase/types';
-import { logger } from '@/lib/logger';
+import { supabase } from '../integrations/supabase/client.ts';
+import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '../lib/stripe.ts';
+import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
+import { ErrorHandler } from '../lib/errors.ts';
+import { Tables, TablesInsert } from '../integrations/supabase/types.ts';
+import { logger } from '../lib/logger.ts';
 
 export type PaymentRecord = Tables<'payment_records'>;
 
