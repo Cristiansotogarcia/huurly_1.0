@@ -2,6 +2,7 @@
  * Centralized configuration management
  * Handles environment variables and application settings
  */
+import { logger } from '@/lib/logger';
 
 export interface AppConfig {
   app: {
@@ -272,14 +273,14 @@ export type Province = typeof CONSTANTS.PROVINCES[number];
 // Development helpers
 if (getConfig.isDevelopment()) {
   // Log configuration in development
-  console.log('🔧 Huurly Configuration:', config);
+   logger.info('🔧 Huurly Configuration:', config);
   
   // Validate configuration
   const validation = validateConfig();
   if (!validation.isValid) {
-    console.error('❌ Configuration errors:', validation.errors);
+     logger.error('❌ Configuration errors:', validation.errors);
   } else {
-    console.log('✅ Configuration is valid');
+     logger.info('✅ Configuration is valid');
   }
   
   // Make config available globally for debugging

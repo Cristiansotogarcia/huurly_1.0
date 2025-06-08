@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface UploadResult {
   url: string | null;
@@ -93,7 +94,7 @@ export class StorageService {
         });
 
       if (error) {
-        console.error('Storage upload error:', error);
+         logger.error('Storage upload error:', error);
         return {
           url: null,
           path: null,
@@ -115,7 +116,7 @@ export class StorageService {
       };
 
     } catch (error) {
-      console.error('Upload error:', error);
+       logger.error('Upload error:', error);
       return {
         url: null,
         path: null,
@@ -167,7 +168,7 @@ export class StorageService {
         .remove([filePath]);
 
       if (error) {
-        console.error('Storage delete error:', error);
+         logger.error('Storage delete error:', error);
         return {
           success: false,
           error: new Error('Fout bij verwijderen van bestand')
@@ -179,7 +180,7 @@ export class StorageService {
         error: null
       };
     } catch (error) {
-      console.error('Delete error:', error);
+       logger.error('Delete error:', error);
       return {
         success: false,
         error: error as Error
@@ -200,7 +201,7 @@ export class StorageService {
         .createSignedUrl(filePath, expiresIn);
 
       if (error) {
-        console.error('Signed URL error:', error);
+         logger.error('Signed URL error:', error);
         return {
           url: null,
           error: new Error('Fout bij genereren van toegangslink')
@@ -212,7 +213,7 @@ export class StorageService {
         error: null
       };
     } catch (error) {
-      console.error('Signed URL error:', error);
+       logger.error('Signed URL error:', error);
       return {
         url: null,
         error: error as Error
@@ -260,7 +261,7 @@ export class StorageService {
       const fileName = filePath.split('/').pop();
       return data.some(file => file.name === fileName);
     } catch (error) {
-      console.error('File exists check error:', error);
+       logger.error('File exists check error:', error);
       return false;
     }
   }
@@ -283,7 +284,7 @@ export class StorageService {
       
       return file || null;
     } catch (error) {
-      console.error('Get file metadata error:', error);
+       logger.error('Get file metadata error:', error);
       return null;
     }
   }
@@ -304,7 +305,7 @@ export class StorageService {
         });
 
       if (error) {
-        console.error('List files error:', error);
+         logger.error('List files error:', error);
         return {
           files: [],
           error: new Error('Fout bij ophalen van bestanden')
@@ -316,7 +317,7 @@ export class StorageService {
         error: null
       };
     } catch (error) {
-      console.error('List files error:', error);
+       logger.error('List files error:', error);
       return {
         files: [],
         error: error as Error
