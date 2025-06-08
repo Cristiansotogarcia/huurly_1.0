@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { demoProperties } from '@/data/demoData';
+import { propertyService } from '@/services/PropertyService';
 import { Search, MapPin, Euro, Home, Heart, Eye, Calendar } from 'lucide-react';
 
 interface PropertySearchModalProps {
@@ -33,49 +33,44 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
     propertyType: '',
   });
 
-  const [searchResults, setSearchResults] = useState(demoProperties);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    handleSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSearch = () => {
-    let results = demoProperties;
-
-    // Apply filters
-    if (filters.city) {
-      results = results.filter(property => 
-        property.city.toLowerCase().includes(filters.city.toLowerCase())
-      );
-    }
-
-    if (filters.minPrice > 0) {
-      results = results.filter(property => property.rent >= filters.minPrice);
-    }
-
-    if (filters.maxPrice > 0) {
-      results = results.filter(property => property.rent <= filters.maxPrice);
-    }
-
-    if (filters.bedrooms) {
-      results = results.filter(property => 
-        property.bedrooms === parseInt(filters.bedrooms)
-      );
-    }
-
-    if (filters.propertyType) {
-      results = results.filter(property => 
-        property.propertyType === filters.propertyType
-      );
-    }
-
-    setSearchResults(results);
-    
-    toast({
-      title: "Zoekresultaten bijgewerkt",
-      description: `${results.length} woning(en) gevonden die voldoen aan je criteria.`
+  const handleSearch = async () => {
+    setLoading(true);
+    const result = await propertyService.searchProperties({
+      city: filters.city || undefined,
+      minRent: filters.minPrice || undefined,
+      maxRent: filters.maxPrice || undefined,
+      bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
+      propertyType: filters.propertyType || undefined,
     });
+
+    if (result.success && result.data) {
+      setSearchResults(result.data);
+      toast({
+        title: 'Zoekresultaten bijgewerkt',
+        description: `${result.data.length} woning(en) gevonden die voldoen aan je criteria.`,
+      });
+    } else {
+      toast({
+        title: 'Fout bij het zoeken',
+        description: result.error?.message || 'Onbekende fout',
+        variant: 'destructive',
+      });
+    }
+
+    setLoading(false);
   };
 
   const toggleFavorite = (propertyId: string) => {
@@ -101,7 +96,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
       bedrooms: '',
       propertyType: '',
     });
-    setSearchResults(demoProperties);
+    handleSearch();
   };
 
   return (

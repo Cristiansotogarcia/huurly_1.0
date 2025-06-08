@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +20,15 @@ import UserManagementModal from '@/components/modals/UserManagementModal';
 import IssueManagementModal from '@/components/modals/IssueManagementModal';
 import { Logo } from '@/components/Logo';
 import NotificationBell from '@/components/NotificationBell';
+
+const EMPTY_STATE_MESSAGES = {
+  noUsers: 'Nog geen gebruikers geregistreerd',
+  noProperties: 'Nog geen woningen toegevoegd',
+  noDocuments: 'Nog geen documenten ge\u00fpload',
+  noViewings: 'Nog geen bezichtigingen gepland',
+  noIssues: 'Geen openstaande issues',
+  noNotifications: 'Geen nieuwe notificaties',
+};
 
 const BeheerderDashboard = () => {
   const { user } = useAuthStore();
