@@ -15,7 +15,7 @@ import { EMPTY_STATE_MESSAGES } from '@/data/demoData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserService } from '@/services/UserService';
+import { userService } from '@/services/UserService';
 import { paymentService } from '@/services/PaymentService';
 import UserManagementModal from '@/components/modals/UserManagementModal';
 import IssueManagementModal from '@/components/modals/IssueManagementModal';
@@ -53,127 +53,23 @@ const BeheerderDashboard = () => {
 
   const loadUsers = async () => {
     try {
-      // Demo users for testing
-      const demoUsers = [
-        {
-          id: 'user-1',
-          name: 'Emma Bakker',
-          email: 'emma.bakker@email.nl',
-          role: 'huurder',
-          status: 'active',
-          isActive: true,
-          createdAt: '2024-01-15T10:00:00Z',
-          lastLogin: '2024-01-20T14:30:00Z'
-        },
-        {
-          id: 'user-2',
-          name: 'Jan de Vries',
-          email: 'jan.devries@email.nl',
-          role: 'verhuurder',
-          status: 'active',
-          isActive: true,
-          createdAt: '2024-01-10T09:00:00Z',
-          lastLogin: '2024-01-20T11:15:00Z'
-        },
-        {
-          id: 'user-3',
-          name: 'Lisa van der Berg',
-          email: 'lisa.vandenberg@email.nl',
-          role: 'beoordelaar',
-          status: 'active',
-          isActive: true,
-          createdAt: '2024-01-05T08:00:00Z',
-          lastLogin: '2024-01-20T16:45:00Z'
-        },
-        {
-          id: 'user-4',
-          name: 'Mark Jansen',
-          email: 'mark.jansen@email.nl',
-          role: 'huurder',
-          status: 'suspended',
-          isActive: false,
-          createdAt: '2024-01-12T12:00:00Z',
-          lastLogin: '2024-01-18T10:20:00Z'
-        }
-      ];
-      setUsers(demoUsers);
+      const result = await userService.getUsers();
+      if (result.success && result.data) {
+        setUsers(result.data);
+      }
     } catch (error) {
-       logger.error('Error loading users:', error);
+      logger.error('Error loading users:', error);
     }
   };
 
   const loadPendingApprovals = async () => {
-    // Demo pending approvals
-    const demoApprovals = [
-      {
-        id: 'approval-1',
-        userName: 'Sophie Hendriks',
-        email: 'sophie.hendriks@email.nl',
-        createdAt: '2024-01-19T14:00:00Z',
-        role: 'verhuurder'
-      },
-      {
-        id: 'approval-2',
-        userName: 'Tom van Dijk',
-        email: 'tom.vandijk@email.nl',
-        createdAt: '2024-01-18T16:30:00Z',
-        role: 'verhuurder'
-      }
-    ];
-    setPendingApprovals(demoApprovals);
+    // TODO: fetch pending approvals from service
+    setPendingApprovals([]);
   };
 
   const loadIssues = async () => {
-    // Demo issues
-    const demoIssues = [
-      {
-        id: 'issue-1',
-        title: 'Document upload niet werkend',
-        description: 'Gebruikers kunnen geen documenten uploaden via de drag & drop interface.',
-        category: 'technical',
-        priority: 'high',
-        status: 'open',
-        reportedBy: 'Emma Bakker',
-        createdAt: '2024-01-20T10:00:00Z',
-        assignedTo: 'Support Team',
-        userInfo: {
-          name: 'Emma Bakker',
-          email: 'emma.bakker@email.nl',
-          role: 'huurder',
-          browser: 'Chrome 120.0',
-          os: 'Windows 11',
-          lastActivity: '2024-01-20T09:45:00Z'
-        },
-        steps: [
-          'Ga naar huurder dashboard',
-          'Klik op "Documenten Uploaden"',
-          'Probeer een PDF bestand te slepen naar de upload zone',
-          'Bestand wordt niet geaccepteerd'
-        ],
-        expectedBehavior: 'PDF bestanden zouden geaccepteerd moeten worden',
-        actualBehavior: 'Upload zone reageert niet op PDF bestanden'
-      },
-      {
-        id: 'issue-2',
-        title: 'Verificatie proces te traag',
-        description: 'Gebruikers klagen over lange wachttijden bij document verificatie.',
-        category: 'user_complaint',
-        priority: 'medium',
-        status: 'in_progress',
-        reportedBy: 'Jan de Vries',
-        createdAt: '2024-01-19T14:30:00Z',
-        assignedTo: 'Verificatie Team',
-        userInfo: {
-          name: 'Jan de Vries',
-          email: 'jan.devries@email.nl',
-          role: 'verhuurder',
-          browser: 'Firefox 121.0',
-          os: 'macOS 14',
-          lastActivity: '2024-01-19T14:15:00Z'
-        }
-      }
-    ];
-    setIssues(demoIssues);
+    // TODO: fetch issues from service
+    setIssues([]);
   };
 
   // Mock analytics data
@@ -235,7 +131,7 @@ const BeheerderDashboard = () => {
   };
 
   const handleResolveIssue = (issueId: string, resolution: string) => {
-    setIssues(prev => prev.map(issue => 
+    setIssues(prev => prev.map(issue =>
       issue.id === issueId ? { ...issue, status: 'resolved' } : issue
     ));
     toast({
@@ -245,7 +141,7 @@ const BeheerderDashboard = () => {
   };
 
   const handleEscalateIssue = (issueId: string, escalationNote: string) => {
-    setIssues(prev => prev.map(issue => 
+    setIssues(prev => prev.map(issue =>
       issue.id === issueId ? { ...issue, status: 'escalated' } : issue
     ));
     toast({
@@ -255,7 +151,7 @@ const BeheerderDashboard = () => {
   };
 
   const handleAddIssueNote = (issueId: string, note: string) => {
-    // In a real app, this would add to the issue's notes array
+    // TODO: integrate with IssueService
     toast({
       title: "Notitie toegevoegd",
       description: "Je notitie is toegevoegd aan het issue."
