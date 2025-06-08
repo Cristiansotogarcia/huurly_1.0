@@ -1,6 +1,6 @@
 
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { ReactNode, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +12,29 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is authenticated but on wrong dashboard, redirect to correct one
+    if (isAuthenticated && user && requiredRole && user.role !== requiredRole) {
+      switch (user.role) {
+        case 'huurder':
+          navigate('/huurder-dashboard', { replace: true });
+          break;
+        case 'verhuurder':
+          navigate('/verhuurder-dashboard', { replace: true });
+          break;
+        case 'beoordelaar':
+          navigate('/beoordelaar-dashboard', { replace: true });
+          break;
+        case 'beheerder':
+          navigate('/beheerder-dashboard', { replace: true });
+          break;
+        default:
+          navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, requiredRole, navigate]);
 
   if (isLoading) {
     return (
@@ -30,7 +53,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
+    // Will be handled by useEffect above
+    return null;
   }
 
   return <>{children}</>;

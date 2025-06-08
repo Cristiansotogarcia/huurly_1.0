@@ -96,6 +96,21 @@ export class UserService extends DatabaseService {
   }
 
   /**
+   * Get tenant profile by user ID
+   */
+  async getTenantProfile(userId: string): Promise<DatabaseResponse<Tables<'tenant_profiles'>>> {
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('tenant_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      return { data, error };
+    });
+  }
+
+  /**
    * Update user profile
    */
   async updateProfile(

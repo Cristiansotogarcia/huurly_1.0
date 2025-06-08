@@ -752,6 +752,7 @@ export type Database = {
       user_role:
         | "Huurder"
         | "Verhuurder"
+        | "Manager"
         | "Beheerder"
         | "Beoordelaar"
     }
@@ -874,6 +875,7 @@ export const Constants = {
       user_role: [
         "Huurder",
         "Verhuurder",
+        "Manager",
         "Beheerder",
         "Beoordelaar",
       ],
