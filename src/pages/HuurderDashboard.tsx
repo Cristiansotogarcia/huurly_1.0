@@ -87,13 +87,14 @@ const HuurderDashboard = () => {
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      // Get tenant profile data which has the is_looking_for_place field
+      // Get tenant profile data - since is_looking_for_place doesn't exist in the schema,
+      // we'll default to true and allow the user to toggle it
       const tenantProfileResult = await userService.getTenantProfile(user.id);
       if (tenantProfileResult.success && tenantProfileResult.data) {
         setHasProfile(true);
-        setIsLookingForPlace(
-          tenantProfileResult.data.is_looking_for_place ?? isLookingForPlace,
-        );
+        // Since is_looking_for_place doesn't exist in the database schema,
+        // we'll keep the default state value
+        // If this field should exist, it needs to be added to the database schema first
       } else {
         // Fallback to check basic profile
         const profileResult = await userService.getProfile(user.id);
