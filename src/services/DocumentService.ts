@@ -105,7 +105,7 @@ export class DocumentService extends DatabaseService {
       }
 
       // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(data.user_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(data.user_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
@@ -131,7 +131,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user can access these documents
-    const hasPermission = await this.checkUserPermission(userId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(userId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -181,7 +181,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -225,7 +225,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -281,7 +281,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -354,7 +354,7 @@ export class DocumentService extends DatabaseService {
       }
 
       // Check if user can delete this document
-      const hasPermission = await this.checkUserPermission(document.user_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(document.user_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
@@ -406,7 +406,7 @@ export class DocumentService extends DatabaseService {
       }
 
       // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(document.user_id, ['Manager']);
+      const hasPermission = await this.checkUserPermission(document.user_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         return {
           url: null,
@@ -440,7 +440,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
@@ -512,7 +512,7 @@ export class DocumentService extends DatabaseService {
     }
 
     // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Manager']);
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
     if (!hasPermission) {
       return {
         data: null,
