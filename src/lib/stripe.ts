@@ -32,16 +32,27 @@ export const getStripe = (): Promise<Stripe | null> => {
   return stripePromise;
 };
 
+// Get environment-configurable price IDs
+const getStripeConfig = () => {
+  const huurderPriceId = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRIPE_HUURDER_PRICE_ID) || 
+                         process.env.VITE_STRIPE_HUURDER_PRICE_ID || 
+                         'price_1QVFSSGadpjzVmLhDTISKngf'; // Default test price ID
+
+  return {
+    huurderPriceId
+  };
+};
+
 // Subscription plans configuration
 export const SUBSCRIPTION_PLANS = {
   huurder: {
     yearly: {
-      priceId: 'price_huurder_yearly', // To be created in Stripe Dashboard
+      priceId: getStripeConfig().huurderPriceId,
       name: 'Huurder Jaarlijks',
       price: 59.99, // Display price (excluding BTW)
       priceWithTax: 72.59, // Actual charge price (including 21% BTW)
       currency: 'eur',
-      interval: 'year',
+      interval: 'jaar',
       taxRate: 0.21, // 21% BTW
       features: [
         'Zoeken naar woningen',

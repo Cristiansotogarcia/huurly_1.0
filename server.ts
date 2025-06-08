@@ -11,31 +11,52 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 
-const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false }
 });
 
-function parseJson(req) {
+interface CheckoutSessionBody {
+  priceId: string;
+  successUrl: string;
+  cancelUrl: string;
+  userEmail: string;
+  userId: string;
+  paymentRecordId: string;
+}
+
+function parseJson(req: http.IncomingMessage): Promise<CheckoutSessionBody> {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', chunk => { data += chunk; });
+    req.on('data', (chunk: Buffer) => { data += chunk; });
     req.on('end', () => {
-      try { resolve(JSON.parse(data)); }
+      try { resolve(JSON.parse(data) as CheckoutSessionBody); }
       catch (err) { reject(err); }
     });
   });
 }
 
-function getRawBody(req) {
+function getRawBody(req: http.IncomingMessage): Promise<Buffer> {
   return new Promise((resolve) => {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks)));
   });
 }
 
 const server = http.createServer(async (req, res) => {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/api/create-checkout-session') {
     try {
       const body = await parseJson(req);
@@ -58,10 +79,25 @@ const server = http.createServer(async (req, res) => {
   } else if (req.method === 'POST' && req.url === '/api/stripe-webhook') {
     const buf = await getRawBody(req);
     const sig = req.headers['stripe-signature'];
+    
+    if (!sig) {
+      logger.error('Missing Stripe signature header');
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Missing signature header');
+      return;
+    }
+
+    if (!STRIPE_WEBHOOK_SECRET) {
+      logger.error('Missing Stripe webhook secret');
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Server configuration error');
+      return;
+    }
+
     let event;
     try {
       event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
-      logger.info('Received Stripe event:', event.type);
+      logger.info('Received verified Stripe event:', event.type);
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
         const { userId, paymentRecordId } = session.metadata || {};

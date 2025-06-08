@@ -27,6 +27,9 @@ export const PaymentModal = ({
   const { toast } = useToast();
   const { user } = useAuthStore();
 
+  // Get actual pricing information
+  const pricingInfo = paymentService.getPricingInfo('huurder');
+
   const handlePayment = async () => {
     if (!user) return;
     setIsLoading(true);
@@ -70,15 +73,18 @@ export const PaymentModal = ({
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span>Maandelijks abonnement</span>
-              <span className="font-bold">€19,99/maand</span>
+              <span>Jaarlijks abonnement</span>
+              <span className="font-bold">{pricingInfo.actualPrice}/{pricingInfo.interval}</span>
             </div>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Onbeperkt profiel zichtbaarheid</li>
-              <li>• Prioriteit bij matches</li>
-              <li>• Geavanceerde zoekfilters</li>
-              <li>• 24/7 klantenservice</li>
+              {pricingInfo.features.map((feature, index) => (
+                <li key={index}>• {feature}</li>
+              ))}
             </ul>
+            <div className="mt-3 text-xs text-gray-500">
+              <div>Excl. BTW: {pricingInfo.displayPrice}</div>
+              <div>BTW ({pricingInfo.taxRate}): {pricingInfo.taxAmount}</div>
+            </div>
           </div>
 
           <div className="space-y-3">

@@ -42,12 +42,12 @@ export class PaymentService extends DatabaseService {
         throw new Error('Gebruiker niet gevonden');
       }
 
-      // Create payment record
+      // Create payment record - amount must be in cents (integer)
       const paymentData: TablesInsert<'payment_records'> = {
         user_id: userId,
         email: user.email,
         user_type: 'huurder',
-        amount: plan.priceWithTax,
+        amount: Math.round(plan.priceWithTax * 100), // Convert euros to cents
         status: 'pending',
       };
 
@@ -62,7 +62,7 @@ export class PaymentService extends DatabaseService {
       }
 
       // Create Stripe checkout session
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('http://localhost:4242/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,8 +72,8 @@ export class PaymentService extends DatabaseService {
           userId: userId,
           userEmail: user.email,
           paymentRecordId: paymentRecord.id,
-          successUrl: `${window.location.origin}/huurder-dashboard?payment=success`,
-          cancelUrl: `${window.location.origin}/huurder-dashboard?payment=cancelled`,
+          successUrl: `http://localhost:8084/huurder-dashboard?payment=success`,
+          cancelUrl: `http://localhost:8084/huurder-dashboard?payment=cancelled`,
           // BTW calculation
           amount: Math.round(plan.priceWithTax * 100), // Convert to cents
           currency: plan.currency,
