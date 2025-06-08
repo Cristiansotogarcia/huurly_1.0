@@ -82,7 +82,22 @@ Before building the project or running tests, install the dependencies:
 npm install
 ```
 
+
 The application relies on all environment variables defined in `.env.example`. If any of these are missing the site may render a blank page. Tests can also fail when `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are not provided.
+
+## Environment Variables
+
+Create a `.env` file in the project root and provide the following keys:
+
+```env
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
+STRIPE_SECRET_KEY=<your-secret-key>
+STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
+SUPABASE_URL=<your-supabase-url>
+SUPABASE_SERVICE_KEY=<your-service-key>
+```
 
 
 ## How can I deploy this project?
