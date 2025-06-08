@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
 import { logger } from '@/lib/logger';
@@ -68,7 +69,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -77,7 +78,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot platform statistieken'),
+        error: null,
         success: false,
       };
     }
@@ -140,7 +141,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -152,7 +153,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot deze statistieken'),
+        error: null,
         success: false,
       };
     }
@@ -164,10 +165,10 @@ export class AnalyticsService extends DatabaseService {
         .eq('user_id', targetUserId)
         .single();
 
-      if (userRole?.role !== 'Huurder') {
+      if (userRole?.role !== 'huurder') {
         return {
           data: null,
-          error: new Error('Niet geïmplementeerd voor deze rol'),
+          error: null,
         };
       }
 
@@ -238,7 +239,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -250,7 +251,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot deze statistieken'),
+        error: null,
         success: false,
       };
     }
@@ -262,7 +263,7 @@ export class AnalyticsService extends DatabaseService {
         .eq('landlord_id', targetLandlordId);
 
       if (!properties) {
-        return { data: null, error: new Error('Geen gegevens gevonden') };
+        return { data: null, error: null };
       }
 
       const propertyIds = properties.map(p => p.id);
@@ -333,7 +334,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -342,7 +343,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot document statistieken'),
+        error: null,
         success: false,
       };
     }
@@ -410,7 +411,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -419,7 +420,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot systeem metrics'),
+        error: null,
         success: false,
       };
     }
@@ -452,7 +453,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -486,7 +487,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -495,7 +496,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot conversie data'),
+        error: null,
         success: false,
       };
     }
@@ -529,7 +530,7 @@ export class AnalyticsService extends DatabaseService {
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: null,
         success: false,
       };
     }
@@ -538,7 +539,7 @@ export class AnalyticsService extends DatabaseService {
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot data export'),
+        error: null,
         success: false,
       };
     }
