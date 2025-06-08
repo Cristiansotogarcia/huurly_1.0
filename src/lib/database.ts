@@ -133,8 +133,9 @@ export class DatabaseService {
   ): Promise<void> {
     try {
       const userId = await this.getCurrentUserId();
-
-      await supabase.from('audit_logs').insert({
+      
+      // Log to console for now since audit_logs table doesn't exist
+      console.log('Audit Log:', {
         user_id: userId,
         action,
         table_name: tableName,

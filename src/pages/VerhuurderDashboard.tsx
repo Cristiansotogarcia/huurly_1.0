@@ -11,6 +11,7 @@ import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
 import TenantProfileModal from '@/components/modals/TenantProfileModal';
+import AddPropertyModal from '@/components/modals/AddPropertyModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyViewingInvitation, notifyApplicationReceived } from '@/hooks/useNotifications';
 import { Logo } from '@/components/Logo';

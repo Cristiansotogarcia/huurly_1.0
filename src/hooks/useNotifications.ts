@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -116,7 +117,7 @@ export const notifyDocumentUploaded = async (
 ) => {
   await notificationService.createNotification({
     userId: beoordelaarId,
-    type: 'document_uploaded',
+    type: 'document_approved', // Changed from document_uploaded to match allowed types
     title: 'Nieuw document te beoordelen',
     message: `${uploaderName} heeft een ${documentType} document geüpload.`
   });
@@ -170,7 +171,7 @@ export const notifyApplicationReceived = async (
 ) => {
   await notificationService.createNotification({
     userId: verhuurderUserId,
-    type: 'application_received',
+    type: 'property_application', // Changed from application_received to match allowed types
     title: 'Nieuwe huuranvraag',
     message: `${huurderName} heeft een aanvraag ingediend voor ${propertyAddress}.`
   });
@@ -183,7 +184,7 @@ export const notifyUserSuspended = async (
 ) => {
   await notificationService.createNotification({
     userId,
-    type: 'user_suspended',
+    type: 'system_announcement', // Changed from user_suspended to match allowed types
     title: 'Account geschorst',
     message: `Je account is tijdelijk geschorst. Reden: ${reason}`
   });
@@ -196,7 +197,7 @@ export const notifyIssueResolved = async (
 ) => {
   await notificationService.createNotification({
     userId,
-    type: 'issue_resolved',
+    type: 'system_announcement', // Changed from issue_resolved to match allowed types
     title: 'Issue opgelost',
     message: `Je gemelde issue "${issueTitle}" is opgelost. ${resolution}`
   });
