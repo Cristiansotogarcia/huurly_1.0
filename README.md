@@ -128,8 +128,7 @@ npm run dev
 
 ## Database Scripts
 
-The scripts in `src/scripts` interact directly with your Supabase project. They
-expect the following environment variables to be set before running:
+The scripts in `src/scripts` interact directly with your Supabase project. The former `seedDatabase.ts` utility has been removed, so only administrative scripts remain. They expect the following environment variables to be set before running:
 
 ```env
 SUPABASE_URL=<your-supabase-url>
