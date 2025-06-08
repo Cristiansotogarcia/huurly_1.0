@@ -62,13 +62,21 @@ This project is built with:
 
 ## Build and Test
 
+6v21lq-codex/enhance-readme-with-setup-instructions
 Install all dependencies first:
+=======
+Before building the project or running tests, install the dependencies:
+main
 
 ```sh
 npm install
 ```
 
+6v21lq-codex/enhance-readme-with-setup-instructions
 Ensure every variable in `.env.example` is set. Missing values can render the site blank. Tests may also fail if `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are absent.
+=======
+The application relies on all environment variables defined in `.env.example`. If any of these are missing the site may render a blank page. Tests can also fail when `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are not provided.
+main
 
 
 ## How can I deploy this project?
