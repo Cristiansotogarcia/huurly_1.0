@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,15 +22,33 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const result = await signUp(formData);
-      if (result.success) {
+      const { success, user } = await signUp(formData);
+      if (success && user) {
         onClose();
+
+        switch (user.role) {
+          case 'huurder':
+            navigate('/huurder-dashboard');
+            break;
+          case 'verhuurder':
+            navigate('/verhuurder-dashboard');
+            break;
+          case 'beoordelaar':
+            navigate('/beoordelaar-dashboard');
+            break;
+          case 'beheerder':
+            navigate('/beheerder-dashboard');
+            break;
+          default:
+            navigate('/');
+        }
       }
     } catch (error) {
       console.error('Signup error:', error);
