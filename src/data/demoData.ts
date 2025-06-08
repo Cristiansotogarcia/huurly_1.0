@@ -296,11 +296,6 @@ export const demoStatistics = {
   }
 };
 
-// Helper function to check if we're in demo mode
-export const isDemoMode = (): boolean => {
-  return getEnvVar('VITE_DEMO_MODE') === 'true';
-};
-
 // Empty state messages for clean UI
 export const EMPTY_STATE_MESSAGES = {
   noUsers: 'Nog geen gebruikers geregistreerd',

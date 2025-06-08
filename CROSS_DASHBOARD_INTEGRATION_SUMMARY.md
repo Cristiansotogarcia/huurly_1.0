@@ -62,20 +62,6 @@ Verhuurder Dashboard → Huurder Dashboard
 - `notifyViewingInvitation()` - Sends invitation details to huurders
 - Integrated with ViewingInvitationModal for complete workflow
 
-### **3. User Management Workflow**
-```
-Beheerder Dashboard → All User Dashboards
-```
-
-**Flow:**
-1. **Beheerder suspends user** → Triggers notification to affected user
-2. **Issue resolution** → Notifies users when their reported issues are resolved
-3. **Administrative actions** → Real-time feedback for platform management
-
-**Implementation:**
-- `notifyUserSuspended()` - Alerts users of account status changes
-- `notifyIssueResolved()` - Confirms issue resolution to reporters
-
 ---
 
 ## 🎯 **INTEGRATION POINTS BY DASHBOARD**
@@ -90,7 +76,7 @@ Beheerder Dashboard → All User Dashboards
 **Notification Types Received:**
 - Document approval/rejection confirmations
 - Viewing invitations from verhuurders
-- Account status updates from beheerders
+- Account status updates
 - Issue resolution confirmations
 
 ### **🏠 Verhuurder Dashboard**
@@ -104,7 +90,7 @@ Beheerder Dashboard → All User Dashboards
 - Tenant application submissions
 - Document verification completions
 - Viewing responses from huurders
-- Platform updates from beheerders
+- Platform updates
 
 ### **✅ Beoordelaar Dashboard**
 **Integrated Features:**
@@ -117,21 +103,6 @@ Beheerder Dashboard → All User Dashboards
 - New document uploads from huurders
 - Bulk review requests
 - Priority document flagging
-- System updates from beheerders
-
-### **👨‍💼 Beheerder Dashboard**
-**Integrated Features:**
-- ✅ **NotificationBell** in header for comprehensive oversight
-- ✅ **User management actions** trigger user notifications
-- ✅ **Issue resolution system** with reporter feedback
-- ✅ **Platform-wide communication capabilities**
-
-**Notification Types Received:**
-- Critical system issues
-- User escalations
-- Platform performance alerts
-- Administrative requests
-
 ---
 
 ## 🛠️ **TECHNICAL IMPLEMENTATION DETAILS**
@@ -215,7 +186,7 @@ notifyIssueResolved(issueTitle, resolution, userId)
 4. **Real-time coordination** enables seamless scheduling
 
 ### **Example 3: Administrative Action**
-1. **Admin (Beheerder)** resolves reported issue
+1. **Admin** resolves reported issue
 2. **System** automatically notifies original reporter
 3. **User** receives confirmation with resolution details
 4. **Transparent communication** builds user trust
@@ -274,7 +245,6 @@ notifyIssueResolved(issueTitle, resolution, userId)
 - [x] Cross-dashboard integration for all 4 dashboards
 - [x] Document workflow notifications (upload → review → feedback)
 - [x] Viewing invitation workflow notifications
-- [x] User management workflow notifications
 - [x] Professional UI with unread counts and management
 - [x] TypeScript support with full type safety
 - [x] Responsive design across all dashboards
@@ -285,7 +255,6 @@ The cross-dashboard integration system is **immediately testable**:
 1. **Upload Document** in Huurder Dashboard → See notification in Beoordelaar Dashboard
 2. **Approve/Reject Document** in Beoordelaar Dashboard → See notification in Huurder Dashboard
 3. **Send Viewing Invitation** in Verhuurder Dashboard → See notification in Huurder Dashboard
-4. **Manage Users** in Beheerder Dashboard → See notifications in affected user dashboards
 
 ### **🔧 TECHNICAL READINESS**
 - **Production Ready**: Clean, maintainable code with proper error handling
