@@ -72,8 +72,8 @@ export class PaymentService extends DatabaseService {
           userId: userId,
           userEmail: user.email,
           paymentRecordId: paymentRecord.id,
-          successUrl: `http://localhost:8084/huurder-dashboard?payment=success`,
-          cancelUrl: `http://localhost:8084/huurder-dashboard?payment=cancelled`,
+          successUrl: `http://localhost:8080/huurder-dashboard?payment=success`,
+          cancelUrl: `http://localhost:8080/huurder-dashboard?payment=cancelled`,
           // BTW calculation
           amount: Math.round(plan.priceWithTax * 100), // Convert to cents
           currency: plan.currency,

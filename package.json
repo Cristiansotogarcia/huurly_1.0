@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "cross-env TS_NODE_TRANSPILE_ONLY=true node --loader ts-node/esm server.ts",
+    "server": "ts-node server.ts",
     "test": "cross-env VITE_SUPABASE_URL=http://localhost VITE_SUPABASE_ANON_KEY=anon TS_NODE_TRANSPILE_ONLY=true node --loader ts-node/esm tests/paymentService.test.ts"
   },
   "dependencies": {

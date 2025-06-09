@@ -1,8 +1,8 @@
-import http from 'http';
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
-import { logger } from './src/lib/logger.ts';
 import dotenv from 'dotenv';
+import { logger } from './src/lib/logger.ts';
+import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
+import http from 'http';
 
 dotenv.config();
 
@@ -78,7 +78,7 @@ const server = http.createServer(async (req, res) => {
     }
   } else if (req.method === 'POST' && req.url === '/api/stripe-webhook') {
     const buf = await getRawBody(req);
-    const sig = req.headers['stripe-signature'];
+      const sig = req.headers['Stripe-Signature'];
     
     if (!sig) {
       logger.error('Missing Stripe signature header');
