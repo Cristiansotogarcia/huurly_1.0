@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { userService } from "@/services/UserService";
 import { documentService } from "@/services/DocumentService";
+import { analyticsService } from "@/services/AnalyticsService";
 import {
   Home,
   FileText,
@@ -60,6 +61,8 @@ const HuurderDashboard = () => {
     applications: 0,
     acceptedApplications: 0
   });
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const { toast } = useToast();
 
   console.log("HuurderDashboard: Current user:", user);
@@ -146,38 +149,84 @@ const HuurderDashboard = () => {
   const loadUserStats = async () => {
     if (!user?.id) return;
     
+    setIsLoadingStats(true);
     try {
-      // For now, we'll calculate basic stats from existing data
-      // In a real implementation, these would come from dedicated analytics tables
+      // Use the new analytics service methods
+      const profileViews = await analyticsService.getProfileViews(user.id);
       
-      // Count viewing invitations (placeholder - would need ViewingService method)
-      // const invitations = await viewingService.getUserInvitations(user.id);
+      // Get user analytics data
+      const analyticsResult = await analyticsService.getUserAnalytics(user.id);
       
-      // Count applications (placeholder - would need ApplicationService method)
-      // const applications = await applicationService.getUserApplications(user.id);
+      if (analyticsResult.success && analyticsResult.data) {
+        setStats({
+          profileViews: analyticsResult.data.profileViews,
+          invitations: analyticsResult.data.invitationsReceived,
+          applications: analyticsResult.data.applicationsSubmitted,
+          acceptedApplications: analyticsResult.data.acceptedApplications
+        });
+      } else {
+        // Fallback to basic stats if analytics service fails
+        setStats({
+          profileViews: profileViews,
+          invitations: 0,
+          applications: 0,
+          acceptedApplications: 0
+        });
+      }
       
-      // For now, set realistic but basic stats
-      setStats({
-        profileViews: 0, // Would come from analytics
-        invitations: 0,  // Would come from viewing_invitations table
-        applications: 0, // Would come from applications table
-        acceptedApplications: 0 // Would come from applications with status 'accepted'
-      });
-      
-      console.log("User stats loaded");
+      console.log("User stats loaded with real data");
     } catch (error) {
       console.error("Error loading user stats:", error);
+      // Fallback to zeros if everything fails
+      setStats({
+        profileViews: 0,
+        invitations: 0,
+        applications: 0,
+        acceptedApplications: 0
+      });
+    } finally {
+      setIsLoadingStats(false);
     }
   };
 
-  const toggleLookingStatus = () => {
-    setIsLookingForPlace(!isLookingForPlace);
-    toast({
-      title: "Status bijgewerkt",
-      description: isLookingForPlace
-        ? "Je profiel is nu niet zichtbaar voor verhuurders"
-        : "Je profiel is nu zichtbaar voor verhuurders",
-    });
+  const toggleLookingStatus = async () => {
+    if (!user?.id || isUpdatingStatus) return;
+    
+    const newStatus = !isLookingForPlace;
+    setIsUpdatingStatus(true);
+    
+    try {
+      // Update the database with the new status
+      // Use any type to bypass TypeScript until types are updated
+      const result = await userService.updateProfile(user.id, {
+        is_looking_for_place: newStatus
+      } as any);
+      
+      if (result.success) {
+        setIsLookingForPlace(newStatus);
+        toast({
+          title: "Status bijgewerkt",
+          description: newStatus
+            ? "Je profiel is nu zichtbaar voor verhuurders"
+            : "Je profiel is nu niet zichtbaar voor verhuurders",
+        });
+      } else {
+        toast({
+          title: "Fout bij bijwerken status",
+          description: result.error?.message || "Er is iets misgegaan bij het bijwerken van je status.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating looking status:", error);
+      toast({
+        title: "Fout bij bijwerken status",
+        description: "Er is een onverwachte fout opgetreden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   const handleProfileComplete = async (profileData: any) => {

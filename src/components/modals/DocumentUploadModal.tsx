@@ -257,7 +257,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Document Types Info */}
+          {/* Document Types with Individual Upload */}
           <div className="grid md:grid-cols-2 gap-4">
             {documentTypes.map((docType) => {
               const Icon = docType.icon;
@@ -281,6 +281,79 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{docType.description}</p>
+                        
+                        {/* Individual Upload Button */}
+                        <div className="mt-3">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                if (file.size > 10 * 1024 * 1024) {
+                                  toast({
+                                    title: "Bestand te groot",
+                                    description: `${file.name} is groter dan 10MB. Kies een kleiner bestand.`,
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+
+                                if (!file.type.includes('pdf') && !file.type.includes('image')) {
+                                  toast({
+                                    title: "Ongeldig bestandstype",
+                                    description: `${file.name} is geen PDF of afbeelding. Upload alleen PDF of afbeeldingsbestanden.`,
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+
+                                // Check if this document type is already uploaded
+                                const existingDoc = documents.find(doc => doc.type === docType.type && doc.status !== 'rejected');
+                                if (existingDoc) {
+                                  toast({
+                                    title: "Document al geüpload",
+                                    description: `Je hebt al een ${docType.label} geüpload.`,
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+
+                                const documentId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                                const newDocument: UploadedDocument = {
+                                  id: documentId,
+                                  file,
+                                  fileName: file.name,
+                                  fileSize: file.size,
+                                  type: docType.type,
+                                  status: 'ready',
+                                  uploadProgress: 0,
+                                  uploadedAt: new Date().toISOString(),
+                                };
+
+                                setDocuments(prev => [...prev, newDocument]);
+                                
+                                toast({
+                                  title: "Document toegevoegd",
+                                  description: `${docType.label} is klaar voor upload.`
+                                });
+                              }
+                            }}
+                            className="hidden"
+                            id={`file-upload-${docType.type}`}
+                          />
+                          <label htmlFor={`file-upload-${docType.type}`}>
+                            <Button 
+                              variant={hasUploaded ? "outline" : "default"} 
+                              size="sm" 
+                              className="cursor-pointer w-full"
+                              disabled={hasUploaded}
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              {hasUploaded ? 'Geüpload' : 'Upload'}
+                            </Button>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

@@ -641,6 +641,111 @@ export class AnalyticsService extends DatabaseService {
       return { data: exportUrl, error: null };
     });
   }
+
+  /**
+   * Get profile views for a specific user (Phase 2 addition)
+   */
+  async getProfileViews(userId: string): Promise<number> {
+    try {
+      // For now, return 0 until the new tables are properly integrated
+      // This will be updated once the database schema is fully deployed
+      logger.info(`Getting profile views for user ${userId} - returning 0 for now`);
+      return 0;
+    } catch (error) {
+      logger.error('Error getting profile views:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Increment profile views for a user (Phase 2 addition)
+   */
+  async incrementProfileViews(userId: string): Promise<DatabaseResponse<boolean>> {
+    return this.executeQuery(async () => {
+      // For now, just log the action until the new tables are properly integrated
+      logger.info(`Incrementing profile views for user ${userId}`);
+      
+      // This will be updated once the database schema is fully deployed
+      return { data: true, error: null };
+    });
+  }
+
+  /**
+   * Get monthly registrations data (Phase 2 addition)
+   */
+  async getMonthlyRegistrations(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        logger.error('Error getting monthly registrations:', error);
+        return [];
+      }
+
+      // Group by month
+      const monthlyData: { [key: string]: { huurders: number; verhuurders: number } } = {};
+      
+      data?.forEach((profile: any) => {
+        const date = new Date(profile.created_at);
+        const monthKey = date.toLocaleDateString('nl-NL', { year: 'numeric', month: 'short' });
+        
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { huurders: 0, verhuurders: 0 };
+        }
+        
+        // For now, assume all are huurders - would need role data for accurate split
+        monthlyData[monthKey].huurders += 1;
+      });
+
+      // Convert to array format expected by charts
+      return Object.entries(monthlyData).map(([month, data]) => ({
+        month,
+        ...data
+      }));
+    } catch (error) {
+      logger.error('Error getting monthly registrations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get verification statistics (Phase 2 addition)
+   */
+  async getVerificationStats(): Promise<any> {
+    try {
+      const [
+        { count: totalDocuments },
+        { count: approvedDocuments },
+        { count: rejectedDocuments },
+        { count: pendingDocuments }
+      ] = await Promise.all([
+        supabase.from('user_documents').select('id', { count: 'exact', head: true }),
+        supabase.from('user_documents').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+        supabase.from('user_documents').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+        supabase.from('user_documents').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+      ]);
+
+      return {
+        totalDocuments: totalDocuments || 0,
+        approvedDocuments: approvedDocuments || 0,
+        rejectedDocuments: rejectedDocuments || 0,
+        pendingDocuments: pendingDocuments || 0,
+        approvalRate: totalDocuments > 0 ? Math.round(((approvedDocuments || 0) / totalDocuments) * 100) : 0
+      };
+    } catch (error) {
+      logger.error('Error getting verification stats:', error);
+      return {
+        totalDocuments: 0,
+        approvedDocuments: 0,
+        rejectedDocuments: 0,
+        pendingDocuments: 0,
+        approvalRate: 0
+      };
+    }
+  }
 }
 
 // Export singleton instance
