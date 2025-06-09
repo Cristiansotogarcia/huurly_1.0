@@ -41,26 +41,39 @@ export class DocumentService extends DatabaseService {
       };
     }
 
-    // Upload file to storage
-    const uploadResult = await storageService.uploadDocument(file, currentUserId, documentType);
-    
-    if (!uploadResult.success || !uploadResult.path) {
-      return {
-        data: null,
-        error: uploadResult.error || new Error('Upload mislukt'),
-        success: false,
-      };
-    }
+    try {
+      // Generate unique file path
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const extension = file.name.split('.').pop();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `documents/${documentType}/${currentUserId}/${timestamp}_${randomString}_${sanitizedName}`;
 
-    // Create document record in database
-    return this.executeQuery(async () => {
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        return {
+          data: null,
+          error: new Error('Fout bij uploaden van bestand naar storage'),
+          success: false,
+        };
+      }
+
+      // Create document record in database
       const { data, error } = await supabase
         .from('user_documents')
         .insert({
           user_id: currentUserId,
           document_type: documentType,
           file_name: file.name,
-          file_path: uploadResult.path!,
+          file_path: filePath,
           file_size: file.size,
           mime_type: file.type,
           status: 'pending',
@@ -69,15 +82,31 @@ export class DocumentService extends DatabaseService {
         .single();
 
       if (error) {
+        console.error('Database insert error:', error);
         // If database insert fails, clean up uploaded file
-        await storageService.deleteFile(uploadResult.path!);
-        throw this.handleDatabaseError(error);
+        await supabase.storage.from('documents').remove([filePath]);
+        return {
+          data: null,
+          error: new Error('Fout bij opslaan van document gegevens'),
+          success: false,
+        };
       }
 
       await this.createAuditLog('CREATE', 'user_documents', data?.id, null, data);
       
-      return { data, error: null };
-    });
+      return {
+        data,
+        error: null,
+        success: true
+      };
+    } catch (error) {
+      console.error('Upload error:', error);
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Upload mislukt'),
+        success: false,
+      };
+    }
   }
 
   /**

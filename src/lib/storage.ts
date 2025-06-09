@@ -127,14 +127,71 @@ export class StorageService {
   }
 
   /**
-   * Upload document with metadata
+   * Upload document with metadata (simplified for direct usage)
    */
   async uploadDocument(
     file: File,
     userId: string,
     documentType: 'identity' | 'payslip'
   ): Promise<UploadResult> {
-    return this.uploadFile(file, userId, `documents/${documentType}`);
+    try {
+      // Validate file
+      const validation = this.validateFile(file);
+      if (!validation.isValid) {
+        return {
+          url: null,
+          path: null,
+          error: new Error(validation.error),
+          success: false
+        };
+      }
+
+      // Generate unique file path
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const extension = file.name.split('.').pop();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `documents/${documentType}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
+
+      // Upload file
+      const { data, error } = await supabase.storage
+        .from(this.BUCKET_NAME)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        logger.error('Storage upload error:', error);
+        return {
+          url: null,
+          path: null,
+          error: new Error('Fout bij uploaden van bestand'),
+          success: false
+        };
+      }
+
+      // Get public URL (even though bucket is private, we still need this for internal reference)
+      const { data: urlData } = supabase.storage
+        .from(this.BUCKET_NAME)
+        .getPublicUrl(filePath);
+
+      return {
+        url: urlData.publicUrl,
+        path: filePath,
+        error: null,
+        success: true
+      };
+
+    } catch (error) {
+      logger.error('Upload error:', error);
+      return {
+        url: null,
+        path: null,
+        error: error as Error,
+        success: false
+      };
+    }
   }
 
   /**

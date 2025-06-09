@@ -9,16 +9,49 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       document_access_requests: {
         Row: {
           access_expires_at: string | null
           access_granted_at: string | null
           created_at: string | null
           id: string
-          landlord_id: string
+          landlord_id: string | null
           message_id: string | null
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -26,10 +59,10 @@ export type Database = {
           access_granted_at?: string | null
           created_at?: string | null
           id?: string
-          landlord_id: string
+          landlord_id?: string | null
           message_id?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -37,10 +70,10 @@ export type Database = {
           access_granted_at?: string | null
           created_at?: string | null
           id?: string
-          landlord_id?: string
+          landlord_id?: string | null
           message_id?: string | null
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -62,7 +95,7 @@ export type Database = {
           pet_details: string | null
           smoking_details: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -72,7 +105,7 @@ export type Database = {
           pet_details?: string | null
           smoking_details?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -82,7 +115,7 @@ export type Database = {
           pet_details?: string | null
           smoking_details?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -92,21 +125,21 @@ export type Database = {
           created_at: string | null
           id: string
           relationship: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           age: number
           created_at?: string | null
           id?: string
           relationship?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           age?: number
           created_at?: string | null
           id?: string
           relationship?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -117,9 +150,9 @@ export type Database = {
           id: string
           message_type: string
           read_at: string | null
-          recipient_id: string
+          recipient_id: string | null
           related_data: Json | null
-          sender_id: string
+          sender_id: string | null
           subject: string
         }
         Insert: {
@@ -128,9 +161,9 @@ export type Database = {
           id?: string
           message_type: string
           read_at?: string | null
-          recipient_id: string
+          recipient_id?: string | null
           related_data?: Json | null
-          sender_id: string
+          sender_id?: string | null
           subject: string
         }
         Update: {
@@ -139,9 +172,9 @@ export type Database = {
           id?: string
           message_type?: string
           read_at?: string | null
-          recipient_id?: string
+          recipient_id?: string | null
           related_data?: Json | null
-          sender_id?: string
+          sender_id?: string | null
           subject?: string
         }
         Relationships: []
@@ -157,7 +190,7 @@ export type Database = {
           title: string
           type: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -169,7 +202,7 @@ export type Database = {
           title: string
           type?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -181,7 +214,7 @@ export type Database = {
           title?: string
           type?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -189,11 +222,15 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string | null
+          currency: string | null
           email: string
           id: string
+          payment_method: string | null
           status: string | null
           stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          subscription_type: string | null
           updated_at: string | null
           user_id: string | null
           user_type: string
@@ -201,11 +238,15 @@ export type Database = {
         Insert: {
           amount?: number | null
           created_at?: string | null
+          currency?: string | null
           email: string
           id?: string
+          payment_method?: string | null
           status?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           user_id?: string | null
           user_type: string
@@ -213,11 +254,15 @@ export type Database = {
         Update: {
           amount?: number | null
           created_at?: string | null
+          currency?: string | null
           email?: string
           id?: string
+          payment_method?: string | null
           status?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           user_id?: string | null
           user_type?: string
@@ -261,7 +306,7 @@ export type Database = {
           description: string | null
           furnished: boolean | null
           id: string
-          landlord_id: string
+          landlord_id: string | null
           max_offers: number | null
           offers_sent: number | null
           pets_allowed: boolean | null
@@ -287,7 +332,7 @@ export type Database = {
           description?: string | null
           furnished?: boolean | null
           id?: string
-          landlord_id: string
+          landlord_id?: string | null
           max_offers?: number | null
           offers_sent?: number | null
           pets_allowed?: boolean | null
@@ -313,7 +358,7 @@ export type Database = {
           description?: string | null
           furnished?: boolean | null
           id?: string
-          landlord_id?: string
+          landlord_id?: string | null
           max_offers?: number | null
           offers_sent?: number | null
           pets_allowed?: boolean | null
@@ -334,31 +379,31 @@ export type Database = {
           application_message: string | null
           applied_at: string | null
           id: string
-          property_id: string
+          property_id: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
         }
         Insert: {
           application_message?: string | null
           applied_at?: string | null
           id?: string
-          property_id: string
+          property_id?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
         }
         Update: {
           application_message?: string | null
           applied_at?: string | null
           id?: string
-          property_id?: string
+          property_id?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -377,7 +422,7 @@ export type Database = {
           image_order: number | null
           image_url: string
           is_primary: boolean | null
-          property_id: string
+          property_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -385,7 +430,7 @@ export type Database = {
           image_order?: number | null
           image_url: string
           is_primary?: boolean | null
-          property_id: string
+          property_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -393,7 +438,7 @@ export type Database = {
           image_order?: number | null
           image_url?: string
           is_primary?: boolean | null
-          property_id?: string
+          property_id?: string | null
         }
         Relationships: [
           {
@@ -410,36 +455,36 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
-          landlord_id: string
+          landlord_id: string | null
           offered_at: string | null
-          property_id: string
+          property_id: string | null
           responded_at: string | null
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           expires_at?: string | null
           id?: string
-          landlord_id: string
+          landlord_id?: string | null
           offered_at?: string | null
-          property_id: string
+          property_id?: string | null
           responded_at?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           expires_at?: string | null
           id?: string
-          landlord_id?: string
+          landlord_id?: string | null
           offered_at?: string | null
-          property_id?: string
+          property_id?: string | null
           responded_at?: string | null
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -451,6 +496,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       tenant_profiles: {
         Row: {
@@ -489,7 +570,7 @@ export type Database = {
           smokes: boolean | null
           smoking_policy_preference: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           work_contract_type: string | null
         }
         Insert: {
@@ -528,7 +609,7 @@ export type Database = {
           smokes?: boolean | null
           smoking_policy_preference?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           work_contract_type?: string | null
         }
         Update: {
@@ -567,7 +648,7 @@ export type Database = {
           smokes?: boolean | null
           smoking_policy_preference?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           work_contract_type?: string | null
         }
         Relationships: []
@@ -586,7 +667,7 @@ export type Database = {
           rejection_reason: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -601,7 +682,7 @@ export type Database = {
           rejection_reason?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -616,7 +697,7 @@ export type Database = {
           rejection_reason?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -625,22 +706,31 @@ export type Database = {
           created_at: string | null
           id: string
           role: Database["public"]["Enums"]["user_role"]
+          subscription_end_date: string | null
+          subscription_start_date: string | null
           subscription_status: string | null
-          user_id: string
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["user_role"]
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
           subscription_status?: string | null
-          user_id: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
           subscription_status?: string | null
-          user_id?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -648,34 +738,34 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          landlord_id: string
+          landlord_id: string | null
           message_id: string | null
           property_address: string
           proposed_date: string
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          landlord_id: string
+          landlord_id?: string | null
           message_id?: string | null
           property_address: string
           proposed_date: string
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          landlord_id?: string
+          landlord_id?: string | null
           message_id?: string | null
           property_address?: string
           proposed_date?: string
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -692,33 +782,33 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          property_id: string
+          property_id: string | null
           reserved_at: string | null
           slot_number: number
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string | null
           viewing_date: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          property_id: string
+          property_id?: string | null
           reserved_at?: string | null
           slot_number: number
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string | null
           viewing_date?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          property_id?: string
+          property_id?: string | null
           reserved_at?: string | null
           slot_number?: number
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string | null
           viewing_date?: string | null
         }
@@ -737,13 +827,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      column_exists: {
-        Args: { table_name: string; column_name: string }
+      user_has_active_subscription: {
+        Args: { user_uuid: string }
         Returns: boolean
-      }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: Database["public"]["Enums"]["user_role"]
       }
     }
     Enums: {
