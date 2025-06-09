@@ -65,7 +65,7 @@ serve(async (req) => {
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-06-20", // Updated to latest stable version
+      apiVersion: "2023-10-16", // Use stable version
     });
 
     // Parse request body
@@ -96,7 +96,7 @@ serve(async (req) => {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'payment' as const,
+      mode: 'subscription' as const, // Changed from 'payment' to 'subscription' for recurring prices
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { 
