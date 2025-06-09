@@ -113,7 +113,8 @@ SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_KEY=<your-supabase-service-key>
 ```
 
-Start the Stripe server alongside the Vite dev server:
+Start the Stripe server alongside the Vite dev server. The `server` script uses `cross-env`,
+so it works on all platforms:
 
 ```sh
 npm run server
