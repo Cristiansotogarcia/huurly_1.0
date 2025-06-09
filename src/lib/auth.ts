@@ -289,20 +289,20 @@ export class AuthService {
    */
   async checkPaymentStatus(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from('payment_records')
-        .select('status')
+      // Check subscription status from user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('subscription_status')
         .eq('user_id', userId)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .single();
 
-      if (error) {
-         logger.error('Error checking payment status:', error);
+      if (roleError) {
+         logger.error('Error checking subscription status:', roleError);
         return false;
       }
 
-      return data && data.length > 0;
+      // Check if subscription is active
+      return roleData?.subscription_status === 'active';
     } catch (error) {
        logger.error('Error checking payment status:', error);
       return false;

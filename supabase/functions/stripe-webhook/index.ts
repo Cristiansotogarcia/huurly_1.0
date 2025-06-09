@@ -59,6 +59,8 @@ serve(async (req) => {
         paymentRecordUUID,
         userUUID,
         stripeCustomerId,
+        sessionId: session.id,
+        mode: session.mode,
       });
 
       // Update payment record status
@@ -68,6 +70,7 @@ serve(async (req) => {
           .update({
             status: 'completed',
             stripe_customer_id: stripeCustomerId,
+            stripe_session_id: session.id,
             updated_at: new Date().toISOString(),
           })
           .eq('id', paymentRecordUUID);
@@ -78,6 +81,8 @@ serve(async (req) => {
             stripeCustomerId,
             error: paymentUpdateError,
           });
+        } else {
+          console.log('Payment record updated successfully:', paymentRecordUUID);
         }
       }
 
@@ -85,33 +90,73 @@ serve(async (req) => {
       if (userUUID) {
         const { error: userRoleError } = await supabase
           .from('user_roles')
-          .update({ subscription_status: 'active' })
+          .update({ 
+            subscription_status: 'active'
+          })
           .eq('user_id', userUUID);
 
         if (userRoleError) {
           console.error('Failed to update user role', { userUUID, error: userRoleError });
+        } else {
+          console.log('User role updated successfully:', userUUID);
         }
 
-        const expiry = new Date();
-        expiry.setFullYear(expiry.getFullYear() + 1);
-
-        const { error: subError } = await supabase.from('subscribers').upsert(
-          {
+        // Create notification for successful payment
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
             user_id: userUUID,
-            email: session.customer_details?.email || session.customer_email,
-            stripe_customer_id: stripeCustomerId,
-            subscribed: true,
-            subscription_tier: 'huurder_yearly',
-            subscription_end: expiry.toISOString(),
-          },
-          { onConflict: 'user_id' }
-        );
+            type: 'payment_success',
+            title: 'Betaling succesvol',
+            message: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
+            read: false,
+          });
 
-        if (subError) {
-          console.error('Failed to upsert subscriber', {
-            userUUID,
-            stripeCustomerId,
-            error: subError,
+        if (notificationError) {
+          console.error('Failed to create notification', { userUUID, error: notificationError });
+        }
+      }
+    }
+
+    // Handle subscription events for ongoing management
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      console.log('Subscription event:', {
+        type: event.type,
+        subscriptionId: subscription.id,
+        customerId: customerId,
+        status: subscription.status,
+      });
+
+      // Find user by stripe customer ID
+      const { data: paymentRecord } = await supabase
+        .from('payment_records')
+        .select('user_id')
+        .eq('stripe_customer_id', customerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (paymentRecord?.user_id) {
+        const subscriptionStatus = subscription.status === 'active' ? 'active' : 
+                                 subscription.status === 'canceled' ? 'cancelled' : 'inactive';
+
+        const { error: userRoleError } = await supabase
+          .from('user_roles')
+          .update({ subscription_status: subscriptionStatus })
+          .eq('user_id', paymentRecord.user_id);
+
+        if (userRoleError) {
+          console.error('Failed to update subscription status', { 
+            userId: paymentRecord.user_id, 
+            error: userRoleError 
+          });
+        } else {
+          console.log('Subscription status updated:', { 
+            userId: paymentRecord.user_id, 
+            status: subscriptionStatus 
           });
         }
       }
