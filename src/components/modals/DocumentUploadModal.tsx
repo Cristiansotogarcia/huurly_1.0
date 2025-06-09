@@ -124,17 +124,35 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
       fileName: file.name,
       fileSize: file.size,
       type: documentType,
-      status: 'ready',
-      uploadProgress: 0,
+      status: 'uploading',
+      uploadProgress: 10,
       uploadedAt: new Date().toISOString(),
     };
 
+    // Add document to state immediately with uploading status
     setDocuments(prev => [...prev, newDocument]);
     
     toast({
-      title: "Document toegevoegd",
-      description: `${documentTypes.find(t => t.type === documentType)?.label} is klaar voor upload.`
+      title: "Document uploaden gestart",
+      description: `${documentTypes.find(t => t.type === documentType)?.label} wordt geüpload...`
     });
+
+    // Start upload immediately
+    try {
+      const uploadedDoc = await uploadDocument(newDocument);
+      
+      toast({
+        title: "Document geüpload",
+        description: `${documentTypes.find(t => t.type === documentType)?.label} is succesvol geüpload.`
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload mislukt';
+      toast({
+        title: 'Upload mislukt',
+        description: `${file.name}: ${errorMessage}`,
+        variant: 'destructive'
+      });
+    }
   };
 
   const removeDocument = (documentId: string) => {
@@ -463,11 +481,11 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
             </Button>
             
             <Button 
-              onClick={handleCompleteUpload}
-              disabled={readyDocuments.length === 0 || !hasAllRequired}
+              onClick={() => onOpenChange(false)}
+              disabled={documents.filter(doc => doc.status === 'success').length === 0}
               className="bg-green-600 hover:bg-green-700"
             >
-              Documenten Uploaden ({readyDocuments.length})
+              Sluiten
               <CheckCircle className="w-4 h-4 ml-2" />
             </Button>
           </div>
