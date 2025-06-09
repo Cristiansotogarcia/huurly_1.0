@@ -15,9 +15,7 @@ import {
   XCircle, 
   AlertCircle, 
   Eye,
-  Trash2,
-  Download,
-  Clock
+  Trash2
 } from 'lucide-react';
 
 interface DocumentUploadModalProps {
@@ -31,18 +29,18 @@ interface UploadedDocument {
   file: File;
   fileName: string;
   fileSize: number;
-  type: 'identity' | 'payslip' | 'employment' | 'reference';
-  status: 'ready' | 'uploading' | 'pending' | 'approved' | 'rejected';
+  type: 'identity' | 'payslip';
+  status: 'ready' | 'uploading' | 'success' | 'error';
   uploadProgress: number;
   uploadedAt: string;
-  rejectionReason?: string;
+  error?: string;
+  result?: any;
 }
 
 const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentUploadModalProps) => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
-  const [dragActive, setDragActive] = useState(false);
 
   const documentTypes = [
     {
@@ -59,91 +57,70 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
       icon: FileText,
       required: true,
     },
-    {
-      type: 'employment' as const,
-      label: 'Arbeidscontract',
-      description: 'Huidig arbeidscontract',
-      icon: FileText,
-      required: false,
-    },
-    {
-      type: 'reference' as const,
-      label: 'Referentie',
-      description: 'Referentie van vorige verhuurder',
-      icon: FileText,
-      required: false,
-    },
   ];
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(Array.from(e.dataTransfer.files));
-    }
-  }, []);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      handleFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleFiles = async (files: File[]) => {
-    for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Bestand te groot",
-          description: `${file.name} is groter dan 10MB. Kies een kleiner bestand.`,
-          variant: "destructive"
-        });
-        continue;
-      }
-
-      if (!file.type.includes('pdf') && !file.type.includes('image')) {
-        toast({
-          title: "Ongeldig bestandstype",
-          description: `${file.name} is geen PDF of afbeelding. Upload alleen PDF of afbeeldingsbestanden.`,
-          variant: "destructive"
-        });
-        continue;
-      }
-
-      const documentId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const newDocument: UploadedDocument = {
-        id: documentId,
-        file,
-        fileName: file.name,
-        fileSize: file.size,
-        type: 'identity',
-        status: 'ready',
-        uploadProgress: 0,
-        uploadedAt: new Date().toISOString(),
+  const validateFile = (file: File): { isValid: boolean; error?: string } => {
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      return {
+        isValid: false,
+        error: `Bestand is te groot. Maximum grootte is 10MB.`
       };
-
-      setDocuments(prev => [...prev, newDocument]);
     }
+
+    // Check file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        error: 'Alleen PDF, JPG en PNG bestanden zijn toegestaan.'
+      };
+    }
+
+    return { isValid: true };
   };
 
+  const handleFileSelect = async (file: File, documentType: 'identity' | 'payslip') => {
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.isValid) {
+      toast({
+        title: "Ongeldig bestand",
+        description: validation.error,
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const updateDocumentType = (documentId: string, type: UploadedDocument['type']) => {
-    setDocuments(prev => 
-      prev.map(doc => 
-        doc.id === documentId ? { ...doc, type } : doc
-      )
-    );
+    // Check if this document type is already uploaded
+    const existingDoc = documents.find(doc => doc.type === documentType && doc.status !== 'error');
+    if (existingDoc) {
+      toast({
+        title: "Document al geüpload",
+        description: `Je hebt al een ${documentTypes.find(t => t.type === documentType)?.label} geüpload.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const documentId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newDocument: UploadedDocument = {
+      id: documentId,
+      file,
+      fileName: file.name,
+      fileSize: file.size,
+      type: documentType,
+      status: 'ready',
+      uploadProgress: 0,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    setDocuments(prev => [...prev, newDocument]);
+    
+    toast({
+      title: "Document toegevoegd",
+      description: `${documentTypes.find(t => t.type === documentType)?.label} is klaar voor upload.`
+    });
   };
 
   const removeDocument = (documentId: string) => {
@@ -159,12 +136,10 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
       case 'ready':
         return <FileText className="w-4 h-4 text-gray-500" />;
       case 'uploading':
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'pending':
-        return <Clock className="w-4 h-4 text-orange-500" />;
-      case 'approved':
+        return <Upload className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'success':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'rejected':
+      case 'error':
         return <XCircle className="w-4 h-4 text-red-500" />;
       default:
         return <FileText className="w-4 h-4 text-gray-500" />;
@@ -177,12 +152,10 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
         return 'Klaar voor upload';
       case 'uploading':
         return 'Uploaden...';
-      case 'pending':
-        return 'In behandeling';
-      case 'approved':
-        return 'Goedgekeurd';
-      case 'rejected':
-        return 'Afgewezen';
+      case 'success':
+        return 'Geüpload';
+      case 'error':
+        return 'Fout';
       default:
         return 'Onbekend';
     }
@@ -194,11 +167,9 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
         return 'bg-gray-100 text-gray-800';
       case 'uploading':
         return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-orange-100 text-orange-800';
-      case 'approved':
+      case 'success':
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case 'error':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -213,38 +184,99 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleComplete = async () => {
-    const uploaded: any[] = [];
-    for (const doc of documents) {
-      setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'uploading' } : d));
-      const result = await documentService.uploadDocument(doc.file, doc.type === 'identity' ? 'identity' : 'payslip');
+  const uploadDocument = async (document: UploadedDocument) => {
+    // Update status to uploading
+    setDocuments(prev => prev.map(d => 
+      d.id === document.id ? { ...d, status: 'uploading', uploadProgress: 10 } : d
+    ));
+
+    try {
+      const result = await documentService.uploadDocument(document.file, document.type);
+      
       if (result.success && result.data) {
-        uploaded.push(result.data);
-        setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'pending', uploadProgress: 100 } : d));
+        setDocuments(prev => prev.map(d => 
+          d.id === document.id ? { 
+            ...d, 
+            status: 'success', 
+            uploadProgress: 100,
+            result: result.data
+          } : d
+        ));
+        return result.data;
       } else {
-        setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'rejected' } : d));
-        toast({ title: 'Upload mislukt', description: result.error?.message || 'Er is iets misgegaan', variant: 'destructive' });
+        throw result.error || new Error('Upload mislukt');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload mislukt';
+      
+      setDocuments(prev => prev.map(d => 
+        d.id === document.id ? { 
+          ...d, 
+          status: 'error',
+          error: errorMessage
+        } : d
+      ));
+      
+      throw error;
+    }
+  };
+
+  const handleCompleteUpload = async () => {
+    const documentsToUpload = documents.filter(doc => doc.status === 'ready');
+    
+    if (documentsToUpload.length === 0) {
+      toast({
+        title: "Geen documenten om te uploaden",
+        description: "Voeg eerst documenten toe voordat je ze uploadt.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const uploadedDocuments: any[] = [];
+    let hasErrors = false;
+
+    // Upload documents one by one
+    for (const doc of documentsToUpload) {
+      try {
+        const uploadedDoc = await uploadDocument(doc);
+        uploadedDocuments.push(uploadedDoc);
+      } catch (error) {
+        hasErrors = true;
+        const errorMessage = error instanceof Error ? error.message : 'Upload mislukt';
+        toast({
+          title: 'Upload mislukt',
+          description: `${doc.fileName}: ${errorMessage}`,
+          variant: 'destructive'
+        });
       }
     }
 
-    if (uploaded.length > 0) {
-      onUploadComplete(uploaded);
-      onOpenChange(false);
+    if (uploadedDocuments.length > 0) {
+      onUploadComplete(uploadedDocuments);
+      
       toast({
         title: 'Documenten geüpload',
-        description: `${uploaded.length} document(en) zijn geüpload voor beoordeling.`
+        description: `${uploadedDocuments.length} document(en) zijn succesvol geüpload voor beoordeling.`
       });
-      setDocuments([]);
+
+      if (!hasErrors) {
+        // Only close modal if no errors occurred
+        onOpenChange(false);
+        setDocuments([]);
+      }
     }
   };
 
   const requiredDocuments = documentTypes.filter(type => type.required);
   const uploadedRequiredTypes = documents
-    .filter(doc => doc.status !== 'rejected')
+    .filter(doc => doc.status !== 'error')
     .map(doc => doc.type);
   const hasAllRequired = requiredDocuments.every(type => 
     uploadedRequiredTypes.includes(type.type)
   );
+
+  const readyDocuments = documents.filter(doc => doc.status === 'ready');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -262,7 +294,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
             {documentTypes.map((docType) => {
               const Icon = docType.icon;
               const hasUploaded = documents.some(doc => 
-                doc.type === docType.type && doc.status !== 'rejected'
+                doc.type === docType.type && doc.status !== 'error'
               );
               
               return (
@@ -288,56 +320,12 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
                             onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                if (file.size > 10 * 1024 * 1024) {
-                                  toast({
-                                    title: "Bestand te groot",
-                                    description: `${file.name} is groter dan 10MB. Kies een kleiner bestand.`,
-                                    variant: "destructive"
-                                  });
-                                  return;
-                                }
-
-                                if (!file.type.includes('pdf') && !file.type.includes('image')) {
-                                  toast({
-                                    title: "Ongeldig bestandstype",
-                                    description: `${file.name} is geen PDF of afbeelding. Upload alleen PDF of afbeeldingsbestanden.`,
-                                    variant: "destructive"
-                                  });
-                                  return;
-                                }
-
-                                // Check if this document type is already uploaded
-                                const existingDoc = documents.find(doc => doc.type === docType.type && doc.status !== 'rejected');
-                                if (existingDoc) {
-                                  toast({
-                                    title: "Document al geüpload",
-                                    description: `Je hebt al een ${docType.label} geüpload.`,
-                                    variant: "destructive"
-                                  });
-                                  return;
-                                }
-
-                                const documentId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                                const newDocument: UploadedDocument = {
-                                  id: documentId,
-                                  file,
-                                  fileName: file.name,
-                                  fileSize: file.size,
-                                  type: docType.type,
-                                  status: 'ready',
-                                  uploadProgress: 0,
-                                  uploadedAt: new Date().toISOString(),
-                                };
-
-                                setDocuments(prev => [...prev, newDocument]);
-                                
-                                toast({
-                                  title: "Document toegevoegd",
-                                  description: `${docType.label} is klaar voor upload.`
-                                });
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleFileSelect(file, docType.type);
                               }
+                              // Reset input
+                              e.target.value = '';
                             }}
                             className="hidden"
                             id={`file-upload-${docType.type}`}
@@ -350,7 +338,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                               disabled={hasUploaded}
                             >
                               <Upload className="w-4 h-4 mr-2" />
-                              {hasUploaded ? 'Geüpload' : 'Upload'}
+                              {hasUploaded ? 'Geüpload' : 'Selecteer Bestand'}
                             </Button>
                           </label>
                         </div>
@@ -362,55 +350,19 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
             })}
           </div>
 
-          {/* Upload Area */}
-          <Card>
-            <CardContent className="pt-6">
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  dragActive 
-                    ? 'border-dutch-blue bg-blue-50' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-              >
-                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2">Sleep bestanden hierheen</h3>
-                <p className="text-gray-600 mb-4">
-                  Of klik om bestanden te selecteren
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileInput}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload">
-                  <Button variant="outline" className="cursor-pointer">
-                    Bestanden Selecteren
-                  </Button>
-                </label>
-                <p className="text-xs text-gray-500 mt-2">
-                  PDF, JPG, PNG bestanden tot 10MB
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Uploaded Documents */}
           {documents.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Geüploade Documenten ({documents.length})</CardTitle>
+                <CardTitle>Geselecteerde Documenten ({documents.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {documents.map((document) => (
-                    <div key={document.id} className="flex items-center space-x-4 p-3 border rounded-lg">
+                    <div
+                      key={document.id}
+                      className="flex items-center space-x-4 p-3 border rounded-lg"
+                    >
                       <FileText className="w-8 h-8 text-dutch-blue" />
                       
                       <div className="flex-1 min-w-0">
@@ -425,47 +377,32 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                           <Badge className={`text-xs ${getStatusColor(document.status)}`}>
                             {getStatusText(document.status)}
                           </Badge>
+                          <span className="text-sm text-gray-500">
+                            {documentTypes.find(t => t.type === document.type)?.label}
+                          </span>
                         </div>
                         
                         {document.status === 'uploading' && (
                           <Progress value={document.uploadProgress} className="h-2 mt-2" />
                         )}
                         
-                        {document.status === 'rejected' && document.rejectionReason && (
+                        {document.status === 'error' && document.error && (
                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">
                             <AlertCircle className="w-4 h-4 inline mr-1" />
-                            {document.rejectionReason}
+                            {document.error}
                           </div>
                         )}
                       </div>
                       
                       <div className="flex items-center space-x-2">
                         {document.status !== 'uploading' && (
-                          <>
-                            <select
-                              value={document.type}
-                              onChange={(e) => updateDocumentType(document.id, e.target.value as UploadedDocument['type'])}
-                              className="text-sm border rounded px-2 py-1"
-                            >
-                              {documentTypes.map((type) => (
-                                <option key={type.type} value={type.type}>
-                                  {type.label}
-                                </option>
-                              ))}
-                            </select>
-                            
-                            <Button variant="ghost" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => removeDocument(document.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeDocument(document.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -486,12 +423,12 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                     <AlertCircle className="w-5 h-5 text-orange-600" />
                   )}
                   <h4 className="font-semibold">
-                    {hasAllRequired ? 'Alle verplichte documenten geüpload' : 'Verplichte documenten ontbreken'}
+                    {hasAllRequired ? 'Alle verplichte documenten geselecteerd' : 'Verplichte documenten ontbreken'}
                   </h4>
                 </div>
                 {!hasAllRequired && (
                   <p className="text-sm text-orange-700 mt-1">
-                    Upload nog: {requiredDocuments
+                    Selecteer nog: {requiredDocuments
                       .filter(type => !uploadedRequiredTypes.includes(type.type))
                       .map(type => type.label)
                       .join(', ')}
@@ -504,15 +441,15 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
           {/* Action Buttons */}
           <div className="flex justify-between pt-4 border-t">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Later Voltooien
+              Annuleren
             </Button>
             
             <Button 
-              onClick={handleComplete}
-              disabled={documents.length === 0 || !hasAllRequired}
+              onClick={handleCompleteUpload}
+              disabled={readyDocuments.length === 0 || !hasAllRequired}
               className="bg-green-600 hover:bg-green-700"
             >
-              Documenten Indienen
+              Documenten Uploaden ({readyDocuments.length})
               <CheckCircle className="w-4 h-4 ml-2" />
             </Button>
           </div>
