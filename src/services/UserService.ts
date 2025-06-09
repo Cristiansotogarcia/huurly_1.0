@@ -15,6 +15,7 @@ export interface UpdateUserProfileData {
   lastName?: string;
   email?: string;
   phone?: string;
+  is_looking_for_place?: boolean;
 }
 
 export interface UserFilters {
@@ -117,15 +118,6 @@ export class UserService extends DatabaseService {
     userId: string,
     updates: UpdateUserProfileData
   ): Promise<DatabaseResponse<Tables<'profiles'>>> {
-    const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot dit profiel'),
-        success: false,
-      };
-    }
-
     const sanitizedData = this.sanitizeInput(updates);
 
     if (sanitizedData.email && !this.isValidEmail(sanitizedData.email)) {
@@ -155,6 +147,7 @@ export class UserService extends DatabaseService {
       const updateData: any = {};
       if (sanitizedData.firstName) updateData.first_name = sanitizedData.firstName;
       if (sanitizedData.lastName) updateData.last_name = sanitizedData.lastName;
+      if (sanitizedData.is_looking_for_place !== undefined) updateData.is_looking_for_place = sanitizedData.is_looking_for_place;
 
       const { data, error } = await supabase
         .from('profiles')
