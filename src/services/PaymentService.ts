@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client.ts';
 import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '../lib/stripe.ts';
 import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
@@ -61,41 +60,35 @@ export class PaymentService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(paymentError);
       }
 
-      // Create Stripe checkout session
-      const response = await fetch('http://localhost:4242/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Create Stripe checkout session using Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
           priceId: plan.priceId,
           userId: userId,
           userEmail: user.email,
           paymentRecordId: paymentRecord.id,
-          successUrl: `http://localhost:8080/huurder-dashboard?payment=success`,
-          cancelUrl: `http://localhost:8080/huurder-dashboard?payment=cancelled`,
-          // BTW calculation
-          amount: Math.round(plan.priceWithTax * 100), // Convert to cents
-          currency: plan.currency,
-          taxRate: plan.taxRate,
-        }),
+          successUrl: `${window.location.origin}/huurder-dashboard?payment=success`,
+          cancelUrl: `${window.location.origin}/huurder-dashboard?payment=cancelled`,
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Fout bij het aanmaken van betaling');
+      if (error) {
+        throw new Error('Fout bij het aanmaken van betaling: ' + error.message);
       }
 
-      const { sessionId } = await response.json();
+      if (!data?.sessionId) {
+        throw new Error('Geen sessie ID ontvangen van Stripe');
+      }
 
       // Update payment record with session ID
       await supabase
         .from('payment_records')
-        .update({ stripe_session_id: sessionId })
+        .update({ stripe_session_id: data.sessionId })
         .eq('id', paymentRecord.id);
 
       // Redirect to Stripe Checkout
       const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
+        sessionId: data.sessionId,
       });
 
       if (stripeError) {

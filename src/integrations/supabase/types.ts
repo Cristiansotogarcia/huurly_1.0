@@ -644,75 +644,6 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          action: string
-          table_name: string
-          record_id: string | null
-          old_values: Json | null
-          new_values: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          action: string
-          table_name: string
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          action?: string
-          table_name?: string
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      subscribers: {
-        Row: {
-          id: string
-          user_id: string | null
-          email: string
-          stripe_customer_id: string | null
-          subscribed: boolean
-          subscription_tier: string | null
-          subscription_end: string | null
-          updated_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          email: string
-          stripe_customer_id?: string | null
-          subscribed?: boolean
-          subscription_tier?: string | null
-          subscription_end?: string | null
-          updated_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          email?: string
-          stripe_customer_id?: string | null
-          subscribed?: boolean
-          subscription_tier?: string | null
-          subscription_end?: string | null
-          updated_at?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
       viewing_invitations: {
         Row: {
           created_at: string | null
@@ -821,6 +752,7 @@ export type Database = {
       user_role:
         | "Huurder"
         | "Verhuurder"
+        | "Manager"
         | "Beheerder"
         | "Beoordelaar"
     }
@@ -943,6 +875,7 @@ export const Constants = {
       user_role: [
         "Huurder",
         "Verhuurder",
+        "Manager",
         "Beheerder",
         "Beoordelaar",
       ],
