@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/NotificationService';
 import { Bell, Check, CheckCheck, Trash2, FileText, Calendar, AlertTriangle, UserCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -31,6 +32,7 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -116,9 +118,24 @@ const NotificationBell = () => {
       const result = await notificationService.deleteNotification(notificationId);
       if (result.success) {
         await loadNotifications(); // Reload to update the list
+        toast({
+          title: "Notificatie verwijderd",
+          description: "De notificatie is succesvol verwijderd.",
+        });
+      } else {
+        toast({
+          title: "Fout bij verwijderen",
+          description: result.error?.message || "Er is iets misgegaan bij het verwijderen van de notificatie.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-       logger.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
+      toast({
+        title: "Fout bij verwijderen",
+        description: "Er is een onverwachte fout opgetreden.",
+        variant: "destructive",
+      });
     }
   };
 
