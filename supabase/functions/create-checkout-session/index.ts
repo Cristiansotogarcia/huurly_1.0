@@ -102,15 +102,35 @@ serve(async (req) => {
       status: 'pending'
     };
 
-    const { data: paymentData, error: paymentError } = await supabaseServiceClient
+    // Check for existing pending payment to prevent duplicates
+    const { data: existingPayment } = await supabaseServiceClient
       .from('payment_records')
-      .insert(paymentRecord)
-      .select()
+      .select('id, status')
+      .eq('user_id', userId || user.id)
+      .eq('status', 'pending')
       .single();
 
-    if (paymentError) {
-      console.error('Failed to create payment record:', paymentError);
-      throw new Error('Failed to create payment record');
+    let paymentData;
+    
+    if (existingPayment) {
+      // Use existing pending payment record
+      paymentData = existingPayment;
+      console.log('Using existing pending payment record:', existingPayment.id);
+    } else {
+      // Create new payment record only if no pending payment exists
+      const { data: newPaymentData, error: paymentError } = await supabaseServiceClient
+        .from('payment_records')
+        .insert(paymentRecord)
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error('Failed to create payment record:', paymentError);
+        throw new Error('Failed to create payment record');
+      }
+      
+      paymentData = newPaymentData;
+      console.log('Created new payment record:', newPaymentData.id);
     }
 
     console.log('Payment record created:', paymentData.id);
