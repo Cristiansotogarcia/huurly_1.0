@@ -205,13 +205,8 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     ));
 
     try {
-      // For employment_contract and reference, we'll use 'payslip' as the document type
-      // since the current service only supports 'identity' and 'payslip'
-      const documentTypeForService = (document.type === 'employment_contract' || document.type === 'reference') 
-        ? 'payslip' as const 
-        : document.type;
-
-      const result = await documentService.uploadDocument(document.file, documentTypeForService);
+      // Use the actual document type - our service now supports all 4 types
+      const result = await documentService.uploadDocument(document.file, document.type);
       
       if (result.success && result.data) {
         setDocuments(prev => prev.map(d => 
