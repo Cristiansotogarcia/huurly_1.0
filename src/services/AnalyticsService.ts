@@ -436,19 +436,18 @@ export class AnalyticsService extends DatabaseService {
         { count: recentActivity },
         { data: storageData }
       ] = await Promise.all([
-        // Active users in last hour (users with recent activity)
+        // Active users in last hour (users with recent notifications)
         supabase
-          .from('audit_logs')
+          .from('notifications')
           .select('user_id', { count: 'exact', head: true })
-          .gte('created_at', oneHourAgo.toISOString())
-          .not('user_id', 'is', null),
+          .gte('created_at', oneHourAgo.toISOString()),
         
         // Total registered users
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         
-        // Recent activity count
+        // Recent activity count from notifications
         supabase
-          .from('audit_logs')
+          .from('notifications')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', oneHourAgo.toISOString()),
         
@@ -492,12 +491,14 @@ export class AnalyticsService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // Store activity in audit logs for real tracking
-      await this.createAuditLog('ACTIVITY', 'user_activity', relatedId, null, {
-        type,
-        description,
-        userId: currentUserId,
-        timestamp: new Date().toISOString()
+      // Store activity as a notification for tracking purposes
+      await supabase.from('notifications').insert({
+        user_id: currentUserId,
+        type: 'system_announcement',
+        title: 'Activity Tracked',
+        message: `${type}: ${description}`,
+        related_id: relatedId,
+        related_type: 'activity_log'
       });
 
       logger.info('Activity tracked:', {
@@ -628,10 +629,13 @@ export class AnalyticsService extends DatabaseService {
       // For demo purposes, return a download URL
       const exportUrl = `https://api.huurly.nl/exports/${type}-${Date.now()}.${format}`;
       
-      await this.createAuditLog('EXPORT', 'analytics', null, null, {
-        type,
-        format,
-        userId: currentUserId
+      // Log the export action as a notification
+      await supabase.from('notifications').insert({
+        user_id: currentUserId,
+        type: 'system_announcement',
+        title: 'Data Export',
+        message: `Analytics data exported: ${type} format: ${format}`,
+        related_type: 'export_log'
       });
 
       return { data: exportUrl, error: null };
