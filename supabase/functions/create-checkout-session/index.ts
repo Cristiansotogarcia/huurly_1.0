@@ -90,6 +90,31 @@ serve(async (req) => {
       console.log('No existing customer found');
     }
 
+    // Create payment record first
+    console.log('Creating payment record...');
+    const supabaseServiceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "");
+    
+    const paymentRecord = {
+      user_id: userId || user.id,
+      email: user.email,
+      user_type: 'huurder',
+      amount: 6500, // €65.00 in cents
+      status: 'pending'
+    };
+
+    const { data: paymentData, error: paymentError } = await supabaseServiceClient
+      .from('payment_records')
+      .insert(paymentRecord)
+      .select()
+      .single();
+
+    if (paymentError) {
+      console.error('Failed to create payment record:', paymentError);
+      throw new Error('Failed to create payment record');
+    }
+
+    console.log('Payment record created:', paymentData.id);
+
     // Create checkout session
     console.log('Creating checkout session...');
     const sessionParams = {
@@ -101,7 +126,7 @@ serve(async (req) => {
       cancel_url: cancelUrl,
       metadata: { 
         userId: userId || user.id, 
-        paymentRecordId: paymentRecordId || 'auto-generated'
+        paymentRecordId: paymentData.id
       }
     };
     
