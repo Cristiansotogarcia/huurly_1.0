@@ -74,13 +74,13 @@ export class DocumentService extends DatabaseService {
         .from('user_documents')
         .insert({
           user_id: currentUserId,
-          document_type: storageDocumentType,
+          document_type: this.mapDocumentTypeForDatabase(documentType) as any,
           file_name: file.name,
           file_path: filePath,
           file_size: file.size,
           mime_type: file.type,
           status: 'pending',
-        })
+        } as any)
         .select()
         .single();
 
@@ -113,18 +113,28 @@ export class DocumentService extends DatabaseService {
   }
 
   /**
-   * Map frontend document types to storage document types
+   * Map frontend document types to database document types
    */
-  private mapDocumentTypeForStorage(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): 'identity' | 'payslip' {
+  private mapDocumentTypeForDatabase(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): 'identity' | 'payslip' | 'employment_contract' | 'reference' {
+    // Return the exact type for database storage
+    return documentType;
+  }
+
+  /**
+   * Map frontend document types to storage folder structure
+   */
+  private mapDocumentTypeForStorage(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): string {
     switch (documentType) {
       case 'identity':
         return 'identity';
       case 'payslip':
-      case 'employment_contract':
-      case 'reference':
-        return 'payslip'; // Map these to payslip for storage compatibility
-      default:
         return 'payslip';
+      case 'employment_contract':
+        return 'employment';
+      case 'reference':
+        return 'reference';
+      default:
+        return 'general';
     }
   }
 
@@ -197,7 +207,7 @@ export class DocumentService extends DatabaseService {
       // Apply filters
       if (filters?.documentType) {
         const storageType = this.mapDocumentTypeForStorage(filters.documentType);
-        query = query.eq('document_type', storageType);
+        query = query.eq('document_type', storageType as any);
       }
 
       if (filters?.status) {
