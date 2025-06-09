@@ -45,23 +45,29 @@ export const useAuth = (): UseAuthReturn => {
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
         login(user);
-        // Auto-redirect to correct dashboard when auth state changes
-        setTimeout(() => {
-          switch (user.role) {
-            case 'huurder':
-              navigate('/huurder-dashboard');
-              break;
-            case 'verhuurder':
-              navigate('/verhuurder-dashboard');
-              break;
-            case 'beoordelaar':
-              navigate('/beoordelaar-dashboard');
-              break;
-            case 'beheerder':
-              navigate('/beheerder-dashboard');
-              break;
-          }
-        }, 100);
+        // Only auto-redirect if we're on the home page or login page
+        // This prevents redirecting after logout
+        const currentPath = window.location.pathname;
+        const shouldRedirect = currentPath === '/' || currentPath === '/login' || currentPath === '/register';
+        
+        if (shouldRedirect) {
+          setTimeout(() => {
+            switch (user.role) {
+              case 'huurder':
+                navigate('/huurder-dashboard');
+                break;
+              case 'verhuurder':
+                navigate('/verhuurder-dashboard');
+                break;
+              case 'beoordelaar':
+                navigate('/beoordelaar-dashboard');
+                break;
+              case 'beheerder':
+                navigate('/beheerder-dashboard');
+                break;
+            }
+          }, 100);
+        }
       } else {
         logout();
       }
@@ -160,6 +166,8 @@ export const useAuth = (): UseAuthReturn => {
         });
       } else {
         logout();
+        // Navigate to home page after successful logout
+        navigate('/');
         toast({
           title: "Succesvol uitgelogd",
           description: "Tot ziens!"

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ import { Logo } from '@/components/Logo';
 
 const VerhuurderDashboard = () => {
   const { user } = useAuthStore();
+  const { signOut } = useAuth();
   const { toast } = useToast();
   const [searchFilters, setSearchFilters] = useState({
     city: '',
@@ -60,9 +62,33 @@ const VerhuurderDashboard = () => {
     toast({ title: "Woning toegevoegd", description: "Je woning is opgeslagen." });
   };
 
-  const handleLogout = () => {
-    useAuthStore.getState().logout();
-    window.location.href = '/';
+    const handleLogout = async () => {
+    try {
+      // Direct approach - clear Supabase session and local storage
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear local storage
+      localStorage.removeItem('auth-storage');
+      
+      // Clear auth store
+      useAuthStore.getState().logout();
+      
+      // Navigate to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback - force logout
+      localStorage.removeItem('auth-storage');
+      useAuthStore.getState().logout();
+      window.location.href = '/';
+    }
   };
 
   const handleSearch = () => {

@@ -12,82 +12,122 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Add missing updated_at triggers where needed
-DROP TRIGGER IF EXISTS update_properties_updated_at ON public.properties;
-CREATE TRIGGER update_properties_updated_at
-    BEFORE UPDATE ON public.properties
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Add missing updated_at triggers where needed (only if tables exist)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'properties') THEN
+        DROP TRIGGER IF EXISTS update_properties_updated_at ON public.properties;
+        CREATE TRIGGER update_properties_updated_at
+            BEFORE UPDATE ON public.properties
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tenant_profiles') THEN
+        DROP TRIGGER IF EXISTS update_tenant_profiles_updated_at ON public.tenant_profiles;
+        CREATE TRIGGER update_tenant_profiles_updated_at
+            BEFORE UPDATE ON public.tenant_profiles
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_documents') THEN
+        DROP TRIGGER IF EXISTS update_user_documents_updated_at ON public.user_documents;
+        CREATE TRIGGER update_user_documents_updated_at
+            BEFORE UPDATE ON public.user_documents
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
-DROP TRIGGER IF EXISTS update_tenant_profiles_updated_at ON public.tenant_profiles;
-CREATE TRIGGER update_tenant_profiles_updated_at
-    BEFORE UPDATE ON public.tenant_profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Enhance payment_records table for Stripe (only if table exists)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'payment_records') THEN
+        ALTER TABLE public.payment_records 
+        ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'eur',
+        ADD COLUMN IF NOT EXISTS subscription_tier TEXT,
+        ADD COLUMN IF NOT EXISTS subscription_end TIMESTAMPTZ;
 
-DROP TRIGGER IF EXISTS update_user_documents_updated_at ON public.user_documents;
-CREATE TRIGGER update_user_documents_updated_at
-    BEFORE UPDATE ON public.user_documents
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+        -- Enable RLS on payment_records if not already enabled
+        ALTER TABLE public.payment_records ENABLE ROW LEVEL SECURITY;
 
--- Enhance payment_records table for Stripe
-ALTER TABLE public.payment_records 
-ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'eur',
-ADD COLUMN IF NOT EXISTS subscription_tier TEXT,
-ADD COLUMN IF NOT EXISTS subscription_end TIMESTAMPTZ;
+        -- Drop existing policies and recreate them properly
+        DROP POLICY IF EXISTS "Users can view own payments" ON public.payment_records;
+        DROP POLICY IF EXISTS "Service role can manage payments" ON public.payment_records;
 
--- Enable RLS on payment_records if not already enabled
-ALTER TABLE public.payment_records ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY "Users can view own payments" ON public.payment_records
+        FOR SELECT USING (user_id = auth.uid());
 
--- Drop existing policies and recreate them properly
-DROP POLICY IF EXISTS "Users can view own payments" ON public.payment_records;
-DROP POLICY IF EXISTS "Service role can manage payments" ON public.payment_records;
+        CREATE POLICY "Service role can manage payments" ON public.payment_records
+        FOR ALL USING (true);
+    END IF;
+END $$;
 
-CREATE POLICY "Users can view own payments" ON public.payment_records
-FOR SELECT USING (user_id = auth.uid());
+-- Ensure user_roles has proper constraints (only if table exists)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_roles') THEN
+        -- Add unique constraint if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'unique_user_role') THEN
+            ALTER TABLE public.user_roles ADD CONSTRAINT unique_user_role UNIQUE (user_id);
+        END IF;
 
-CREATE POLICY "Service role can manage payments" ON public.payment_records
-FOR ALL USING (true);
+        -- Handle user_roles RLS policies
+        ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- Ensure user_roles has proper constraints
-ALTER TABLE public.user_roles 
-ADD CONSTRAINT IF NOT EXISTS unique_user_role UNIQUE (user_id);
+        DROP POLICY IF EXISTS "Users can view own role" ON public.user_roles;
+        DROP POLICY IF EXISTS "Service role can manage roles" ON public.user_roles;
 
--- Handle user_roles RLS policies
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY "Users can view own role" ON public.user_roles
+        FOR SELECT USING (user_id = auth.uid());
 
-DROP POLICY IF EXISTS "Users can view own role" ON public.user_roles;
-DROP POLICY IF EXISTS "Service role can manage roles" ON public.user_roles;
+        CREATE POLICY "Service role can manage roles" ON public.user_roles
+        FOR ALL USING (true);
+    END IF;
+END $$;
 
-CREATE POLICY "Users can view own role" ON public.user_roles
-FOR SELECT USING (user_id = auth.uid());
+-- Handle profiles RLS policies (only if table exists)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'profiles') THEN
+        ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Service role can manage roles" ON public.user_roles
-FOR ALL USING (true);
+        DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+        DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+        DROP POLICY IF EXISTS "Service role can manage profiles" ON public.profiles;
 
--- Handle profiles RLS policies
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY "Users can view own profile" ON public.profiles
+        FOR SELECT USING (id = auth.uid());
 
-DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Service role can manage profiles" ON public.profiles;
+        CREATE POLICY "Users can update own profile" ON public.profiles
+        FOR UPDATE USING (id = auth.uid());
 
-CREATE POLICY "Users can view own profile" ON public.profiles
-FOR SELECT USING (id = auth.uid());
+        CREATE POLICY "Service role can manage profiles" ON public.profiles
+        FOR ALL USING (true);
+    END IF;
+END $$;
 
-CREATE POLICY "Users can update own profile" ON public.profiles
-FOR UPDATE USING (id = auth.uid());
-
-CREATE POLICY "Service role can manage profiles" ON public.profiles
-FOR ALL USING (true);
-
--- Add performance indexes
-CREATE INDEX IF NOT EXISTS idx_payment_records_user_id ON public.payment_records(user_id);
-CREATE INDEX IF NOT EXISTS idx_payment_records_stripe_session ON public.payment_records(stripe_session_id);
-CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
-CREATE INDEX IF NOT EXISTS idx_properties_landlord_id ON public.properties(landlord_id);
-CREATE INDEX IF NOT EXISTS idx_tenant_profiles_user_id ON public.tenant_profiles(user_id);
+-- Add performance indexes (only if tables exist)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'payment_records') THEN
+        CREATE INDEX IF NOT EXISTS idx_payment_records_user_id ON public.payment_records(user_id);
+        CREATE INDEX IF NOT EXISTS idx_payment_records_stripe_session ON public.payment_records(stripe_session_id);
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_roles') THEN
+        CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'properties') THEN
+        CREATE INDEX IF NOT EXISTS idx_properties_landlord_id ON public.properties(landlord_id);
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tenant_profiles') THEN
+        CREATE INDEX IF NOT EXISTS idx_tenant_profiles_user_id ON public.tenant_profiles(user_id);
+    END IF;
+END $$;
 
 -- Create subscribers table for Stripe subscription management
 CREATE TABLE IF NOT EXISTS public.subscribers (
@@ -121,4 +161,3 @@ CREATE TRIGGER update_subscribers_updated_at
     BEFORE UPDATE ON public.subscribers
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
-
