@@ -18,6 +18,22 @@ export interface UpdateUserProfileData {
   is_looking_for_place?: boolean;
 }
 
+export interface CreateTenantProfileData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  dateOfBirth: string;
+  profession: string;
+  monthlyIncome: number;
+  bio: string;
+  city: string;
+  minBudget: number;
+  maxBudget: number;
+  bedrooms: number;
+  propertyType: string;
+  motivation: string;
+}
+
 export interface UserFilters {
   role?: UserRole;
   isActive?: boolean;
@@ -93,6 +109,87 @@ export class UserService extends DatabaseService {
         .single();
 
       return { data, error };
+    });
+  }
+
+  /**
+   * Create complete tenant profile
+   */
+  async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: new Error('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    const sanitizedData = this.sanitizeInput(data);
+    
+    const validation = this.validateRequiredFields(sanitizedData, [
+      'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
+      'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
+    ]);
+    if (!validation.isValid) {
+      return {
+        data: null,
+        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+        success: false,
+      };
+    }
+
+    if (!this.isValidPhoneNumber(sanitizedData.phone)) {
+      return {
+        data: null,
+        error: new Error('Ongeldig telefoonnummer'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      // 1. Update basic profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: sanitizedData.firstName,
+          last_name: sanitizedData.lastName,
+          is_looking_for_place: true,
+        })
+        .eq('id', currentUserId);
+
+      if (profileError) {
+        throw this.handleDatabaseError(profileError);
+      }
+
+      // 2. Create or update tenant profile
+      const { data: tenantProfile, error: tenantError } = await supabase
+        .from('tenant_profiles')
+        .upsert({
+          user_id: currentUserId,
+          phone: sanitizedData.phone,
+          date_of_birth: sanitizedData.dateOfBirth,
+          profession: sanitizedData.profession,
+          monthly_income: sanitizedData.monthlyIncome,
+          bio: sanitizedData.bio,
+          preferred_city: sanitizedData.city,
+          min_budget: sanitizedData.minBudget,
+          max_budget: sanitizedData.maxBudget,
+          preferred_bedrooms: sanitizedData.bedrooms,
+          preferred_property_type: sanitizedData.propertyType,
+          motivation: sanitizedData.motivation,
+          profile_completed: true,
+        })
+        .select()
+        .single();
+
+      if (tenantError) {
+        throw this.handleDatabaseError(tenantError);
+      }
+
+      await this.createAuditLog('CREATE', 'tenant_profiles', currentUserId, null, tenantProfile);
+
+      return { data: tenantProfile, error: null };
     });
   }
 

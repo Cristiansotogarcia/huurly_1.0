@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
+import { userService } from '@/services/UserService';
 import { User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, Briefcase } from 'lucide-react';
 
 interface ProfileCreationModalProps {
@@ -88,21 +89,40 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Profiel aangemaakt!",
-        description: "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
+      // Create tenant profile using UserService
+      const result = await userService.createTenantProfile({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+        dateOfBirth: profileData.dateOfBirth,
+        profession: profileData.profession,
+        monthlyIncome: profileData.monthlyIncome,
+        bio: profileData.bio,
+        city: profileData.city,
+        minBudget: profileData.minBudget,
+        maxBudget: profileData.maxBudget,
+        bedrooms: profileData.bedrooms,
+        propertyType: profileData.propertyType,
+        motivation: profileData.motivation,
       });
-      
-      onComplete(profileData);
-      onOpenChange(false);
-      setCurrentStep(1);
+
+      if (result.success && result.data) {
+        toast({
+          title: "Profiel aangemaakt!",
+          description: "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
+        });
+        
+        onComplete(result.data);
+        onOpenChange(false);
+        setCurrentStep(1);
+      } else {
+        throw result.error || new Error('Profiel aanmaken mislukt');
+      }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan. Probeer het opnieuw.';
       toast({
         title: "Fout bij aanmaken profiel",
-        description: "Er is iets misgegaan. Probeer het opnieuw.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
