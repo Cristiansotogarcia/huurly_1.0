@@ -4,7 +4,7 @@ import { storageService } from '@/lib/storage';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export interface CreateDocumentData {
-  documentType: 'identity' | 'payslip';
+  documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference';
   fileName: string;
   filePath: string;
   fileSize: number;
@@ -19,7 +19,7 @@ export interface UpdateDocumentData {
 
 export interface DocumentFilters {
   userId?: string;
-  documentType?: 'identity' | 'payslip';
+  documentType?: 'identity' | 'payslip' | 'employment_contract' | 'reference';
   status?: 'pending' | 'approved' | 'rejected';
   searchTerm?: string;
 }
@@ -30,7 +30,7 @@ export class DocumentService extends DatabaseService {
    */
   async uploadDocument(
     file: File,
-    documentType: 'identity' | 'payslip'
+    documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'
   ): Promise<DatabaseResponse<Tables<'user_documents'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
@@ -42,12 +42,15 @@ export class DocumentService extends DatabaseService {
     }
 
     try {
+      // Map the document types to the storage folder structure
+      const storageDocumentType = this.mapDocumentTypeForStorage(documentType);
+      
       // Generate unique file path
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
       const extension = file.name.split('.').pop();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `documents/${documentType}/${currentUserId}/${timestamp}_${randomString}_${sanitizedName}`;
+      const filePath = `documents/${storageDocumentType}/${currentUserId}/${timestamp}_${randomString}_${sanitizedName}`;
 
       // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -71,7 +74,7 @@ export class DocumentService extends DatabaseService {
         .from('user_documents')
         .insert({
           user_id: currentUserId,
-          document_type: documentType,
+          document_type: storageDocumentType,
           file_name: file.name,
           file_path: filePath,
           file_size: file.size,
@@ -106,6 +109,22 @@ export class DocumentService extends DatabaseService {
         error: error instanceof Error ? error : new Error('Upload mislukt'),
         success: false,
       };
+    }
+  }
+
+  /**
+   * Map frontend document types to storage document types
+   */
+  private mapDocumentTypeForStorage(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): 'identity' | 'payslip' {
+    switch (documentType) {
+      case 'identity':
+        return 'identity';
+      case 'payslip':
+      case 'employment_contract':
+      case 'reference':
+        return 'payslip'; // Map these to payslip for storage compatibility
+      default:
+        return 'payslip';
     }
   }
 
@@ -177,7 +196,8 @@ export class DocumentService extends DatabaseService {
 
       // Apply filters
       if (filters?.documentType) {
-        query = query.eq('document_type', filters.documentType);
+        const storageType = this.mapDocumentTypeForStorage(filters.documentType);
+        query = query.eq('document_type', storageType);
       }
 
       if (filters?.status) {
