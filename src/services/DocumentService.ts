@@ -250,12 +250,10 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
+      // First get the pending documents
       let query = supabase
         .from('user_documents')
-        .select(`
-          *,
-          profiles!inner(first_name, last_name)
-        `)
+        .select('*')
         .eq('status', 'pending');
 
       // Apply sorting
@@ -264,9 +262,37 @@ export class DocumentService extends DatabaseService {
       // Apply pagination
       query = this.applyPagination(query, pagination);
 
-      const { data, error } = await query;
+      const { data: documents, error } = await query;
 
-      return { data, error };
+      if (error) {
+        return { data: null, error };
+      }
+
+      // Get user profiles for each document
+      const documentsWithProfiles = await Promise.all(
+        (documents || []).map(async (doc) => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('id', doc.user_id)
+              .single();
+
+            return {
+              ...doc,
+              profiles: profile || { first_name: 'Onbekende', last_name: 'gebruiker' }
+            };
+          } catch (error) {
+            console.error('Error fetching profile for user:', doc.user_id, error);
+            return {
+              ...doc,
+              profiles: { first_name: 'Onbekende', last_name: 'gebruiker' }
+            };
+          }
+        })
+      );
+
+      return { data: documentsWithProfiles, error: null };
     });
   }
 
