@@ -274,6 +274,7 @@ export type Database = {
           created_at: string | null
           first_name: string | null
           id: string
+          is_looking_for_place: boolean | null
           last_name: string | null
           updated_at: string | null
         }
@@ -281,6 +282,7 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id: string
+          is_looking_for_place?: boolean | null
           last_name?: string | null
           updated_at?: string | null
         }
@@ -288,6 +290,7 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id?: string
+          is_looking_for_place?: boolean | null
           last_name?: string | null
           updated_at?: string | null
         }
@@ -541,6 +544,7 @@ export type Database = {
           contract_type: string | null
           created_at: string | null
           current_housing_situation: string | null
+          date_of_birth: string | null
           documents_verified: boolean | null
           employer: string | null
           employment_status: string | null
@@ -553,16 +557,22 @@ export type Database = {
           id: string
           landlord_interest: number | null
           last_name: string | null
+          max_budget: number | null
           max_rent: number | null
+          min_budget: number | null
           monthly_income: number | null
           motivation: string | null
           move_in_flexibility: string | null
           pet_details: string | null
           pet_policy_preference: string | null
+          phone: string | null
           preferred_bedrooms: number | null
+          preferred_city: string | null
           preferred_location: string | null
+          preferred_property_type: string | null
           preferred_radius: number | null
           profession: string | null
+          profile_completed: boolean | null
           profile_completion_percentage: number | null
           profile_picture_url: string | null
           profile_views: number | null
@@ -580,6 +590,7 @@ export type Database = {
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
+          date_of_birth?: string | null
           documents_verified?: boolean | null
           employer?: string | null
           employment_status?: string | null
@@ -592,16 +603,22 @@ export type Database = {
           id?: string
           landlord_interest?: number | null
           last_name?: string | null
+          max_budget?: number | null
           max_rent?: number | null
+          min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
           move_in_flexibility?: string | null
           pet_details?: string | null
           pet_policy_preference?: string | null
+          phone?: string | null
           preferred_bedrooms?: number | null
+          preferred_city?: string | null
           preferred_location?: string | null
+          preferred_property_type?: string | null
           preferred_radius?: number | null
           profession?: string | null
+          profile_completed?: boolean | null
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
@@ -619,6 +636,7 @@ export type Database = {
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
+          date_of_birth?: string | null
           documents_verified?: boolean | null
           employer?: string | null
           employment_status?: string | null
@@ -631,16 +649,22 @@ export type Database = {
           id?: string
           landlord_interest?: number | null
           last_name?: string | null
+          max_budget?: number | null
           max_rent?: number | null
+          min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
           move_in_flexibility?: string | null
           pet_details?: string | null
           pet_policy_preference?: string | null
+          phone?: string | null
           preferred_bedrooms?: number | null
+          preferred_city?: string | null
           preferred_location?: string | null
+          preferred_property_type?: string | null
           preferred_radius?: number | null
           profession?: string | null
+          profile_completed?: boolean | null
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
@@ -834,7 +858,11 @@ export type Database = {
     }
     Enums: {
       document_status: "pending" | "approved" | "rejected"
-      document_type: "identity" | "payslip"
+      document_type:
+        | "identity"
+        | "payslip"
+        | "employment_contract"
+        | "reference"
       user_role:
         | "Huurder"
         | "Verhuurder"
@@ -957,7 +985,12 @@ export const Constants = {
   public: {
     Enums: {
       document_status: ["pending", "approved", "rejected"],
-      document_type: ["identity", "payslip"],
+      document_type: [
+        "identity",
+        "payslip",
+        "employment_contract",
+        "reference",
+      ],
       user_role: [
         "Huurder",
         "Verhuurder",

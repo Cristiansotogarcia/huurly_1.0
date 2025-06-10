@@ -44,7 +44,7 @@ const VerhuurderDashboard = () => {
     recentActivities: [] as any[]
   });
   const [loading, setLoading] = useState(true);
-  const availableTenants = filteredTenants;
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -62,14 +62,8 @@ const VerhuurderDashboard = () => {
         setProperties(propsResult.data);
       }
 
-      // Load tenants
-      const tenantsResult = await userService.getUsers({ role: 'huurder' });
-      if (tenantsResult.success && tenantsResult.data) {
-        setAllTenants(tenantsResult.data);
-        setFilteredTenants(
-          tenantsResult.data.filter((t: any) => t.is_looking_for_place),
-        );
-      }
+      // Load all tenants initially
+      await loadTenants();
 
       // Load viewing statistics
       const viewingStats = await viewingService.getViewingStatistics(user.id);
@@ -162,6 +156,52 @@ const VerhuurderDashboard = () => {
     }
   };
 
+  const loadTenants = async () => {
+    try {
+      const tenantsResult = await userService.getTenantProfiles();
+      console.log('Tenant profiles loaded:', tenantsResult);
+      
+      if (tenantsResult.success && tenantsResult.data) {
+        // Transform the data to match the expected format
+        const transformedTenants = tenantsResult.data.map(tenant => ({
+          id: tenant.user_id,
+          userId: tenant.user_id,
+          firstName: tenant.first_name || tenant.profiles?.first_name,
+          lastName: tenant.last_name || tenant.profiles?.last_name,
+          profession: tenant.profession,
+          bio: tenant.bio,
+          income: tenant.monthly_income,
+          preferences: {
+            city: tenant.preferred_city,
+            minBudget: tenant.min_budget,
+            maxBudget: tenant.max_budget,
+            bedrooms: tenant.preferred_bedrooms,
+            propertyType: tenant.preferred_property_type
+          },
+          phone: tenant.phone,
+          age: tenant.age,
+          profilePicture: tenant.profile_picture_url,
+          verificationStatus: tenant.documents_verified ? 'approved' : 'pending',
+          is_looking_for_place: tenant.profiles?.is_looking_for_place || true,
+          motivation: tenant.motivation,
+          dateOfBirth: tenant.date_of_birth
+        }));
+
+        console.log('Transformed tenants:', transformedTenants);
+        setAllTenants(transformedTenants);
+        setFilteredTenants(transformedTenants);
+      } else {
+        console.error('Failed to load tenants:', tenantsResult.error);
+        setAllTenants([]);
+        setFilteredTenants([]);
+      }
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+      setAllTenants([]);
+      setFilteredTenants([]);
+    }
+  };
+
   const handlePropertyCreated = (property: any) => {
     setProperties(prev => [...prev, property]);
     toast({ title: "Woning toegevoegd", description: "Je woning is opgeslagen." });
@@ -196,36 +236,77 @@ const VerhuurderDashboard = () => {
     }
   };
 
-  const handleSearch = () => {
-    let results = allTenants.filter(tenant => tenant.is_looking_for_place);
+  const handleSearch = async () => {
+    setSearchLoading(true);
+    try {
+      const filters: any = {};
+      
+      if (searchFilters.city) {
+        filters.city = searchFilters.city;
+      }
+      
+      if (searchFilters.maxBudget) {
+        filters.maxBudget = parseInt(searchFilters.maxBudget);
+      }
+      
+      if (searchFilters.minIncome) {
+        filters.minIncome = parseInt(searchFilters.minIncome);
+      }
 
-    // Apply filters
-    if (searchFilters.city) {
-      results = results.filter(tenant => 
-        tenant.preferences?.city?.toLowerCase().includes(searchFilters.city.toLowerCase())
-      );
+      console.log('Searching with filters:', filters);
+      
+      const tenantsResult = await userService.getTenantProfiles(filters);
+      
+      if (tenantsResult.success && tenantsResult.data) {
+        // Transform the data to match the expected format
+        const transformedTenants = tenantsResult.data.map(tenant => ({
+          id: tenant.user_id,
+          userId: tenant.user_id,
+          firstName: tenant.first_name || tenant.profiles?.first_name,
+          lastName: tenant.last_name || tenant.profiles?.last_name,
+          profession: tenant.profession,
+          bio: tenant.bio,
+          income: tenant.monthly_income,
+          preferences: {
+            city: tenant.preferred_city,
+            minBudget: tenant.min_budget,
+            maxBudget: tenant.max_budget,
+            bedrooms: tenant.preferred_bedrooms,
+            propertyType: tenant.preferred_property_type
+          },
+          phone: tenant.phone,
+          age: tenant.age,
+          profilePicture: tenant.profile_picture_url,
+          verificationStatus: tenant.documents_verified ? 'approved' : 'pending',
+          is_looking_for_place: tenant.profiles?.is_looking_for_place || true,
+          motivation: tenant.motivation,
+          dateOfBirth: tenant.date_of_birth
+        }));
+
+        setFilteredTenants(transformedTenants);
+        
+        toast({
+          title: "Zoekresultaten bijgewerkt",
+          description: `${transformedTenants.length} huurder(s) gevonden die voldoen aan je criteria.`
+        });
+      } else {
+        setFilteredTenants([]);
+        toast({
+          title: "Geen resultaten",
+          description: "Geen huurders gevonden die voldoen aan de criteria.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Zoekfout",
+        description: "Er is een fout opgetreden bij het zoeken.",
+        variant: "destructive"
+      });
+    } finally {
+      setSearchLoading(false);
     }
-
-    if (searchFilters.maxBudget) {
-      const maxBudget = parseInt(searchFilters.maxBudget);
-      results = results.filter(tenant => 
-        tenant.preferences?.maxBudget <= maxBudget
-      );
-    }
-
-    if (searchFilters.minIncome) {
-      const minIncome = parseInt(searchFilters.minIncome);
-      results = results.filter(tenant => 
-        tenant.income >= minIncome
-      );
-    }
-
-    setFilteredTenants(results);
-    
-    toast({
-      title: "Zoekresultaten bijgewerkt",
-      description: `${results.length} huurder(s) gevonden die voldoen aan je criteria.`
-    });
   };
 
   const handleViewProfile = (tenant: any) => {
@@ -277,6 +358,8 @@ const VerhuurderDashboard = () => {
   if (!user || user.role !== 'verhuurder') {
     return <div>Toegang geweigerd</div>;
   }
+
+  const availableTenants = filteredTenants;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -380,7 +463,8 @@ const VerhuurderDashboard = () => {
                   <div>
                     <label className="text-sm font-medium">Max Budget</label>
                     <Input 
-                      placeholder="€2000" 
+                      placeholder="2000" 
+                      type="number"
                       value={searchFilters.maxBudget}
                       onChange={(e) => setSearchFilters({...searchFilters, maxBudget: e.target.value})}
                     />
@@ -388,15 +472,20 @@ const VerhuurderDashboard = () => {
                   <div>
                     <label className="text-sm font-medium">Min Inkomen</label>
                     <Input 
-                      placeholder="€4000" 
+                      placeholder="4000" 
+                      type="number"
                       value={searchFilters.minIncome}
                       onChange={(e) => setSearchFilters({...searchFilters, minIncome: e.target.value})}
                     />
                   </div>
                 </div>
-                <Button className="mt-4" onClick={handleSearch}>
+                <Button 
+                  className="mt-4" 
+                  onClick={handleSearch}
+                  disabled={searchLoading}
+                >
                   <Search className="w-4 h-4 mr-2" />
-                  Zoeken
+                  {searchLoading ? 'Zoeken...' : 'Zoeken'}
                 </Button>
               </CardContent>
             </Card>
@@ -408,42 +497,55 @@ const VerhuurderDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {availableTenants.map((tenant) => (
-                    <div key={tenant.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start space-x-4">
-                        <img 
-                          src={tenant.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face'} 
-                          alt={`${tenant.firstName} ${tenant.lastName}`}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">
-                              {tenant.firstName} {tenant.lastName}
-                            </h3>
-                            <Badge variant={tenant.verificationStatus === 'approved' ? 'default' : 'secondary'}>
-                              {tenant.verificationStatus === 'approved' ? 'Geverifieerd' : 'In behandeling'}
-                            </Badge>
-                          </div>
-                          <p className="text-gray-600">{tenant.profession}</p>
-                          <p className="text-sm text-gray-500 mt-1">{tenant.bio}</p>
-                          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
-                            <span>Inkomen: €{tenant.income.toLocaleString()}</span>
-                            <span>Budget: €{tenant.preferences.minBudget} - €{tenant.preferences.maxBudget}</span>
-                            <span>Kamers: {tenant.preferences.bedrooms}</span>
-                          </div>
-                          <div className="mt-3 flex space-x-2">
-                            <Button size="sm" onClick={() => handleInviteViewing(tenant)}>
-                              Uitnodigen voor Bezichtiging
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleViewProfile(tenant)}>
-                              Profiel Bekijken
-                            </Button>
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">Huurders laden...</div>
+                    </div>
+                  ) : availableTenants.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">Geen huurders gevonden</div>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Probeer andere zoekfilters of wacht tot er nieuwe huurders registreren.
+                      </p>
+                    </div>
+                  ) : (
+                    availableTenants.map((tenant) => (
+                      <div key={tenant.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start space-x-4">
+                          <img 
+                            src={tenant.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face'} 
+                            alt={`${tenant.firstName} ${tenant.lastName}`}
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-semibold">
+                                {tenant.firstName} {tenant.lastName}
+                              </h3>
+                              <Badge variant={tenant.verificationStatus === 'approved' ? 'default' : 'secondary'}>
+                                {tenant.verificationStatus === 'approved' ? 'Geverifieerd' : 'In behandeling'}
+                              </Badge>
+                            </div>
+                            <p className="text-gray-600">{tenant.profession}</p>
+                            <p className="text-sm text-gray-500 mt-1">{tenant.bio}</p>
+                            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+                              <span>Inkomen: €{tenant.income?.toLocaleString() || 'Niet opgegeven'}</span>
+                              <span>Budget: €{tenant.preferences.minBudget} - €{tenant.preferences.maxBudget}</span>
+                              <span>Kamers: {tenant.preferences.bedrooms}</span>
+                            </div>
+                            <div className="mt-3 flex space-x-2">
+                              <Button size="sm" onClick={() => handleInviteViewing(tenant)}>
+                                Uitnodigen voor Bezichtiging
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleViewProfile(tenant)}>
+                                Profiel Bekijken
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -472,9 +574,9 @@ const VerhuurderDashboard = () => {
                       <h4 className="font-medium text-sm">{property.title}</h4>
                       <p className="text-xs text-gray-600">{property.address}, {property.city}</p>
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm font-semibold">€{property.rent}/maand</span>
-                        <Badge variant={property.isActive ? 'default' : 'secondary'}>
-                          {property.isActive ? 'Actief' : 'Inactief'}
+                        <span className="text-sm font-semibold">€{property.rent_amount}/maand</span>
+                        <Badge variant={property.status === 'active' ? 'default' : 'secondary'}>
+                          {property.status === 'active' ? 'Actief' : 'Inactief'}
                         </Badge>
                       </div>
                     </div>
