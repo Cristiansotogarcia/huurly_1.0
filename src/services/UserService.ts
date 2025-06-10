@@ -32,6 +32,31 @@ export interface CreateTenantProfileData {
   bedrooms: number;
   propertyType: string;
   motivation: string;
+  
+  // Enhanced fields from 7-step modal
+  nationality?: string;
+  maritalStatus?: 'single' | 'married' | 'partnership' | 'divorced' | 'widowed';
+  hasChildren?: boolean;
+  numberOfChildren?: number;
+  hasPartner?: boolean;
+  partnerName?: string;
+  partnerProfession?: string;
+  partnerMonthlyIncome?: number;
+  partnerEmploymentStatus?: string;
+  preferredDistricts?: string[];
+  maxCommuteTime?: number;
+  transportationPreference?: string;
+  furnishedPreference?: 'furnished' | 'unfurnished' | 'no_preference';
+  desiredAmenities?: string[];
+  
+  // Additional fields that may be passed
+  employer?: string;
+  employmentStatus?: string;
+  workContractType?: string;
+  housingAllowanceEligible?: boolean;
+  hasPets?: boolean;
+  petDetails?: string;
+  smokes?: boolean;
 }
 
 export interface UserFilters {
@@ -47,6 +72,11 @@ export interface TenantSearchFilters {
   minIncome?: number;
   propertyType?: string;
   bedrooms?: number;
+  familyComposition?: string;
+  hasChildren?: boolean;
+  maritalStatus?: string;
+  nationality?: string;
+  preferredDistricts?: string[];
 }
 
 export class UserService extends DatabaseService {
@@ -170,26 +200,44 @@ export class UserService extends DatabaseService {
         throw this.handleDatabaseError(profileError);
       }
 
-      // 2. Create or update tenant profile
+      // 2. Create or update tenant profile with enhanced fields
+      const tenantProfileData: any = {
+        user_id: currentUserId,
+        first_name: sanitizedData.firstName,
+        last_name: sanitizedData.lastName,
+        phone: sanitizedData.phone,
+        date_of_birth: sanitizedData.dateOfBirth,
+        profession: sanitizedData.profession,
+        monthly_income: sanitizedData.monthlyIncome,
+        bio: sanitizedData.bio,
+        preferred_city: sanitizedData.city,
+        min_budget: sanitizedData.minBudget,
+        max_budget: sanitizedData.maxBudget,
+        preferred_bedrooms: sanitizedData.bedrooms,
+        preferred_property_type: sanitizedData.propertyType,
+        motivation: sanitizedData.motivation,
+        profile_completed: true,
+        
+        // Enhanced fields from 7-step modal
+        nationality: sanitizedData.nationality || 'Nederlandse',
+        marital_status: sanitizedData.maritalStatus || 'single',
+        has_children: sanitizedData.hasChildren || false,
+        number_of_children: sanitizedData.numberOfChildren || 0,
+        has_partner: sanitizedData.hasPartner || false,
+        partner_name: sanitizedData.partnerName || null,
+        partner_profession: sanitizedData.partnerProfession || null,
+        partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
+        partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
+        preferred_districts: sanitizedData.preferredDistricts || [],
+        max_commute_time: sanitizedData.maxCommuteTime || 30,
+        transportation_preference: sanitizedData.transportationPreference || 'public_transport',
+        furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
+        desired_amenities: sanitizedData.desiredAmenities || [],
+      };
+
       const { data: tenantProfile, error: tenantError } = await supabase
         .from('tenant_profiles')
-        .upsert({
-          user_id: currentUserId,
-          first_name: sanitizedData.firstName,
-          last_name: sanitizedData.lastName,
-          phone: sanitizedData.phone,
-          date_of_birth: sanitizedData.dateOfBirth,
-          profession: sanitizedData.profession,
-          monthly_income: sanitizedData.monthlyIncome,
-          bio: sanitizedData.bio,
-          preferred_city: sanitizedData.city,
-          min_budget: sanitizedData.minBudget,
-          max_budget: sanitizedData.maxBudget,
-          preferred_bedrooms: sanitizedData.bedrooms,
-          preferred_property_type: sanitizedData.propertyType,
-          motivation: sanitizedData.motivation,
-          profile_completed: true,
-        })
+        .upsert(tenantProfileData)
         .select()
         .single();
 
@@ -243,7 +291,8 @@ export class UserService extends DatabaseService {
       }
 
       if (filters?.minIncome) {
-        tenantQuery = tenantQuery.gte('monthly_income', filters.minIncome);
+        // Use total_household_income for more accurate filtering
+        tenantQuery = tenantQuery.gte('total_household_income', filters.minIncome);
       }
 
       if (filters?.propertyType) {
@@ -252,6 +301,27 @@ export class UserService extends DatabaseService {
 
       if (filters?.bedrooms) {
         tenantQuery = tenantQuery.eq('preferred_bedrooms', filters.bedrooms);
+      }
+
+      // Enhanced filters - using any type to avoid TypeScript complexity
+      if (filters?.familyComposition) {
+        tenantQuery = (tenantQuery as any).eq('family_composition', filters.familyComposition);
+      }
+
+      if (filters?.hasChildren !== undefined) {
+        tenantQuery = (tenantQuery as any).eq('has_children', filters.hasChildren);
+      }
+
+      if (filters?.maritalStatus) {
+        tenantQuery = (tenantQuery as any).eq('marital_status', filters.maritalStatus);
+      }
+
+      if (filters?.nationality) {
+        tenantQuery = (tenantQuery as any).eq('nationality', filters.nationality);
+      }
+
+      if (filters?.preferredDistricts && filters.preferredDistricts.length > 0) {
+        tenantQuery = (tenantQuery as any).overlaps('preferred_districts', filters.preferredDistricts);
       }
 
       // Apply sorting
