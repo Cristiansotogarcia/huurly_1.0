@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { propertyService } from '@/services/PropertyService';
 import { userService } from '@/services/UserService';
 import { viewingService } from '@/services/ViewingService';
-import { Search, Home, Users, Calendar, Plus } from 'lucide-react';
+import { matchingService } from '@/services/MatchingService';
+import { Search, Home, Users, Calendar, Plus, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
 import TenantProfileModal from '@/components/modals/TenantProfileModal';
@@ -37,16 +38,31 @@ const VerhuurderDashboard = () => {
 
   const [properties, setProperties] = useState<any[]>([]);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    scheduledViewings: 0,
+    weeklyMatches: 0,
+    recentActivities: [] as any[]
+  });
+  const [loading, setLoading] = useState(true);
   const availableTenants = filteredTenants;
 
   useEffect(() => {
     if (!user?.id) return;
-    (async () => {
+    loadDashboardData();
+  }, [user?.id]);
+
+  const loadDashboardData = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      // Load properties
       const propsResult = await propertyService.getPropertiesByLandlord(user.id);
       if (propsResult.success && propsResult.data) {
         setProperties(propsResult.data);
       }
 
+      // Load tenants
       const tenantsResult = await userService.getUsers({ role: 'huurder' });
       if (tenantsResult.success && tenantsResult.data) {
         setAllTenants(tenantsResult.data);
@@ -54,8 +70,97 @@ const VerhuurderDashboard = () => {
           tenantsResult.data.filter((t: any) => t.is_looking_for_place),
         );
       }
-    })();
-  }, [user?.id]);
+
+      // Load viewing statistics
+      const viewingStats = await viewingService.getViewingStatistics(user.id);
+      let scheduledViewings = 0;
+      if (viewingStats.success && viewingStats.data) {
+        scheduledViewings = viewingStats.data.pendingInvitations + viewingStats.data.acceptedInvitations;
+      }
+
+      // Load recent viewing invitations for activity feed
+      const recentViewings = await viewingService.getViewingInvitations(
+        { landlordId: user.id },
+        { limit: 5 },
+        { column: 'created_at', ascending: false }
+      );
+
+      // Calculate weekly matches (simplified - count recent matches)
+      let weeklyMatches = 0;
+      if (propsResult.success && propsResult.data && propsResult.data.length > 0) {
+        // For each property, get potential matches
+        for (const property of propsResult.data) {
+          const matches = await matchingService.findMatchingTenants(property.id, 10);
+          if (matches.success && matches.data) {
+            weeklyMatches += matches.data.length;
+          }
+        }
+      }
+
+      // Build recent activities from viewing invitations and other events
+      const recentActivities = [];
+      
+      if (recentViewings.success && recentViewings.data) {
+        for (const viewing of recentViewings.data.slice(0, 3)) {
+          const tenantName = viewing.tenant_profiles?.profiles?.first_name || 'Huurder';
+          const propertyAddress = viewing.properties?.address || 'Woning';
+          
+          if (viewing.status === 'accepted') {
+            recentActivities.push({
+              type: 'viewing_accepted',
+              message: `${tenantName} heeft bezichtiging geaccepteerd voor ${propertyAddress}`,
+              color: 'bg-green-500',
+              timestamp: viewing.responded_at || viewing.created_at
+            });
+          } else if (viewing.status === 'pending') {
+            recentActivities.push({
+              type: 'viewing_sent',
+              message: `Bezichtigingsuitnodiging verzonden naar ${tenantName}`,
+              color: 'bg-blue-500',
+              timestamp: viewing.created_at
+            });
+          } else if (viewing.status === 'rejected') {
+            recentActivities.push({
+              type: 'viewing_rejected',
+              message: `${tenantName} heeft bezichtiging afgewezen`,
+              color: 'bg-red-500',
+              timestamp: viewing.responded_at || viewing.created_at
+            });
+          }
+        }
+      }
+
+      // Add some default activities if none exist
+      if (recentActivities.length === 0) {
+        recentActivities.push(
+          {
+            type: 'system',
+            message: 'Dashboard geladen - klaar voor nieuwe activiteiten',
+            color: 'bg-gray-500',
+            timestamp: new Date().toISOString()
+          }
+        );
+      }
+
+      setDashboardStats({
+        scheduledViewings,
+        weeklyMatches: Math.min(weeklyMatches, 50), // Cap at reasonable number
+        recentActivities: recentActivities.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )
+      });
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast({
+        title: "Fout bij laden dashboard",
+        description: "Sommige gegevens konden niet worden geladen.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePropertyCreated = (property: any) => {
     setProperties(prev => [...prev, property]);
@@ -155,6 +260,9 @@ const VerhuurderDashboard = () => {
         title: 'Uitnodiging verzonden!',
         description: `${selectedTenant?.firstName} ${selectedTenant?.lastName} heeft een uitnodiging ontvangen.`
       });
+
+      // Refresh dashboard data to show new activity
+      loadDashboardData();
     }
   };
 
@@ -224,7 +332,9 @@ const VerhuurderDashboard = () => {
               <div className="flex items-center">
                 <Calendar className="w-8 h-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? '...' : dashboardStats.scheduledViewings}
+                  </p>
                   <p className="text-gray-600">Geplande Bezichtigingen</p>
                 </div>
               </div>
@@ -234,10 +344,12 @@ const VerhuurderDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center">
-                <Search className="w-8 h-8 text-purple-600" />
+                <Activity className="w-8 h-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-2xl font-bold">12</p>
-                  <p className="text-gray-600">Matches Deze Week</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? '...' : dashboardStats.weeklyMatches}
+                  </p>
+                  <p className="text-gray-600">Potentiële Matches</p>
                 </div>
               </div>
             </CardContent>
@@ -378,18 +490,26 @@ const VerhuurderDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Emma Bakker heeft interesse getoond</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Nieuwe bezichtiging ingepland</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span>Document goedgekeurd voor Jan de Vries</span>
-                  </div>
+                  {loading ? (
+                    <div className="text-gray-500">Activiteiten laden...</div>
+                  ) : dashboardStats.recentActivities.length > 0 ? (
+                    dashboardStats.recentActivities.map((activity, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 ${activity.color} rounded-full`}></div>
+                        <span className="flex-1">{activity.message}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(activity.timestamp).toLocaleDateString('nl-NL', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-500 text-center py-4">
+                      Nog geen recente activiteiten
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
