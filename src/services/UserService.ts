@@ -284,6 +284,127 @@ export class UserService extends DatabaseService {
   }
 
   /**
+   * Update existing tenant profile
+   */
+  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: new Error('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    const sanitizedData = this.sanitizeInput(data);
+    
+    const validation = this.validateRequiredFields(sanitizedData, [
+      'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
+      'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
+    ]);
+    if (!validation.isValid) {
+      return {
+        data: null,
+        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+        success: false,
+      };
+    }
+
+    if (!this.isValidPhoneNumber(sanitizedData.phone)) {
+      return {
+        data: null,
+        error: new Error('Ongeldig telefoonnummer'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      // 1. Update basic profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: sanitizedData.firstName,
+          last_name: sanitizedData.lastName,
+          is_looking_for_place: true,
+        })
+        .eq('id', currentUserId);
+
+      if (profileError) {
+        throw this.handleDatabaseError(profileError);
+      }
+
+      // 2. Update tenant profile with all enhanced fields
+      const tenantProfileData: any = {
+        first_name: sanitizedData.firstName,
+        last_name: sanitizedData.lastName,
+        phone: sanitizedData.phone,
+        date_of_birth: sanitizedData.dateOfBirth,
+        profession: sanitizedData.profession,
+        monthly_income: sanitizedData.monthlyIncome,
+        bio: sanitizedData.bio,
+        preferred_city: sanitizedData.city,
+        min_budget: sanitizedData.minBudget,
+        max_budget: sanitizedData.maxBudget,
+        preferred_bedrooms: sanitizedData.bedrooms,
+        preferred_property_type: sanitizedData.propertyType,
+        motivation: sanitizedData.motivation,
+        profile_completed: true,
+        
+        // Existing fields
+        employer: sanitizedData.employer || null,
+        employment_status: sanitizedData.employmentStatus || 'employed',
+        work_contract_type: sanitizedData.workContractType || 'permanent',
+        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
+        has_pets: sanitizedData.hasPets || false,
+        pet_details: sanitizedData.petDetails || null,
+        smokes: sanitizedData.smokes || false,
+        
+        // Enhanced fields from 7-step modal (now supported by database schema)
+        nationality: sanitizedData.nationality || 'Nederlandse',
+        sex: sanitizedData.sex || null,
+        marital_status: sanitizedData.maritalStatus || 'single',
+        has_children: sanitizedData.hasChildren || false,
+        number_of_children: sanitizedData.numberOfChildren || 0,
+        children_ages: sanitizedData.childrenAges || [],
+        has_partner: sanitizedData.hasPartner || false,
+        partner_name: sanitizedData.partnerName || null,
+        partner_profession: sanitizedData.partnerProfession || null,
+        partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
+        partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
+        preferred_districts: sanitizedData.preferredDistricts || [],
+        max_commute_time: sanitizedData.maxCommuteTime || 30,
+        transportation_preference: sanitizedData.transportationPreference || 'public_transport',
+        furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
+        desired_amenities: sanitizedData.desiredAmenities || [],
+        smoking_details: sanitizedData.smokingDetails || null,
+        profile_picture_url: sanitizedData.profilePictureUrl || null,
+      };
+
+      // Get current data for audit log
+      const { data: currentData } = await supabase
+        .from('tenant_profiles')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .single();
+
+      const { data: tenantProfile, error: tenantError } = await supabase
+        .from('tenant_profiles')
+        .update(tenantProfileData)
+        .eq('user_id', currentUserId)
+        .select()
+        .single();
+
+      if (tenantError) {
+        throw this.handleDatabaseError(tenantError);
+      }
+
+      await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, currentData, tenantProfile);
+
+      return { data: tenantProfile, error: null };
+    });
+  }
+
+  /**
    * Get all tenant profiles with search filters
    */
   async getTenantProfiles(

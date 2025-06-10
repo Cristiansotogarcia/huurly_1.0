@@ -166,8 +166,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     setIsSubmitting(true);
     
     try {
-      // Create enhanced tenant profile
-      const result = await userService.createTenantProfile({
+      const profileDataToSubmit = {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         phone: profileData.phone,
@@ -181,7 +180,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         bedrooms: profileData.bedrooms,
         propertyType: profileData.propertyType,
         motivation: profileData.motivation,
-        // Enhanced fields (will be added when schema is updated)
+        // Enhanced fields
         employer: profileData.employer,
         employmentStatus: profileData.employmentStatus,
         workContractType: profileData.workContractType,
@@ -189,11 +188,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         hasPets: profileData.hasPets,
         petDetails: profileData.petDetails,
         smokes: profileData.smokes,
+        smokingDetails: profileData.smokingDetails,
         // New enhanced fields
         nationality: profileData.nationality,
+        sex: profileData.sex,
         maritalStatus: profileData.maritalStatus,
         hasChildren: profileData.hasChildren,
         numberOfChildren: profileData.numberOfChildren,
+        childrenAges: profileData.childrenAges,
         hasPartner: profileData.hasPartner,
         partnerName: profileData.partnerName,
         partnerProfession: profileData.partnerProfession,
@@ -204,24 +206,32 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         transportationPreference: profileData.transportationPreference,
         furnishedPreference: profileData.furnishedPreference,
         desiredAmenities: profileData.desiredAmenities,
-      } as any);
+        profilePictureUrl: profileData.profilePictureUrl,
+      } as any;
+
+      // Use the appropriate method based on edit mode
+      const result = editMode 
+        ? await userService.updateTenantProfile(profileDataToSubmit)
+        : await userService.createTenantProfile(profileDataToSubmit);
 
       if (result.success && result.data) {
         toast({
-          title: "Uitgebreid profiel aangemaakt!",
-          description: "Je complete profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
+          title: editMode ? "Profiel bijgewerkt!" : "Profiel aangemaakt!",
+          description: editMode 
+            ? "Je profiel is succesvol bijgewerkt."
+            : "Je complete profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
         });
         
         onComplete(result.data);
         onOpenChange(false);
         setCurrentStep(1);
       } else {
-        throw result.error || new Error('Profiel aanmaken mislukt');
+        throw result.error || new Error(editMode ? 'Profiel bijwerken mislukt' : 'Profiel aanmaken mislukt');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan. Probeer het opnieuw.';
       toast({
-        title: "Fout bij aanmaken profiel",
+        title: editMode ? "Fout bij bijwerken profiel" : "Fout bij aanmaken profiel",
         description: errorMessage,
         variant: "destructive"
       });
