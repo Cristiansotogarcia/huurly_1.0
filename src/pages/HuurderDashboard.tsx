@@ -20,7 +20,6 @@ import {
   TrendingUp,
   Upload,
   Search,
-  ArrowLeft,
   Bell,
   Settings,
 } from "lucide-react";
@@ -55,6 +54,7 @@ const HuurderDashboard = () => {
   const [hasProfile, setHasProfile] = useState(false);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [stats, setStats] = useState({
     profileViews: 0,
     invitations: 0,
@@ -85,6 +85,13 @@ const HuurderDashboard = () => {
       (async () => {
         // Force close payment modal immediately
         setShowPaymentModal(false);
+        
+        // Show success popup only once after payment
+        const hasShownSuccessPopup = localStorage.getItem('hasShownPaymentSuccessPopup');
+        if (!hasShownSuccessPopup) {
+          setShowSuccessPopup(true);
+          localStorage.setItem('hasShownPaymentSuccessPopup', 'true');
+        }
         
         // Refresh user data
         const refreshed = await authService.getCurrentUser();
@@ -356,6 +363,22 @@ const HuurderDashboard = () => {
     window.location.href = "/";
   };
 
+  // Calculate subscription end date (1 year from subscription start)
+  const getSubscriptionEndDate = () => {
+    if (user?.hasPayment) {
+      // For now, we'll calculate 1 year from current date since we don't have subscription_start_date
+      // In production, this should come from the subscription data
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      return endDate.toLocaleDateString('nl-NL', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+    return null;
+  };
+
   // Show loading state while checking authentication
   if (isLoading) {
     console.log("Showing loading state");
@@ -386,7 +409,6 @@ const HuurderDashboard = () => {
                 Je moet ingelogd zijn om het huurder dashboard te bekijken.
               </p>
               <Button onClick={handleGoHome}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
                 Terug naar home
               </Button>
             </div>
@@ -408,7 +430,6 @@ const HuurderDashboard = () => {
                 Je hebt geen toegang tot het huurder dashboard.
               </p>
               <Button onClick={handleGoHome}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
                 Terug naar home
               </Button>
             </div>
@@ -434,12 +455,20 @@ const HuurderDashboard = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <Button variant="ghost" onClick={handleGoHome} className="mr-4">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Home
-                </Button>
                 <Logo />
-                <span className="ml-4 text-gray-500">| Huurder Dashboard</span>
+                <div className="ml-4 flex items-center">
+                  <span className="text-gray-500">| Huurder Dashboard</span>
+                  {user.hasPayment && (
+                    <div className="ml-4 flex items-center space-x-2">
+                      <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                        Account Actief
+                      </Badge>
+                      <span className="text-sm text-gray-600">
+                        tot {getSubscriptionEndDate()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center space-x-4">
@@ -459,23 +488,33 @@ const HuurderDashboard = () => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Payment Status Alert */}
-          {user.hasPayment && (
+          {/* One-time Payment Success Alert */}
+          {showSuccessPopup && (
             <Card className="mb-8 border-green-200 bg-green-50">
               <CardContent className="pt-6">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-green-900">
+                        Account Actief
+                      </h3>
+                      <p className="text-green-700">
+                        Je hebt een actief abonnement (€65/jaar inclusief BTW).
+                        Je profiel is zichtbaar voor verhuurders.
+                      </p>
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-green-900">
-                      Account Actief
-                    </h3>
-                    <p className="text-green-700">
-                      Je hebt een actief abonnement (€65/jaar inclusief BTW).
-                      Je profiel is zichtbaar voor verhuurders.
-                    </p>
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowSuccessPopup(false)}
+                    className="text-green-600 hover:text-green-800"
+                  >
+                    ×
+                  </Button>
                 </div>
               </CardContent>
             </Card>
