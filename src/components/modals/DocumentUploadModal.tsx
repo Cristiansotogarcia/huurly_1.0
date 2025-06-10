@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -41,6 +41,27 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
+
+  // Load existing documents when modal opens
+  useEffect(() => {
+    if (open && user?.id) {
+      loadExistingDocuments();
+    }
+  }, [open, user?.id]);
+
+  const loadExistingDocuments = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const result = await documentService.getDocumentsByUser(user.id);
+      if (result.success && result.data) {
+        setExistingDocuments(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading existing documents:', error);
+    }
+  };
 
   const documentTypes = [
     {
@@ -326,8 +347,19 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
           <div className="grid md:grid-cols-2 gap-4">
             {documentTypes.map((docType) => {
               const Icon = docType.icon;
-              const hasUploaded = documents.some(doc => 
+              
+              // Check both current session uploads and existing documents
+              const hasUploadedInSession = documents.some(doc => 
                 doc.type === docType.type && doc.status !== 'error'
+              );
+              const hasExistingDocument = existingDocuments.some(doc => 
+                doc.document_type === docType.type
+              );
+              const hasUploaded = hasUploadedInSession || hasExistingDocument;
+              
+              // Get existing document for display
+              const existingDoc = existingDocuments.find(doc => 
+                doc.document_type === docType.type
               );
               
               return (
@@ -344,8 +376,29 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                           {hasUploaded && (
                             <CheckCircle className="w-4 h-4 text-green-500" />
                           )}
+                          {existingDoc && (
+                            <Badge 
+                              variant={existingDoc.status === 'approved' ? 'default' : 
+                                     existingDoc.status === 'rejected' ? 'destructive' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {existingDoc.status === 'pending' ? 'In behandeling' :
+                               existingDoc.status === 'approved' ? 'Goedgekeurd' :
+                               existingDoc.status === 'rejected' ? 'Afgewezen' : existingDoc.status}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{docType.description}</p>
+                        
+                        {/* Show existing document info */}
+                        {existingDoc && (
+                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                            <p className="font-medium text-blue-900">{existingDoc.file_name}</p>
+                            <p className="text-blue-700">
+                              Geüpload op {new Date(existingDoc.created_at).toLocaleDateString('nl-NL')}
+                            </p>
+                          </div>
+                        )}
                         
                         {/* Individual Upload Button */}
                         <div className="mt-3">
@@ -368,12 +421,12 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                               variant={hasUploaded ? "outline" : "default"} 
                               size="sm" 
                               className="cursor-pointer w-full"
-                              disabled={hasUploaded}
+                              disabled={hasUploadedInSession}
                               asChild
                             >
                               <span>
                                 <Upload className="w-4 h-4 mr-2" />
-                                {hasUploaded ? 'Geüpload' : 'Upload'}
+                                {hasExistingDocument ? 'Vervangen' : hasUploadedInSession ? 'Geüpload' : 'Upload'}
                               </span>
                             </Button>
                           </label>

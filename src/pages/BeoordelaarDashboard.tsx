@@ -34,13 +34,34 @@ const BeoordelaarDashboard = () => {
   const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
+    loadPendingDocuments();
+  }, []);
+
+  const loadPendingDocuments = async () => {
+    try {
       const result = await documentService.getPendingDocuments();
       if (result.success && result.data) {
-        setPendingDocuments(result.data);
+        // Transform the data to match the expected format
+        const transformedData = result.data.map((doc: any) => ({
+          id: doc.id,
+          fileName: doc.file_name,
+          tenantName: doc.profiles ? `${doc.profiles.first_name} ${doc.profiles.last_name}` : 'Onbekende gebruiker',
+          tenantId: doc.user_id,
+          type: doc.document_type,
+          uploadedAt: doc.created_at,
+          status: doc.status,
+          fileSize: doc.file_size,
+          mimeType: doc.mime_type
+        }));
+        setPendingDocuments(transformedData);
+        console.log('Loaded pending documents:', transformedData);
+      } else {
+        console.error('Failed to load pending documents:', result.error);
       }
-    })();
-  }, []);
+    } catch (error) {
+      console.error('Error loading pending documents:', error);
+    }
+  };
 
   const handleReviewDocument = (document: any) => {
     setSelectedDocument(document);
