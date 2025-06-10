@@ -32,7 +32,9 @@ interface EnhancedProfileData {
   phone: string;
   dateOfBirth: string;
   nationality: string;
+  sex: 'man' | 'vrouw' | 'anders' | 'zeg_ik_liever_niet' | '';
   profilePicture?: File;
+  profilePictureUrl?: string;
   
   // Step 2: Marital & Family Status
   maritalStatus: 'single' | 'married' | 'partnership' | 'divorced' | 'widowed';
@@ -71,6 +73,7 @@ interface EnhancedProfileData {
   hasPets: boolean;
   petDetails: string;
   smokes: boolean;
+  smokingDetails: string;
   
   // Step 7: About You & Review
   bio: string;
@@ -91,6 +94,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
     phone: '',
     dateOfBirth: '',
     nationality: 'Nederlandse',
+    sex: '',
     
     // Step 2: Marital & Family Status
     maritalStatus: 'single',
@@ -129,6 +133,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
     hasPets: false,
     petDetails: '',
     smokes: false,
+    smokingDetails: '',
     
     // Step 7: About You & Review
     bio: '',
@@ -350,6 +355,21 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
                   <SelectItem value="Britse">Britse</SelectItem>
                   <SelectItem value="Andere EU">Andere EU</SelectItem>
                   <SelectItem value="Niet-EU">Niet-EU</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="sex">Geslacht</Label>
+              <Select value={profileData.sex} onValueChange={(value: any) => updateProfileData('sex', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer geslacht" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="man">Man</SelectItem>
+                  <SelectItem value="vrouw">Vrouw</SelectItem>
+                  <SelectItem value="anders">Anders</SelectItem>
+                  <SelectItem value="zeg_ik_liever_niet">Zeg ik liever niet</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -859,10 +879,28 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
                 <Checkbox
                   id="smokes"
                   checked={profileData.smokes}
-                  onCheckedChange={(checked) => updateProfileData('smokes', checked)}
+                  onCheckedChange={(checked) => {
+                    updateProfileData('smokes', checked);
+                    if (!checked) {
+                      updateProfileData('smokingDetails', '');
+                    }
+                  }}
                 />
                 <Label htmlFor="smokes">Ik rook</Label>
               </div>
+              
+              {profileData.smokes && (
+                <div>
+                  <Label htmlFor="smokingDetails">Details over roken</Label>
+                  <Textarea
+                    id="smokingDetails"
+                    value={profileData.smokingDetails}
+                    onChange={(e) => updateProfileData('smokingDetails', e.target.value)}
+                    placeholder="Bijvoorbeeld: alleen buiten, op balkon, binnen huis, alleen sigaretten, etc."
+                    rows={2}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1073,7 +1111,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
                 disabled={!isStepValid() || isSubmitting}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {isSubmitting ? 'Profiel aanmaken...' : 'Uitgebreid Profiel Aanmaken'}
+                {isSubmitting ? 'Profiel aanmaken...' : 'Profiel Aanmaken'}
                 <CheckCircle className="w-4 h-4 ml-2" />
               </Button>
             )}
