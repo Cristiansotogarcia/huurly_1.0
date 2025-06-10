@@ -396,7 +396,7 @@ const DocumentReviewModal = ({
             {/* Action Buttons */}
             <div className="space-y-3">
               {!showRejectionForm ? (
-                <div>
+                <div className="space-y-2">
                   <Button 
                     onClick={handleApprove}
                     disabled={isSubmitting}
@@ -408,14 +408,15 @@ const DocumentReviewModal = ({
                   <Button 
                     variant="destructive" 
                     onClick={() => setShowRejectionForm(true)}
-                    className="w-full mt-2"
+                    disabled={isSubmitting}
+                    className="w-full"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     Document Afwijzen
                   </Button>
                 </div>
               ) : (
-                <div>
+                <div className="space-y-2">
                   <Button 
                     variant="destructive" 
                     onClick={handleReject}
@@ -428,14 +429,15 @@ const DocumentReviewModal = ({
                   <Button 
                     variant="outline" 
                     onClick={() => setShowRejectionForm(false)}
-                    className="w-full mt-2"
+                    disabled={isSubmitting}
+                    className="w-full"
                   >
                     Annuleren
                   </Button>
                 </div>
               )}
               
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full mt-4">
                 Sluiten
               </Button>
             </div>
