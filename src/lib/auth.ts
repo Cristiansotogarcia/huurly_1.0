@@ -312,7 +312,7 @@ export class AuthService {
   /**
    * Map Supabase user to our User type
    */
-  private async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
+  async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
       // Get user role with better error handling
        logger.info('Fetching role for user:', supabaseUser.email);
