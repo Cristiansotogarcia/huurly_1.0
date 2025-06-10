@@ -253,28 +253,28 @@ const HuurderDashboard = () => {
     }
   };
 
-  const handleDocumentUploadComplete = (documents: any[]) => {
-    setUserDocuments((prev) => [
-      ...prev,
-      ...documents.map((doc) => ({
-        ...doc,
-        tenantId: user?.id || "",
-        type: doc.type,
-        status: doc.status,
-      })),
-    ]);
+  const handleDocumentUploadComplete = async (documents: any[]) => {
+    // Reload user documents to get the latest data
+    if (user?.id) {
+      const docsResult = await documentService.getDocumentsByUser(user.id);
+      if (docsResult.success && docsResult.data) {
+        setUserDocuments(docsResult.data);
+      }
+    }
 
     // Notify beoordelaars about new documents
     documents.forEach((doc) => {
       notifyDocumentUploaded(
         user?.name || "Onbekende gebruiker",
-        doc.type === "identity"
+        doc.document_type === "identity"
           ? "identiteitsbewijs"
-          : doc.type === "payslip"
+          : doc.document_type === "payslip"
             ? "loonstrook"
-            : doc.type === "employment"
+            : doc.document_type === "employment_contract"
               ? "arbeidscontract"
-              : "document",
+              : doc.document_type === "reference"
+                ? "referentie"
+                : "document",
         "beoordelaar-demo-id", // In real app, this would be actual beoordelaar ID
       );
     });
@@ -649,24 +649,62 @@ const HuurderDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <FileText className="w-5 h-5 mr-2" />
-                    Documenten
+                    Documenten ({userDocuments.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-sm mb-4">
-                      {EMPTY_STATE_MESSAGES.noDocuments}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDocumentModal(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload document
-                    </Button>
-                  </div>
+                  {userDocuments.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-sm mb-4">
+                        {EMPTY_STATE_MESSAGES.noDocuments}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowDocumentModal(true)}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload document
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userDocuments.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="w-5 h-5 text-dutch-blue" />
+                            <div>
+                              <p className="font-medium">{doc.file_name}</p>
+                              <p className="text-sm text-gray-500">
+                                {doc.document_type === 'identity' ? 'Identiteitsbewijs' :
+                                 doc.document_type === 'payslip' ? 'Loonstrook' :
+                                 doc.document_type === 'employment_contract' ? 'Arbeidscontract' :
+                                 doc.document_type === 'reference' ? 'Referentie' : doc.document_type}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={doc.status === 'approved' ? 'default' : 
+                                   doc.status === 'rejected' ? 'destructive' : 'secondary'}
+                          >
+                            {doc.status === 'pending' ? 'In behandeling' :
+                             doc.status === 'approved' ? 'Goedgekeurd' :
+                             doc.status === 'rejected' ? 'Afgewezen' : doc.status}
+                          </Badge>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setShowDocumentModal(true)}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Meer documenten uploaden
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
