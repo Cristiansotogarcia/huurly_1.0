@@ -130,7 +130,7 @@ export class DocumentService extends DatabaseService {
       case 'payslip':
         return 'payslip';
       case 'employment_contract':
-        return 'employment';
+        return 'employment_contract';
       case 'reference':
         return 'reference';
       default:
