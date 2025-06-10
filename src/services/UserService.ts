@@ -660,5 +660,3 @@ export class UserService extends DatabaseService {
 
 // Export singleton instance
 export const userService = new UserService();
-
-}
