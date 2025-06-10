@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,8 @@ interface EnhancedProfileCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete: (profileData: any) => void;
+  editMode?: boolean;
+  existingProfileId?: string;
 }
 
 interface EnhancedProfileData {
@@ -80,7 +83,7 @@ interface EnhancedProfileData {
   motivation: string;
 }
 
-const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: EnhancedProfileCreationModalProps) => {
+const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode = false, existingProfileId }: EnhancedProfileCreationModalProps) => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
@@ -255,16 +258,209 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
     return profileData.monthlyIncome + (profileData.hasPartner ? profileData.partnerMonthlyIncome : 0);
   };
 
-  const getDistrictsForCity = (city: string) => {
-    const districts = {
-      'Amsterdam': ['Centrum', 'Jordaan', 'Oud-Zuid', 'Oud-West', 'Noord', 'Oost', 'West', 'Zuid', 'Zuidoost'],
-      'Rotterdam': ['Centrum', 'Noord', 'Delfshaven', 'Overschie', 'Hillegersberg-Schiebroek', 'Kralingen-Crooswijk'],
-      'Den Haag': ['Centrum', 'Scheveningen', 'Bezuidenhout', 'Haagse Hout', 'Laak', 'Leidschenveen-Ypenburg'],
-      'Utrecht': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Nieuwegein', 'Vleuten-De Meern'],
-      'Eindhoven': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Woensel'],
-      'Groningen': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid']
+  const [dutchCities, setDutchCities] = useState<{[key: string]: string[]}>({});
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  // Load existing profile data when in edit mode
+  useEffect(() => {
+    const loadExistingProfile = async () => {
+      if (!editMode || !user?.id) return;
+      
+      setIsLoadingProfile(true);
+      try {
+        const result = await userService.getTenantProfile(user.id);
+        
+        if (result.success && result.data) {
+          const existingData = result.data;
+          
+          // Map database fields to form fields with safe property access
+          const data = existingData as any; // Use any to avoid TypeScript errors for new fields
+          
+          setProfileData({
+            firstName: existingData.first_name || '',
+            lastName: existingData.last_name || '',
+            email: user.email || '',
+            phone: existingData.phone || '',
+            dateOfBirth: existingData.date_of_birth || '',
+            nationality: data.nationality || 'Nederlandse',
+            sex: data.sex || '',
+            
+            maritalStatus: data.marital_status || 'single',
+            hasChildren: data.has_children || false,
+            numberOfChildren: data.number_of_children || 0,
+            childrenAges: data.children_ages || [],
+            
+            profession: existingData.profession || '',
+            employer: existingData.employer || '',
+            employmentStatus: existingData.employment_status || 'employed',
+            workContractType: existingData.work_contract_type || 'permanent',
+            monthlyIncome: existingData.monthly_income || 0,
+            housingAllowanceEligible: existingData.housing_allowance_eligible || false,
+            
+            hasPartner: data.has_partner || false,
+            partnerName: data.partner_name || '',
+            partnerProfession: data.partner_profession || '',
+            partnerMonthlyIncome: data.partner_monthly_income || 0,
+            partnerEmploymentStatus: data.partner_employment_status || 'employed',
+            
+            city: existingData.preferred_city || 'Amsterdam',
+            preferredDistricts: data.preferred_districts || [],
+            maxCommuteTime: data.max_commute_time || 30,
+            transportationPreference: data.transportation_preference || 'public_transport',
+            
+            minBudget: existingData.min_budget || 1000,
+            maxBudget: existingData.max_budget || 2000,
+            bedrooms: existingData.preferred_bedrooms || 1,
+            propertyType: existingData.preferred_property_type || 'Appartement',
+            furnishedPreference: data.furnished_preference || 'no_preference',
+            desiredAmenities: data.desired_amenities || [],
+            hasPets: existingData.has_pets || false,
+            petDetails: existingData.pet_details || '',
+            smokes: existingData.smokes || false,
+            smokingDetails: data.smoking_details || '',
+            
+            bio: existingData.bio || '',
+            motivation: existingData.motivation || '',
+            profilePictureUrl: existingData.profile_picture_url || '',
+          });
+          
+          // Set image preview if profile picture exists
+          if (existingData.profile_picture_url) {
+            setImagePreview(existingData.profile_picture_url);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading existing profile:', error);
+        toast({
+          title: "Fout bij laden profiel",
+          description: "Er is een fout opgetreden bij het laden van je bestaande profiel.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingProfile(false);
+      }
     };
-    return districts[city as keyof typeof districts] || [];
+
+    loadExistingProfile();
+  }, [editMode, user?.id, toast]);
+
+  // Initialize Dutch cities and neighborhoods data
+  useEffect(() => {
+    // Use comprehensive Dutch cities data from our database
+    const dutchCitiesData = {
+      'Amsterdam': ['Centrum', 'Jordaan', 'Oud-Zuid', 'Oud-West', 'Noord', 'Oost', 'West', 'Zuid', 'Zuidoost', 'De Pijp', 'Vondelpark', 'Museumkwartier'],
+      'Rotterdam': ['Centrum', 'Noord', 'Delfshaven', 'Overschie', 'Hillegersberg-Schiebroek', 'Kralingen-Crooswijk', 'Feijenoord', 'IJsselmonde', 'Pernis', 'Prins Alexander'],
+      'Den Haag': ['Centrum', 'Scheveningen', 'Bezuidenhout', 'Haagse Hout', 'Laak', 'Leidschenveen-Ypenburg', 'Loosduinen', 'Segbroek', 'Escamp'],
+      'Utrecht': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Nieuwegein', 'Vleuten-De Meern', 'Zuilen', 'Overvecht', 'Kanaleneiland'],
+      'Eindhoven': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Woensel', 'Stratum', 'Gestel', 'Strijp'],
+      'Groningen': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Paddepoel', 'Vinkhuizen'],
+      'Tilburg': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Almere': ['Centrum', 'Haven', 'Stad', 'Buiten', 'Poort'],
+      'Breda': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Nijmegen': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Apeldoorn': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Haarlem': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Arnhem': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Zaanstad': ['Zaandam', 'Koog aan de Zaan', 'Zaandijk', 'Wormerveer'],
+      'Amersfoort': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Maastricht': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
+      'Dordrecht': ['Centrum', 'Noord', 'Oost', 'West'],
+      'Leiden': ['Centrum', 'Noord', 'Oost', 'West'],
+      'Haarlemmermeer': ['Hoofddorp', 'Nieuw-Vennep', 'Badhoevedorp'],
+      'Zoetermeer': ['Centrum', 'Noord', 'Oost', 'West'],
+      'Zwolle': ['Centrum', 'Noord', 'Oost', 'West']
+    };
+
+    setDutchCities(dutchCitiesData);
+    setAvailableCities(Object.keys(dutchCitiesData));
+  }, []);
+
+  const getDistrictsForCity = (city: string) => {
+    return dutchCities[city] || [];
+  };
+
+  // Profile picture upload functionality
+  const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Ongeldig bestandstype",
+        description: "Alleen JPEG, PNG en WebP bestanden zijn toegestaan.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Bestand te groot",
+        description: "De afbeelding mag maximaal 5MB groot zijn.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      // Create file path with user ID
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/profile-picture.${fileExt}`;
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+
+      // Update profile data
+      updateProfileData('profilePictureUrl', publicUrl);
+      updateProfileData('profilePicture', file);
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+
+      toast({
+        title: "Foto geüpload",
+        description: "Je profielfoto is succesvol geüpload."
+      });
+
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      toast({
+        title: "Upload mislukt",
+        description: "Er is een fout opgetreden bij het uploaden van je foto.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const removeProfilePicture = () => {
+    updateProfileData('profilePictureUrl', '');
+    updateProfileData('profilePicture', undefined);
+    setImagePreview(null);
   };
 
   const amenitiesOptions = [
@@ -377,13 +573,41 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
             <div>
               <Label htmlFor="profilePicture">Profielfoto (optioneel)</Label>
               <div className="flex items-center space-x-4 mt-2">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-gray-400" />
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Profile preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-gray-400" />
+                  )}
                 </div>
-                <Button variant="outline" size="sm">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload foto
-                </Button>
+                <div className="flex flex-col space-y-2">
+                  <input
+                    type="file"
+                    id="profilePictureInput"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleProfilePictureUpload}
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => document.getElementById('profilePictureInput')?.click()}
+                    disabled={isUploadingImage}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isUploadingImage ? 'Uploaden...' : 'Upload foto'}
+                  </Button>
+                  {imagePreview && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={removeProfilePicture}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Verwijder foto
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -680,12 +904,9 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Amsterdam">Amsterdam</SelectItem>
-                  <SelectItem value="Rotterdam">Rotterdam</SelectItem>
-                  <SelectItem value="Den Haag">Den Haag</SelectItem>
-                  <SelectItem value="Utrecht">Utrecht</SelectItem>
-                  <SelectItem value="Eindhoven">Eindhoven</SelectItem>
-                  <SelectItem value="Groningen">Groningen</SelectItem>
+                  {availableCities.map((city) => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -896,9 +1117,12 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
                     id="smokingDetails"
                     value={profileData.smokingDetails}
                     onChange={(e) => updateProfileData('smokingDetails', e.target.value)}
-                    placeholder="Bijvoorbeeld: alleen buiten, op balkon, binnen huis, alleen sigaretten, etc."
-                    rows={2}
+                    placeholder="Bijvoorbeeld: alleen buiten, op balkon, binnen huis, alleen sigaretten, e-sigaretten, pijp, etc."
+                    rows={3}
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Geef aan waar je rookt (binnen/buiten), wat je rookt (sigaretten/e-sigaretten/pijp), en hoe vaak
+                  </p>
                 </div>
               )}
             </div>
@@ -1047,7 +1271,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete }: Enhanc
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <User className="w-5 h-5 mr-2" />
-            Uitgebreid Profiel Aanmaken
+            Profiel Aanmaken
           </DialogTitle>
         </DialogHeader>
         
