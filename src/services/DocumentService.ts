@@ -250,7 +250,7 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // First get the pending documents
+      // Get the pending documents without profile lookup
       let query = supabase
         .from('user_documents')
         .select('*')
@@ -268,29 +268,11 @@ export class DocumentService extends DatabaseService {
         return { data: null, error };
       }
 
-      // Get user profiles for each document
-      const documentsWithProfiles = await Promise.all(
-        (documents || []).map(async (doc) => {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('first_name, last_name')
-              .eq('id', doc.user_id)
-              .single();
-
-            return {
-              ...doc,
-              profiles: profile || { first_name: 'Onbekende', last_name: 'gebruiker' }
-            };
-          } catch (error) {
-            console.error('Error fetching profile for user:', doc.user_id, error);
-            return {
-              ...doc,
-              profiles: { first_name: 'Onbekende', last_name: 'gebruiker' }
-            };
-          }
-        })
-      );
+      // Add default profile info without database lookup
+      const documentsWithProfiles = (documents || []).map((doc) => ({
+        ...doc,
+        profiles: { first_name: 'Huurder', last_name: `(${doc.user_id.substring(0, 8)})` }
+      }));
 
       return { data: documentsWithProfiles, error: null };
     });
