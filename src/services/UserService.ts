@@ -41,6 +41,14 @@ export interface UserFilters {
   searchTerm?: string;
 }
 
+export interface TenantSearchFilters {
+  city?: string;
+  maxBudget?: number;
+  minIncome?: number;
+  propertyType?: string;
+  bedrooms?: number;
+}
+
 export class UserService extends DatabaseService {
   /**
    * Create user profile
@@ -167,6 +175,8 @@ export class UserService extends DatabaseService {
         .from('tenant_profiles')
         .upsert({
           user_id: currentUserId,
+          first_name: sanitizedData.firstName,
+          last_name: sanitizedData.lastName,
           phone: sanitizedData.phone,
           date_of_birth: sanitizedData.dateOfBirth,
           profession: sanitizedData.profession,
@@ -203,6 +213,62 @@ export class UserService extends DatabaseService {
         .select('*')
         .eq('user_id', userId)
         .single();
+
+      return { data, error };
+    });
+  }
+
+  /**
+   * Get all tenant profiles with search filters
+   */
+  async getTenantProfiles(
+    filters?: TenantSearchFilters,
+    pagination?: PaginationOptions,
+    sort?: SortOptions
+  ): Promise<DatabaseResponse<any[]>> {
+    return this.executeQuery(async () => {
+      let query = supabase
+        .from('tenant_profiles')
+        .select(`
+          *,
+          profiles!inner(
+            id,
+            first_name,
+            last_name,
+            is_looking_for_place
+          )
+        `)
+        .eq('profile_completed', true)
+        .eq('profiles.is_looking_for_place', true);
+
+      // Apply filters
+      if (filters?.city) {
+        query = query.ilike('preferred_city', `%${filters.city}%`);
+      }
+
+      if (filters?.maxBudget) {
+        query = query.lte('max_budget', filters.maxBudget);
+      }
+
+      if (filters?.minIncome) {
+        query = query.gte('monthly_income', filters.minIncome);
+      }
+
+      if (filters?.propertyType) {
+        query = query.eq('preferred_property_type', filters.propertyType);
+      }
+
+      if (filters?.bedrooms) {
+        query = query.eq('preferred_bedrooms', filters.bedrooms);
+      }
+
+      // Apply sorting
+      query = this.applySorting(query, sort || { column: 'created_at', ascending: false });
+
+      // Apply pagination
+      query = this.applyPagination(query, pagination);
+
+      const { data, error } = await query;
 
       return { data, error };
     });
@@ -594,3 +660,5 @@ export class UserService extends DatabaseService {
 
 // Export singleton instance
 export const userService = new UserService();
+
+}
