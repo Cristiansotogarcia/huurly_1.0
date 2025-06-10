@@ -227,50 +227,73 @@ export class UserService extends DatabaseService {
     sort?: SortOptions
   ): Promise<DatabaseResponse<any[]>> {
     return this.executeQuery(async () => {
-      let query = supabase
+      // First get tenant profiles with filters
+      let tenantQuery = supabase
         .from('tenant_profiles')
-        .select(`
-          *,
-          profiles!inner(
-            id,
-            first_name,
-            last_name,
-            is_looking_for_place
-          )
-        `)
-        .eq('profile_completed', true)
-        .eq('profiles.is_looking_for_place', true);
+        .select('*')
+        .eq('profile_completed', true);
 
       // Apply filters
       if (filters?.city) {
-        query = query.ilike('preferred_city', `%${filters.city}%`);
+        tenantQuery = tenantQuery.ilike('preferred_city', `%${filters.city}%`);
       }
 
       if (filters?.maxBudget) {
-        query = query.lte('max_budget', filters.maxBudget);
+        tenantQuery = tenantQuery.lte('max_budget', filters.maxBudget);
       }
 
       if (filters?.minIncome) {
-        query = query.gte('monthly_income', filters.minIncome);
+        tenantQuery = tenantQuery.gte('monthly_income', filters.minIncome);
       }
 
       if (filters?.propertyType) {
-        query = query.eq('preferred_property_type', filters.propertyType);
+        tenantQuery = tenantQuery.eq('preferred_property_type', filters.propertyType);
       }
 
       if (filters?.bedrooms) {
-        query = query.eq('preferred_bedrooms', filters.bedrooms);
+        tenantQuery = tenantQuery.eq('preferred_bedrooms', filters.bedrooms);
       }
 
       // Apply sorting
-      query = this.applySorting(query, sort || { column: 'created_at', ascending: false });
+      tenantQuery = this.applySorting(tenantQuery, sort || { column: 'created_at', ascending: false });
 
       // Apply pagination
-      query = this.applyPagination(query, pagination);
+      tenantQuery = this.applyPagination(tenantQuery, pagination);
 
-      const { data, error } = await query;
+      const { data: tenantData, error: tenantError } = await tenantQuery;
 
-      return { data, error };
+      if (tenantError) {
+        return { data: null, error: tenantError };
+      }
+
+      if (!tenantData || tenantData.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Get user IDs from tenant profiles
+      const userIds = tenantData.map(tenant => tenant.user_id);
+
+      // Get corresponding profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, is_looking_for_place')
+        .in('id', userIds)
+        .eq('is_looking_for_place', true);
+
+      if (profilesError) {
+        return { data: null, error: profilesError };
+      }
+
+      // Manual join - combine tenant profiles with their corresponding profiles
+      const joinedData = tenantData.map(tenant => {
+        const profile = profilesData?.find(p => p.id === tenant.user_id);
+        return {
+          ...tenant,
+          profiles: profile
+        };
+      }).filter(item => item.profiles); // Only include tenants with valid profiles
+
+      return { data: joinedData, error: null };
     });
   }
 
