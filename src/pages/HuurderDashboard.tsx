@@ -23,7 +23,7 @@ import {
   Bell,
   Settings,
 } from "lucide-react";
-import ProfileCreationModal from "@/components/modals/ProfileCreationModal";
+import EnhancedProfileCreationModal from "@/components/modals/EnhancedProfileCreationModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
 import PropertySearchModal from "@/components/modals/PropertySearchModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -808,7 +808,7 @@ const HuurderDashboard = () => {
         </div>
 
         {/* Modals */}
-        <ProfileCreationModal
+        <EnhancedProfileCreationModal
           open={showProfileModal}
           onOpenChange={setShowProfileModal}
           onComplete={handleProfileComplete}

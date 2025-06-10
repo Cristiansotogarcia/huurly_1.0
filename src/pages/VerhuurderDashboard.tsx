@@ -27,7 +27,9 @@ const VerhuurderDashboard = () => {
   const [searchFilters, setSearchFilters] = useState({
     city: '',
     maxBudget: '',
-    minIncome: ''
+    minIncome: '',
+    familyComposition: '',
+    hasChildren: ''
   });
   const [allTenants, setAllTenants] = useState<any[]>([]);
   const [filteredTenants, setFilteredTenants] = useState<any[]>([]);
@@ -451,7 +453,7 @@ const VerhuurderDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="text-sm font-medium">Stad</label>
                     <Input 
@@ -470,13 +472,44 @@ const VerhuurderDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Min Inkomen</label>
+                    <label className="text-sm font-medium">Min Huishoudinkomen</label>
                     <Input 
                       placeholder="4000" 
                       type="number"
                       value={searchFilters.minIncome}
                       onChange={(e) => setSearchFilters({...searchFilters, minIncome: e.target.value})}
                     />
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Gezinssamenstelling</label>
+                    <Select value={searchFilters.familyComposition} onValueChange={(value) => setSearchFilters({...searchFilters, familyComposition: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Alle gezinstypes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Alle gezinstypes</SelectItem>
+                        <SelectItem value="single">Alleenstaand</SelectItem>
+                        <SelectItem value="couple">Stel zonder kinderen</SelectItem>
+                        <SelectItem value="family_with_children">Gezin met kinderen</SelectItem>
+                        <SelectItem value="single_parent">Alleenstaande ouder</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Kinderen</label>
+                    <Select value={searchFilters.hasChildren} onValueChange={(value) => setSearchFilters({...searchFilters, hasChildren: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Alle huurders" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Alle huurders</SelectItem>
+                        <SelectItem value="true">Met kinderen</SelectItem>
+                        <SelectItem value="false">Zonder kinderen</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <Button 
