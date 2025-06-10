@@ -18,17 +18,22 @@ CREATE TABLE IF NOT EXISTS dutch_cities_neighborhoods (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 3: Add indexes for performance
+-- Step 3: Add indexes and unique constraint for performance
 CREATE INDEX IF NOT EXISTS idx_dutch_cities_city_name ON dutch_cities_neighborhoods(city_name);
 CREATE INDEX IF NOT EXISTS idx_dutch_cities_province ON dutch_cities_neighborhoods(province);
 CREATE INDEX IF NOT EXISTS idx_dutch_cities_is_major ON dutch_cities_neighborhoods(is_major_city);
 CREATE INDEX IF NOT EXISTS idx_tenant_profiles_sex ON tenant_profiles(sex);
 
+-- Add unique constraint for city_name and neighborhood_name combination
+ALTER TABLE dutch_cities_neighborhoods 
+ADD CONSTRAINT unique_city_neighborhood UNIQUE (city_name, neighborhood_name);
+
 -- Step 4: Enable RLS on new table
 ALTER TABLE dutch_cities_neighborhoods ENABLE ROW LEVEL SECURITY;
 
 -- Step 5: Create RLS policy for Dutch cities
-CREATE POLICY IF NOT EXISTS "Anyone can read Dutch cities and neighborhoods" 
+DROP POLICY IF EXISTS "Anyone can read Dutch cities and neighborhoods" ON dutch_cities_neighborhoods;
+CREATE POLICY "Anyone can read Dutch cities and neighborhoods" 
 ON dutch_cities_neighborhoods FOR SELECT USING (true);
 
 -- Step 6: Insert comprehensive Dutch cities and neighborhoods data
@@ -187,7 +192,7 @@ INSERT INTO dutch_cities_neighborhoods (city_name, province, neighborhood_name, 
 ('Zwolle', 'Overijssel', 'Oost', '8021', false),
 ('Zwolle', 'Overijssel', 'West', '8041', false)
 
-ON CONFLICT (city_name, neighborhood_name) DO NOTHING;
+;
 
 -- Step 7: Add comments for documentation
 COMMENT ON COLUMN tenant_profiles.sex IS 'Gender selection: man, vrouw, anders, zeg_ik_liever_niet';

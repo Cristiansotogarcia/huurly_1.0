@@ -35,9 +35,11 @@ export interface CreateTenantProfileData {
   
   // Enhanced fields from 7-step modal
   nationality?: string;
+  sex?: 'man' | 'vrouw' | 'anders' | 'zeg_ik_liever_niet';
   maritalStatus?: 'single' | 'married' | 'partnership' | 'divorced' | 'widowed';
   hasChildren?: boolean;
   numberOfChildren?: number;
+  childrenAges?: number[];
   hasPartner?: boolean;
   partnerName?: string;
   partnerProfession?: string;
@@ -57,6 +59,8 @@ export interface CreateTenantProfileData {
   hasPets?: boolean;
   petDetails?: string;
   smokes?: boolean;
+  smokingDetails?: string;
+  profilePictureUrl?: string;
 }
 
 export interface UserFilters {
@@ -220,9 +224,11 @@ export class UserService extends DatabaseService {
         
         // Enhanced fields from 7-step modal
         nationality: sanitizedData.nationality || 'Nederlandse',
+        sex: sanitizedData.sex || null,
         marital_status: sanitizedData.maritalStatus || 'single',
         has_children: sanitizedData.hasChildren || false,
         number_of_children: sanitizedData.numberOfChildren || 0,
+        children_ages: sanitizedData.childrenAges || [],
         has_partner: sanitizedData.hasPartner || false,
         partner_name: sanitizedData.partnerName || null,
         partner_profession: sanitizedData.partnerProfession || null,
@@ -233,6 +239,17 @@ export class UserService extends DatabaseService {
         transportation_preference: sanitizedData.transportationPreference || 'public_transport',
         furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
         desired_amenities: sanitizedData.desiredAmenities || [],
+        
+        // Additional enhanced fields
+        employer: sanitizedData.employer || null,
+        employment_status: sanitizedData.employmentStatus || 'employed',
+        work_contract_type: sanitizedData.workContractType || 'permanent',
+        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
+        has_pets: sanitizedData.hasPets || false,
+        pet_details: sanitizedData.petDetails || null,
+        smokes: sanitizedData.smokes || false,
+        smoking_details: sanitizedData.smokingDetails || null,
+        profile_picture_url: sanitizedData.profilePictureUrl || null,
       };
 
       const { data: tenantProfile, error: tenantError } = await supabase
