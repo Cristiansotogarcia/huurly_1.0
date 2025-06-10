@@ -2,6 +2,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
 import { User, UserRole } from '@/types';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { useAuthStore } from '@/store/authStore';
+import { logger } from '@/lib/logger';
+
+// Authentication error class
+export class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
 
 export interface CreateUserProfileData {
   firstName: string;
@@ -85,6 +95,44 @@ export interface TenantSearchFilters {
 
 export class UserService extends DatabaseService {
   /**
+   * Validate authentication and refresh session if needed
+   */
+  private async validateAuthentication(): Promise<void> {
+    const authStore = useAuthStore.getState();
+    
+    // Check if session is valid
+    const isValid = await authStore.validateSession();
+    
+    if (!isValid) {
+      logger.warn('Session invalid, attempting refresh...');
+      const refreshed = await authStore.refreshSession();
+      
+      if (!refreshed) {
+        logger.error('Session refresh failed, user needs to re-authenticate');
+        throw new AuthenticationError('Uw sessie is verlopen. Log opnieuw in om door te gaan.');
+      }
+    }
+  }
+
+  /**
+   * Execute operation with authentication guard
+   */
+  private async withAuthGuard<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      await this.validateAuthentication();
+      return await operation();
+    } catch (error) {
+      if (error instanceof AuthenticationError) {
+        // Force logout on authentication failure
+        const authStore = useAuthStore.getState();
+        authStore.logout();
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Create user profile
    */
   async createProfile(
@@ -158,38 +206,39 @@ export class UserService extends DatabaseService {
    * Create complete tenant profile
    */
   async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
+    return this.withAuthGuard(async () => {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return {
+          data: null,
+          error: new AuthenticationError('Niet geautoriseerd'),
+          success: false,
+        };
+      }
 
-    const sanitizedData = this.sanitizeInput(data);
-    
-    const validation = this.validateRequiredFields(sanitizedData, [
-      'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
-      'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
-    ]);
-    if (!validation.isValid) {
-      return {
-        data: null,
-        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
-        success: false,
-      };
-    }
+      const sanitizedData = this.sanitizeInput(data);
+      
+      const validation = this.validateRequiredFields(sanitizedData, [
+        'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
+        'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
+      ]);
+      if (!validation.isValid) {
+        return {
+          data: null,
+          error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+          success: false,
+        };
+      }
 
-    if (!this.isValidPhoneNumber(sanitizedData.phone)) {
-      return {
-        data: null,
-        error: new Error('Ongeldig telefoonnummer'),
-        success: false,
-      };
-    }
+      if (!this.isValidPhoneNumber(sanitizedData.phone)) {
+        return {
+          data: null,
+          error: new Error('Ongeldig telefoonnummer'),
+          success: false,
+        };
+      }
 
-    return this.executeQuery(async () => {
+      return this.executeQuery(async () => {
       // 1. Update basic profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -265,6 +314,7 @@ export class UserService extends DatabaseService {
       await this.createAuditLog('CREATE', 'tenant_profiles', currentUserId, null, tenantProfile);
 
       return { data: tenantProfile, error: null };
+      });
     });
   }
 
@@ -287,38 +337,39 @@ export class UserService extends DatabaseService {
    * Update existing tenant profile
    */
   async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
+    return this.withAuthGuard(async () => {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return {
+          data: null,
+          error: new AuthenticationError('Niet geautoriseerd'),
+          success: false,
+        };
+      }
 
-    const sanitizedData = this.sanitizeInput(data);
-    
-    const validation = this.validateRequiredFields(sanitizedData, [
-      'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
-      'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
-    ]);
-    if (!validation.isValid) {
-      return {
-        data: null,
-        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
-        success: false,
-      };
-    }
+      const sanitizedData = this.sanitizeInput(data);
+      
+      const validation = this.validateRequiredFields(sanitizedData, [
+        'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
+        'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
+      ]);
+      if (!validation.isValid) {
+        return {
+          data: null,
+          error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+          success: false,
+        };
+      }
 
-    if (!this.isValidPhoneNumber(sanitizedData.phone)) {
-      return {
-        data: null,
-        error: new Error('Ongeldig telefoonnummer'),
-        success: false,
-      };
-    }
+      if (!this.isValidPhoneNumber(sanitizedData.phone)) {
+        return {
+          data: null,
+          error: new Error('Ongeldig telefoonnummer'),
+          success: false,
+        };
+      }
 
-    return this.executeQuery(async () => {
+      return this.executeQuery(async () => {
       // 1. Update basic profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -401,6 +452,7 @@ export class UserService extends DatabaseService {
       await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, currentData, tenantProfile);
 
       return { data: tenantProfile, error: null };
+      });
     });
   }
 

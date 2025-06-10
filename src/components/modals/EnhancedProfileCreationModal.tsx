@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
-import { userService } from '@/services/UserService';
+import { userService, AuthenticationError } from '@/services/UserService';
 import { 
   User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, 
   Briefcase, Heart, Users, Baby, Camera, Clock, Car, Wifi, Bath, 
@@ -229,6 +229,21 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         throw result.error || new Error(editMode ? 'Profiel bijwerken mislukt' : 'Profiel aanmaken mislukt');
       }
     } catch (error) {
+      console.error('Profile submission error:', error);
+      
+      if (error instanceof AuthenticationError) {
+        // Handle authentication errors specifically
+        toast({
+          title: "Sessie verlopen",
+          description: "Je sessie is verlopen. Je wordt automatisch uitgelogd. Log opnieuw in om door te gaan.",
+          variant: "destructive"
+        });
+        
+        // Close the modal and let the auth system handle the logout
+        onOpenChange(false);
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan. Probeer het opnieuw.';
       toast({
         title: editMode ? "Fout bij bijwerken profiel" : "Fout bij aanmaken profiel",
