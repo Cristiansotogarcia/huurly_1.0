@@ -204,7 +204,7 @@ export class UserService extends DatabaseService {
         throw this.handleDatabaseError(profileError);
       }
 
-      // 2. Create or update tenant profile with enhanced fields
+      // 2. Create or update tenant profile with all enhanced fields
       const tenantProfileData: any = {
         user_id: currentUserId,
         first_name: sanitizedData.firstName,
@@ -222,7 +222,16 @@ export class UserService extends DatabaseService {
         motivation: sanitizedData.motivation,
         profile_completed: true,
         
-        // Enhanced fields from 7-step modal
+        // Existing fields
+        employer: sanitizedData.employer || null,
+        employment_status: sanitizedData.employmentStatus || 'employed',
+        work_contract_type: sanitizedData.workContractType || 'permanent',
+        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
+        has_pets: sanitizedData.hasPets || false,
+        pet_details: sanitizedData.petDetails || null,
+        smokes: sanitizedData.smokes || false,
+        
+        // Enhanced fields from 7-step modal (now supported by database schema)
         nationality: sanitizedData.nationality || 'Nederlandse',
         sex: sanitizedData.sex || null,
         marital_status: sanitizedData.maritalStatus || 'single',
@@ -239,15 +248,6 @@ export class UserService extends DatabaseService {
         transportation_preference: sanitizedData.transportationPreference || 'public_transport',
         furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
         desired_amenities: sanitizedData.desiredAmenities || [],
-        
-        // Additional enhanced fields
-        employer: sanitizedData.employer || null,
-        employment_status: sanitizedData.employmentStatus || 'employed',
-        work_contract_type: sanitizedData.workContractType || 'permanent',
-        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
-        has_pets: sanitizedData.hasPets || false,
-        pet_details: sanitizedData.petDetails || null,
-        smokes: sanitizedData.smokes || false,
         smoking_details: sanitizedData.smokingDetails || null,
         profile_picture_url: sanitizedData.profilePictureUrl || null,
       };
