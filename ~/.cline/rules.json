@@ -19,6 +19,11 @@
       "name": "Always Check Git History Before Making Branch Recommendations",
       "description": "Examine git log and branch relationships before suggesting merge strategies",
       "rule": "Before making any recommendations about git branches, merging, or repository management, I must first run 'git log --oneline --graph --all' to understand the actual branch relationships and commit history. Never assume branch relationships or make merge recommendations without first examining the git history. This prevents incorrect advice about which branches contain which changes."
+    },
+    {
+      "name": "Continuous Development Flow",
+      "description": "NEVER stop development flow after phase completions or commits",
+      "rule": "After completing any phase, commit, or major milestone, I must IMMEDIATELY proceed to the next logical step without requiring manual intervention or stopping. This includes: 1) After phase completion → immediately begin next phase, 2) After commits → continue with next task in sequence, 3) After documentation → move directly to implementation, 4) No artificial stops or completion-only summaries. This rule has CRITICAL enforcement level and prevents workflow interruptions that require manual mode switching."
     }
   ]
 }

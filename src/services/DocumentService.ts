@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
+import { PaginationOptions, SortOptions } from '@/lib/database';
 import { storageService } from '@/lib/storage';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
 
 export interface CreateDocumentData {
   documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference';
@@ -24,14 +25,17 @@ export interface DocumentFilters {
   searchTerm?: string;
 }
 
-export class DocumentService extends DatabaseService {
+export class DocumentService extends BaseService {
+  constructor() {
+    super('DocumentService');
+  }
   /**
    * Upload and create document record
    */
   async uploadDocument(
     file: File,
     documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'
-  ): Promise<DatabaseResponse<Tables<'user_documents'>>> {
+  ): Promise<ServiceResponse<Tables<'user_documents'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -141,7 +145,7 @@ export class DocumentService extends DatabaseService {
   /**
    * Get document by ID
    */
-  async getDocument(documentId: string): Promise<DatabaseResponse<Tables<'user_documents'>>> {
+  async getDocument(documentId: string): Promise<ServiceResponse<Tables<'user_documents'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -178,7 +182,7 @@ export class DocumentService extends DatabaseService {
   async getDocumentsByUser(
     userId: string,
     filters?: DocumentFilters
-  ): Promise<DatabaseResponse<Tables<'user_documents'>[]>> {
+  ): Promise<ServiceResponse<Tables<'user_documents'>[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -229,7 +233,7 @@ export class DocumentService extends DatabaseService {
   async getPendingDocuments(
     pagination?: PaginationOptions,
     sort?: SortOptions
-  ): Promise<DatabaseResponse<any[]>> {
+  ): Promise<ServiceResponse<any[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -281,7 +285,7 @@ export class DocumentService extends DatabaseService {
   /**
    * Approve document (reviewers only)
    */
-  async approveDocument(documentId: string): Promise<DatabaseResponse<Tables<'user_documents'>>> {
+  async approveDocument(documentId: string): Promise<ServiceResponse<Tables<'user_documents'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -337,7 +341,7 @@ export class DocumentService extends DatabaseService {
   async rejectDocument(
     documentId: string,
     rejectionReason: string
-  ): Promise<DatabaseResponse<Tables<'user_documents'>>> {
+  ): Promise<ServiceResponse<Tables<'user_documents'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -398,7 +402,7 @@ export class DocumentService extends DatabaseService {
   /**
    * Delete document
    */
-  async deleteDocument(documentId: string): Promise<DatabaseResponse<boolean>> {
+  async deleteDocument(documentId: string): Promise<ServiceResponse<boolean>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -496,7 +500,7 @@ export class DocumentService extends DatabaseService {
   /**
    * Get document statistics (reviewers only)
    */
-  async getDocumentStatistics(): Promise<DatabaseResponse<any>> {
+  async getDocumentStatistics(): Promise<ServiceResponse<any>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -568,7 +572,7 @@ export class DocumentService extends DatabaseService {
   /**
    * Bulk approve documents (reviewers only)
    */
-  async bulkApproveDocuments(documentIds: string[]): Promise<DatabaseResponse<number>> {
+  async bulkApproveDocuments(documentIds: string[]): Promise<ServiceResponse<number>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
