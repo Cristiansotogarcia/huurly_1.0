@@ -17,10 +17,17 @@ import { Users, FileText, AlertTriangle, TrendingUp, Download, UserCheck, UserX,
 import { useToast } from '@/hooks/use-toast';
 import { userService } from '@/services/UserService';
 import { paymentService } from '@/services/PaymentService';
+import { DashboardService } from '@/services/DashboardService';
 import UserManagementModal from '@/components/modals/UserManagementModal';
 import IssueManagementModal from '@/components/modals/IssueManagementModal';
 import { Logo } from '@/components/Logo';
 import NotificationBell from '@/components/NotificationBell';
+
+// Standardized components
+import { StatsWidget } from '@/components/standard/StatsWidget';
+import { EmptyState } from '@/components/standard/EmptyState';
+import { StandardCard } from '@/components/standard/StandardCard';
+import { UI_TEXT } from '@/utils/constants';
 
 const EMPTY_STATE_MESSAGES = {
   noUsers: 'Nog geen gebruikers geregistreerd',
@@ -53,13 +60,42 @@ const BeheerderDashboard = () => {
     role: '',
     password: '',
   });
+  const [beheerderStats, setBeheerderStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalProperties: 0,
+    totalRevenue: 0,
+    systemHealth: 'good' as 'good' | 'warning' | 'critical'
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   
   // Load real data
   useEffect(() => {
+    if (!user?.id) return;
     loadUsers();
     loadPendingApprovals();
     loadIssues();
-  }, []);
+    loadBeheerderStats();
+  }, [user?.id]);
+
+  const loadBeheerderStats = async () => {
+    setIsLoadingStats(true);
+    try {
+      const result = await DashboardService.getBeheerderStats();
+      if (result.success && result.data) {
+        setBeheerderStats(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading beheerder stats:', error);
+      toast({
+        title: "Fout bij laden statistieken",
+        description: "Statistieken konden niet worden geladen.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -260,55 +296,39 @@ const BeheerderDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
+        {/* Statistics Section - Standardized Components */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Users className="w-8 h-8 text-dutch-blue" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">15,420</p>
-                  <p className="text-gray-600">Totaal Gebruikers</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Totaal Gebruikers"
+            value={beheerderStats.totalUsers}
+            icon={Users}
+            color="dutch-blue"
+            loading={isLoadingStats}
+          />
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <FileText className="w-8 h-8 text-dutch-orange" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">3,240</p>
-                  <p className="text-gray-600">Actieve Panden</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Actieve Gebruikers"
+            value={beheerderStats.activeUsers}
+            icon={UserCheck}
+            color="green"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <UserCheck className="w-8 h-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">23</p>
-                  <p className="text-gray-600">Verificaties</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Totaal Panden"
+            value={beheerderStats.totalProperties}
+            icon={FileText}
+            color="dutch-orange"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">8</p>
-                  <p className="text-gray-600">Open Issues</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Platform Omzet"
+            value={`€${beheerderStats.totalRevenue.toLocaleString()}`}
+            icon={TrendingUp}
+            color="purple"
+            loading={isLoadingStats}
+          />
         </div>
 
         <Tabs defaultValue="analytics" className="space-y-6">
