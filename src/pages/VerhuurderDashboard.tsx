@@ -11,7 +11,7 @@ import { propertyService } from '@/services/PropertyService';
 import { userService } from '@/services/UserService';
 import { viewingService } from '@/services/ViewingService';
 import { matchingService } from '@/services/MatchingService';
-import { Search, Home, Users, Calendar, Plus, Activity } from 'lucide-react';
+import { Search, Home, Users, Calendar, Plus, Activity, Euro } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ViewingInvitationModal from '@/components/modals/ViewingInvitationModal';
 import TenantProfileModal from '@/components/modals/TenantProfileModal';
@@ -19,6 +19,13 @@ import AddPropertyModal from '@/components/modals/AddPropertyModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyViewingInvitation, notifyApplicationReceived } from '@/hooks/useNotifications';
 import { Logo } from '@/components/Logo';
+import { DashboardService } from '@/services/DashboardService';
+
+// Standardized components
+import { StatsWidget } from '@/components/standard/StatsWidget';
+import { EmptyState } from '@/components/standard/EmptyState';
+import { StandardCard } from '@/components/standard/StandardCard';
+import { UI_TEXT } from '@/utils/constants';
 
 const VerhuurderDashboard = () => {
   const { user } = useAuthStore();
@@ -45,13 +52,43 @@ const VerhuurderDashboard = () => {
     weeklyMatches: 0,
     recentActivities: [] as any[]
   });
+  const [verhuurderStats, setVerhuurderStats] = useState({
+    totalProperties: 0,
+    activeProperties: 0,
+    totalTenants: 0,
+    pendingApplications: 0,
+    monthlyRevenue: 0
+  });
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
     loadDashboardData();
+    loadVerhuurderStats();
   }, [user?.id]);
+
+  const loadVerhuurderStats = async () => {
+    if (!user?.id) return;
+    
+    setIsLoadingStats(true);
+    try {
+      const result = await DashboardService.getVerhuurderStats(user.id);
+      if (result.success && result.data) {
+        setVerhuurderStats(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading verhuurder stats:', error);
+      toast({
+        title: "Fout bij laden statistieken",
+        description: "Statistieken konden niet worden geladen.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   const loadDashboardData = async () => {
     if (!user?.id) return;
@@ -387,58 +424,46 @@ const VerhuurderDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Home className="w-8 h-8 text-dutch-blue" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">{properties.length}</p>
-                  <p className="text-gray-600">Actieve Objecten</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid md:grid-cols-5 gap-6 mb-8">
+          <StatsWidget
+            title="Totaal Objecten"
+            value={verhuurderStats.totalProperties}
+            icon={Home}
+            color="dutch-blue"
+            loading={isLoadingStats}
+          />
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Users className="w-8 h-8 text-dutch-orange" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">{availableTenants.length}</p>
-                  <p className="text-gray-600">Beschikbare Huurders</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Actieve Objecten"
+            value={verhuurderStats.activeProperties}
+            icon={Home}
+            color="green"
+            loading={isLoadingStats}
+          />
+          
+          <StatsWidget
+            title="Huurders"
+            value={verhuurderStats.totalTenants}
+            icon={Users}
+            color="dutch-orange"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Calendar className="w-8 h-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">
-                    {loading ? '...' : dashboardStats.scheduledViewings}
-                  </p>
-                  <p className="text-gray-600">Geplande Bezichtigingen</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Aanvragen"
+            value={verhuurderStats.pendingApplications}
+            icon={Calendar}
+            color="purple"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Activity className="w-8 h-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">
-                    {loading ? '...' : dashboardStats.weeklyMatches}
-                  </p>
-                  <p className="text-gray-600">Potentiële Matches</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Maandelijkse Inkomsten"
+            value={`€${verhuurderStats.monthlyRevenue.toLocaleString()}`}
+            icon={Euro}
+            color="green"
+            loading={isLoadingStats}
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
