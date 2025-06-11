@@ -1,13 +1,11 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, MapPin, User, Send, CheckCircle } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
 
 interface ViewingInvitationModalProps {
   open: boolean;
@@ -25,6 +23,18 @@ interface InvitationData {
   requirements: string;
 }
 
+const initialData: InvitationData = {
+  date: '',
+  time: '',
+  message: '',
+  duration: 30,
+  requirements: '',
+};
+
+const validateForm = (data: InvitationData): boolean => {
+  return !!(data.date && data.time);
+};
+
 const ViewingInvitationModal = ({ 
   open, 
   onOpenChange, 
@@ -33,19 +43,8 @@ const ViewingInvitationModal = ({
   onInvitationSent 
 }: ViewingInvitationModalProps) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [invitationData, setInvitationData] = useState<InvitationData>({
-    date: '',
-    time: '',
-    message: '',
-    duration: 30,
-    requirements: '',
-  });
-
-  const updateInvitationData = (field: keyof InvitationData, value: any) => {
-    setInvitationData(prev => ({ ...prev, [field]: value }));
-  };
+  const { isSubmitting, setIsSubmitting } = useModalState();
+  const { data: invitationData, updateField, resetForm, isValid } = useModalForm(initialData, validateForm);
 
   const handleSendInvitation = async () => {
     if (!invitationData.date || !invitationData.time) {
@@ -84,13 +83,7 @@ const ViewingInvitationModal = ({
       });
 
       // Reset form
-      setInvitationData({
-        date: '',
-        time: '',
-        message: '',
-        duration: 30,
-        requirements: '',
-      });
+      resetForm();
       
     } catch (error) {
       toast({
@@ -125,16 +118,14 @@ const ViewingInvitationModal = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Calendar className="w-5 h-5 mr-2" />
-            Bezichtiging Inplannen
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Bezichtiging Inplannen"
+      icon={Calendar}
+      size="2xl"
+    >
+      <div className="space-y-6">
           {/* Tenant & Property Info */}
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
@@ -195,7 +186,7 @@ const ViewingInvitationModal = ({
                     type="date"
                     min={getMinDate()}
                     value={invitationData.date}
-                    onChange={(e) => updateInvitationData('date', e.target.value)}
+                    onChange={(e) => updateField('date', e.target.value)}
                   />
                 </div>
                 
@@ -204,7 +195,7 @@ const ViewingInvitationModal = ({
                   <select
                     id="time"
                     value={invitationData.time}
-                    onChange={(e) => updateInvitationData('time', e.target.value)}
+                    onChange={(e) => updateField('time', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-dutch-blue"
                   >
                     <option value="">Selecteer tijd</option>
@@ -221,7 +212,7 @@ const ViewingInvitationModal = ({
                   <select
                     id="duration"
                     value={invitationData.duration}
-                    onChange={(e) => updateInvitationData('duration', parseInt(e.target.value))}
+                    onChange={(e) => updateField('duration', parseInt(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-dutch-blue"
                   >
                     <option value={15}>15 minuten</option>
@@ -245,7 +236,7 @@ const ViewingInvitationModal = ({
                 <Textarea
                   id="message"
                   value={invitationData.message}
-                  onChange={(e) => updateInvitationData('message', e.target.value)}
+                  onChange={(e) => updateField('message', e.target.value)}
                   placeholder="Bijvoorbeeld: Hallo! Ik zou graag een bezichtiging inplannen. Neem gerust contact op als je vragen hebt."
                   rows={3}
                 />
@@ -267,7 +258,7 @@ const ViewingInvitationModal = ({
                 <Textarea
                   id="requirements"
                   value={invitationData.requirements}
-                  onChange={(e) => updateInvitationData('requirements', e.target.value)}
+                  onChange={(e) => updateField('requirements', e.target.value)}
                   placeholder="Bijvoorbeeld: Identiteitsbewijs, loonstrook, referenties..."
                   rows={2}
                 />
@@ -310,24 +301,21 @@ const ViewingInvitationModal = ({
             </Card>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Annuleren
-            </Button>
-            
-            <Button 
-              onClick={handleSendInvitation}
-              disabled={!invitationData.date || !invitationData.time || isSubmitting}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isSubmitting ? 'Verzenden...' : 'Uitnodiging Verzenden'}
-              <Send className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <BaseModalActions
+          cancelAction={{
+            label: 'Annuleren',
+            onClick: () => onOpenChange(false)
+          }}
+          primaryAction={{
+            label: 'Uitnodiging Verzenden',
+            onClick: handleSendInvitation,
+            disabled: !isValid,
+            loading: isSubmitting,
+            className: 'bg-green-600 hover:bg-green-700'
+          }}
+        />
+      </div>
+    </BaseModal>
   );
 };
 
