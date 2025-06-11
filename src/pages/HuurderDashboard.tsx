@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { userService } from "@/services/UserService";
 import { documentService } from "@/services/DocumentService";
-import { analyticsService } from "@/services/AnalyticsService";
+import { DashboardService } from "@/services/DashboardService";
 import {
   Home,
   FileText,
@@ -31,14 +31,12 @@ import { notifyDocumentUploaded } from "@/hooks/useNotifications";
 import { Logo } from "@/components/Logo";
 import { PaymentModal } from "@/components/PaymentModal";
 
-const EMPTY_STATE_MESSAGES = {
-  noUsers: 'Nog geen gebruikers geregistreerd',
-  noProperties: 'Nog geen woningen toegevoegd',
-  noDocuments: 'Nog geen documenten geüpload',
-  noViewings: 'Nog geen bezichtigingen gepland',
-  noIssues: 'Geen openstaande issues',
-  noNotifications: 'Geen nieuwe notificaties',
-};
+// Standardized components
+import { StatsWidget } from "@/components/standard/StatsWidget";
+import { EmptyState } from "@/components/standard/EmptyState";
+import { StandardCard } from "@/components/standard/StandardCard";
+import { UI_TEXT } from "@/utils/constants";
+
 import { authService } from "@/lib/auth";
 
 const HuurderDashboard = () => {
@@ -158,30 +156,27 @@ const HuurderDashboard = () => {
     
     setIsLoadingStats(true);
     try {
-      // Use the new analytics service methods
-      const profileViews = await analyticsService.getProfileViews(user.id);
+      // Use the new DashboardService
+      const result = await DashboardService.getHuurderStats(user.id);
       
-      // Get user analytics data
-      const analyticsResult = await analyticsService.getUserAnalytics(user.id);
-      
-      if (analyticsResult.success && analyticsResult.data) {
+      if (result.success && result.data) {
         setStats({
-          profileViews: analyticsResult.data.profileViews,
-          invitations: analyticsResult.data.invitationsReceived,
-          applications: analyticsResult.data.applicationsSubmitted,
-          acceptedApplications: analyticsResult.data.acceptedApplications
+          profileViews: result.data.profileViews,
+          invitations: result.data.invitations,
+          applications: result.data.applications,
+          acceptedApplications: result.data.acceptedApplications
         });
       } else {
-        // Fallback to basic stats if analytics service fails
+        // Fallback to zeros if service fails
         setStats({
-          profileViews: profileViews,
+          profileViews: 0,
           invitations: 0,
           applications: 0,
           acceptedApplications: 0
         });
       }
       
-      console.log("User stats loaded with real data");
+      console.log("User stats loaded with DashboardService");
     } catch (error) {
       console.error("Error loading user stats:", error);
       // Fallback to zeros if everything fails
@@ -548,60 +543,36 @@ const HuurderDashboard = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Quick Stats - Now using real data */}
+              {/* Quick Stats - Standardized Components */}
               <div className="grid md:grid-cols-4 gap-4 mb-6">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center">
-                      <TrendingUp className="h-8 w-8 text-dutch-blue" />
-                      <div className="ml-4">
-                        <p className="text-2xl font-bold">{stats.profileViews}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Profielweergaven
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center">
-                      <Calendar className="h-8 w-8 text-dutch-orange" />
-                      <div className="ml-4">
-                        <p className="text-2xl font-bold">{stats.invitations}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Uitnodigingen
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center">
-                      <FileText className="h-8 w-8 text-green-600" />
-                      <div className="ml-4">
-                        <p className="text-2xl font-bold">{stats.applications}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Aanmeldingen
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center">
-                      <Home className="h-8 w-8 text-purple-600" />
-                      <div className="ml-4">
-                        <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Geaccepteerd
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <StatsWidget
+                  title="Profielweergaven"
+                  value={stats.profileViews}
+                  icon={TrendingUp}
+                  color="dutch-blue"
+                  loading={isLoadingStats}
+                />
+                <StatsWidget
+                  title="Uitnodigingen"
+                  value={stats.invitations}
+                  icon={Calendar}
+                  color="dutch-orange"
+                  loading={isLoadingStats}
+                />
+                <StatsWidget
+                  title="Aanmeldingen"
+                  value={stats.applications}
+                  icon={FileText}
+                  color="green-600"
+                  loading={isLoadingStats}
+                />
+                <StatsWidget
+                  title="Geaccepteerd"
+                  value={stats.acceptedApplications}
+                  icon={Home}
+                  color="purple-600"
+                  loading={isLoadingStats}
+                />
               </div>
 
               {/* Profile Setup */}
@@ -678,7 +649,7 @@ const HuurderDashboard = () => {
                 <CardContent>
                   <div className="text-center py-8 text-gray-500">
                     <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-sm">{EMPTY_STATE_MESSAGES.noViewings}</p>
+                    <p className="text-sm">{UI_TEXT.emptyStates.noViewings}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -696,7 +667,7 @@ const HuurderDashboard = () => {
                     <div className="text-center py-8 text-gray-500">
                       <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                       <p className="text-sm mb-4">
-                        {EMPTY_STATE_MESSAGES.noDocuments}
+                        {UI_TEXT.emptyStates.noDocuments}
                       </p>
                       <Button
                         variant="outline"
