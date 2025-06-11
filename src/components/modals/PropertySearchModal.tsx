@@ -113,7 +113,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
                     id="city"
                     placeholder="Amsterdam"
                     value={filters.city}
-                    onChange={(e) => updateFilter('city', e.target.value)}
+                    onChange={(e) => updateField('city', e.target.value)}
                   />
                 </div>
                 
@@ -124,7 +124,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
                     type="number"
                     placeholder="1000"
                     value={filters.minPrice || ''}
-                    onChange={(e) => updateFilter('minPrice', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateField('minPrice', parseInt(e.target.value) || 0)}
                   />
                 </div>
                 
@@ -135,13 +135,13 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
                     type="number"
                     placeholder="2000"
                     value={filters.maxPrice || ''}
-                    onChange={(e) => updateFilter('maxPrice', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateField('maxPrice', parseInt(e.target.value) || 0)}
                   />
                 </div>
                 
                 <div>
                   <Label htmlFor="bedrooms">Slaapkamers</Label>
-                  <Select value={filters.bedrooms} onValueChange={(value) => updateFilter('bedrooms', value)}>
+                  <Select value={filters.bedrooms} onValueChange={(value) => updateField('bedrooms', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Alle" />
                     </SelectTrigger>
@@ -157,7 +157,7 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
                 
                 <div>
                   <Label htmlFor="propertyType">Type</Label>
-                  <Select value={filters.propertyType} onValueChange={(value) => updateFilter('propertyType', value)}>
+                  <Select value={filters.propertyType} onValueChange={(value) => updateField('propertyType', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Alle" />
                     </SelectTrigger>
