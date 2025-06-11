@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { userService } from '@/services/UserService';
 import { User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, Briefcase } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
 
 interface ProfileCreationModalProps {
   open: boolean;
@@ -46,9 +46,9 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isSubmitting, setIsSubmitting } = useModalState();
   
-  const [profileData, setProfileData] = useState<ProfileData>({
+  const initialData: ProfileData = {
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
@@ -64,14 +64,12 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     propertyType: 'Appartement',
     motivation: '',
     hasDocuments: false,
-  });
+  };
+
+  const { data: profileData, updateField, resetForm } = useModalForm(initialData);
 
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
-
-  const updateProfileData = (field: keyof ProfileData, value: any) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
-  };
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -163,7 +161,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                 <Input
                   id="firstName"
                   value={profileData.firstName}
-                  onChange={(e) => updateProfileData('firstName', e.target.value)}
+                  onChange={(e) => updateField('firstName', e.target.value)}
                   placeholder="Emma"
                 />
               </div>
@@ -172,7 +170,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                 <Input
                   id="lastName"
                   value={profileData.lastName}
-                  onChange={(e) => updateProfileData('lastName', e.target.value)}
+                  onChange={(e) => updateField('lastName', e.target.value)}
                   placeholder="Bakker"
                 />
               </div>
@@ -194,7 +192,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               <Input
                 id="phone"
                 value={profileData.phone}
-                onChange={(e) => updateProfileData('phone', e.target.value)}
+                onChange={(e) => updateField('phone', e.target.value)}
                 placeholder="+31 6 12345678"
               />
             </div>
@@ -205,7 +203,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                 id="dateOfBirth"
                 type="date"
                 value={profileData.dateOfBirth}
-                onChange={(e) => updateProfileData('dateOfBirth', e.target.value)}
+                onChange={(e) => updateField('dateOfBirth', e.target.value)}
               />
             </div>
             
@@ -214,7 +212,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               <Input
                 id="profession"
                 value={profileData.profession}
-                onChange={(e) => updateProfileData('profession', e.target.value)}
+                onChange={(e) => updateField('profession', e.target.value)}
                 placeholder="Software Developer"
               />
             </div>
@@ -225,7 +223,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                 id="monthlyIncome"
                 type="number"
                 value={profileData.monthlyIncome || ''}
-                onChange={(e) => updateProfileData('monthlyIncome', parseInt(e.target.value) || 0)}
+                onChange={(e) => updateField('monthlyIncome', parseInt(e.target.value) || 0)}
                 placeholder="4500"
               />
             </div>
@@ -243,7 +241,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
             
             <div>
               <Label htmlFor="city">Gewenste stad *</Label>
-              <Select value={profileData.city} onValueChange={(value) => updateProfileData('city', value)}>
+              <Select value={profileData.city} onValueChange={(value) => updateField('city', value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -265,7 +263,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                   id="minBudget"
                   type="number"
                   value={profileData.minBudget || ''}
-                  onChange={(e) => updateProfileData('minBudget', parseInt(e.target.value) || 0)}
+                  onChange={(e) => updateField('minBudget', parseInt(e.target.value) || 0)}
                   placeholder="1000"
                 />
               </div>
@@ -275,7 +273,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                   id="maxBudget"
                   type="number"
                   value={profileData.maxBudget || ''}
-                  onChange={(e) => updateProfileData('maxBudget', parseInt(e.target.value) || 0)}
+                  onChange={(e) => updateField('maxBudget', parseInt(e.target.value) || 0)}
                   placeholder="2000"
                 />
               </div>
@@ -283,7 +281,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
             
             <div>
               <Label htmlFor="bedrooms">Aantal slaapkamers</Label>
-              <Select value={profileData.bedrooms.toString()} onValueChange={(value) => updateProfileData('bedrooms', parseInt(value))}>
+              <Select value={profileData.bedrooms.toString()} onValueChange={(value) => updateField('bedrooms', parseInt(value))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -298,7 +296,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
             
             <div>
               <Label htmlFor="propertyType">Type woning</Label>
-              <Select value={profileData.propertyType} onValueChange={(value) => updateProfileData('propertyType', value)}>
+              <Select value={profileData.propertyType} onValueChange={(value) => updateField('propertyType', value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -327,7 +325,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               <Textarea
                 id="bio"
                 value={profileData.bio}
-                onChange={(e) => updateProfileData('bio', e.target.value)}
+                onChange={(e) => updateField('bio', e.target.value)}
                 placeholder="Vertel iets over jezelf, je hobby's, werk en wat voor huurder je bent..."
                 rows={4}
               />
@@ -341,7 +339,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               <Textarea
                 id="motivation"
                 value={profileData.motivation}
-                onChange={(e) => updateProfileData('motivation', e.target.value)}
+                onChange={(e) => updateField('motivation', e.target.value)}
                 placeholder="Bijvoorbeeld: nieuwe baan, studie, samenwonen..."
                 rows={3}
               />
@@ -424,83 +422,83 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <User className="w-5 h-5 mr-2" />
-            Profiel Aanmaken
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Stap {currentStep} van {totalSteps}</span>
-              <span>{Math.round(progress)}% voltooid</span>
-            </div>
-            <Progress value={progress} className="h-2" />
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Profiel Aanmaken"
+      icon={User}
+      size="2xl"
+    >
+      <div className="space-y-6">
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Stap {currentStep} van {totalSteps}</span>
+            <span>{Math.round(progress)}% voltooid</span>
           </div>
-          
-          {/* Step Indicators */}
-          <div className="flex justify-between">
-            {[1, 2, 3, 4].map((step) => (
-              <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step < currentStep ? 'bg-green-500 text-white' :
-                  step === currentStep ? 'bg-dutch-blue text-white' :
-                  'bg-gray-200 text-gray-600'
-                }`}>
-                  {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
-                </div>
-                {step < 4 && (
-                  <div className={`w-12 h-1 mx-2 ${
-                    step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-          
-          {/* Step Content */}
-          <div className="min-h-[400px]">
-            {renderStep()}
-          </div>
-          
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Vorige
-            </Button>
-            
-            {currentStep < totalSteps ? (
-              <Button
-                onClick={nextStep}
-                disabled={!isStepValid()}
-              >
-                Volgende
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isSubmitting ? 'Profiel aanmaken...' : 'Profiel Aanmaken'}
-                <CheckCircle className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-          </div>
+          <Progress value={progress} className="h-2" />
         </div>
-      </DialogContent>
-    </Dialog>
+        
+        {/* Step Indicators */}
+        <div className="flex justify-between">
+          {[1, 2, 3, 4].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step < currentStep ? 'bg-green-500 text-white' :
+                step === currentStep ? 'bg-dutch-blue text-white' :
+                'bg-gray-200 text-gray-600'
+              }`}>
+                {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
+              </div>
+              {step < 4 && (
+                <div className={`w-12 h-1 mx-2 ${
+                  step < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Step Content */}
+        <div className="min-h-[400px]">
+          {renderStep()}
+        </div>
+        
+        <BaseModalActions
+          customActions={
+            <div className="flex justify-between w-full">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Vorige
+              </Button>
+              
+              {currentStep < totalSteps ? (
+                <Button
+                  onClick={nextStep}
+                  disabled={!isStepValid()}
+                >
+                  Volgende
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!isStepValid() || isSubmitting}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? 'Profiel aanmaken...' : 'Profiel Aanmaken'}
+                  <CheckCircle className="w-4 h-4 ml-2" />
+                </Button>
+              )}
+            </div>
+          }
+        />
+      </div>
+    </BaseModal>
   );
 };
 
