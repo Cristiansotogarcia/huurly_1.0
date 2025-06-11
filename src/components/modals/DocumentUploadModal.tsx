@@ -2,7 +2,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +16,7 @@ import {
   Eye,
   Trash2
 } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
 
 interface DocumentUploadModalProps {
   open: boolean;
@@ -333,16 +333,14 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
   const readyDocuments = documents.filter(doc => doc.status === 'ready');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Upload className="w-5 h-5 mr-2" />
-            Documenten Uploaden
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Documenten Uploaden"
+      icon={Upload}
+      size="4xl"
+    >
+      <div className="space-y-6">
           {/* Document Types with Individual Upload */}
           <div className="grid md:grid-cols-2 gap-4">
             {documentTypes.map((docType) => {
@@ -527,24 +525,20 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
             </Card>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Annuleren
-            </Button>
-            
-            <Button 
-              onClick={() => onOpenChange(false)}
-              disabled={documents.filter(doc => doc.status === 'success').length === 0}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Sluiten
-              <CheckCircle className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <BaseModalActions
+          cancelAction={{
+            label: "Annuleren",
+            onClick: () => onOpenChange(false)
+          }}
+          primaryAction={{
+            label: "Sluiten",
+            onClick: () => onOpenChange(false),
+            disabled: documents.filter(doc => doc.status === 'success').length === 0,
+            className: "bg-green-600 hover:bg-green-700"
+          }}
+        />
+      </div>
+    </BaseModal>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -22,6 +21,7 @@ import {
   FileText,
   Mail
 } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
 
 interface IssueManagementModalProps {
   open: boolean;
@@ -41,6 +41,7 @@ const IssueManagementModal = ({
   onAddNote
 }: IssueManagementModalProps) => {
   const { toast } = useToast();
+  const { isSubmitting, setIsSubmitting } = useModalState();
   const [resolution, setResolution] = useState('');
   const [escalationNote, setEscalationNote] = useState('');
   const [newNote, setNewNote] = useState('');
@@ -170,16 +171,14 @@ const IssueManagementModal = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2" />
-            Issue Beheer - #{issue.id}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <Tabs defaultValue="details" className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Issue Beheer - #${issue.id}`}
+      icon={AlertTriangle}
+      size="4xl"
+    >
+      <Tabs defaultValue="details" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -522,8 +521,14 @@ const IssueManagementModal = ({
             </Card>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+        
+        <BaseModalActions
+          cancelAction={{
+            label: "Sluiten",
+            onClick: () => onOpenChange(false)
+          }}
+        />
+      </BaseModal>
   );
 };
 

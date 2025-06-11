@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +20,7 @@ import {
   MessageCircle,
   Download
 } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
 
 interface TenantProfileModalProps {
   open: boolean;
@@ -37,6 +37,7 @@ const TenantProfileModal = ({
 }: TenantProfileModalProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
+  const { isSubmitting, setIsSubmitting } = useModalState();
 
   const handleInviteViewing = () => {
     onInviteViewing(tenant);
@@ -116,16 +117,14 @@ const TenantProfileModal = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <User className="w-5 h-5 mr-2" />
-            Huurder Profiel
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Huurder Profiel"
+      icon={User}
+      size="4xl"
+    >
+      <div className="space-y-6">
           {/* Header with basic info */}
           <Card>
             <CardContent className="pt-6">
@@ -437,32 +436,34 @@ const TenantProfileModal = ({
             </TabsContent>
           </Tabs>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleAddToFavorites}>
-                <Heart className="w-4 h-4 mr-2" />
-                Favoriet
-              </Button>
-              <Button variant="outline" onClick={handleSendMessage}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Bericht
-              </Button>
+        <BaseModalActions
+          customActions={
+            <div className="flex justify-between w-full">
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={handleAddToFavorites}>
+                  <Heart className="w-4 h-4 mr-2" />
+                  Favoriet
+                </Button>
+                <Button variant="outline" onClick={handleSendMessage}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Bericht
+                </Button>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Sluiten
+                </Button>
+                <Button onClick={handleInviteViewing} className="bg-green-600 hover:bg-green-700">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Uitnodigen voor Bezichtiging
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Sluiten
-              </Button>
-              <Button onClick={handleInviteViewing} className="bg-green-600 hover:bg-green-700">
-                <Calendar className="w-4 h-4 mr-2" />
-                Uitnodigen voor Bezichtiging
-              </Button>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          }
+        />
+      </div>
+    </BaseModal>
   );
 };
 
