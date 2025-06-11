@@ -120,7 +120,7 @@ export class DashboardService {
         .from('properties')
         .select('id')
         .eq('landlord_id', userId)
-        .eq('status', 'available');
+        .eq('status', 'active');
 
       if (activeError) {
         logger.error('Error fetching active properties:', activeError);
@@ -137,7 +137,7 @@ export class DashboardService {
         logger.error('Error fetching total tenants:', tenantsError);
       }
 
-      // Get pending applications
+      // Get pending applications for this landlord's properties
       const { data: pendingApplications, error: pendingError } = await supabase
         .from('property_applications')
         .select('id')
@@ -319,78 +319,61 @@ export class DashboardService {
     try {
       logger.info('Fetching recent activity for user:', userId, 'role:', role);
 
-      let query;
+      // Simplified queries to avoid TypeScript complexity
+      let data: any[] = [];
       
       switch (role) {
         case 'huurder':
-          query = supabase
+          const { data: huurderData, error: huurderError } = await supabase
             .from('property_applications')
-            .select(`
-              id,
-              status,
-              created_at,
-              properties (
-                title,
-                address
-              )
-            `)
+            .select('id, status, created_at')
             .eq('tenant_id', userId)
             .order('created_at', { ascending: false })
             .limit(limit);
+          
+          if (huurderError) {
+            logger.error('Error fetching huurder activity:', huurderError);
+            return { success: false, error: huurderError };
+          }
+          data = huurderData || [];
           break;
 
         case 'verhuurder':
-          query = supabase
+          const { data: verhuurderData, error: verhuurderError } = await supabase
             .from('property_applications')
-            .select(`
-              id,
-              status,
-              created_at,
-              properties (
-                title,
-                address
-              ),
-              user_profiles (
-                first_name,
-                last_name
-              )
-            `)
+            .select('id, status, created_at')
             .eq('landlord_id', userId)
             .order('created_at', { ascending: false })
             .limit(limit);
+          
+          if (verhuurderError) {
+            logger.error('Error fetching verhuurder activity:', verhuurderError);
+            return { success: false, error: verhuurderError };
+          }
+          data = verhuurderData || [];
           break;
 
         case 'beoordelaar':
-          query = supabase
+          const { data: beoordelaarData, error: beoordelaarError } = await supabase
             .from('user_documents')
-            .select(`
-              id,
-              document_type,
-              status,
-              reviewed_at,
-              user_profiles (
-                first_name,
-                last_name
-              )
-            `)
+            .select('id, document_type, status, reviewed_at')
             .eq('reviewed_by', userId)
             .order('reviewed_at', { ascending: false })
             .limit(limit);
+          
+          if (beoordelaarError) {
+            logger.error('Error fetching beoordelaar activity:', beoordelaarError);
+            return { success: false, error: beoordelaarError };
+          }
+          data = beoordelaarData || [];
           break;
 
         default:
           return { success: false, error: 'Invalid role' };
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        logger.error('Error fetching recent activity:', error);
-        return { success: false, error };
-      }
-
-      logger.info('Recent activity fetched successfully:', data?.length || 0, 'items');
-      return { success: true, data: data || [] };
+      logger.info('Recent activity fetched successfully:', data.length, 'items');
+      return { success: true, data };
 
     } catch (error) {
       logger.error('Error in getRecentActivity:', error);
