@@ -9,6 +9,16 @@
       "name": "Dutch UI for Huurly Project",
       "description": "Use Dutch language specifically for Huurly project user interface elements",
       "rule": "When working on the Huurly project and creating, modifying, or suggesting user interface elements (buttons, labels, messages, form fields, navigation, etc.), always use Dutch language. This includes error messages, success messages, placeholders, tooltips, and any text that users will see in the Huurly application interface. Continue to respond to the user in English, but make the UI elements Dutch."
+    },
+    {
+      "name": "Self-Improvement Through Mistake Analysis",
+      "description": "Create new rules when mistakes are identified to prevent similar errors in the future",
+      "rule": "When I notice I've made a mistake or the user points out an error in my reasoning, I must: 1) Acknowledge the mistake clearly, 2) Analyze WHY the mistake happened (root cause), 3) Create a specific rule to prevent this type of mistake in the future, 4) Add that rule to this rules file. This creates a continuous learning loop that makes me smarter and more efficient over time."
+    },
+    {
+      "name": "Always Check Git History Before Making Branch Recommendations",
+      "description": "Examine git log and branch relationships before suggesting merge strategies",
+      "rule": "Before making any recommendations about git branches, merging, or repository management, I must first run 'git log --oneline --graph --all' to understand the actual branch relationships and commit history. Never assume branch relationships or make merge recommendations without first examining the git history. This prevents incorrect advice about which branches contain which changes."
     }
   ]
 }
