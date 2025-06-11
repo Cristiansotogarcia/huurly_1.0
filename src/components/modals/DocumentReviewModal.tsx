@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -21,6 +20,7 @@ import {
   AlertTriangle,
   Clock
 } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
 
 interface DocumentReviewModalProps {
   open: boolean;
@@ -38,11 +38,11 @@ const DocumentReviewModal = ({
   onReject 
 }: DocumentReviewModalProps) => {
   const { toast } = useToast();
+  const { isSubmitting, setIsSubmitting } = useModalState();
   const [reviewNotes, setReviewNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionForm, setShowRejectionForm] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleApprove = async () => {
     setIsSubmitting(true);
@@ -143,16 +143,14 @@ const DocumentReviewModal = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <FileText className="w-5 h-5 mr-2" />
-            Document Beoordelen
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid lg:grid-cols-3 gap-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Document Beoordelen"
+      icon={FileText}
+      size="6xl"
+    >
+      <div className="grid lg:grid-cols-3 gap-6">
           {/* Document Viewer */}
           <div className="lg:col-span-2">
             <Card>
@@ -443,8 +441,7 @@ const DocumentReviewModal = ({
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </BaseModal>
   );
 };
 

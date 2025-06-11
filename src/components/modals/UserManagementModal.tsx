@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -23,6 +22,7 @@ import {
   Ban,
   UserCheck
 } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
 
 interface UserManagementModalProps {
   open: boolean;
@@ -42,6 +42,7 @@ const UserManagementModal = ({
   onActivateUser
 }: UserManagementModalProps) => {
   const { toast } = useToast();
+  const { isSubmitting, setIsSubmitting } = useModalState();
   const [suspensionReason, setSuspensionReason] = useState('');
   const [showSuspensionForm, setShowSuspensionForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -129,16 +130,14 @@ const UserManagementModal = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <User className="w-5 h-5 mr-2" />
-            Gebruiker Beheer - {user.name}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <Tabs defaultValue="profile" className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Gebruiker Beheer - ${user.name}`}
+      icon={User}
+      size="4xl"
+    >
+      <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profiel</TabsTrigger>
             <TabsTrigger value="activity">Activiteit</TabsTrigger>
@@ -457,8 +456,14 @@ const UserManagementModal = ({
             </Card>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+        
+        <BaseModalActions
+          cancelAction={{
+            label: "Sluiten",
+            onClick: () => onOpenChange(false)
+          }}
+        />
+      </BaseModal>
   );
 };
 
