@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { propertyService } from '@/services/PropertyService';
 import { Search, MapPin, Euro, Home, Heart, Eye, Calendar } from 'lucide-react';
+import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
 
 interface PropertySearchModalProps {
   open: boolean;
@@ -23,28 +23,26 @@ interface SearchFilters {
   propertyType: string;
 }
 
+const initialFilters: SearchFilters = {
+  city: '',
+  minPrice: 0,
+  maxPrice: 3000,
+  bedrooms: '',
+  propertyType: '',
+};
+
 const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) => {
   const { toast } = useToast();
-  const [filters, setFilters] = useState<SearchFilters>({
-    city: '',
-    minPrice: 0,
-    maxPrice: 3000,
-    bedrooms: '',
-    propertyType: '',
-  });
-
+  const { isSubmitting: loading, setIsSubmitting: setLoading } = useModalState();
+  const { data: filters, updateField, resetForm } = useModalForm(initialFilters);
+  
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
 
   const handleSearch = async () => {
     setLoading(true);
@@ -89,27 +87,19 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
   };
 
   const clearFilters = () => {
-    setFilters({
-      city: '',
-      minPrice: 0,
-      maxPrice: 3000,
-      bedrooms: '',
-      propertyType: '',
-    });
+    resetForm();
     handleSearch();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Search className="w-5 h-5 mr-2" />
-            Woningen Zoeken
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Woningen Zoeken"
+      icon={Search}
+      size="6xl"
+    >
+      <div className="space-y-6">
           {/* Search Filters */}
           <Card>
             <CardHeader>
@@ -312,25 +302,27 @@ const PropertySearchModal = ({ open, onOpenChange }: PropertySearchModalProps) =
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Sluiten
-            </Button>
-            
-            <div className="flex space-x-2">
-              <Button variant="outline">
-                <Heart className="w-4 h-4 mr-2" />
-                Favorieten ({favorites.length})
+        <BaseModalActions
+          customActions={
+            <div className="flex justify-between w-full">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Sluiten
               </Button>
-              <Button>
-                Opgeslagen zoekopdrachten
-              </Button>
+              
+              <div className="flex space-x-2">
+                <Button variant="outline">
+                  <Heart className="w-4 h-4 mr-2" />
+                  Favorieten ({favorites.length})
+                </Button>
+                <Button>
+                  Opgeslagen zoekopdrachten
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          }
+        />
+      </div>
+    </BaseModal>
   );
 };
 
