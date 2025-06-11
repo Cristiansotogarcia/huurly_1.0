@@ -8,12 +8,19 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { documentService } from '@/services/DocumentService';
+import { DashboardService } from '@/services/DashboardService';
 import { FileText, CheckCircle, XCircle, Clock, Eye, ArrowLeft, Bell, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
 import NotificationBell from '@/components/NotificationBell';
 import { notifyDocumentApproved, notifyDocumentRejected } from '@/hooks/useNotifications';
 import { Logo } from '@/components/Logo';
+
+// Standardized components
+import { StatsWidget } from '@/components/standard/StatsWidget';
+import { EmptyState } from '@/components/standard/EmptyState';
+import { StandardCard } from '@/components/standard/StandardCard';
+import { UI_TEXT } from '@/utils/constants';
 
 const EMPTY_STATE_MESSAGES = {
   noUsers: 'Nog geen gebruikers geregistreerd',
@@ -32,10 +39,40 @@ const BeoordelaarDashboard = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
+  const [beoordelaarStats, setBeoordelaarStats] = useState({
+    pendingDocuments: 0,
+    reviewedToday: 0,
+    totalReviewed: 0,
+    averageReviewTime: 0
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   useEffect(() => {
+    if (!user?.id) return;
     loadPendingDocuments();
-  }, []);
+    loadBeoordelaarStats();
+  }, [user?.id]);
+
+  const loadBeoordelaarStats = async () => {
+    if (!user?.id) return;
+    
+    setIsLoadingStats(true);
+    try {
+      const result = await DashboardService.getBeoordelaarStats(user.id);
+      if (result.success && result.data) {
+        setBeoordelaarStats(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading beoordelaar stats:', error);
+      toast({
+        title: "Fout bij laden statistieken",
+        description: "Statistieken konden niet worden geladen.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   const loadPendingDocuments = async () => {
     try {
@@ -222,55 +259,39 @@ const BeoordelaarDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards - Clean for real testing */}
+        {/* Statistics Section - Standardized Components */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Clock className="w-8 h-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">{pendingDocuments.length}</p>
-                  <p className="text-gray-600">Wachtende Verificaties</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Wachtende Verificaties"
+            value={beoordelaarStats.pendingDocuments}
+            icon={Clock}
+            color="dutch-orange"
+            loading={isLoadingStats}
+          />
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-gray-600">Goedgekeurd Vandaag</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Beoordeeld Vandaag"
+            value={beoordelaarStats.reviewedToday}
+            icon={CheckCircle}
+            color="green"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <XCircle className="w-8 h-8 text-red-600" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-gray-600">Afgewezen Vandaag</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Totaal Beoordeeld"
+            value={beoordelaarStats.totalReviewed}
+            icon={FileText}
+            color="dutch-blue"
+            loading={isLoadingStats}
+          />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <FileText className="w-8 h-8 text-dutch-blue" />
-                <div className="ml-4">
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-gray-600">Openstaande Portfolio's</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsWidget
+            title="Gem. Beoordelingstijd"
+            value={`${beoordelaarStats.averageReviewTime} min`}
+            icon={Clock}
+            color="purple"
+            loading={isLoadingStats}
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
