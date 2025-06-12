@@ -20,6 +20,7 @@ const AlgemeneVoorwaarden = lazy(() => import("./pages/AlgemeneVoorwaarden"));
 const Privacybeleid = lazy(() => import("./pages/Privacybeleid"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/privacybeleid" element={<Privacybeleid />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/payment-required" element={<PaymentRequired />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
