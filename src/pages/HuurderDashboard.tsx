@@ -69,9 +69,9 @@ const HuurderDashboard = () => {
 
   // Initialize loading state
   useEffect(() => {
-    if (user !== null) {
-      setIsLoading(false);
-      setShowPaymentModal(!user?.hasPayment);
+    setIsLoading(false);
+    if (user) {
+      setShowPaymentModal(!user.hasPayment);
     }
   }, [user]);
 
@@ -99,6 +99,9 @@ const HuurderDashboard = () => {
             title: 'Betaling succesvol!',
             description: 'Je account is nu actief. Welkom bij Huurly!',
           });
+        } else {
+          // Attempt to refresh the session if no user is returned
+          await useAuthStore.getState().refreshSession?.();
         }
         
         // Clean up URL
