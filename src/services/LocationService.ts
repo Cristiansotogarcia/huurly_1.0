@@ -1,286 +1,176 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse } from '@/lib/database';
+import { logger } from '@/lib/logger';
 
-export class LocationService extends DatabaseService {
+export interface LocationResponse<T> {
+  data: T | null;
+  error: Error | null;
+  success: boolean;
+}
+
+export class LocationService {
   /**
-   * Get all active cities
+   * Get all cities from dutch_cities_neighborhoods table
    */
-  async getCities(): Promise<DatabaseResponse<any[]>> {
-    return this.executeQuery(async () => {
+  async getCities(): Promise<LocationResponse<any[]>> {
+    try {
       const { data, error } = await supabase
-        .from('cities')
+        .from('dutch_cities_neighborhoods')
+        .select('city_name, province')
+        .order('city_name');
+
+      if (error) {
+        logger.error('Error fetching cities:', error);
+        return { data: null, error: new Error(error.message), success: false };
+      }
+
+      // Remove duplicates and create unique city list
+      const uniqueCities = Array.from(
+        new Map(data?.map(item => [item.city_name, item]) || []).values()
+      );
+
+      return { data: uniqueCities, error: null, success: true };
+    } catch (error) {
+      logger.error('Unexpected error in getCities:', error);
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error('Unknown error'), 
+        success: false 
+      };
+    }
+  }
+
+  /**
+   * Get neighborhoods for a specific city
+   */
+  async getNeighborhoodsByCity(cityName: string): Promise<LocationResponse<any[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('dutch_cities_neighborhoods')
         .select('*')
-        .eq('is_active', true)
-        .order('name');
+        .eq('city_name', cityName)
+        .order('neighborhood_name');
 
-      return { data, error };
-    });
+      if (error) {
+        logger.error('Error fetching neighborhoods:', error);
+        return { data: null, error: new Error(error.message), success: false };
+      }
+
+      return { data: data || [], error: null, success: true };
+    } catch (error) {
+      logger.error('Unexpected error in getNeighborhoodsByCity:', error);
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error('Unknown error'), 
+        success: false 
+      };
+    }
   }
 
   /**
-   * Get districts for a specific city
+   * Get all cities with their neighborhoods
    */
-  async getDistrictsByCity(cityId: string): Promise<DatabaseResponse<any[]>> {
-    return this.executeQuery(async () => {
+  async getCitiesWithNeighborhoods(): Promise<LocationResponse<any[]>> {
+    try {
       const { data, error } = await supabase
-        .from('districts')
+        .from('dutch_cities_neighborhoods')
         .select('*')
-        .eq('city_id', cityId)
-        .eq('is_active', true)
-        .order('name');
+        .order('city_name, neighborhood_name');
 
-      return { data, error };
-    });
-  }
+      if (error) {
+        logger.error('Error fetching cities with neighborhoods:', error);
+        return { data: null, error: new Error(error.message), success: false };
+      }
 
-  /**
-   * Get districts for a city by city name
-   */
-  async getDistrictsByCityName(cityName: string): Promise<DatabaseResponse<any[]>> {
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('districts')
-        .select(`
-          *,
-          cities!inner(name)
-        `)
-        .eq('cities.name', cityName)
-        .eq('is_active', true)
-        .eq('cities.is_active', true)
-        .order('name');
+      // Group by city
+      const groupedData = data?.reduce((acc: any, item: any) => {
+        const cityKey = item.city_name;
+        if (!acc[cityKey]) {
+          acc[cityKey] = {
+            city_name: item.city_name,
+            province: item.province,
+            neighborhoods: []
+          };
+        }
+        acc[cityKey].neighborhoods.push({
+          neighborhood_name: item.neighborhood_name,
+          postal_code_prefix: item.postal_code_prefix,
+          population: item.population
+        });
+        return acc;
+      }, {});
 
-      return { data, error };
-    });
-  }
-
-  /**
-   * Get all cities with their districts
-   */
-  async getCitiesWithDistricts(): Promise<DatabaseResponse<any[]>> {
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('cities')
-        .select(`
-          *,
-          districts(*)
-        `)
-        .eq('is_active', true)
-        .eq('districts.is_active', true)
-        .order('name');
-
-      return { data, error };
-    });
+      const result = Object.values(groupedData || {});
+      return { data: result, error: null, success: true };
+    } catch (error) {
+      logger.error('Unexpected error in getCitiesWithNeighborhoods:', error);
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error('Unknown error'), 
+        success: false 
+      };
+    }
   }
 
   /**
    * Search cities by name
    */
-  async searchCities(searchTerm: string): Promise<DatabaseResponse<any[]>> {
-    return this.executeQuery(async () => {
+  async searchCities(searchTerm: string): Promise<LocationResponse<any[]>> {
+    try {
       const { data, error } = await supabase
-        .from('cities')
-        .select('*')
-        .eq('is_active', true)
-        .ilike('name', `%${searchTerm}%`)
-        .order('name')
+        .from('dutch_cities_neighborhoods')
+        .select('city_name, province')
+        .ilike('city_name', `%${searchTerm}%`)
+        .order('city_name')
         .limit(10);
 
-      return { data, error };
-    });
+      if (error) {
+        logger.error('Error searching cities:', error);
+        return { data: null, error: new Error(error.message), success: false };
+      }
+
+      // Remove duplicates
+      const uniqueCities = Array.from(
+        new Map(data?.map(item => [item.city_name, item]) || []).values()
+      );
+
+      return { data: uniqueCities, error: null, success: true };
+    } catch (error) {
+      logger.error('Unexpected error in searchCities:', error);
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error('Unknown error'), 
+        success: false 
+      };
+    }
   }
 
   /**
    * Get city by name
    */
-  async getCityByName(name: string): Promise<DatabaseResponse<any>> {
-    return this.executeQuery(async () => {
+  async getCityByName(name: string): Promise<LocationResponse<any>> {
+    try {
       const { data, error } = await supabase
-        .from('cities')
-        .select('*')
-        .eq('name', name)
-        .eq('is_active', true)
-        .single();
-
-      return { data, error };
-    });
-  }
-
-  /**
-   * Add new city (admin only)
-   */
-  async addCity(name: string, country: string = 'Netherlands'): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang om steden toe te voegen'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('cities')
-        .insert({
-          name: name.trim(),
-          country: country
-        })
-        .select()
+        .from('dutch_cities_neighborhoods')
+        .select('city_name, province')
+        .eq('city_name', name)
+        .limit(1)
         .single();
 
       if (error) {
-        throw this.handleDatabaseError(error);
+        logger.error('Error fetching city by name:', error);
+        return { data: null, error: new Error(error.message), success: false };
       }
 
-      await this.createAuditLog('CREATE', 'cities', data?.id, null, data);
-
-      return { data, error: null };
-    });
-  }
-
-  /**
-   * Add new district (admin only)
-   */
-  async addDistrict(cityId: string, name: string): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
+      return { data, error: null, success: true };
+    } catch (error) {
+      logger.error('Unexpected error in getCityByName:', error);
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error('Unknown error'), 
+        success: false 
       };
     }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang om wijken toe te voegen'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('districts')
-        .insert({
-          city_id: cityId,
-          name: name.trim()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      await this.createAuditLog('CREATE', 'districts', data?.id, null, data);
-
-      return { data, error: null };
-    });
-  }
-
-  /**
-   * Update city (admin only)
-   */
-  async updateCity(cityId: string, updates: { name?: string; country?: string; is_active?: boolean }): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang om steden te wijzigen'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      // Get current data for audit log
-      const { data: currentData } = await supabase
-        .from('cities')
-        .select('*')
-        .eq('id', cityId)
-        .single();
-
-      const { data, error } = await supabase
-        .from('cities')
-        .update(updates)
-        .eq('id', cityId)
-        .select()
-        .single();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      await this.createAuditLog('UPDATE', 'cities', cityId, currentData, data);
-
-      return { data, error: null };
-    });
-  }
-
-  /**
-   * Update district (admin only)
-   */
-  async updateDistrict(districtId: string, updates: { name?: string; is_active?: boolean }): Promise<DatabaseResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang om wijken te wijzigen'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      // Get current data for audit log
-      const { data: currentData } = await supabase
-        .from('districts')
-        .select('*')
-        .eq('id', districtId)
-        .single();
-
-      const { data, error } = await supabase
-        .from('districts')
-        .update(updates)
-        .eq('id', districtId)
-        .select()
-        .single();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      await this.createAuditLog('UPDATE', 'districts', districtId, currentData, data);
-
-      return { data, error: null };
-    });
   }
 }
 
