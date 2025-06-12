@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -105,6 +104,11 @@ const HuurderDashboard = () => {
         // Clean up URL
         params.delete('payment');
         window.history.replaceState({}, '', location.pathname);
+        
+        // Force full page reload to ensure fresh state
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000); // Small delay to allow toast to show
       })();
     } else if (result === 'cancelled') {
       toast({

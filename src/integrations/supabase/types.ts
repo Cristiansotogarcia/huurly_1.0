@@ -42,6 +42,39 @@ export type Database = {
         }
         Relationships: []
       }
+      children_details: {
+        Row: {
+          child_age: number
+          child_gender: string | null
+          created_at: string | null
+          id: string
+          special_needs: boolean | null
+          special_needs_details: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          child_age: number
+          child_gender?: string | null
+          created_at?: string | null
+          id?: string
+          special_needs?: boolean | null
+          special_needs_details?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          child_age?: number
+          child_gender?: string | null
+          created_at?: string | null
+          id?: string
+          special_needs?: boolean | null
+          special_needs_details?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       document_access_requests: {
         Row: {
           access_expires_at: string | null
@@ -85,6 +118,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dutch_cities_neighborhoods: {
+        Row: {
+          city_name: string
+          created_at: string | null
+          id: string
+          is_major_city: boolean | null
+          neighborhood_name: string
+          population: number | null
+          postal_code_prefix: string | null
+          province: string
+        }
+        Insert: {
+          city_name: string
+          created_at?: string | null
+          id?: string
+          is_major_city?: boolean | null
+          neighborhood_name: string
+          population?: number | null
+          postal_code_prefix?: string | null
+          province: string
+        }
+        Update: {
+          city_name?: string
+          created_at?: string | null
+          id?: string
+          is_major_city?: boolean | null
+          neighborhood_name?: string
+          population?: number | null
+          postal_code_prefix?: string | null
+          province?: string
+        }
+        Relationships: []
       }
       household_info: {
         Row: {
@@ -266,6 +332,114 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           user_type?: string
+        }
+        Relationships: []
+      }
+      profile_analytics: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_viewed_at: string | null
+          monthly_views: number | null
+          peak_viewing_day: string | null
+          peak_viewing_hour: number | null
+          profile_completion_score: number | null
+          total_views: number | null
+          unique_viewers: number | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_views: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          monthly_views?: number | null
+          peak_viewing_day?: string | null
+          peak_viewing_hour?: number | null
+          profile_completion_score?: number | null
+          total_views?: number | null
+          unique_viewers?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_views?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          monthly_views?: number | null
+          peak_viewing_day?: string | null
+          peak_viewing_hour?: number | null
+          profile_completion_score?: number | null
+          total_views?: number | null
+          unique_viewers?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_views?: number | null
+        }
+        Relationships: []
+      }
+      profile_view_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          notification_type: string | null
+          read_at: string | null
+          user_id: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          notification_type?: string | null
+          read_at?: string | null
+          user_id?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          notification_type?: string | null
+          read_at?: string | null
+          user_id?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: []
+      }
+      profile_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          user_agent: string | null
+          viewed_at: string | null
+          viewed_profile_id: string | null
+          viewer_id: string | null
+          viewer_type: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+          viewed_profile_id?: string | null
+          viewer_id?: string | null
+          viewer_type: string
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+          viewed_profile_id?: string | null
+          viewer_id?: string | null
+          viewer_type?: string
         }
         Relationships: []
       }
@@ -541,15 +715,21 @@ export type Database = {
           age: number | null
           available_from: string | null
           bio: string | null
+          children_ages: Json | null
           contract_type: string | null
           created_at: string | null
           current_housing_situation: string | null
           date_of_birth: string | null
+          desired_amenities: string[] | null
           documents_verified: boolean | null
           employer: string | null
           employment_status: string | null
+          family_composition: string | null
           first_name: string | null
+          furnished_preference: string | null
           guarantor_available: boolean | null
+          has_children: boolean | null
+          has_partner: boolean | null
           has_pets: boolean | null
           household_composition: string | null
           household_size: number | null
@@ -557,17 +737,26 @@ export type Database = {
           id: string
           landlord_interest: number | null
           last_name: string | null
+          marital_status: string | null
           max_budget: number | null
+          max_commute_time: number | null
           max_rent: number | null
           min_budget: number | null
           monthly_income: number | null
           motivation: string | null
           move_in_flexibility: string | null
+          nationality: string | null
+          number_of_children: number | null
+          partner_employment_status: string | null
+          partner_monthly_income: number | null
+          partner_name: string | null
+          partner_profession: string | null
           pet_details: string | null
           pet_policy_preference: string | null
           phone: string | null
           preferred_bedrooms: number | null
           preferred_city: string | null
+          preferred_districts: string[] | null
           preferred_location: string | null
           preferred_property_type: string | null
           preferred_radius: number | null
@@ -577,8 +766,12 @@ export type Database = {
           profile_picture_url: string | null
           profile_views: number | null
           rental_history: string | null
+          sex: string | null
           smokes: boolean | null
+          smoking_details: string | null
           smoking_policy_preference: string | null
+          total_household_income: number | null
+          transportation_preference: string | null
           updated_at: string | null
           user_id: string | null
           work_contract_type: string | null
@@ -587,15 +780,21 @@ export type Database = {
           age?: number | null
           available_from?: string | null
           bio?: string | null
+          children_ages?: Json | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
+          desired_amenities?: string[] | null
           documents_verified?: boolean | null
           employer?: string | null
           employment_status?: string | null
+          family_composition?: string | null
           first_name?: string | null
+          furnished_preference?: string | null
           guarantor_available?: boolean | null
+          has_children?: boolean | null
+          has_partner?: boolean | null
           has_pets?: boolean | null
           household_composition?: string | null
           household_size?: number | null
@@ -603,17 +802,26 @@ export type Database = {
           id?: string
           landlord_interest?: number | null
           last_name?: string | null
+          marital_status?: string | null
           max_budget?: number | null
+          max_commute_time?: number | null
           max_rent?: number | null
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
           move_in_flexibility?: string | null
+          nationality?: string | null
+          number_of_children?: number | null
+          partner_employment_status?: string | null
+          partner_monthly_income?: number | null
+          partner_name?: string | null
+          partner_profession?: string | null
           pet_details?: string | null
           pet_policy_preference?: string | null
           phone?: string | null
           preferred_bedrooms?: number | null
           preferred_city?: string | null
+          preferred_districts?: string[] | null
           preferred_location?: string | null
           preferred_property_type?: string | null
           preferred_radius?: number | null
@@ -623,8 +831,12 @@ export type Database = {
           profile_picture_url?: string | null
           profile_views?: number | null
           rental_history?: string | null
+          sex?: string | null
           smokes?: boolean | null
+          smoking_details?: string | null
           smoking_policy_preference?: string | null
+          total_household_income?: number | null
+          transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
@@ -633,15 +845,21 @@ export type Database = {
           age?: number | null
           available_from?: string | null
           bio?: string | null
+          children_ages?: Json | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
+          desired_amenities?: string[] | null
           documents_verified?: boolean | null
           employer?: string | null
           employment_status?: string | null
+          family_composition?: string | null
           first_name?: string | null
+          furnished_preference?: string | null
           guarantor_available?: boolean | null
+          has_children?: boolean | null
+          has_partner?: boolean | null
           has_pets?: boolean | null
           household_composition?: string | null
           household_size?: number | null
@@ -649,17 +867,26 @@ export type Database = {
           id?: string
           landlord_interest?: number | null
           last_name?: string | null
+          marital_status?: string | null
           max_budget?: number | null
+          max_commute_time?: number | null
           max_rent?: number | null
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
           move_in_flexibility?: string | null
+          nationality?: string | null
+          number_of_children?: number | null
+          partner_employment_status?: string | null
+          partner_monthly_income?: number | null
+          partner_name?: string | null
+          partner_profession?: string | null
           pet_details?: string | null
           pet_policy_preference?: string | null
           phone?: string | null
           preferred_bedrooms?: number | null
           preferred_city?: string | null
+          preferred_districts?: string[] | null
           preferred_location?: string | null
           preferred_property_type?: string | null
           preferred_radius?: number | null
@@ -669,13 +896,25 @@ export type Database = {
           profile_picture_url?: string | null
           profile_views?: number | null
           rental_history?: string | null
+          sex?: string | null
           smokes?: boolean | null
+          smoking_details?: string | null
           smoking_policy_preference?: string | null
+          total_household_income?: number | null
+          transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenant_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_documents: {
         Row: {
