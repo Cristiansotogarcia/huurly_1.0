@@ -53,6 +53,7 @@ const HuurderDashboard = () => {
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [paymentProcessed, setPaymentProcessed] = useState(false);
   const [stats, setStats] = useState({
     profileViews: 0,
     invitations: 0,
@@ -75,11 +76,15 @@ const HuurderDashboard = () => {
     }
   }, [user]);
 
-  // Check payment result in URL
+  // Check payment result in URL - FIXED to prevent infinite loop
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const result = params.get('payment');
-    if (result === 'success') {
+    
+    // Only process payment if we haven't already processed it
+    if (result === 'success' && !paymentProcessed) {
+      setPaymentProcessed(true); // Prevent re-processing
+      
       (async () => {
         // Force close payment modal immediately
         setShowPaymentModal(false);
@@ -91,38 +96,40 @@ const HuurderDashboard = () => {
           localStorage.setItem('hasShownPaymentSuccessPopup', 'true');
         }
         
-        // Refresh user data
-        const refreshed = await authService.getCurrentUser();
-        if (refreshed) {
-          login(refreshed);
-          toast({
-            title: 'Betaling succesvol!',
-            description: 'Je account is nu actief. Welkom bij Huurly!',
-          });
-        } else {
-          // Attempt to refresh the session if no user is returned
-          await useAuthStore.getState().refreshSession?.();
+        // Refresh user data without reloading the page
+        try {
+          const refreshed = await authService.getCurrentUser();
+          if (refreshed) {
+            login(refreshed);
+            toast({
+              title: 'Betaling succesvol!',
+              description: 'Je account is nu actief. Welkom bij Huurly!',
+            });
+          } else {
+            // Attempt to refresh the session if no user is returned
+            await useAuthStore.getState().refreshSession?.();
+          }
+        } catch (error) {
+          console.error('Error refreshing user data after payment:', error);
         }
         
-        // Clean up URL
+        // Clean up URL without reloading
         params.delete('payment');
-        window.history.replaceState({}, '', location.pathname);
-        
-        // Force full page reload to ensure fresh state
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000); // Small delay to allow toast to show
+        const newUrl = `${location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+        window.history.replaceState({}, '', newUrl);
       })();
-    } else if (result === 'cancelled') {
+    } else if (result === 'cancelled' && !paymentProcessed) {
+      setPaymentProcessed(true);
       toast({
         title: 'Betaling geannuleerd',
         description: 'De betaling is geannuleerd.',
         variant: 'destructive',
       });
       params.delete('payment');
-      window.history.replaceState({}, '', location.pathname);
+      const newUrl = `${location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
     }
-  }, [location.search, login, toast, location.pathname]);
+  }, [location.search, login, toast, location.pathname, paymentProcessed]);
 
   // Load profile, documents, and stats
   useEffect(() => {
