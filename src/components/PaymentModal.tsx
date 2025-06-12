@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,9 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthStore } from "@/store/authStore";
-import { paymentService } from "@/services/PaymentService";
+import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -23,27 +20,20 @@ export const PaymentModal = ({
   onClose,
   persistent = false,
 }: PaymentModalProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuthStore();
+  // Pricing information for huurders
+  const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+  const pricingInfo = {
+    displayPrice: formatPrice(plan.price),
+    actualPrice: formatPrice(plan.priceWithTax),
+    taxAmount: formatPrice(plan.priceWithTax - plan.price),
+    taxRate: `${(plan.taxRate * 100).toFixed(0)}%`,
+    interval: plan.interval,
+    features: plan.features,
+  };
 
-  // Get actual pricing information
-  const pricingInfo = paymentService.getPricingInfo('huurder');
-
-  const handlePayment = async () => {
-    if (!user) return;
-    setIsLoading(true);
-
-    const { error } = await paymentService.createCheckoutSession(user.id);
-
-    if (error) {
-      toast({
-        title: "Betaling mislukt",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+  const handlePayment = () => {
+    window.location.href =
+      "https://buy.stripe.com/test_14A4gz3NMaRW2vRfHm9MY00?locale=nl";
   };
 
   const Content = persistent ? PersistentDialogContent : DialogContent;
@@ -91,9 +81,8 @@ export const PaymentModal = ({
             <Button
               onClick={handlePayment}
               className="w-full bg-dutch-blue hover:bg-blue-700"
-              disabled={isLoading}
             >
-              {isLoading ? "Bezig met verwerken..." : "Abonnement afsluiten"}
+              Abonnement afsluiten
             </Button>
           </div>
 
