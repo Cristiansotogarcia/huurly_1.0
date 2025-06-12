@@ -24,7 +24,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    role: '' as UserRole,
+    role: 'huurder' as UserRole,
   });
   
   const { signUp } = useAuth();
@@ -33,7 +33,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (step < 3) {
+    if (step < 2) {
       setStep(step + 1);
       return;
     }
@@ -89,7 +89,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registreren - Stap {step} van 3</DialogTitle>
+          <DialogTitle>Registreren - Stap {step} van 2</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,21 +151,6 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
             </>
           )}
 
-          {step === 3 && (
-            <div>
-              <Label htmlFor="role">Ik ben een...</Label>
-              <Select onValueChange={(value: UserRole) => updateFormData('role', value)} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer je rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="huurder">Huurder</SelectItem>
-                  <SelectItem value="verhuurder">Verhuurder</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="flex justify-between">
             {step > 1 && (
               <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
@@ -178,7 +163,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Registreren...
                 </>
-              ) : step === 3 ? (
+              ) : step === 2 ? (
                 'Registreren'
               ) : (
                 'Volgende'

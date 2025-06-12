@@ -16,7 +16,7 @@ import { userService, AuthenticationError } from '@/services/UserService';
 import { 
   User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, 
   Briefcase, Heart, Users, Baby, Camera, Clock, Car, Wifi, Bath, 
-  TreePine, ParkingCircle, WashingMachine, Utensils 
+  TreePine, ParkingCircle, WashingMachine, Utensils, Shield, Calendar 
 } from 'lucide-react';
 
 interface EnhancedProfileCreationModalProps {
@@ -45,13 +45,20 @@ interface EnhancedProfileData {
   numberOfChildren: number;
   childrenAges: number[];
   
-  // Step 3: Work & Employment
+  // Step 3: Work & Employment + Guarantor Information
   profession: string;
   employer: string;
   employmentStatus: string;
   workContractType: string;
   monthlyIncome: number;
   housingAllowanceEligible: boolean;
+  // Priority 1: Guarantor Information
+  guarantorAvailable: boolean;
+  guarantorName: string;
+  guarantorPhone: string;
+  guarantorIncome: number;
+  guarantorRelationship: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders' | '';
+  incomeProofAvailable: boolean;
   
   // Step 4: Partner Information
   hasPartner: boolean;
@@ -60,11 +67,15 @@ interface EnhancedProfileData {
   partnerMonthlyIncome: number;
   partnerEmploymentStatus: string;
   
-  // Step 5: Location Preferences
+  // Step 5: Location Preferences + Timing Information
   city: string;
   preferredDistricts: string[];
   maxCommuteTime: number;
   transportationPreference: string;
+  // Priority 2: Timing Information
+  moveInDatePreferred: string;
+  moveInDateEarliest: string;
+  availabilityFlexible: boolean;
   
   // Step 6: Housing & Lifestyle Preferences
   minBudget: number;
@@ -105,13 +116,19 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     numberOfChildren: 0,
     childrenAges: [],
     
-    // Step 3: Work & Employment
+    // Step 3: Work & Employment + Guarantor Information
     profession: '',
     employer: '',
     employmentStatus: 'employed',
     workContractType: 'permanent',
     monthlyIncome: 0,
     housingAllowanceEligible: false,
+    guarantorAvailable: false,
+    guarantorName: '',
+    guarantorPhone: '',
+    guarantorIncome: 0,
+    guarantorRelationship: '',
+    incomeProofAvailable: false,
     
     // Step 4: Partner Information
     hasPartner: false,
@@ -120,11 +137,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     partnerMonthlyIncome: 0,
     partnerEmploymentStatus: 'employed',
     
-    // Step 5: Location Preferences
+    // Step 5: Location Preferences + Timing Information
     city: 'Amsterdam',
     preferredDistricts: [],
     maxCommuteTime: 30,
     transportationPreference: 'public_transport',
+    moveInDatePreferred: '',
+    moveInDateEarliest: '',
+    availabilityFlexible: false,
     
     // Step 6: Housing & Lifestyle Preferences
     minBudget: 1000,
@@ -207,6 +227,19 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         furnishedPreference: profileData.furnishedPreference,
         desiredAmenities: profileData.desiredAmenities,
         profilePictureUrl: profileData.profilePictureUrl,
+        
+        // Priority 1: Guarantor Information
+        guarantorAvailable: profileData.guarantorAvailable,
+        guarantorName: profileData.guarantorName,
+        guarantorPhone: profileData.guarantorPhone,
+        guarantorIncome: profileData.guarantorIncome,
+        guarantorRelationship: profileData.guarantorRelationship,
+        incomeProofAvailable: profileData.incomeProofAvailable,
+        
+        // Priority 2: Timing Information
+        moveInDatePreferred: profileData.moveInDatePreferred,
+        moveInDateEarliest: profileData.moveInDateEarliest,
+        availabilityFlexible: profileData.availabilityFlexible,
       } as any;
 
       // Use the appropriate method based on edit mode
@@ -232,14 +265,12 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
       console.error('Profile submission error:', error);
       
       if (error instanceof AuthenticationError) {
-        // Handle authentication errors specifically
         toast({
           title: "Sessie verlopen",
           description: "Je sessie is verlopen. Je wordt automatisch uitgelogd. Log opnieuw in om door te gaan.",
           variant: "destructive"
         });
         
-        // Close the modal and let the auth system handle the logout
         onOpenChange(false);
         return;
       }
@@ -292,7 +323,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
   // Load existing profile data when in edit mode
   useEffect(() => {
     const loadExistingProfile = async () => {
-      if (!editMode || !user?.id) return;
+      if (!editMode || !user?.id || !open) return;
       
       setIsLoadingProfile(true);
       try {
@@ -300,9 +331,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         
         if (result.success && result.data) {
           const existingData = result.data;
-          
-          // Map database fields to form fields with safe property access
-          const data = existingData as any; // Use any to avoid TypeScript errors for new fields
+          const data = existingData as any;
           
           setProfileData({
             firstName: existingData.first_name || '',
@@ -324,6 +353,12 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             workContractType: existingData.work_contract_type || 'permanent',
             monthlyIncome: existingData.monthly_income || 0,
             housingAllowanceEligible: existingData.housing_allowance_eligible || false,
+            guarantorAvailable: data.guarantor_available || false,
+            guarantorName: data.guarantor_name || '',
+            guarantorPhone: data.guarantor_phone || '',
+            guarantorIncome: data.guarantor_income || 0,
+            guarantorRelationship: data.guarantor_relationship || '',
+            incomeProofAvailable: data.income_proof_available || false,
             
             hasPartner: data.has_partner || false,
             partnerName: data.partner_name || '',
@@ -335,6 +370,9 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             preferredDistricts: data.preferred_districts || [],
             maxCommuteTime: data.max_commute_time || 30,
             transportationPreference: data.transportation_preference || 'public_transport',
+            moveInDatePreferred: data.move_in_date_preferred || '',
+            moveInDateEarliest: data.move_in_date_earliest || '',
+            availabilityFlexible: data.availability_flexible || false,
             
             minBudget: existingData.min_budget || 1000,
             maxBudget: existingData.max_budget || 2000,
@@ -349,12 +387,11 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             
             bio: existingData.bio || '',
             motivation: existingData.motivation || '',
-            profilePictureUrl: existingData.profile_picture_url || '',
+            profilePictureUrl: data.profile_picture_url || '',
           });
           
-          // Set image preview if profile picture exists
-          if (existingData.profile_picture_url) {
-            setImagePreview(existingData.profile_picture_url);
+          if (data.profile_picture_url) {
+            setImagePreview(data.profile_picture_url);
           }
         }
       } catch (error) {
@@ -370,11 +407,10 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     };
 
     loadExistingProfile();
-  }, [editMode, user?.id, toast]);
+  }, [editMode, user?.id, toast, open]);
 
   // Initialize Dutch cities and neighborhoods data
   useEffect(() => {
-    // Use comprehensive Dutch cities data from our database
     const dutchCitiesData = {
       'Amsterdam': ['Centrum', 'Jordaan', 'Oud-Zuid', 'Oud-West', 'Noord', 'Oost', 'West', 'Zuid', 'Zuidoost', 'De Pijp', 'Vondelpark', 'Museumkwartier'],
       'Rotterdam': ['Centrum', 'Noord', 'Delfshaven', 'Overschie', 'Hillegersberg-Schiebroek', 'Kralingen-Crooswijk', 'Feijenoord', 'IJsselmonde', 'Pernis', 'Prins Alexander'],
@@ -412,7 +448,6 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       toast({
@@ -423,7 +458,6 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Bestand te groot",
@@ -436,11 +470,9 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     setIsUploadingImage(true);
 
     try {
-      // Create file path with user ID
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/profile-picture.${fileExt}`;
 
-      // Upload to Supabase storage
       const { data, error } = await supabase.storage
         .from('profile-pictures')
         .upload(fileName, file, {
@@ -452,16 +484,13 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         throw error;
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profile-pictures')
         .getPublicUrl(fileName);
 
-      // Update profile data
       updateProfileData('profilePictureUrl', publicUrl);
       updateProfileData('profilePicture', file);
 
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
 
@@ -486,6 +515,56 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     updateProfileData('profilePictureUrl', '');
     updateProfileData('profilePicture', undefined);
     setImagePreview(null);
+  };
+
+  // Dutch date formatting functions
+  const formatDateToDutch = (isoDate: string) => {
+    if (!isoDate) return '';
+    const date = new Date(isoDate);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleDutchDateChange = (dutchDate: string) => {
+    // Remove any non-digit characters except /
+    let cleaned = dutchDate.replace(/[^\d/]/g, '');
+    
+    // Auto-format as user types
+    if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
+      cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
+    }
+    if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
+      cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
+    }
+    
+    // Limit to 10 characters (dd/mm/yyyy)
+    cleaned = cleaned.substring(0, 10);
+    
+    // Validate and convert to ISO format for storage
+    if (cleaned.length === 10) {
+      const parts = cleaned.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+        
+        // Basic validation
+        if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
+          // Convert to ISO format (yyyy-mm-dd) for database storage
+          const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+          updateProfileData('dateOfBirth', isoDate);
+          return;
+        }
+      }
+    }
+    
+    // If not a complete valid date, just store the partial input for display
+    // but don't update the actual dateOfBirth field until it's valid
+    if (cleaned !== dutchDate) {
+      // This is just for display formatting, we'll handle the actual update above
+    }
   };
 
   const amenitiesOptions = [
@@ -553,13 +632,17 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             </div>
             
             <div>
-              <Label htmlFor="dateOfBirth">Geboortedatum *</Label>
+              <Label htmlFor="dateOfBirth">Geboortedatum * (dd/mm/yyyy)</Label>
               <Input
                 id="dateOfBirth"
-                type="date"
-                value={profileData.dateOfBirth}
-                onChange={(e) => updateProfileData('dateOfBirth', e.target.value)}
+                type="text"
+                value={profileData.dateOfBirth ? formatDateToDutch(profileData.dateOfBirth) : ''}
+                onChange={(e) => handleDutchDateChange(e.target.value)}
+                placeholder="dd/mm/yyyy"
+                maxLength={10}
+                pattern="\d{2}/\d{2}/\d{4}"
               />
+              <p className="text-xs text-gray-500 mt-1">Nederlandse datumnotatie: dag/maand/jaar (bijvoorbeeld: 15/03/1990)</p>
             </div>
             
             <div>
@@ -667,63 +750,46 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
               <Checkbox
                 id="hasChildren"
                 checked={profileData.hasChildren}
-                onCheckedChange={(checked) => {
-                  updateProfileData('hasChildren', checked);
-                  if (!checked) {
-                    updateProfileData('numberOfChildren', 0);
-                    updateProfileData('childrenAges', []);
-                  }
-                }}
+                onCheckedChange={(checked) => updateProfileData('hasChildren', checked)}
               />
               <Label htmlFor="hasChildren">Ik heb kinderen</Label>
             </div>
             
             {profileData.hasChildren && (
-              <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+              <>
                 <div>
-                  <Label htmlFor="numberOfChildren">Aantal kinderen</Label>
-                  <Select 
-                    value={profileData.numberOfChildren.toString()} 
-                    onValueChange={(value) => {
-                      const num = parseInt(value);
-                      updateProfileData('numberOfChildren', num);
-                      updateProfileData('childrenAges', Array(num).fill(0));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1,2,3,4,5].map(num => (
-                        <SelectItem key={num} value={num.toString()}>{num} {num === 1 ? 'kind' : 'kinderen'}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="numberOfChildren">Aantal kinderen *</Label>
+                  <Input
+                    id="numberOfChildren"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={profileData.numberOfChildren}
+                    onChange={(e) => updateProfileData('numberOfChildren', parseInt(e.target.value) || 0)}
+                  />
                 </div>
                 
-                {profileData.numberOfChildren > 0 && (
-                  <div>
-                    <Label>Leeftijden van de kinderen</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {Array(profileData.numberOfChildren).fill(0).map((_, index) => (
-                        <Input
-                          key={index}
-                          type="number"
-                          placeholder={`Kind ${index + 1} leeftijd`}
-                          value={profileData.childrenAges[index] || ''}
-                          onChange={(e) => {
-                            const newAges = [...profileData.childrenAges];
-                            newAges[index] = parseInt(e.target.value) || 0;
-                            updateProfileData('childrenAges', newAges);
-                          }}
-                          min="0"
-                          max="25"
-                        />
-                      ))}
-                    </div>
+                <div>
+                  <Label>Leeftijden van kinderen *</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {Array.from({ length: profileData.numberOfChildren }, (_, index) => (
+                      <Input
+                        key={index}
+                        type="number"
+                        min="0"
+                        max="25"
+                        placeholder={`Kind ${index + 1}`}
+                        value={profileData.childrenAges[index] || ''}
+                        onChange={(e) => {
+                          const newAges = [...profileData.childrenAges];
+                          newAges[index] = parseInt(e.target.value) || 0;
+                          updateProfileData('childrenAges', newAges);
+                        }}
+                      />
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              </>
             )}
           </div>
         );
@@ -733,28 +799,29 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
           <div className="space-y-4">
             <div className="text-center mb-6">
               <Briefcase className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold">Werk & Inkomen</h3>
-              <p className="text-gray-600">Je werkgerelateerde informatie</p>
+              <h3 className="text-lg font-semibold">Werk & Inkomen + Borg</h3>
+              <p className="text-gray-600">Informatie over je werk en financiële zekerheid</p>
             </div>
             
-            <div>
-              <Label htmlFor="profession">Beroep *</Label>
-              <Input
-                id="profession"
-                value={profileData.profession}
-                onChange={(e) => updateProfileData('profession', e.target.value)}
-                placeholder="Software Developer"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="employer">Werkgever</Label>
-              <Input
-                id="employer"
-                value={profileData.employer}
-                onChange={(e) => updateProfileData('employer', e.target.value)}
-                placeholder="TechCorp B.V."
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="profession">Beroep *</Label>
+                <Input
+                  id="profession"
+                  value={profileData.profession}
+                  onChange={(e) => updateProfileData('profession', e.target.value)}
+                  placeholder="Software Developer"
+                />
+              </div>
+              <div>
+                <Label htmlFor="employer">Werkgever</Label>
+                <Input
+                  id="employer"
+                  value={profileData.employer}
+                  onChange={(e) => updateProfileData('employer', e.target.value)}
+                  placeholder="Tech Company B.V."
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -767,15 +834,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                   <SelectContent>
                     <SelectItem value="employed">In dienst</SelectItem>
                     <SelectItem value="self_employed">Zelfstandig</SelectItem>
-                    <SelectItem value="freelance">Freelancer</SelectItem>
+                    <SelectItem value="freelancer">Freelancer</SelectItem>
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="unemployed">Werkloos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
               <div>
-                <Label htmlFor="workContractType">Type contract</Label>
+                <Label htmlFor="workContractType">Contract type</Label>
                 <Select value={profileData.workContractType} onValueChange={(value) => updateProfileData('workContractType', value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -791,13 +857,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             </div>
             
             <div>
-              <Label htmlFor="monthlyIncome">Jouw maandelijks bruto inkomen * (€)</Label>
+              <Label htmlFor="monthlyIncome">Maandelijks bruto inkomen * (€)</Label>
               <Input
                 id="monthlyIncome"
                 type="number"
-                value={profileData.monthlyIncome || ''}
+                min="0"
+                value={profileData.monthlyIncome}
                 onChange={(e) => updateProfileData('monthlyIncome', parseInt(e.target.value) || 0)}
-                placeholder="4500"
+                placeholder="3500"
               />
             </div>
             
@@ -808,6 +875,86 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                 onCheckedChange={(checked) => updateProfileData('housingAllowanceEligible', checked)}
               />
               <Label htmlFor="housingAllowanceEligible">Ik kom in aanmerking voor huurtoeslag</Label>
+            </div>
+            
+            {/* Guarantor Information */}
+            <div className="border-t pt-4 mt-6">
+              <h4 className="text-lg font-semibold mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2" />
+                Borg/Garantstelling
+              </h4>
+              
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="guarantorAvailable"
+                  checked={profileData.guarantorAvailable}
+                  onCheckedChange={(checked) => updateProfileData('guarantorAvailable', checked)}
+                />
+                <Label htmlFor="guarantorAvailable">Ik heb een borg/garantsteller beschikbaar</Label>
+              </div>
+              
+              {profileData.guarantorAvailable && (
+                <div className="space-y-4 pl-6 border-l-2 border-green-200">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="guarantorName">Naam borg/garantsteller</Label>
+                      <Input
+                        id="guarantorName"
+                        value={profileData.guarantorName}
+                        onChange={(e) => updateProfileData('guarantorName', e.target.value)}
+                        placeholder="Jan Bakker"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guarantorPhone">Telefoonnummer borg</Label>
+                      <Input
+                        id="guarantorPhone"
+                        value={profileData.guarantorPhone}
+                        onChange={(e) => updateProfileData('guarantorPhone', e.target.value)}
+                        placeholder="+31 6 12345678"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="guarantorIncome">Maandelijks inkomen borg (€)</Label>
+                      <Input
+                        id="guarantorIncome"
+                        type="number"
+                        min="0"
+                        value={profileData.guarantorIncome}
+                        onChange={(e) => updateProfileData('guarantorIncome', parseInt(e.target.value) || 0)}
+                        placeholder="4000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guarantorRelationship">Relatie tot borg</Label>
+                      <Select value={profileData.guarantorRelationship} onValueChange={(value: any) => updateProfileData('guarantorRelationship', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecteer relatie" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ouder">Ouder</SelectItem>
+                          <SelectItem value="familie">Familie</SelectItem>
+                          <SelectItem value="vriend">Vriend/Vriendin</SelectItem>
+                          <SelectItem value="werkgever">Werkgever</SelectItem>
+                          <SelectItem value="anders">Anders</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="incomeProofAvailable"
+                      checked={profileData.incomeProofAvailable}
+                      onCheckedChange={(checked) => updateProfileData('incomeProofAvailable', checked)}
+                    />
+                    <Label htmlFor="incomeProofAvailable">Ik kan inkomensbewijzen overleggen</Label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -825,23 +972,15 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
               <Checkbox
                 id="hasPartner"
                 checked={profileData.hasPartner}
-                onCheckedChange={(checked) => {
-                  updateProfileData('hasPartner', checked);
-                  if (!checked) {
-                    updateProfileData('partnerName', '');
-                    updateProfileData('partnerProfession', '');
-                    updateProfileData('partnerMonthlyIncome', 0);
-                    updateProfileData('partnerEmploymentStatus', 'employed');
-                  }
-                }}
+                onCheckedChange={(checked) => updateProfileData('hasPartner', checked)}
               />
-              <Label htmlFor="hasPartner">Ik heb een partner die mee gaat wonen</Label>
+              <Label htmlFor="hasPartner">Ik heb een partner die mee gaat verhuizen</Label>
             </div>
             
             {profileData.hasPartner && (
-              <div className="space-y-4 p-4 bg-pink-50 rounded-lg">
+              <div className="space-y-4 pl-6 border-l-2 border-pink-200">
                 <div>
-                  <Label htmlFor="partnerName">Naam van partner</Label>
+                  <Label htmlFor="partnerName">Naam partner</Label>
                   <Input
                     id="partnerName"
                     value={profileData.partnerName}
@@ -850,17 +989,16 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="partnerProfession">Beroep van partner</Label>
-                  <Input
-                    id="partnerProfession"
-                    value={profileData.partnerProfession}
-                    onChange={(e) => updateProfileData('partnerProfession', e.target.value)}
-                    placeholder="Grafisch ontwerper"
-                  />
-                </div>
-                
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="partnerProfession">Beroep partner</Label>
+                    <Input
+                      id="partnerProfession"
+                      value={profileData.partnerProfession}
+                      onChange={(e) => updateProfileData('partnerProfession', e.target.value)}
+                      placeholder="Grafisch ontwerper"
+                    />
+                  </div>
                   <div>
                     <Label htmlFor="partnerEmploymentStatus">Dienstverband partner</Label>
                     <Select value={profileData.partnerEmploymentStatus} onValueChange={(value) => updateProfileData('partnerEmploymentStatus', value)}>
@@ -870,41 +1008,31 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                       <SelectContent>
                         <SelectItem value="employed">In dienst</SelectItem>
                         <SelectItem value="self_employed">Zelfstandig</SelectItem>
-                        <SelectItem value="freelance">Freelancer</SelectItem>
+                        <SelectItem value="freelancer">Freelancer</SelectItem>
                         <SelectItem value="student">Student</SelectItem>
                         <SelectItem value="unemployed">Werkloos</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="partnerMonthlyIncome">Maandelijks bruto inkomen partner (€)</Label>
-                    <Input
-                      id="partnerMonthlyIncome"
-                      type="number"
-                      value={profileData.partnerMonthlyIncome || ''}
-                      onChange={(e) => updateProfileData('partnerMonthlyIncome', parseInt(e.target.value) || 0)}
-                      placeholder="3200"
-                    />
-                  </div>
                 </div>
                 
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-green-800">
-                    Totaal huishoudinkomen: €{calculateTotalHouseholdIncome().toLocaleString()}/maand
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    Dit wordt gebruikt voor inkomensfiltering door verhuurders
+                <div>
+                  <Label htmlFor="partnerMonthlyIncome">Maandelijks bruto inkomen partner (€)</Label>
+                  <Input
+                    id="partnerMonthlyIncome"
+                    type="number"
+                    min="0"
+                    value={profileData.partnerMonthlyIncome}
+                    onChange={(e) => updateProfileData('partnerMonthlyIncome', parseInt(e.target.value) || 0)}
+                    placeholder="2800"
+                  />
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Totaal huishoudinkomen:</strong> €{calculateTotalHouseholdIncome().toLocaleString('nl-NL')} per maand
                   </p>
                 </div>
-              </div>
-            )}
-            
-            {!profileData.hasPartner && (
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  Jouw inkomen: €{profileData.monthlyIncome.toLocaleString()}/maand
-                </p>
               </div>
             )}
           </div>
@@ -914,17 +1042,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <MapPin className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-              <h3 className="text-lg font-semibold">Locatie Voorkeuren</h3>
-              <p className="text-gray-600">Waar wil je graag wonen?</p>
+              <MapPin className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+              <h3 className="text-lg font-semibold">Locatie & Timing</h3>
+              <p className="text-gray-600">Waar wil je wonen en wanneer?</p>
             </div>
             
             <div>
               <Label htmlFor="city">Gewenste stad *</Label>
-              <Select value={profileData.city} onValueChange={(value) => {
-                updateProfileData('city', value);
-                updateProfileData('preferredDistricts', []);
-              }}>
+              <Select value={profileData.city} onValueChange={(value) => updateProfileData('city', value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -938,8 +1063,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             
             <div>
               <Label>Gewenste wijken/buurten *</Label>
-              <p className="text-sm text-gray-600 mb-2">Selecteer minimaal 1 wijk</p>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-2 mt-2 max-h-40 overflow-y-auto">
                 {getDistrictsForCity(profileData.city).map((district) => (
                   <div key={district} className="flex items-center space-x-2">
                     <Checkbox
@@ -961,16 +1085,16 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="maxCommuteTime">Max. reistijd naar werk (minuten)</Label>
+                <Label htmlFor="maxCommuteTime">Max reistijd naar werk (minuten)</Label>
                 <Input
                   id="maxCommuteTime"
                   type="number"
-                  value={profileData.maxCommuteTime || ''}
+                  min="5"
+                  max="120"
+                  value={profileData.maxCommuteTime}
                   onChange={(e) => updateProfileData('maxCommuteTime', parseInt(e.target.value) || 30)}
-                  placeholder="30"
                 />
               </div>
-              
               <div>
                 <Label htmlFor="transportationPreference">Vervoer voorkeur</Label>
                 <Select value={profileData.transportationPreference} onValueChange={(value) => updateProfileData('transportationPreference', value)}>
@@ -987,6 +1111,76 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                 </Select>
               </div>
             </div>
+            
+            {/* Timing Information */}
+            <div className="border-t pt-4 mt-6">
+              <h4 className="text-lg font-semibold mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                Timing & Beschikbaarheid
+              </h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="moveInDatePreferred">Gewenste intrekdatum (dd/mm/yyyy)</Label>
+                  <Input
+                    id="moveInDatePreferred"
+                    type="text"
+                    value={profileData.moveInDatePreferred ? formatDateToDutch(profileData.moveInDatePreferred) : ''}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^\d/]/g, '');
+                      if (cleaned.length === 10) {
+                        const parts = cleaned.split('/');
+                        if (parts.length === 3) {
+                          const day = parseInt(parts[0]);
+                          const month = parseInt(parts[1]);
+                          const year = parseInt(parts[2]);
+                          if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2024) {
+                            const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                            updateProfileData('moveInDatePreferred', isoDate);
+                          }
+                        }
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
+                    maxLength={10}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="moveInDateEarliest">Vroegst mogelijke intrekdatum (dd/mm/yyyy)</Label>
+                  <Input
+                    id="moveInDateEarliest"
+                    type="text"
+                    value={profileData.moveInDateEarliest ? formatDateToDutch(profileData.moveInDateEarliest) : ''}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^\d/]/g, '');
+                      if (cleaned.length === 10) {
+                        const parts = cleaned.split('/');
+                        if (parts.length === 3) {
+                          const day = parseInt(parts[0]);
+                          const month = parseInt(parts[1]);
+                          const year = parseInt(parts[2]);
+                          if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2024) {
+                            const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                            updateProfileData('moveInDateEarliest', isoDate);
+                          }
+                        }
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox
+                  id="availabilityFlexible"
+                  checked={profileData.availabilityFlexible}
+                  onCheckedChange={(checked) => updateProfileData('availabilityFlexible', checked)}
+                />
+                <Label htmlFor="availabilityFlexible">Mijn timing is flexibel</Label>
+              </div>
+            </div>
           </div>
         );
 
@@ -994,30 +1188,30 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <Home className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-lg font-semibold">Woning & Lifestyle Voorkeuren</h3>
+              <Home className="w-12 h-12 mx-auto mb-4 text-purple-600" />
+              <h3 className="text-lg font-semibold">Woning & Lifestyle</h3>
               <p className="text-gray-600">Wat voor woning zoek je?</p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="minBudget">Minimum budget * (€/maand)</Label>
+                <Label htmlFor="minBudget">Minimum budget (€/maand) *</Label>
                 <Input
                   id="minBudget"
                   type="number"
-                  value={profileData.minBudget || ''}
-                  onChange={(e) => updateProfileData('minBudget', parseInt(e.target.value) || 0)}
-                  placeholder="1000"
+                  min="500"
+                  value={profileData.minBudget}
+                  onChange={(e) => updateProfileData('minBudget', parseInt(e.target.value) || 1000)}
                 />
               </div>
               <div>
-                <Label htmlFor="maxBudget">Maximum budget * (€/maand)</Label>
+                <Label htmlFor="maxBudget">Maximum budget (€/maand) *</Label>
                 <Input
                   id="maxBudget"
                   type="number"
-                  value={profileData.maxBudget || ''}
-                  onChange={(e) => updateProfileData('maxBudget', parseInt(e.target.value) || 0)}
-                  placeholder="2000"
+                  min="500"
+                  value={profileData.maxBudget}
+                  onChange={(e) => updateProfileData('maxBudget', parseInt(e.target.value) || 2000)}
                 />
               </div>
             </div>
@@ -1037,7 +1231,6 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                   </SelectContent>
                 </Select>
               </div>
-              
               <div>
                 <Label htmlFor="propertyType">Type woning</Label>
                 <Select value={profileData.propertyType} onValueChange={(value) => updateProfileData('propertyType', value)}>
@@ -1049,13 +1242,14 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
                     <SelectItem value="Studio">Studio</SelectItem>
                     <SelectItem value="Huis">Huis</SelectItem>
                     <SelectItem value="Kamer">Kamer</SelectItem>
+                    <SelectItem value="Loft">Loft</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div>
-              <Label htmlFor="furnishedPreference">Gemeubileerd voorkeur</Label>
+              <Label htmlFor="furnishedPreference">Inrichting voorkeur</Label>
               <Select value={profileData.furnishedPreference} onValueChange={(value: any) => updateProfileData('furnishedPreference', value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -1070,7 +1264,7 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
             
             <div>
               <Label>Gewenste voorzieningen</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-3 mt-2">
                 {amenitiesOptions.map((amenity) => (
                   <div key={amenity.id} className="flex items-center space-x-2">
                     <Checkbox
@@ -1093,63 +1287,43 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="hasPets"
-                  checked={profileData.hasPets}
-                  onCheckedChange={(checked) => {
-                    updateProfileData('hasPets', checked);
-                    if (!checked) {
-                      updateProfileData('petDetails', '');
-                    }
-                  }}
-                />
-                <Label htmlFor="hasPets">Ik heb huisdieren</Label>
-              </div>
-              
-              {profileData.hasPets && (
-                <div>
-                  <Label htmlFor="petDetails">Details over huisdieren</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="hasPets"
+                    checked={profileData.hasPets}
+                    onCheckedChange={(checked) => updateProfileData('hasPets', checked)}
+                  />
+                  <Label htmlFor="hasPets">Ik heb huisdieren</Label>
+                </div>
+                {profileData.hasPets && (
                   <Textarea
-                    id="petDetails"
+                    className="mt-2"
+                    placeholder="Beschrijf je huisdieren..."
                     value={profileData.petDetails}
                     onChange={(e) => updateProfileData('petDetails', e.target.value)}
-                    placeholder="Bijvoorbeeld: 1 kat, 2 jaar oud, gecastreerd"
-                    rows={2}
                   />
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="smokes"
-                  checked={profileData.smokes}
-                  onCheckedChange={(checked) => {
-                    updateProfileData('smokes', checked);
-                    if (!checked) {
-                      updateProfileData('smokingDetails', '');
-                    }
-                  }}
-                />
-                <Label htmlFor="smokes">Ik rook</Label>
+                )}
               </div>
-              
-              {profileData.smokes && (
-                <div>
-                  <Label htmlFor="smokingDetails">Details over roken</Label>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="smokes"
+                    checked={profileData.smokes}
+                    onCheckedChange={(checked) => updateProfileData('smokes', checked)}
+                  />
+                  <Label htmlFor="smokes">Ik rook</Label>
+                </div>
+                {profileData.smokes && (
                   <Textarea
-                    id="smokingDetails"
+                    className="mt-2"
+                    placeholder="Details over roken..."
                     value={profileData.smokingDetails}
                     onChange={(e) => updateProfileData('smokingDetails', e.target.value)}
-                    placeholder="Bijvoorbeeld: alleen buiten, op balkon, binnen huis, alleen sigaretten, e-sigaretten, pijp, etc."
-                    rows={3}
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Geef aan waar je rookt (binnen/buiten), wat je rookt (sigaretten/e-sigaretten/pijp), en hoe vaak
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         );
@@ -1158,135 +1332,63 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold">Over Jezelf & Overzicht</h3>
-              <p className="text-gray-600">Maak een goede eerste indruk en controleer je gegevens</p>
+              <User className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-lg font-semibold">Over Jou & Overzicht</h3>
+              <p className="text-gray-600">Vertel iets over jezelf en controleer je gegevens</p>
             </div>
             
             <div>
-              <Label htmlFor="bio">Korte beschrijving van jezelf *</Label>
+              <Label htmlFor="bio">Persoonlijke beschrijving *</Label>
               <Textarea
                 id="bio"
+                placeholder="Vertel iets over jezelf, je hobby's, levensstijl..."
                 value={profileData.bio}
                 onChange={(e) => updateProfileData('bio', e.target.value)}
-                placeholder="Vertel iets over jezelf, je hobby's, werk en wat voor huurder je bent..."
                 rows={4}
               />
-              <p className="text-sm text-gray-500 mt-1">
-                {profileData.bio.length}/500 karakters
-              </p>
             </div>
             
             <div>
               <Label htmlFor="motivation">Waarom ben je op zoek naar een woning? *</Label>
               <Textarea
                 id="motivation"
+                placeholder="Vertel waarom je op zoek bent naar een nieuwe woning..."
                 value={profileData.motivation}
                 onChange={(e) => updateProfileData('motivation', e.target.value)}
-                placeholder="Bijvoorbeeld: nieuwe baan, studie, samenwonen..."
                 rows={3}
               />
             </div>
             
-            <div className="space-y-4">
-              <h4 className="font-semibold text-lg">Profiel Overzicht</h4>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Persoonlijke Informatie</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Naam:</span>
-                    <span>{profileData.firstName} {profileData.lastName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Nationaliteit:</span>
-                    <span>{profileData.nationality}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Familie:</span>
-                    <span>
-                      {profileData.maritalStatus === 'single' ? 'Alleenstaand' :
-                       profileData.maritalStatus === 'married' ? 'Getrouwd' :
-                       profileData.maritalStatus === 'partnership' ? 'Samenwonend' :
-                       profileData.maritalStatus === 'divorced' ? 'Gescheiden' : 'Weduwe/weduwnaar'}
-                      {profileData.hasChildren && `, ${profileData.numberOfChildren} ${profileData.numberOfChildren === 1 ? 'kind' : 'kinderen'}`}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Inkomen & Werk</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Beroep:</span>
-                    <span>{profileData.profession}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Jouw inkomen:</span>
-                    <span>€{profileData.monthlyIncome.toLocaleString()}/maand</span>
-                  </div>
+            {/* Profile Summary */}
+            <div className="border-t pt-6 mt-6">
+              <h4 className="text-lg font-semibold mb-4">Profiel Overzicht</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-2">
+                  <p><strong>Naam:</strong> {profileData.firstName} {profileData.lastName}</p>
+                  <p><strong>Leeftijd:</strong> {profileData.dateOfBirth ? new Date().getFullYear() - new Date(profileData.dateOfBirth).getFullYear() : 'Niet ingevuld'}</p>
+                  <p><strong>Beroep:</strong> {profileData.profession || 'Niet ingevuld'}</p>
+                  <p><strong>Inkomen:</strong> €{profileData.monthlyIncome.toLocaleString('nl-NL')}/maand</p>
                   {profileData.hasPartner && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Partner inkomen:</span>
-                        <span>€{profileData.partnerMonthlyIncome.toLocaleString()}/maand</span>
-                      </div>
-                      <div className="flex justify-between font-semibold">
-                        <span className="text-gray-600">Totaal huishoudinkomen:</span>
-                        <span>€{calculateTotalHouseholdIncome().toLocaleString()}/maand</span>
-                      </div>
-                    </>
+                    <p><strong>Partner inkomen:</strong> €{profileData.partnerMonthlyIncome.toLocaleString('nl-NL')}/maand</p>
                   )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Woonvoorkeuren</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Locatie:</span>
-                    <span>{profileData.city} ({profileData.preferredDistricts.join(', ')})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Budget:</span>
-                    <span>€{profileData.minBudget} - €{profileData.maxBudget}/maand</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Type:</span>
-                    <span>{profileData.propertyType}, {profileData.bedrooms} slaapkamer(s)</span>
-                  </div>
-                  {profileData.desiredAmenities.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Voorzieningen:</span>
-                      <span className="text-right">{profileData.desiredAmenities.length} gewenst</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Volgende stappen:</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Je uitgebreide profiel wordt zichtbaar voor verhuurders</li>
-                <li>• Upload je documenten voor verificatie</li>
-                <li>• Begin met zoeken naar woningen</li>
-                <li>• Ontvang uitnodigingen voor bezichtigingen</li>
-                <li>• Krijg meldingen wanneer verhuurders je profiel bekijken</li>
-              </ul>
+                  <p><strong>Totaal huishoudinkomen:</strong> €{calculateTotalHouseholdIncome().toLocaleString('nl-NL')}/maand</p>
+                </div>
+                <div className="space-y-2">
+                  <p><strong>Gewenste stad:</strong> {profileData.city}</p>
+                  <p><strong>Budget:</strong> €{profileData.minBudget} - €{profileData.maxBudget}/maand</p>
+                  <p><strong>Slaapkamers:</strong> {profileData.bedrooms}</p>
+                  <p><strong>Type:</strong> {profileData.propertyType}</p>
+                  <p><strong>Borg beschikbaar:</strong> {profileData.guarantorAvailable ? 'Ja' : 'Nee'}</p>
+                  <p><strong>Huisdieren:</strong> {profileData.hasPets ? 'Ja' : 'Nee'}</p>
+                  <p><strong>Roken:</strong> {profileData.smokes ? 'Ja' : 'Nee'}</p>
+                </div>
+              </div>
             </div>
           </div>
         );
 
       default:
-        return null;
+        return <div>Step not found</div>;
     }
   };
 
@@ -1294,49 +1396,23 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <User className="w-5 h-5 mr-2" />
-            Profiel Aanmaken
+          <DialogTitle>
+            {editMode ? 'Profiel Bewerken' : 'Profiel Aanmaken'} - Stap {currentStep} van {totalSteps}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Stap {currentStep} van {totalSteps}</span>
-              <span>{Math.round(progress)}% voltooid</span>
+          <Progress value={progress} className="w-full" />
+          
+          {isLoadingProfile ? (
+            <div className="text-center py-8">
+              <p>Profiel wordt geladen...</p>
             </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-          
-          {/* Step Indicators */}
-          <div className="flex justify-between">
-            {[1, 2, 3, 4, 5, 6, 7].map((step) => (
-              <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step < currentStep ? 'bg-green-500 text-white' :
-                  step === currentStep ? 'bg-dutch-blue text-white' :
-                  'bg-gray-200 text-gray-600'
-                }`}>
-                  {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
-                </div>
-                {step < 7 && (
-                  <div className={`w-8 h-1 mx-1 ${
-                    step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-          
-          {/* Step Content */}
-          <div className="min-h-[500px]">
-            {renderStep()}
-          </div>
-          
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4 border-t">
+          ) : (
+            renderStep()
+          )}
+
+          <div className="flex justify-between pt-6">
             <Button
               variant="outline"
               onClick={prevStep}
@@ -1345,23 +1421,22 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
               <ArrowLeft className="w-4 h-4 mr-2" />
               Vorige
             </Button>
-            
-            {currentStep < totalSteps ? (
+
+            {currentStep === totalSteps ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={!isStepValid() || isSubmitting}
+              >
+                {isSubmitting ? 'Opslaan...' : editMode ? 'Bijwerken' : 'Profiel Aanmaken'}
+                <CheckCircle className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
               <Button
                 onClick={nextStep}
                 disabled={!isStepValid()}
               >
                 Volgende
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isSubmitting ? 'Profiel aanmaken...' : 'Profiel Aanmaken'}
-                <CheckCircle className="w-4 h-4 ml-2" />
               </Button>
             )}
           </div>

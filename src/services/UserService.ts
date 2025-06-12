@@ -61,6 +61,19 @@ export interface CreateTenantProfileData {
   furnishedPreference?: 'furnished' | 'unfurnished' | 'no_preference';
   desiredAmenities?: string[];
   
+  // Priority 1: Guarantor Information
+  guarantorAvailable?: boolean;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorIncome?: number;
+  guarantorRelationship?: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders';
+  incomeProofAvailable?: boolean;
+  
+  // Priority 2: Timing Information
+  moveInDatePreferred?: string;
+  moveInDateEarliest?: string;
+  availabilityFlexible?: boolean;
+  
   // Additional fields that may be passed
   employer?: string;
   employmentStatus?: string;
@@ -292,13 +305,26 @@ export class UserService extends DatabaseService {
         partner_profession: sanitizedData.partnerProfession || null,
         partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
         partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
-        preferred_districts: sanitizedData.preferredDistricts || [],
+        preferred_districts: sanitizedData.preferredDistricts || null,
         max_commute_time: sanitizedData.maxCommuteTime || 30,
         transportation_preference: sanitizedData.transportationPreference || 'public_transport',
         furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
         desired_amenities: sanitizedData.desiredAmenities || [],
         smoking_details: sanitizedData.smokingDetails || null,
         profile_picture_url: sanitizedData.profilePictureUrl || null,
+        
+        // Priority 1: Guarantor Information
+        guarantor_available: sanitizedData.guarantorAvailable || false,
+        guarantor_name: sanitizedData.guarantorName || null,
+        guarantor_phone: sanitizedData.guarantorPhone || null,
+        guarantor_income: sanitizedData.guarantorIncome || 0,
+        guarantor_relationship: sanitizedData.guarantorRelationship || null,
+        income_proof_available: sanitizedData.incomeProofAvailable || false,
+        
+        // Priority 2: Timing Information
+        move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
+        move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
+        availability_flexible: sanitizedData.availabilityFlexible || false,
       };
 
       const { data: tenantProfile, error: tenantError } = await supabase
@@ -384,7 +410,7 @@ export class UserService extends DatabaseService {
         throw this.handleDatabaseError(profileError);
       }
 
-      // 2. Update tenant profile with all enhanced fields
+      // 2. Update tenant profile with all enhanced fields (now that schema is complete)
       const tenantProfileData: any = {
         first_name: sanitizedData.firstName,
         last_name: sanitizedData.lastName,
@@ -401,7 +427,7 @@ export class UserService extends DatabaseService {
         motivation: sanitizedData.motivation,
         profile_completed: true,
         
-        // Existing fields
+        // Core existing fields
         employer: sanitizedData.employer || null,
         employment_status: sanitizedData.employmentStatus || 'employed',
         work_contract_type: sanitizedData.workContractType || 'permanent',
@@ -429,6 +455,19 @@ export class UserService extends DatabaseService {
         desired_amenities: sanitizedData.desiredAmenities || [],
         smoking_details: sanitizedData.smokingDetails || null,
         profile_picture_url: sanitizedData.profilePictureUrl || null,
+        
+        // Priority 1: Guarantor Information
+        guarantor_available: sanitizedData.guarantorAvailable || false,
+        guarantor_name: sanitizedData.guarantorName || null,
+        guarantor_phone: sanitizedData.guarantorPhone || null,
+        guarantor_income: sanitizedData.guarantorIncome || 0,
+        guarantor_relationship: sanitizedData.guarantorRelationship || null,
+        income_proof_available: sanitizedData.incomeProofAvailable || false,
+        
+        // Priority 2: Timing Information
+        move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
+        move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
+        availability_flexible: sanitizedData.availabilityFlexible || false,
       };
 
       // Get current data for audit log

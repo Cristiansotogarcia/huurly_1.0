@@ -22,6 +22,7 @@ import {
   Search,
   Bell,
   Settings,
+  CheckCircle,
 } from "lucide-react";
 import EnhancedProfileCreationModal from "@/components/modals/EnhancedProfileCreationModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
@@ -233,22 +234,35 @@ const HuurderDashboard = () => {
 
   const handleProfileComplete = async (profileData: any) => {
     if (!user?.id) return;
-    const result = await userService.createProfile(user.id, {
-      firstName: profileData.firstName,
-      lastName: profileData.lastName,
-      email: profileData.email,
-      phone: profileData.phone,
-    });
+    
+    // Always use updateTenantProfile since we're always in edit mode
+    const result = await userService.updateTenantProfile(profileData);
+    
     if (result.success) {
       setHasProfile(true);
       toast({
-        title: "Profiel aangemaakt!",
+        title: "Profiel bijgewerkt!",
         description:
-          "Je profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders.",
+          "Je profiel is succesvol bijgewerkt en is nu zichtbaar voor verhuurders.",
       });
+      
+      // Reload profile and documents data
+      const tenantProfileResult = await userService.getTenantProfile(user.id);
+      if (tenantProfileResult.success && tenantProfileResult.data) {
+        console.log("Updated tenant profile loaded:", tenantProfileResult.data);
+      }
+      
+      // Reload documents
+      const docsResult = await documentService.getDocumentsByUser(user.id);
+      if (docsResult.success && docsResult.data) {
+        setUserDocuments(docsResult.data);
+      }
+      
+      // Reload stats
+      await loadUserStats();
     } else {
       toast({
-        title: "Fout bij aanmaken profiel",
+        title: "Fout bij bijwerken profiel",
         description: result.error?.message || 'Er is iets misgegaan.',
         variant: "destructive",
       });
@@ -584,29 +598,55 @@ const HuurderDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Profiel nog niet compleet
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Vul je profiel aan om zichtbaar te worden voor verhuurders
-                    </p>
-                    <Button
-                      className="mr-2"
-                      onClick={() => setShowProfileModal(true)}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Profiel aanmaken
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowDocumentModal(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Documenten uploaden
-                    </Button>
-                  </div>
+                  {!hasProfile ? (
+                    <div className="text-center py-8">
+                      <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        Profiel nog niet compleet
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Vul je profiel aan om zichtbaar te worden voor verhuurders
+                      </p>
+                      <Button
+                        className="mr-2"
+                        onClick={() => setShowProfileModal(true)}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Profiel aanmaken
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDocumentModal(true)}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Documenten uploaden
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        Profiel compleet
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Je profiel is zichtbaar voor verhuurders. Je kunt je gegevens altijd bijwerken.
+                      </p>
+                      <Button
+                        className="mr-2"
+                        onClick={() => setShowProfileModal(true)}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Profiel bewerken
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDocumentModal(true)}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Documenten uploaden
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -783,6 +823,8 @@ const HuurderDashboard = () => {
           open={showProfileModal}
           onOpenChange={setShowProfileModal}
           onComplete={handleProfileComplete}
+          editMode={true}
+          existingProfileId={user?.id}
         />
 
         <DocumentUploadModal
