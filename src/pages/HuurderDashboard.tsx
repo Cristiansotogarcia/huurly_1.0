@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from "@/store/authStore";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
   Bell,
   Settings,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 import EnhancedProfileCreationModal from "@/components/modals/EnhancedProfileCreationModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
@@ -29,6 +31,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { notifyDocumentUploaded } from "@/hooks/useNotifications";
 import { Logo } from "@/components/Logo";
 import { PaymentModal } from "@/components/PaymentModal";
+import { authService } from "@/lib/auth"; // Import authService
 
 // Standardized components
 import { StatsWidget } from "@/components/standard/StatsWidget";
@@ -39,6 +42,8 @@ import { UI_TEXT } from "@/utils/constants";
 const HuurderDashboard = () => {
   const { user, login } = useAuthStore();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLookingForPlace, setIsLookingForPlace] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -49,6 +54,7 @@ const HuurderDashboard = () => {
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [stats, setStats] = useState({
     profileViews: 0,
     invitations: 0,
@@ -63,11 +69,51 @@ const HuurderDashboard = () => {
   console.log("HuurderDashboard: User role:", user?.role);
   console.log("HuurderDashboard: Is loading:", isLoading);
 
-  // Initialize loading state
+  // Initialize loading state and handle payment success redirect
   useEffect(() => {
     setIsLoading(false);
     if (user) {
-      setShowPaymentModal(!user.hasPayment);
+      const paymentSuccessParam = searchParams.get('payment');
+
+      if (paymentSuccessParam === 'success' && !user.hasPayment) {
+        setIsVerifyingPayment(true);
+        const verifyPaymentStatus = async () => {
+          let attempts = 0;
+          const maxAttempts = 10; // Try up to 10 times
+          const delay = 1000; // 1 second delay between attempts
+
+          while (attempts < maxAttempts) {
+            console.log(`Attempt ${attempts + 1} to verify payment status...`);
+            const refreshedUser = await authService.getCurrentUser(); // Re-fetch user
+            if (refreshedUser && refreshedUser.hasPayment) {
+              login(refreshedUser); // Update store with correct status
+              setIsVerifyingPayment(false);
+              toast({
+                title: 'Betaling succesvol!',
+                description: 'Je account is nu actief. Welkom bij Huurly!',
+              });
+              // Clear the payment=success param from URL
+              navigate('/huurder-dashboard', { replace: true });
+              break;
+            }
+            attempts++;
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+
+          if (attempts === maxAttempts) {
+            console.error('Failed to verify payment status after multiple attempts.');
+            setIsVerifyingPayment(false);
+            toast({
+              title: 'Betaling verificatie mislukt',
+              description: 'We konden je betalingsstatus niet verifiëren. Probeer opnieuw in te loggen of neem contact op met support.',
+              variant: 'destructive',
+            });
+          }
+        };
+        verifyPaymentStatus();
+      } else {
+        setShowPaymentModal(!user.hasPayment);
+      }
       
       // Show success popup only once after payment if localStorage flag is set
       const hasShownSuccessPopup = localStorage.getItem('hasShownPaymentSuccessPopup');
@@ -77,7 +123,7 @@ const HuurderDashboard = () => {
         localStorage.removeItem('hasShownPaymentSuccessPopup');
       }
     }
-  }, [user]);
+  }, [user, searchParams, navigate, login, toast]);
 
   // Load profile, documents, and stats
   useEffect(() => {
@@ -304,7 +350,7 @@ const HuurderDashboard = () => {
   const handleLogout = async () => {
     try {
       // Direct approach - clear Supabase session and local storage
-      const { createClient } = await import('@supabase/supabase-js');
+      const { createClient } = await import("@supabase/supabase-js");
       const supabase = createClient(
         import.meta.env.VITE_SUPABASE_URL,
         import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -351,15 +397,16 @@ const HuurderDashboard = () => {
   };
 
   // Show loading state while checking authentication
-  if (isLoading) {
+  if (isLoading || isVerifyingPayment) {
     console.log("Showing loading state");
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4">Laden...</h2>
-              <p className="text-gray-600">Dashboard wordt geladen...</p>
+              <h2 className="text-xl font-semibold mb-4">{isVerifyingPayment ? "Betaling verifiëren..." : "Laden..."}</h2>
+              <p className="text-gray-600">{isVerifyingPayment ? "Even geduld, we controleren je betalingsstatus." : "Dashboard wordt geladen..."}</p>
+              {isVerifyingPayment && <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mt-4" />}
             </div>
           </CardContent>
         </Card>
@@ -466,347 +513,168 @@ const HuurderDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-white" />
+                      <TrendingUp className="w-6 h-6 text-white" />
                     </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-green-900">
-                        Account Actief
-                      </h3>
-                      <p className="text-green-700">
-                        Je hebt een actief abonnement (€65/jaar inclusief BTW).
-                        Je profiel is zichtbaar voor verhuurders.
-                      </p>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-semibold text-green-800">Betaling succesvol!</h3>
+                      <p className="text-sm text-green-700">Je account is nu actief. Welkom bij Huurly!</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowSuccessPopup(false)}
-                    className="text-green-600 hover:text-green-800"
-                  >
-                    ×
+                  <Button variant="ghost" onClick={() => setShowSuccessPopup(false)}>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Status Toggle */}
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Zoekstatus</h3>
-                  <p className="text-gray-600">
-                    {isLookingForPlace
-                      ? "Je profiel is zichtbaar voor verhuurders"
-                      : "Je profiel is niet zichtbaar voor verhuurders"}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm">Niet zoekend</span>
-                  <Switch
-                    checked={isLookingForPlace}
-                    onCheckedChange={toggleLookingStatus}
-                  />
-                  <span className="text-sm">Actief zoekend</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dashboard Grid */}
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Quick Stats - Standardized Components */}
-              <div className="grid md:grid-cols-4 gap-4 mb-6">
-                <StatsWidget
-                  title="Profielweergaven"
-                  value={stats.profileViews}
-                  icon={TrendingUp}
-                  color="dutch-blue"
-                  loading={isLoadingStats}
-                />
-                <StatsWidget
-                  title="Uitnodigingen"
-                  value={stats.invitations}
-                  icon={Calendar}
-                  color="dutch-orange"
-                  loading={isLoadingStats}
-                />
-                <StatsWidget
-                  title="Aanmeldingen"
-                  value={stats.applications}
-                  icon={FileText}
-                  color="green-600"
-                  loading={isLoadingStats}
-                />
-                <StatsWidget
-                  title="Geaccepteerd"
-                  value={stats.acceptedApplications}
-                  icon={Home}
-                  color="purple-600"
-                  loading={isLoadingStats}
-                />
-              </div>
-
-              {/* Profile Setup */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <User className="w-5 h-5 mr-2" />
-                    Mijn Profiel
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!hasProfile ? (
-                    <div className="text-center py-8">
-                      <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        Profiel nog niet compleet
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Vul je profiel aan om zichtbaar te worden voor verhuurders
-                      </p>
-                      <Button
-                        className="mr-2"
-                        onClick={() => setShowProfileModal(true)}
-                      >
-                        <User className="w-4 h-4 mr-2" />
-                        Profiel aanmaken
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowDocumentModal(true)}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Documenten uploaden
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        Profiel compleet
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Je profiel is zichtbaar voor verhuurders. Je kunt je gegevens altijd bijwerken.
-                      </p>
-                      <Button
-                        className="mr-2"
-                        onClick={() => setShowProfileModal(true)}
-                      >
-                        <User className="w-4 h-4 mr-2" />
-                        Profiel bewerken
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowDocumentModal(true)}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Documenten uploaden
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Property Search */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Search className="w-5 h-5 mr-2" />
-                    Woningen Zoeken
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Zoek je droomwoning
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Doorzoek duizenden woningen en vind je perfecte match
-                    </p>
-                    <Button onClick={handleStartSearch}>
-                      <Search className="w-4 h-4 mr-2" />
-                      Start zoeken
+          {/* Dashboard Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Area */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Welcome Card */}
+              <StandardCard
+                title={`Welkom, ${user.name}`}
+                description="Dit is je persoonlijke dashboard. Hier kun je je profiel beheren, documenten uploaden en woningen zoeken."
+                icon={<Home className="w-6 h-6" />}
+              >
+                <div className="flex flex-wrap gap-4">
+                  {!hasProfile && (
+                    <Button onClick={() => setShowProfileModal(true)}>
+                      <User className="mr-2 h-4 w-4" /> Maak Profiel Aan
                     </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setShowDocumentModal(true)}>
+                    <Upload className="mr-2 h-4 w-4" /> Documenten Uploaden
+                  </Button>
+                  <Button onClick={handleStartSearch}>
+                    <Search className="mr-2 h-4 w-4" /> Zoek Woningen
+                  </Button>
+                </div>
+              </StandardCard>
+
+              {/* Profile Status */}
+              <StandardCard
+                title="Profiel Status"
+                description="Beheer de zichtbaarheid van je profiel voor verhuurders."
+                icon={<User className="w-6 h-6" />}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="looking-status"
+                      checked={isLookingForPlace}
+                      onCheckedChange={toggleLookingStatus}
+                      disabled={isUpdatingStatus}
+                    />
+                    <label htmlFor="looking-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {isLookingForPlace ? "Ik zoek actief een woning" : "Ik zoek momenteel geen woning"}
+                    </label>
                   </div>
-                </CardContent>
-              </Card>
+                  {isUpdatingStatus && <Loader2 className="h-4 w-4 animate-spin" />}
+                </div>
+              </StandardCard>
+
+              {/* Documents Section */}
+              <StandardCard
+                title="Mijn Documenten"
+                description="Upload en beheer belangrijke documenten zoals loonstroken en identiteitsbewijzen."
+                icon={<FileText className="w-6 h-6" />}
+              >
+                {userDocuments.length > 0 ? (
+                  <ul className="space-y-2">
+                    {userDocuments.map((doc) => (
+                      <li key={doc.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                        <span className="text-sm font-medium">{doc.file_name}</span>
+                        <Badge variant="secondary">{doc.status}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyState
+                    title="Geen documenten geüpload"
+                    description="Upload je documenten om je profiel compleet te maken."
+                    actionText="Documenten Uploaden"
+                    onAction={() => setShowDocumentModal(true)}
+                  />
+                )}
+              </StandardCard>
+
+              {/* Statistics Section */}
+              <StatsWidget
+                profileViews={stats.profileViews}
+                invitations={stats.invitations}
+                applications={stats.applications}
+                acceptedApplications={stats.acceptedApplications}
+                isLoading={isLoadingStats}
+              />
             </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Viewing Invitations */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2" />
-                    Bezichtigingen (0)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-gray-500">
-                    <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-sm">{UI_TEXT.emptyStates.noViewings}</p>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Sidebar / Quick Actions */}
+            <div className="lg:col-span-1 space-y-8">
+              <StandardCard
+                title="Snelle Acties"
+                description="Handige links voor snelle toegang."
+                icon={<Calendar className="w-6 h-6" />}
+              >
+                <div className="space-y-4">
+                  <Button variant="outline" className="w-full" onClick={() => setShowProfileModal(true)}>
+                    <User className="mr-2 h-4 w-4" /> Profiel Bewerken
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => setShowDocumentModal(true)}>
+                    <Upload className="mr-2 h-4 w-4" /> Documenten Beheren
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleStartSearch}>
+                    <Search className="mr-2 h-4 w-4" /> Woningen Zoeken
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleReportIssue}>
+                    <Bell className="mr-2 h-4 w-4" /> Probleem Melden
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleHelpSupport}>
+                    <Settings className="mr-2 h-4 w-4" /> Help & Support
+                  </Button>
+                </div>
+              </StandardCard>
 
-              {/* Documents */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="w-5 h-5 mr-2" />
-                    Documenten ({userDocuments.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {userDocuments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-sm mb-4">
-                        {UI_TEXT.emptyStates.noDocuments}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowDocumentModal(true)}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload document
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {userDocuments.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="w-5 h-5 text-dutch-blue" />
-                            <div>
-                              <p className="font-medium">{doc.file_name}</p>
-                              <p className="text-sm text-gray-500">
-                                {doc.document_type === 'identity' ? 'Identiteitsbewijs' :
-                                 doc.document_type === 'payslip' ? 'Loonstrook' :
-                                 doc.document_type === 'employment_contract' ? 'Arbeidscontract' :
-                                 doc.document_type === 'reference' ? 'Referentie' : doc.document_type}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge 
-                            variant={doc.status === 'approved' ? 'default' : 
-                                   doc.status === 'rejected' ? 'destructive' : 'secondary'}
-                          >
-                            {doc.status === 'pending' ? 'In behandeling' :
-                             doc.status === 'approved' ? 'Goedgekeurd' :
-                             doc.status === 'rejected' ? 'Afgewezen' : doc.status}
-                          </Badge>
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setShowDocumentModal(true)}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Meer documenten uploaden
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Snelle Acties</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      className="w-full text-sm"
-                      onClick={handleStartSearch}
-                    >
-                      <Search className="w-4 h-4 mr-2" />
-                      Zoek woningen
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full text-sm"
-                      onClick={() => setShowDocumentModal(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload documenten
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full text-sm"
-                      onClick={handleReportIssue}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Probleem melden
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Help Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Hulp nodig?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 text-sm">
-                    <p className="text-gray-600">Als huurder kun je:</p>
-                    <ul className="space-y-1 text-gray-600">
-                      <li>• Je profiel aanmaken en verifiëren</li>
-                      <li>• Documenten uploaden voor verificatie</li>
-                      <li>• Woningen zoeken en bekijken</li>
-                      <li>• Bezichtigingen aanvragen</li>
-                      <li>• Contact opnemen met verhuurders</li>
-                    </ul>
-                    <Button variant="outline" size="sm" className="w-full mt-3" onClick={handleHelpSupport}>
-                      Help & Support
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* UI Text Card */}
+              <StandardCard
+                title="Belangrijke Informatie"
+                description="Lees meer over onze voorwaarden en privacybeleid."
+                icon={<FileText className="w-6 h-6" />}
+              >
+                <div className="space-y-2">
+                  <a href="/algemene-voorwaarden" className="text-blue-600 hover:underline block">{UI_TEXT.algemeneVoorwaarden}</a>
+                  <a href="/privacybeleid" className="text-blue-600 hover:underline block">{UI_TEXT.privacybeleid}</a>
+                </div>
+              </StandardCard>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Modals */}
+      {showProfileModal && (
         <EnhancedProfileCreationModal
-          open={showProfileModal}
-          onOpenChange={setShowProfileModal}
-          onComplete={handleProfileComplete}
-          editMode={true}
-          existingProfileId={user?.id}
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onProfileComplete={handleProfileComplete}
+          initialData={user}
         />
+      )}
 
+      {showDocumentModal && (
         <DocumentUploadModal
-          open={showDocumentModal}
-          onOpenChange={setShowDocumentModal}
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
           onUploadComplete={handleDocumentUploadComplete}
         />
+      )}
 
+      {showSearchModal && (
         <PropertySearchModal
-          open={showSearchModal}
-          onOpenChange={setShowSearchModal}
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
         />
-      </div>
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        persistent
-      />
-    </>
-  );
-};
+      )}
 
-export default HuurderDashboard;
+      {showPaymentModal && <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} />}
+
