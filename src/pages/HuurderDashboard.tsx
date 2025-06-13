@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -37,12 +36,9 @@ import { EmptyState } from "@/components/standard/EmptyState";
 import { StandardCard } from "@/components/standard/StandardCard";
 import { UI_TEXT } from "@/utils/constants";
 
-import { authService } from "@/lib/auth";
-
 const HuurderDashboard = () => {
   const { user, login } = useAuthStore();
   const { signOut } = useAuth();
-  const location = useLocation();
   const [isLookingForPlace, setIsLookingForPlace] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -53,7 +49,6 @@ const HuurderDashboard = () => {
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [paymentProcessed, setPaymentProcessed] = useState(false);
   const [stats, setStats] = useState({
     profileViews: 0,
     invitations: 0,
@@ -73,63 +68,16 @@ const HuurderDashboard = () => {
     setIsLoading(false);
     if (user) {
       setShowPaymentModal(!user.hasPayment);
+      
+      // Show success popup only once after payment if localStorage flag is set
+      const hasShownSuccessPopup = localStorage.getItem('hasShownPaymentSuccessPopup');
+      if (hasShownSuccessPopup && !showSuccessPopup) {
+        setShowSuccessPopup(true);
+        // Remove the flag so it doesn't show again
+        localStorage.removeItem('hasShownPaymentSuccessPopup');
+      }
     }
   }, [user]);
-
-  // Check payment result in URL - FIXED to prevent infinite loop
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const result = params.get('payment');
-    
-    // Only process payment if we haven't already processed it
-    if (result === 'success' && !paymentProcessed) {
-      setPaymentProcessed(true); // Prevent re-processing
-      
-      (async () => {
-        // Force close payment modal immediately
-        setShowPaymentModal(false);
-        
-        // Show success popup only once after payment
-        const hasShownSuccessPopup = localStorage.getItem('hasShownPaymentSuccessPopup');
-        if (!hasShownSuccessPopup) {
-          setShowSuccessPopup(true);
-          localStorage.setItem('hasShownPaymentSuccessPopup', 'true');
-        }
-        
-        // Refresh user data without reloading the page
-        try {
-          const refreshed = await authService.getCurrentUser();
-          if (refreshed) {
-            login(refreshed);
-            toast({
-              title: 'Betaling succesvol!',
-              description: 'Je account is nu actief. Welkom bij Huurly!',
-            });
-          } else {
-            // Attempt to refresh the session if no user is returned
-            await useAuthStore.getState().refreshSession?.();
-          }
-        } catch (error) {
-          console.error('Error refreshing user data after payment:', error);
-        }
-        
-        // Clean up URL without reloading
-        params.delete('payment');
-        const newUrl = `${location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-        window.history.replaceState({}, '', newUrl);
-      })();
-    } else if (result === 'cancelled' && !paymentProcessed) {
-      setPaymentProcessed(true);
-      toast({
-        title: 'Betaling geannuleerd',
-        description: 'De betaling is geannuleerd.',
-        variant: 'destructive',
-      });
-      params.delete('payment');
-      const newUrl = `${location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [location.search, login, toast, location.pathname, paymentProcessed]);
 
   // Load profile, documents, and stats
   useEffect(() => {
