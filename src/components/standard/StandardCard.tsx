@@ -6,6 +6,7 @@ import { EmptyState } from './EmptyState';
 
 interface StandardCardProps {
   title: string;
+  description?: string;
   icon?: LucideIcon;
   count?: number;
   loading?: boolean;
@@ -32,6 +33,7 @@ interface StandardCardProps {
 
 export const StandardCard: React.FC<StandardCardProps> = ({
   title,
+  description,
   icon: Icon,
   count,
   loading = false,
@@ -98,6 +100,11 @@ export const StandardCard: React.FC<StandardCardProps> = ({
           )}
         </CardTitle>
       </CardHeader>
+      {description && (
+        <div className="px-6 -mt-2 mb-2">
+          <p className="text-sm text-gray-500">{description}</p>
+        </div>
+      )}
       <CardContent className={contentClassName}>
         {shouldShowEmptyState ? (
           <EmptyState

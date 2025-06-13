@@ -8,6 +8,11 @@ import {
 import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
 import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/store/authStore";
+import { paymentService } from "@/services/PaymentService";
+import { Loader2 } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -32,13 +37,40 @@ export const PaymentModal = ({
     features: plan.features,
   };
 
-  const handlePayment = () => {
-    // Redirect to payment success page instead of dashboard with payment param
-      window.location.href =
-        "https://buy.stripe.com/test_14A4gz3NMaRW2vRfHm9MY00?locale=nl&success_url=" +
-        `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` +
-        "&cancel_url=" +
-        encodeURIComponent(`${window.location.origin}/huurder-dashboard?payment=cancelled`);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuthStore();
+
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: "Fout",
+        description: "Je moet ingelogd zijn om een abonnement af te sluiten.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await paymentService.createCheckoutSession(user.id);
+      if (result.error) {
+        toast({
+          title: "Fout",
+          description: result.error.message || "Er is een fout opgetreden bij het starten van de betaling.",
+          variant: "destructive",
+        });
+      }
+      // The redirect is handled by the service
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Fout",
+        description: "Er is een onverwachte fout opgetreden. Probeer het later opnieuw.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const Content = persistent ? PersistentDialogContent : DialogContent;
@@ -86,8 +118,16 @@ export const PaymentModal = ({
             <Button
               onClick={handlePayment}
               className="w-full bg-dutch-blue hover:bg-blue-700"
+              disabled={isLoading}
             >
-              Abonnement afsluiten
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Bezig met verwerken...
+                </>
+              ) : (
+                "Abonnement afsluiten"
+              )}
             </Button>
           </div>
 

@@ -536,7 +536,7 @@ const HuurderDashboard = () => {
               <StandardCard
                 title={`Welkom, ${user.name}`}
                 description="Dit is je persoonlijke dashboard. Hier kun je je profiel beheren, documenten uploaden en woningen zoeken."
-                icon={<Home className="w-6 h-6" />}
+                icon={Home}
               >
                 <div className="flex flex-wrap gap-4">
                   {!hasProfile && (
@@ -557,7 +557,7 @@ const HuurderDashboard = () => {
               <StandardCard
                 title="Profiel Status"
                 description="Beheer de zichtbaarheid van je profiel voor verhuurders."
-                icon={<User className="w-6 h-6" />}
+                icon={User}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -579,7 +579,7 @@ const HuurderDashboard = () => {
               <StandardCard
                 title="Mijn Documenten"
                 description="Upload en beheer belangrijke documenten zoals loonstroken en identiteitsbewijzen."
-                icon={<FileText className="w-6 h-6" />}
+                icon={FileText}
               >
                 {userDocuments.length > 0 ? (
                   <ul className="space-y-2">
@@ -592,22 +592,50 @@ const HuurderDashboard = () => {
                   </ul>
                 ) : (
                   <EmptyState
+                    icon={FileText}
                     title="Geen documenten geüpload"
                     description="Upload je documenten om je profiel compleet te maken."
-                    actionText="Documenten Uploaden"
-                    onAction={() => setShowDocumentModal(true)}
+                    action={{
+                      label: "Documenten Uploaden",
+                      onClick: () => setShowDocumentModal(true)
+                    }}
                   />
                 )}
               </StandardCard>
 
               {/* Statistics Section */}
-              <StatsWidget
-                profileViews={stats.profileViews}
-                invitations={stats.invitations}
-                applications={stats.applications}
-                acceptedApplications={stats.acceptedApplications}
-                isLoading={isLoadingStats}
-              />
+              <StandardCard
+                title="Statistieken"
+                description="Overzicht van je activiteit op Huurly"
+                icon={TrendingUp}
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <StatsWidget
+                    title="Profiel weergaven"
+                    value={stats.profileViews}
+                    icon={Eye}
+                    loading={isLoadingStats}
+                  />
+                  <StatsWidget
+                    title="Uitnodigingen"
+                    value={stats.invitations}
+                    icon={Calendar}
+                    loading={isLoadingStats}
+                  />
+                  <StatsWidget
+                    title="Aanvragen"
+                    value={stats.applications}
+                    icon={FileText}
+                    loading={isLoadingStats}
+                  />
+                  <StatsWidget
+                    title="Geaccepteerd"
+                    value={stats.acceptedApplications}
+                    icon={CheckCircle}
+                    loading={isLoadingStats}
+                  />
+                </div>
+              </StandardCard>
             </div>
 
             {/* Sidebar / Quick Actions */}
@@ -615,7 +643,7 @@ const HuurderDashboard = () => {
               <StandardCard
                 title="Snelle Acties"
                 description="Handige links voor snelle toegang."
-                icon={<Calendar className="w-6 h-6" />}
+                icon={Calendar}
               >
                 <div className="space-y-4">
                   <Button variant="outline" className="w-full" onClick={() => setShowProfileModal(true)}>
@@ -640,11 +668,11 @@ const HuurderDashboard = () => {
               <StandardCard
                 title="Belangrijke Informatie"
                 description="Lees meer over onze voorwaarden en privacybeleid."
-                icon={<FileText className="w-6 h-6" />}
+                icon={FileText}
               >
                 <div className="space-y-2">
-                  <a href="/algemene-voorwaarden" className="text-blue-600 hover:underline block">{UI_TEXT.algemeneVoorwaarden}</a>
-                  <a href="/privacybeleid" className="text-blue-600 hover:underline block">{UI_TEXT.privacybeleid}</a>
+                  <a href="/algemene-voorwaarden" className="text-blue-600 hover:underline block">Algemene Voorwaarden</a>
+                  <a href="/privacybeleid" className="text-blue-600 hover:underline block">Privacybeleid</a>
                 </div>
               </StandardCard>
             </div>
@@ -654,27 +682,31 @@ const HuurderDashboard = () => {
 
       {showProfileModal && (
         <EnhancedProfileCreationModal
-          isOpen={showProfileModal}
-          onClose={() => setShowProfileModal(false)}
-          onProfileComplete={handleProfileComplete}
-          initialData={user}
+          open={showProfileModal}
+          onOpenChange={setShowProfileModal}
+          onComplete={handleProfileComplete}
+          editMode={hasProfile}
         />
       )}
 
       {showDocumentModal && (
         <DocumentUploadModal
-          isOpen={showDocumentModal}
-          onClose={() => setShowDocumentModal(false)}
+          open={showDocumentModal}
+          onOpenChange={setShowDocumentModal}
           onUploadComplete={handleDocumentUploadComplete}
         />
       )}
 
       {showSearchModal && (
         <PropertySearchModal
-          isOpen={showSearchModal}
-          onClose={() => setShowSearchModal(false)}
+          open={showSearchModal}
+          onOpenChange={setShowSearchModal}
         />
       )}
 
       {showPaymentModal && <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} />}
+    </>
+  );
+};
 
+export default HuurderDashboard;
