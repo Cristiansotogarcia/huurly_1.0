@@ -34,11 +34,11 @@ export const PaymentModal = ({
 
   const handlePayment = () => {
     // Redirect to payment success page instead of dashboard with payment param
-    window.location.href =
-      "https://buy.stripe.com/test_14A4gz3NMaRW2vRfHm9MY00?locale=nl&success_url=" + 
-      encodeURIComponent(`${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`) +
-      "&cancel_url=" + 
-      encodeURIComponent(`${window.location.origin}/huurder-dashboard?payment=cancelled`);
+      window.location.href =
+        "https://buy.stripe.com/test_14A4gz3NMaRW2vRfHm9MY00?locale=nl&success_url=" +
+        `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` +
+        "&cancel_url=" +
+        encodeURIComponent(`${window.location.origin}/huurder-dashboard?payment=cancelled`);
   };
 
   const Content = persistent ? PersistentDialogContent : DialogContent;
