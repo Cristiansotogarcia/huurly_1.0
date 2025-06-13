@@ -67,7 +67,7 @@ export class PaymentService extends DatabaseService {
           userId: userId,
           userEmail: user.email,
           paymentRecordId: paymentRecord.id,
-          successUrl: `${window.location.origin}/payment-success`,
+          successUrl: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/huurder-dashboard?payment=cancelled`,
         },
       });
