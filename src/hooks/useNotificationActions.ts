@@ -24,6 +24,7 @@ export const useNotificationActions = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [deletedNotificationIds, setDeletedNotificationIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -36,10 +37,14 @@ export const useNotificationActions = () => {
       const result = await notificationService.getUserNotifications();
       if (result.success && result.data) {
         console.log('Loaded notifications:', result.data.length);
-        setNotifications(result.data);
+        // Filter out deleted notifications
+        const filteredNotifications = result.data.filter((n: Notification) => 
+          !deletedNotificationIds.has(n.id)
+        );
+        setNotifications(filteredNotifications);
         
         // Count unread notifications
-        const unread = result.data.filter((n: Notification) => !n.read).length;
+        const unread = filteredNotifications.filter((n: Notification) => !n.read).length;
         setUnreadCount(unread);
       }
     } catch (error) {
@@ -71,6 +76,9 @@ export const useNotificationActions = () => {
           
           if (payload.eventType === 'INSERT') {
             const newNotif = payload.new as Notification;
+            // Don't add if it's in the deleted list
+            if (deletedNotificationIds.has(newNotif.id)) return;
+            
             setNotifications(current => {
               // Check if notification already exists to prevent duplicates
               const exists = current.find(n => n.id === newNotif.id);
@@ -86,6 +94,9 @@ export const useNotificationActions = () => {
           
           if (payload.eventType === 'UPDATE') {
             const updated = payload.new as Notification;
+            // Don't update if it's in the deleted list
+            if (deletedNotificationIds.has(updated.id)) return;
+            
             setNotifications(current => {
               const newList = current.map(n => (n.id === updated.id ? updated : n));
               console.log('Updated notification via realtime:', newList.length);
@@ -102,6 +113,8 @@ export const useNotificationActions = () => {
           if (payload.eventType === 'DELETE') {
             const oldId = (payload.old as Notification).id;
             console.log('Real-time DELETE event for notification:', oldId);
+            // Add to deleted list to prevent re-adding
+            setDeletedNotificationIds(prev => new Set([...prev, oldId]));
             setNotifications(current => {
               const filtered = current.filter(n => n.id !== oldId);
               console.log('Filtered notifications after realtime delete:', filtered.length);
@@ -122,7 +135,7 @@ export const useNotificationActions = () => {
       console.log('Cleaning up notification subscription');
       supabase.removeChannel(channel);
     };
-  }, [user, toast]);
+  }, [user, toast, deletedNotificationIds]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -156,12 +169,36 @@ export const useNotificationActions = () => {
     }
 
     console.log('deleteNotification called with ID:', notificationId);
-    console.log('Current notifications before delete:', notifications.length);
+
+    // Find the notification before deleting
+    const notificationToDelete = notifications.find(n => n.id === notificationId);
+    if (!notificationToDelete) {
+      console.error('Notification not found in local state:', notificationId);
+      return;
+    }
+
+    console.log('Found notification to delete:', notificationToDelete);
 
     setIsDeleting(notificationId);
     
     try {
       console.log('Calling notificationService.deleteNotification...');
+      
+      // Add to deleted list immediately
+      setDeletedNotificationIds(prev => new Set([...prev, notificationId]));
+      
+      // Remove from local state immediately
+      setNotifications(current => {
+        const filtered = current.filter(n => n.id !== notificationId);
+        console.log('Notifications after filter:', filtered.length);
+        return filtered;
+      });
+
+      // Update unread count
+      if (!notificationToDelete.read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+
       const result = await notificationService.deleteNotification(notificationId);
       console.log('Delete service result:', result);
       
@@ -173,10 +210,19 @@ export const useNotificationActions = () => {
           description: "De notificatie is succesvol verwijderd.",
         });
 
-        // The real-time subscription will handle the state update
-        // No need to manually update local state here
+        // Reload notifications to verify deletion
+        console.log('Reloading notifications to verify deletion...');
+        await loadNotifications();
       } else {
         console.error('Delete failed:', result.error);
+        // Revert changes if deletion failed
+        setDeletedNotificationIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(notificationId);
+          return newSet;
+        });
+        await loadNotifications(); // Reload to get correct state
+        
         toast({
           title: "Fout bij verwijderen",
           description: result.error?.message || "Er is iets misgegaan bij het verwijderen van de notificatie.",
@@ -186,6 +232,15 @@ export const useNotificationActions = () => {
     } catch (error) {
       console.error('Delete notification error:', error);
       logger.error('Error deleting notification:', error);
+      
+      // Revert changes if deletion failed
+      setDeletedNotificationIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
+      await loadNotifications(); // Reload to get correct state
+      
       toast({
         title: "Fout bij verwijderen",
         description: "Er is een onverwachte fout opgetreden.",

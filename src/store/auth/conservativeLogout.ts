@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 
 export const setupConservativeLogout = (get: any) => {
   let isNavigatingWithinApp = false;
+  let isUserInteracting = false;
   let logoutTimer: NodeJS.Timeout | null = null;
 
   // Track internal navigation to prevent logout on app navigation
@@ -12,28 +13,40 @@ export const setupConservativeLogout = (get: any) => {
   
   history.pushState = function(...args) {
     isNavigatingWithinApp = true;
-    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+    setTimeout(() => { isNavigatingWithinApp = false; }, 2000); // Increased to 2 seconds
     return originalPushState.apply(this, args);
   };
   
   history.replaceState = function(...args) {
     isNavigatingWithinApp = true;
-    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+    setTimeout(() => { isNavigatingWithinApp = false; }, 2000); // Increased to 2 seconds
     return originalReplaceState.apply(this, args);
   };
 
   // Listen for popstate (back/forward navigation)
   window.addEventListener('popstate', () => {
     isNavigatingWithinApp = true;
-    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+    setTimeout(() => { isNavigatingWithinApp = false; }, 2000);
   });
+
+  // Track user interactions to prevent logout during active use
+  const trackUserInteraction = () => {
+    isUserInteracting = true;
+    setTimeout(() => { isUserInteracting = false; }, 5000); // 5 seconds after last interaction
+  };
+
+  // Add interaction listeners
+  document.addEventListener('click', trackUserInteraction, true);
+  document.addEventListener('keydown', trackUserInteraction, true);
+  document.addEventListener('mousemove', trackUserInteraction, true);
+  document.addEventListener('scroll', trackUserInteraction, true);
 
   // Only logout on actual browser close, not on navigation or refresh
   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
     const currentState = get();
     
-    // Don't logout if navigating within app
-    if (isNavigatingWithinApp || !currentState.isAuthenticated) {
+    // Don't logout if navigating within app or user is interacting
+    if (isNavigatingWithinApp || isUserInteracting || !currentState.isAuthenticated) {
       return;
     }
 
@@ -65,14 +78,19 @@ export const setupConservativeLogout = (get: any) => {
     if (!currentState.isAuthenticated) return;
 
     if (document.visibilityState === 'hidden') {
+      // Don't logout if user is actively interacting or navigating
+      if (isUserInteracting || isNavigatingWithinApp) {
+        return;
+      }
+
       // Clear any existing timer
       if (logoutTimer) {
         clearTimeout(logoutTimer);
       }
       
-      // Only logout after a much longer period and if still hidden
+      // Only logout after a much longer period and if still hidden and not interacting
       logoutTimer = setTimeout(() => {
-        if (document.visibilityState === 'hidden' && !isNavigatingWithinApp) {
+        if (document.visibilityState === 'hidden' && !isNavigatingWithinApp && !isUserInteracting) {
           const stillHiddenState = get();
           if (stillHiddenState.isAuthenticated) {
             logger.info('Page hidden for extended period - logging out user');
@@ -85,7 +103,7 @@ export const setupConservativeLogout = (get: any) => {
             }
           }
         }
-      }, 30000); // 30 seconds instead of 5 seconds
+      }, 120000); // Increased to 2 minutes instead of 30 seconds
     } else if (document.visibilityState === 'visible') {
       // Cancel logout if page becomes visible again
       if (logoutTimer) {
@@ -103,6 +121,10 @@ export const setupConservativeLogout = (get: any) => {
   return () => {
     window.removeEventListener('beforeunload', handleBeforeUnload);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.removeEventListener('click', trackUserInteraction, true);
+    document.removeEventListener('keydown', trackUserInteraction, true);
+    document.removeEventListener('mousemove', trackUserInteraction, true);
+    document.removeEventListener('scroll', trackUserInteraction, true);
     if (logoutTimer) {
       clearTimeout(logoutTimer);
     }
