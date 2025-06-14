@@ -1,14 +1,12 @@
+
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useHuurderDashboard } from "@/hooks/useHuurderDashboard";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
 import { DashboardHeader } from "@/components/HuurderDashboard/DashboardHeader";
 import { DashboardContent } from "@/components/HuurderDashboard/DashboardContent";
-import EnhancedProfileCreationModal from "@/components/modals/EnhancedProfileCreationModal";
-import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
-import PropertySearchModal from "@/components/modals/PropertySearchModal";
-import { PaymentModal } from "@/components/PaymentModal";
+import { LoadingState } from "@/components/HuurderDashboard/LoadingState";
+import { AccessDeniedState } from "@/components/HuurderDashboard/AccessDeniedState";
+import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
 
 const HuurderDashboard = () => {
   const {
@@ -21,7 +19,6 @@ const HuurderDashboard = () => {
     isLoadingStats,
     initializeDashboard,
     loadDashboardData,
-    loadUserStats,
     refreshDocuments,
     getSubscriptionEndDate
   } = useHuurderDashboard();
@@ -87,60 +84,29 @@ const HuurderDashboard = () => {
   // Show loading state while initializing
   if (isLoading) {
     console.log("Showing loading state");
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4">Laden...</h2>
-              <p className="text-gray-600">Dashboard wordt geladen...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   // Show access denied if no user or wrong role
   if (!user) {
     console.log("No user found, showing access denied");
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
-              <p className="text-gray-600 mb-4">
-                Je moet ingelogd zijn om het huurder dashboard te bekijken.
-              </p>
-              <Button onClick={handleGoHome}>
-                Terug naar home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AccessDeniedState
+        title="Toegang geweigerd"
+        message="Je moet ingelogd zijn om het huurder dashboard te bekijken."
+        onGoHome={handleGoHome}
+      />
     );
   }
 
   if (user.role !== "huurder") {
     console.log("Wrong role, showing access denied. User role:", user.role);
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4">Toegang geweigerd</h2>
-              <p className="text-gray-600 mb-4">
-                Je hebt geen toegang tot het huurder dashboard.
-              </p>
-              <Button onClick={handleGoHome}>
-                Terug naar home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AccessDeniedState
+        title="Toegang geweigerd"
+        message="Je hebt geen toegang tot het huurder dashboard."
+        onGoHome={handleGoHome}
+      />
     );
   }
 
@@ -180,31 +146,19 @@ const HuurderDashboard = () => {
         />
       </div>
 
-      {showProfileModal && (
-        <EnhancedProfileCreationModal
-          open={showProfileModal}
-          onOpenChange={setShowProfileModal}
-          onComplete={onProfileComplete}
-          editMode={hasProfile}
-        />
-      )}
-
-      {showDocumentModal && (
-        <DocumentUploadModal
-          open={showDocumentModal}
-          onOpenChange={setShowDocumentModal}
-          onUploadComplete={onDocumentUploadComplete}
-        />
-      )}
-
-      {showSearchModal && (
-        <PropertySearchModal
-          open={showSearchModal}
-          onOpenChange={setShowSearchModal}
-        />
-      )}
-
-      {showPaymentModal && <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} />}
+      <DashboardModals
+        showProfileModal={showProfileModal}
+        showDocumentModal={showDocumentModal}
+        showSearchModal={showSearchModal}
+        showPaymentModal={showPaymentModal}
+        hasProfile={hasProfile}
+        setShowProfileModal={setShowProfileModal}
+        setShowDocumentModal={setShowDocumentModal}
+        setShowSearchModal={setShowSearchModal}
+        setShowPaymentModal={setShowPaymentModal}
+        onProfileComplete={onProfileComplete}
+        onDocumentUploadComplete={onDocumentUploadComplete}
+      />
     </>
   );
 };
