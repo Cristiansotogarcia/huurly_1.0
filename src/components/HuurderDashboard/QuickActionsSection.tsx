@@ -21,35 +21,65 @@ export const QuickActionsSection = ({
 }: QuickActionsSectionProps) => {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white shadow-xl">
-      <div className="flex items-center space-x-3 mb-6">
+      <div className="flex items-center justify-center space-x-3 mb-8">
         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
           <Settings className="w-6 h-6" />
         </div>
-        <div>
+        <div className="text-center">
           <h1 className="text-2xl font-bold">Snelle Acties</h1>
           <p className="text-blue-100">Handige links voor snelle toegang</p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
         {!hasProfile && (
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-medium" onClick={onShowProfileModal}>
-            <User className="mr-2 h-4 w-4" /> Maak Profiel Aan
+          <Button 
+            className="bg-white text-blue-700 hover:bg-blue-50 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] shadow-md" 
+            onClick={onShowProfileModal}
+          >
+            <User className="mb-2 h-5 w-5" />
+            <span className="text-center">Maak Profiel Aan</span>
           </Button>
         )}
-        <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={onShowDocumentModal}>
-          <Upload className="mr-2 h-4 w-4" /> Documenten Uploaden
+        
+        <Button 
+          className="bg-blue-800 text-white hover:bg-blue-900 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-600 shadow-md" 
+          onClick={onShowDocumentModal}
+        >
+          <Upload className="mb-2 h-5 w-5" />
+          <span className="text-center">Documenten Uploaden</span>
         </Button>
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={onStartSearch}>
-          <Search className="mr-2 h-4 w-4" /> Zoek Woningen
+        
+        <Button 
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] shadow-md" 
+          onClick={onStartSearch}
+        >
+          <Search className="mb-2 h-5 w-5" />
+          <span className="text-center">Zoek Woningen</span>
         </Button>
-        <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={onShowProfileModal}>
-          <User className="mr-2 h-4 w-4" /> Profiel Bewerken
+        
+        <Button 
+          className="bg-blue-800 text-white hover:bg-blue-900 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-600 shadow-md" 
+          onClick={onShowProfileModal}
+        >
+          <User className="mb-2 h-5 w-5" />
+          <span className="text-center">Profiel Bewerken</span>
         </Button>
-        <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={onReportIssue}>
-          <Bell className="mr-2 h-4 w-4" /> Probleem Melden
+        
+        <Button 
+          className="bg-blue-800 text-white hover:bg-blue-900 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-600 shadow-md" 
+          onClick={onReportIssue}
+        >
+          <Bell className="mb-2 h-5 w-5" />
+          <span className="text-center">Probleem Melden</span>
         </Button>
-        <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={onHelpSupport}>
-          <Settings className="mr-2 h-4 w-4" /> Help & Support
+        
+        <Button 
+          className="bg-blue-800 text-white hover:bg-blue-900 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-600 shadow-md" 
+          onClick={onHelpSupport}
+        >
+          <Settings className="mb-2 h-5 w-5" />
+          <span className="text-center">Help & Support</span>
         </Button>
       </div>
     </div>
