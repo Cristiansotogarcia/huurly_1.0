@@ -1,7 +1,6 @@
 
 import { QuickActionsSection } from "./QuickActionsSection";
 import { StatsGrid } from "./StatsGrid";
-import { ProfileStatusCard } from "./ProfileStatusCard";
 import { DocumentsSection } from "./DocumentsSection";
 import { ImportantInfoSection } from "./ImportantInfoSection";
 
@@ -45,20 +44,17 @@ export const DashboardContent = ({
       <div className="space-y-6">
         <QuickActionsSection
           hasProfile={hasProfile}
+          isLookingForPlace={isLookingForPlace}
+          isUpdatingStatus={isUpdatingStatus}
           onShowProfileModal={onShowProfileModal}
           onShowDocumentModal={onShowDocumentModal}
           onStartSearch={onStartSearch}
           onReportIssue={onReportIssue}
           onHelpSupport={onHelpSupport}
+          onToggleLookingStatus={onToggleLookingStatus}
         />
 
         <StatsGrid stats={stats} isLoadingStats={isLoadingStats} />
-
-        <ProfileStatusCard
-          isLookingForPlace={isLookingForPlace}
-          isUpdatingStatus={isUpdatingStatus}
-          onToggleLookingStatus={onToggleLookingStatus}
-        />
 
         <DocumentsSection
           userDocuments={userDocuments}
