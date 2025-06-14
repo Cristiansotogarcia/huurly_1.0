@@ -1,12 +1,11 @@
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { SignupForm } from './auth/SignupForm';
-import { useState } from 'react';
 
-export const Hero = () => {
-  const [showSignup, setShowSignup] = useState(false);
+interface HeroProps {
+  onShowSignup?: () => void;
+}
 
+export const Hero = ({ onShowSignup }: HeroProps) => {
   return (
     <section className="hero-gradient text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -24,16 +23,13 @@ export const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Dialog open={showSignup} onOpenChange={setShowSignup}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="bg-white text-dutch-blue hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
-                  Profiel aanmaken
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md bg-white">
-                <SignupForm onClose={() => setShowSignup(false)} />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              size="lg" 
+              className="bg-white text-dutch-blue hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
+              onClick={onShowSignup}
+            >
+              Profiel aanmaken
+            </Button>
           </div>
         </div>
       </div>
