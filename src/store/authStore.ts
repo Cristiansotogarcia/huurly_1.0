@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       lastSessionCheck: 0,
       
       login: (user: User) => {
+        logger.info('AuthStore: User logged in', { userId: user.id, hasPayment: user.hasPayment });
         set({ 
           user, 
           isAuthenticated: true, 
@@ -40,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
+        logger.info('AuthStore: User logged out');
         set({ 
           user: null, 
           isAuthenticated: false, 
@@ -47,14 +49,15 @@ export const useAuthStore = create<AuthState>()(
           isRefreshing: false,
           lastSessionCheck: 0
         });
-        // Clear localStorage to ensure complete logout
         localStorage.removeItem('auth-storage');
       },
       
       updateUser: (updates: Partial<User>) => {
         const currentUser = get().user;
         if (currentUser) {
-          set({ user: { ...currentUser, ...updates } });
+          const updatedUser = { ...currentUser, ...updates };
+          logger.info('AuthStore: User updated', { updates, newHasPayment: updatedUser.hasPayment });
+          set({ user: updatedUser });
         }
       },
 
@@ -65,7 +68,6 @@ export const useAuthStore = create<AuthState>()(
       validateSession: async () => {
         const state = get();
         
-        // Check if we've validated recently (within 5 minutes)
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
         if (state.sessionValid && state.lastSessionCheck > fiveMinutesAgo) {
           return true;
@@ -87,7 +89,6 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          // Check if session is expired
           const now = Math.floor(Date.now() / 1000);
           if (session.expires_at && session.expires_at < now) {
             logger.warn('Session has expired');
@@ -95,10 +96,8 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          // Session is valid
           set({ sessionValid: true, lastSessionCheck: Date.now() });
           
-          // Update user data if needed
           if (session.user && (!state.user || state.user.id !== session.user.id)) {
             const user = await authService.mapSupabaseUserToUser(session.user);
             set({ user, isAuthenticated: true });
@@ -116,7 +115,6 @@ export const useAuthStore = create<AuthState>()(
         const state = get();
         
         if (state.isRefreshing) {
-          // Wait for existing refresh to complete
           return new Promise((resolve) => {
             const checkRefresh = () => {
               const currentState = get();
@@ -156,7 +154,6 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          // Session refreshed successfully
           const user = await authService.mapSupabaseUserToUser(data.session.user);
           set({ 
             user,
@@ -183,7 +180,6 @@ export const useAuthStore = create<AuthState>()(
         try {
           logger.info('Initializing authentication...');
           
-          // Get current session
           const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
@@ -216,18 +212,21 @@ export const useAuthStore = create<AuthState>()(
             logger.info('No existing session found');
           }
 
-          // Set up auth state listener
-          supabase.auth.onAuthStateChange(async (event, session) => {
+          // Set up auth state listener without async operations inside
+          supabase.auth.onAuthStateChange((event, session) => {
             logger.info('Auth state changed:', event);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              const user = await authService.mapSupabaseUserToUser(session.user);
-              set({ 
-                user, 
-                isAuthenticated: true, 
-                sessionValid: true,
-                lastSessionCheck: Date.now()
-              });
+              // Use setTimeout to defer the async operation
+              setTimeout(async () => {
+                const user = await authService.mapSupabaseUserToUser(session.user);
+                set({ 
+                  user, 
+                  isAuthenticated: true, 
+                  sessionValid: true,
+                  lastSessionCheck: Date.now()
+                });
+              }, 0);
             } else if (event === 'SIGNED_OUT') {
               set({ 
                 user: null, 
@@ -237,13 +236,16 @@ export const useAuthStore = create<AuthState>()(
                 lastSessionCheck: 0
               });
             } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-              const user = await authService.mapSupabaseUserToUser(session.user);
-              set({ 
-                user, 
-                isAuthenticated: true, 
-                sessionValid: true,
-                lastSessionCheck: Date.now()
-              });
+              // Use setTimeout to defer the async operation
+              setTimeout(async () => {
+                const user = await authService.mapSupabaseUserToUser(session.user);
+                set({ 
+                  user, 
+                  isAuthenticated: true, 
+                  sessionValid: true,
+                  lastSessionCheck: Date.now()
+                });
+              }, 0);
             }
           });
 
