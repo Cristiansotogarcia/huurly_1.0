@@ -4,7 +4,7 @@ import { authService } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
 export const createSessionManager = (set: any, get: any) => ({
-  validateSession: async () => {
+  validateSession: async (): Promise<boolean> => {
     const state = get();
     
     const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
@@ -50,11 +50,12 @@ export const createSessionManager = (set: any, get: any) => ({
     }
   },
 
-  refreshSession: async () => {
+  refreshSession: async (): Promise<boolean> => {
     const state = get();
     
     if (state.isRefreshing) {
-      return new Promise((resolve) => {
+      // Wait for the current refresh to complete and return its result
+      return new Promise<boolean>((resolve) => {
         const checkRefresh = () => {
           const currentState = get();
           if (!currentState.isRefreshing) {
