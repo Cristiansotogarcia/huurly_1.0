@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/NotificationService';
 import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Notification {
   id: string;
@@ -49,21 +50,86 @@ export const useNotificationActions = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
+
+    // Load initial notifications
     loadNotifications();
-  }, [user]);
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        payload => {
+          console.log('Real-time notification event:', payload.eventType, payload);
+          
+          if (payload.eventType === 'INSERT') {
+            const newNotif = payload.new as Notification;
+            setNotifications(current => {
+              // Check if notification already exists to prevent duplicates
+              const exists = current.find(n => n.id === newNotif.id);
+              if (exists) return current;
+              
+              const updated = [newNotif, ...current];
+              console.log('Added new notification via realtime:', updated.length);
+              return updated;
+            });
+            setUnreadCount(prev => prev + 1);
+            toast({ title: newNotif.title, description: newNotif.message });
+          }
+          
+          if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Notification;
+            setNotifications(current => {
+              const newList = current.map(n => (n.id === updated.id ? updated : n));
+              console.log('Updated notification via realtime:', newList.length);
+              return newList;
+            });
+            // Recalculate unread count
+            setNotifications(current => {
+              const unread = current.filter(n => !n.read).length;
+              setUnreadCount(unread);
+              return current;
+            });
+          }
+          
+          if (payload.eventType === 'DELETE') {
+            const oldId = (payload.old as Notification).id;
+            console.log('Real-time DELETE event for notification:', oldId);
+            setNotifications(current => {
+              const filtered = current.filter(n => n.id !== oldId);
+              console.log('Filtered notifications after realtime delete:', filtered.length);
+              return filtered;
+            });
+            // Recalculate unread count
+            setNotifications(current => {
+              const unread = current.filter(n => !n.read).length;
+              setUnreadCount(unread);
+              return current;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up notification subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
 
   const markAsRead = async (notificationId: string) => {
     try {
       const result = await notificationService.markAsRead(notificationId);
       if (result.success) {
-        // Update local state immediately for better UX
-        setNotifications(prev => 
-          prev.map(n => 
-            n.id === notificationId ? { ...n, read: true } : n
-          )
-        );
-        // Update unread count
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        // Local state will be updated via real-time subscription
+        console.log('Marked notification as read:', notificationId);
       }
     } catch (error) {
        logger.error('Error marking notification as read:', error);
@@ -74,11 +140,8 @@ export const useNotificationActions = () => {
     try {
       const result = await notificationService.markAllAsRead();
       if (result.success) {
-        // Update local state immediately
-        setNotifications(prev => 
-          prev.map(n => ({ ...n, read: true }))
-        );
-        setUnreadCount(0);
+        // Local state will be updated via real-time subscription
+        console.log('Marked all notifications as read');
       }
     } catch (error) {
        logger.error('Error marking all notifications as read:', error);
@@ -104,31 +167,14 @@ export const useNotificationActions = () => {
       
       if (result.success) {
         console.log('Service reports successful deletion');
-        // Update local state immediately for better UX
-        const deletedNotification = notifications.find(n => n.id === notificationId);
-        console.log('Found notification to delete:', deletedNotification);
-        
-        setNotifications(prev => {
-          const filtered = prev.filter(n => n.id !== notificationId);
-          console.log('Notifications after filter:', filtered.length);
-          return filtered;
-        });
-        
-        // Update unread count if the deleted notification was unread
-        if (deletedNotification && !deletedNotification.read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
         
         toast({
           title: "Notificatie verwijderd",
           description: "De notificatie is succesvol verwijderd.",
         });
 
-        // Reload notifications to ensure consistency with database
-        console.log('Reloading notifications to verify deletion...');
-        setTimeout(() => {
-          loadNotifications();
-        }, 500);
+        // The real-time subscription will handle the state update
+        // No need to manually update local state here
       } else {
         console.error('Delete failed:', result.error);
         toast({
