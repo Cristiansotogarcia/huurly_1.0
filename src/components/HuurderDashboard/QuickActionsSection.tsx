@@ -81,7 +81,6 @@ export const QuickActionsSection = ({
                 checked={isLookingForPlace}
                 onCheckedChange={onToggleLookingStatus}
                 disabled={isUpdatingStatus}
-                size="sm"
               />
               <span className="text-xs text-center">
                 {isLookingForPlace ? "Actief zoekend" : "Niet zoekend"}
