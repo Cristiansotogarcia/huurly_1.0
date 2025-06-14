@@ -249,7 +249,10 @@ export class NotificationService extends DatabaseService {
    */
   async deleteNotification(notificationId: string): Promise<DatabaseResponse<boolean>> {
     const currentUserId = await this.getCurrentUserId();
+    console.log('NotificationService.deleteNotification called for:', notificationId, 'by user:', currentUserId);
+    
     if (!currentUserId) {
+      console.error('No current user ID found');
       return {
         data: null,
         error: new Error('Niet geautoriseerd'),
@@ -259,32 +262,46 @@ export class NotificationService extends DatabaseService {
 
     return this.executeQuery(async () => {
       // Get notification to check ownership
-      const { data: notification } = await supabase
+      console.log('Fetching notification to verify ownership...');
+      const { data: notification, error: fetchError } = await supabase
         .from('notifications')
         .select('*')
         .eq('id', notificationId)
         .single();
 
-      if (!notification) {
+      if (fetchError) {
+        console.error('Error fetching notification:', fetchError);
         throw new Error('Notificatie niet gevonden');
       }
 
+      if (!notification) {
+        console.error('Notification not found in database');
+        throw new Error('Notificatie niet gevonden');
+      }
+
+      console.log('Found notification:', notification);
+
       // Check if user owns this notification
       if (notification.user_id !== currentUserId) {
+        console.error('User does not own this notification:', notification.user_id, 'vs', currentUserId);
         const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
         if (!hasPermission) {
           throw new Error('Geen toegang tot deze notificatie');
         }
       }
 
-      const { error } = await supabase
+      console.log('Attempting to delete notification from database...');
+      const { error: deleteError } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
 
-      if (error) {
-        throw this.handleDatabaseError(error);
+      if (deleteError) {
+        console.error('Database delete error:', deleteError);
+        throw this.handleDatabaseError(deleteError);
       }
+
+      console.log('Notification successfully deleted from database');
 
       await this.createAuditLog('DELETE', 'notifications', notificationId, notification);
 

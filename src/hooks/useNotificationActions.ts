@@ -98,10 +98,12 @@ export const useNotificationActions = () => {
     setIsDeleting(notificationId);
     
     try {
+      console.log('Calling notificationService.deleteNotification...');
       const result = await notificationService.deleteNotification(notificationId);
       console.log('Delete service result:', result);
       
       if (result.success) {
+        console.log('Service reports successful deletion');
         // Update local state immediately for better UX
         const deletedNotification = notifications.find(n => n.id === notificationId);
         console.log('Found notification to delete:', deletedNotification);
@@ -121,6 +123,12 @@ export const useNotificationActions = () => {
           title: "Notificatie verwijderd",
           description: "De notificatie is succesvol verwijderd.",
         });
+
+        // Reload notifications to ensure consistency with database
+        console.log('Reloading notifications to verify deletion...');
+        setTimeout(() => {
+          loadNotifications();
+        }, 500);
       } else {
         console.error('Delete failed:', result.error);
         toast({
