@@ -77,8 +77,8 @@ export const createAuthInitializer = (set: any, get: any) => ({
         }
       });
 
-      // Set up automatic logout event listeners
-      setupAutomaticLogout(get);
+      // Set up conservative automatic logout for browser closure only
+      setupConservativeLogout(get);
 
     } catch (error) {
       logger.error('Auth initialization failed:', error);
@@ -92,48 +92,109 @@ export const createAuthInitializer = (set: any, get: any) => ({
   },
 });
 
-const setupAutomaticLogout = (get: any) => {
-  // Set up automatic logout on browser close
-  const handleBeforeUnload = async () => {
+const setupConservativeLogout = (get: any) => {
+  let isNavigatingWithinApp = false;
+  let logoutTimer: NodeJS.Timeout | null = null;
+
+  // Track internal navigation to prevent logout on app navigation
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  
+  history.pushState = function(...args) {
+    isNavigatingWithinApp = true;
+    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+    return originalPushState.apply(this, args);
+  };
+  
+  history.replaceState = function(...args) {
+    isNavigatingWithinApp = true;
+    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+    return originalReplaceState.apply(this, args);
+  };
+
+  // Listen for popstate (back/forward navigation)
+  window.addEventListener('popstate', () => {
+    isNavigatingWithinApp = true;
+    setTimeout(() => { isNavigatingWithinApp = false; }, 1000);
+  });
+
+  // Only logout on actual browser close, not on navigation or refresh
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
     const currentState = get();
-    if (currentState.isAuthenticated) {
-      logger.info('Browser closing - logging out user automatically');
-      try {
+    
+    // Don't logout if navigating within app
+    if (isNavigatingWithinApp || !currentState.isAuthenticated) {
+      return;
+    }
+
+    // Check if this is a refresh by looking at the event
+    // Refreshes don't have a returnValue set by default
+    if (event.returnValue === undefined || event.returnValue === '') {
+      // This is likely a refresh, don't logout
+      return;
+    }
+
+    // Only logout if user is actually closing browser/tab
+    logger.info('Browser closing - logging out user automatically');
+    try {
+      // Use async approach since this is browser close
+      setTimeout(async () => {
         await supabase.auth.signOut();
         currentState.logout();
-      } catch (error) {
-        logger.error('Error during automatic logout:', error);
-        // Force logout even if Supabase call fails
-        currentState.logout();
-      }
+      }, 0);
+    } catch (error) {
+      logger.error('Error during automatic logout:', error);
+      currentState.logout();
     }
   };
 
-  // Add event listener for browser close
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  
-  // Also handle page visibility change for better coverage
-  const handleVisibilityChange = async () => {
+  // Much more conservative visibility change handler
+  const handleVisibilityChange = () => {
+    const currentState = get();
+    
+    if (!currentState.isAuthenticated) return;
+
     if (document.visibilityState === 'hidden') {
-      const currentState = get();
-      if (currentState.isAuthenticated) {
-        logger.info('Page hidden - preparing for potential logout');
-        // Don't logout immediately on hidden, but prepare for it
-        setTimeout(async () => {
-          if (document.visibilityState === 'hidden') {
-            logger.info('Page remained hidden - logging out user');
+      // Clear any existing timer
+      if (logoutTimer) {
+        clearTimeout(logoutTimer);
+      }
+      
+      // Only logout after a much longer period and if still hidden
+      logoutTimer = setTimeout(() => {
+        if (document.visibilityState === 'hidden' && !isNavigatingWithinApp) {
+          const stillHiddenState = get();
+          if (stillHiddenState.isAuthenticated) {
+            logger.info('Page hidden for extended period - logging out user');
             try {
-              await supabase.auth.signOut();
-              currentState.logout();
+              supabase.auth.signOut();
+              stillHiddenState.logout();
             } catch (error) {
               logger.error('Error during visibility-based logout:', error);
-              currentState.logout();
+              stillHiddenState.logout();
             }
           }
-        }, 5000); // Wait 5 seconds before logging out
+        }
+      }, 30000); // 30 seconds instead of 5 seconds
+    } else if (document.visibilityState === 'visible') {
+      // Cancel logout if page becomes visible again
+      if (logoutTimer) {
+        clearTimeout(logoutTimer);
+        logoutTimer = null;
       }
     }
   };
 
+  // Add event listeners
+  window.addEventListener('beforeunload', handleBeforeUnload);
   document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Cleanup function (though it won't be called in this implementation)
+  return () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    if (logoutTimer) {
+      clearTimeout(logoutTimer);
+    }
+  };
 };
