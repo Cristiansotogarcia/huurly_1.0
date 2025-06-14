@@ -73,7 +73,7 @@ class UserMapper {
   }
 
   /**
-   * Create default role for user if none exists
+   * Create default role for user if none exists using UPSERT
    */
   private async createDefaultRole(userId: string, email?: string): Promise<void> {
     try {
@@ -82,12 +82,15 @@ class UserMapper {
       
       logger.info('Creating default role for user:', email, 'Role:', dbRole);
       
+      // Use UPSERT to prevent duplicate key violations
       const { error } = await supabase
         .from('user_roles')
         .upsert({
           user_id: userId,
           role: dbRole,
           subscription_status: 'inactive',
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) {

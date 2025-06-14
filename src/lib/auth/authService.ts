@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
@@ -32,26 +31,30 @@ export class AuthService {
       }
 
       if (authData.user) {
-        // Create user profile
+        // Use UPSERT to create user profile (prevents duplicates)
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: authData.user.id,
             first_name: data.firstName,
             last_name: data.lastName,
+          }, {
+            onConflict: 'id'
           });
 
-        // Create user role with mapped database role
+        // Use UPSERT to create user role with mapped database role (prevents duplicates)
         const { error: roleError } = await supabase
           .from('user_roles')
-          .insert({
+          .upsert({
             user_id: authData.user.id,
             role: roleMapper.mapRoleToDatabase(data.role),
             subscription_status: 'inactive',
+          }, {
+            onConflict: 'user_id'
           });
 
         if (profileError || roleError) {
-          logger.error('Profile creation error:', profileError || roleError);
+          logger.error('Profile/Role creation error:', profileError || roleError);
           const errorMessage = (profileError || roleError)?.message || 'Profile creation failed';
           const error = new Error(errorMessage) as AuthError;
           error.status = 400;
@@ -64,6 +67,7 @@ export class AuthService {
 
       return { user: null, error: null };
     } catch (error) {
+      logger.error('Sign up error:', error);
       return { user: null, error: error as AuthError };
     }
   }
@@ -193,7 +197,7 @@ export class AuthService {
         }
       }
 
-      // Update profile table
+      // Update profile table using UPSERT
       const profileUpdates: any = {};
       if (updates.name) {
         const [firstName, ...lastNameParts] = updates.name.split(' ');
@@ -204,8 +208,12 @@ export class AuthService {
       if (Object.keys(profileUpdates).length > 0) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update(profileUpdates)
-          .eq('id', user.id);
+          .upsert({
+            id: user.id,
+            ...profileUpdates
+          }, {
+            onConflict: 'id'
+          });
 
         if (profileError) {
           return { error: profileError };
