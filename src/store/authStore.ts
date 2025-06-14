@@ -249,6 +249,50 @@ export const useAuthStore = create<AuthState>()(
             }
           });
 
+          // Set up automatic logout on browser close
+          const handleBeforeUnload = async () => {
+            const currentState = get();
+            if (currentState.isAuthenticated) {
+              logger.info('Browser closing - logging out user automatically');
+              try {
+                await supabase.auth.signOut();
+                currentState.logout();
+              } catch (error) {
+                logger.error('Error during automatic logout:', error);
+                // Force logout even if Supabase call fails
+                currentState.logout();
+              }
+            }
+          };
+
+          // Add event listener for browser close
+          window.addEventListener('beforeunload', handleBeforeUnload);
+          
+          // Also handle page visibility change for better coverage
+          const handleVisibilityChange = async () => {
+            if (document.visibilityState === 'hidden') {
+              const currentState = get();
+              if (currentState.isAuthenticated) {
+                logger.info('Page hidden - preparing for potential logout');
+                // Don't logout immediately on hidden, but prepare for it
+                setTimeout(async () => {
+                  if (document.visibilityState === 'hidden') {
+                    logger.info('Page remained hidden - logging out user');
+                    try {
+                      await supabase.auth.signOut();
+                      currentState.logout();
+                    } catch (error) {
+                      logger.error('Error during visibility-based logout:', error);
+                      currentState.logout();
+                    }
+                  }
+                }, 5000); // Wait 5 seconds before logging out
+              }
+            }
+          };
+
+          document.addEventListener('visibilitychange', handleVisibilityChange);
+
         } catch (error) {
           logger.error('Auth initialization failed:', error);
           set({ 
