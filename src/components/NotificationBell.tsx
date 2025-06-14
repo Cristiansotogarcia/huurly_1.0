@@ -138,10 +138,11 @@ const NotificationBell = () => {
       const result = await notificationService.deleteNotification(notificationId);
       if (result.success) {
         // Update local state immediately for better UX
+        const deletedNotification = notifications.find(n => n.id === notificationId);
+        
         setNotifications(prev => prev.filter(n => n.id !== notificationId));
         
         // Update unread count if the deleted notification was unread
-        const deletedNotification = notifications.find(n => n.id === notificationId);
         if (deletedNotification && !deletedNotification.read) {
           setUnreadCount(prev => Math.max(0, prev - 1));
         }
@@ -172,39 +173,6 @@ const NotificationBell = () => {
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
       markAsRead(notification.id);
-    }
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'document_uploaded':
-      case 'document_approved':
-      case 'document_rejected':
-        return <FileText className="w-4 h-4" />;
-      case 'viewing_invitation':
-        return <Calendar className="w-4 h-4" />;
-      case 'property_application':
-        return <UserCheck className="w-4 h-4" />;
-      case 'system_announcement':
-        return <AlertTriangle className="w-4 h-4" />;
-      default:
-        return <Bell className="w-4 h-4" />;
-    }
-  };
-
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'document_approved':
-        return 'text-green-600 bg-green-100';
-      case 'document_rejected':
-        return 'text-red-600 bg-red-100';
-      case 'document_uploaded':
-      case 'property_application':
-        return 'text-blue-600 bg-blue-100';
-      case 'viewing_invitation':
-        return 'text-orange-600 bg-orange-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
     }
   };
 
