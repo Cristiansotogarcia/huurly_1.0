@@ -31,6 +31,14 @@ export const NotificationItem = ({
   onNotificationClick,
   onDeleteNotification
 }: NotificationItemProps) => {
+  
+  const handleDeleteClick = (event: React.MouseEvent) => {
+    console.log('Delete button clicked for notification:', notification.id);
+    event.preventDefault();
+    event.stopPropagation();
+    onDeleteNotification(notification.id, event);
+  };
+
   return (
     <div
       className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -54,7 +62,7 @@ export const NotificationItem = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => onDeleteNotification(notification.id, e)}
+                onClick={handleDeleteClick}
                 disabled={isDeleting}
                 className="h-6 w-6 p-0 hover:bg-red-100"
               >

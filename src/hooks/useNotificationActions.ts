@@ -31,8 +31,10 @@ export const useNotificationActions = () => {
     
     setIsLoading(true);
     try {
+      console.log('Loading notifications for user:', user.id);
       const result = await notificationService.getUserNotifications();
       if (result.success && result.data) {
+        console.log('Loaded notifications:', result.data.length);
         setNotifications(result.data);
         
         // Count unread notifications
@@ -90,15 +92,25 @@ export const useNotificationActions = () => {
       event.stopPropagation();
     }
 
+    console.log('deleteNotification called with ID:', notificationId);
+    console.log('Current notifications before delete:', notifications.length);
+
     setIsDeleting(notificationId);
     
     try {
       const result = await notificationService.deleteNotification(notificationId);
+      console.log('Delete service result:', result);
+      
       if (result.success) {
         // Update local state immediately for better UX
         const deletedNotification = notifications.find(n => n.id === notificationId);
+        console.log('Found notification to delete:', deletedNotification);
         
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        setNotifications(prev => {
+          const filtered = prev.filter(n => n.id !== notificationId);
+          console.log('Notifications after filter:', filtered.length);
+          return filtered;
+        });
         
         // Update unread count if the deleted notification was unread
         if (deletedNotification && !deletedNotification.read) {
@@ -110,6 +122,7 @@ export const useNotificationActions = () => {
           description: "De notificatie is succesvol verwijderd.",
         });
       } else {
+        console.error('Delete failed:', result.error);
         toast({
           title: "Fout bij verwijderen",
           description: result.error?.message || "Er is iets misgegaan bij het verwijderen van de notificatie.",
@@ -117,6 +130,7 @@ export const useNotificationActions = () => {
         });
       }
     } catch (error) {
+      console.error('Delete notification error:', error);
       logger.error('Error deleting notification:', error);
       toast({
         title: "Fout bij verwijderen",
@@ -137,6 +151,8 @@ export const useNotificationActions = () => {
   const sortedNotifications = [...notifications].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+
+  console.log('Current notifications count:', sortedNotifications.length);
 
   return {
     notifications: sortedNotifications,
