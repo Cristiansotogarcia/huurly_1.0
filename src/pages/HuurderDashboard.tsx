@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from "@/store/authStore";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { userService } from "@/services/UserService";
 import { documentService } from "@/services/DocumentService";
 import { DashboardService } from "@/services/DashboardService";
+import { paymentService } from "@/services/PaymentService";
 import {
   Home,
   FileText,
@@ -50,6 +52,7 @@ const HuurderDashboard = () => {
   const [hasProfile, setHasProfile] = useState(false);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [stats, setStats] = useState({
     profileViews: 0,
     invitations: 0,
@@ -72,11 +75,30 @@ const HuurderDashboard = () => {
       if (user) {
         // Simple payment modal logic - show if no payment
         setShowPaymentModal(!user.hasPayment);
+        
+        // Load actual subscription end date if user has payment
+        if (user.hasPayment) {
+          await loadSubscriptionEndDate();
+        }
       }
     };
 
     initializeDashboard();
   }, [user]);
+
+  // Load actual subscription end date from payment records
+  const loadSubscriptionEndDate = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const result = await paymentService.checkSubscriptionStatus(user.id);
+      if (result.success && result.data?.expiresAt) {
+        setSubscriptionEndDate(result.data.expiresAt);
+      }
+    } catch (error) {
+      console.error("Error loading subscription end date:", error);
+    }
+  };
 
   // Load profile, documents, and stats
   useEffect(() => {
@@ -313,10 +335,8 @@ const HuurderDashboard = () => {
   };
 
   const getSubscriptionEndDate = () => {
-    if (user?.hasPayment) {
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      return endDate.toLocaleDateString('nl-NL', { 
+    if (user?.hasPayment && subscriptionEndDate) {
+      return new Date(subscriptionEndDate).toLocaleDateString('nl-NL', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
