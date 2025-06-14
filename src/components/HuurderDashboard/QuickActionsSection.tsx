@@ -38,8 +38,8 @@ export const QuickActionsSection = ({
         </div>
       </div>
 
-      {/* Profile Status Section */}
-      <div className="bg-white/10 rounded-xl p-6 mb-6 backdrop-blur-sm">
+      {/* Mobile Profile Status Section */}
+      <div className="bg-white/10 rounded-xl p-6 mb-6 backdrop-blur-sm lg:hidden">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -54,18 +54,45 @@ export const QuickActionsSection = ({
         </div>
         <div className="flex items-center space-x-3 p-4 bg-white/10 rounded-lg">
           <Switch
-            id="looking-status"
+            id="looking-status-mobile"
             checked={isLookingForPlace}
             onCheckedChange={onToggleLookingStatus}
             disabled={isUpdatingStatus}
           />
-          <label htmlFor="looking-status" className="text-sm font-medium text-white cursor-pointer">
+          <label htmlFor="looking-status-mobile" className="text-sm font-medium text-white cursor-pointer">
             {isLookingForPlace ? "Ik zoek actief een woning" : "Ik zoek momenteel geen woning"}
           </label>
         </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        {/* Desktop Profile Status Button */}
+        <div className="hidden lg:block">
+          <Button 
+            className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[120px] border border-blue-500 shadow-md w-full relative" 
+            onClick={onToggleLookingStatus}
+            disabled={isUpdatingStatus}
+          >
+            <User className="mb-2 h-5 w-5" />
+            <span className="text-center mb-2">Profiel Status</span>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="looking-status-desktop"
+                checked={isLookingForPlace}
+                onCheckedChange={onToggleLookingStatus}
+                disabled={isUpdatingStatus}
+                size="sm"
+              />
+              <span className="text-xs text-center">
+                {isLookingForPlace ? "Actief zoekend" : "Niet zoekend"}
+              </span>
+            </div>
+            {isUpdatingStatus && (
+              <Loader2 className="h-4 w-4 animate-spin absolute top-2 right-2" />
+            )}
+          </Button>
+        </div>
+
         {!hasProfile && (
           <Button 
             className="bg-blue-500 text-white hover:bg-blue-400 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] shadow-md" 
