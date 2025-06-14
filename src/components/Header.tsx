@@ -6,9 +6,12 @@ import { LoginForm } from './auth/LoginForm';
 import { MultiStepSignupModal } from './auth/MultiStepSignupModal';
 import { Logo } from './Logo';
 
-export const Header = () => {
+interface HeaderProps {
+  onShowSignup?: () => void;
+}
+
+export const Header = ({ onShowSignup }: HeaderProps) => {
   const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -30,15 +33,10 @@ export const Header = () => {
 
             <Button 
               className="bg-dutch-orange hover:bg-orange-600 text-white"
-              onClick={() => setShowSignup(true)}
+              onClick={onShowSignup}
             >
               Registreren
             </Button>
-            
-            <MultiStepSignupModal 
-              isOpen={showSignup} 
-              onClose={() => setShowSignup(false)} 
-            />
           </div>
         </div>
       </div>
