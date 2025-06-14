@@ -94,25 +94,31 @@ export const DashboardHeader = ({
               </span>
             </div>
             
-            {/* Logout Button - Responsive */}
+            {/* Logout Button - Only visible on desktop */}
             <Button 
               variant="outline" 
               onClick={onLogout} 
-              className="hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors rounded-full text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-8 sm:h-auto"
+              className="hidden sm:flex hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors rounded-full text-sm px-4 py-2"
             >
-              <span className="hidden sm:inline">Uitloggen</span>
-              <span className="sm:hidden">Uit</span>
+              Uitloggen
             </Button>
           </div>
         </div>
 
-        {/* Mobile Payment Status Row - Only visible on mobile when has payment */}
+        {/* Mobile Payment Status and Logout Row - Only visible on mobile when has payment */}
         {hasPayment && (
-          <div className="md:hidden pb-3 pt-1">
-            <div className="flex items-center justify-center">
+          <div className="sm:hidden pb-3 pt-1">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                 Account actief tot {subscriptionEndDate}
               </span>
+              <Button 
+                variant="outline" 
+                onClick={onLogout} 
+                className="hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors rounded-full text-xs px-3 py-1 h-auto ml-2"
+              >
+                Uitloggen
+              </Button>
             </div>
           </div>
         )}
