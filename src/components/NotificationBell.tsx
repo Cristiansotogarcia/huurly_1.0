@@ -31,6 +31,7 @@ const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -95,7 +96,14 @@ const NotificationBell = () => {
     try {
       const result = await notificationService.markAsRead(notificationId);
       if (result.success) {
-        await loadNotifications(); // Reload to update the list
+        // Update local state immediately for better UX
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === notificationId ? { ...n, read: true } : n
+          )
+        );
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
        logger.error('Error marking notification as read:', error);
@@ -106,18 +114,38 @@ const NotificationBell = () => {
     try {
       const result = await notificationService.markAllAsRead();
       if (result.success) {
-        await loadNotifications(); // Reload to update the list
+        // Update local state immediately
+        setNotifications(prev => 
+          prev.map(n => ({ ...n, read: true }))
+        );
+        setUnreadCount(0);
       }
     } catch (error) {
        logger.error('Error marking all notifications as read:', error);
     }
   };
 
-  const deleteNotification = async (notificationId: string) => {
+  const deleteNotification = async (notificationId: string, event?: React.MouseEvent) => {
+    // Prevent event bubbling to avoid triggering parent click handlers
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    setIsDeleting(notificationId);
+    
     try {
       const result = await notificationService.deleteNotification(notificationId);
       if (result.success) {
-        await loadNotifications(); // Reload to update the list
+        // Update local state immediately for better UX
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        
+        // Update unread count if the deleted notification was unread
+        const deletedNotification = notifications.find(n => n.id === notificationId);
+        if (deletedNotification && !deletedNotification.read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+        
         toast({
           title: "Notificatie verwijderd",
           description: "De notificatie is succesvol verwijderd.",
@@ -136,12 +164,47 @@ const NotificationBell = () => {
         description: "Er is een onverwachte fout opgetreden.",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(null);
     }
   };
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
       markAsRead(notification.id);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'document_uploaded':
+      case 'document_approved':
+      case 'document_rejected':
+        return <FileText className="w-4 h-4" />;
+      case 'viewing_invitation':
+        return <Calendar className="w-4 h-4" />;
+      case 'property_application':
+        return <UserCheck className="w-4 h-4" />;
+      case 'system_announcement':
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <Bell className="w-4 h-4" />;
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'document_approved':
+        return 'text-green-600 bg-green-100';
+      case 'document_rejected':
+        return 'text-red-600 bg-red-100';
+      case 'document_uploaded':
+      case 'property_application':
+        return 'text-blue-600 bg-blue-100';
+      case 'viewing_invitation':
+        return 'text-orange-600 bg-orange-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -228,10 +291,8 @@ const NotificationBell = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotification(notification.id);
-                                }}
+                                onClick={(e) => deleteNotification(notification.id, e)}
+                                disabled={isDeleting === notification.id}
                                 className="h-6 w-6 p-0 hover:bg-red-100"
                               >
                                 <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-600" />
