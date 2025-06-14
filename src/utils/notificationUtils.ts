@@ -1,24 +1,25 @@
 
 import { Bell, Check, FileText, Calendar, AlertTriangle, UserCheck } from 'lucide-react';
+import React from 'react';
 
-export const getNotificationIcon = (type: string) => {
+export const getNotificationIcon = (type: string): React.ReactElement => {
   switch (type) {
     case 'document_uploaded':
     case 'document_approved':
     case 'document_rejected':
-      return <FileText className="w-4 h-4" />;
+      return React.createElement(FileText, { className: "w-4 h-4" });
     case 'viewing_invitation':
-      return <Calendar className="w-4 h-4" />;
+      return React.createElement(Calendar, { className: "w-4 h-4" });
     case 'property_application':
-      return <UserCheck className="w-4 h-4" />;
+      return React.createElement(UserCheck, { className: "w-4 h-4" });
     case 'system_announcement':
-      return <AlertTriangle className="w-4 h-4" />;
+      return React.createElement(AlertTriangle, { className: "w-4 h-4" });
     default:
-      return <Bell className="w-4 h-4" />;
+      return React.createElement(Bell, { className: "w-4 h-4" });
   }
 };
 
-export const getNotificationColor = (type: string) => {
+export const getNotificationColor = (type: string): string => {
   switch (type) {
     case 'document_approved':
       return 'text-green-600 bg-green-100';
