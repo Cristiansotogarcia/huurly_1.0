@@ -155,7 +155,7 @@ const HuurderDashboard = () => {
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
         setShowSearchModal={setShowSearchModal}
-        setShowPaymentModal={() => {}} // Don't allow closing persistent payment modal
+        setShowPaymentModal={setShowPaymentModal}
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}
       />

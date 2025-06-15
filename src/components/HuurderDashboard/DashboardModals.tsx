@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { EnhancedProfileCreationModal } from '@/components/modals/EnhancedProfileCreationModal';
-import { DocumentUploadModal } from '@/components/modals/DocumentUploadModal';
-import { PropertySearchModal } from '@/components/modals/PropertySearchModal';
+import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
+import PropertySearchModal from '@/components/modals/PropertySearchModal';
 import { PaymentModal } from '@/components/PaymentModal';
 
 interface DashboardModalsProps {
@@ -36,7 +36,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
     <>
       {/* Profile Creation Modal */}
       <EnhancedProfileCreationModal
-        isOpen={showProfileModal}
+        open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         onComplete={onProfileComplete}
       />
@@ -58,7 +58,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       {/* Persistent Payment Modal - cannot be closed without payment */}
       <PaymentModal
         isOpen={showPaymentModal}
-        onClose={setShowPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
         persistent={true}
       />
     </>
