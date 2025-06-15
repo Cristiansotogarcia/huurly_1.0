@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Notification, NotificationState } from './types';
 
 export const useNotificationState = () => {
@@ -9,7 +9,7 @@ export const useNotificationState = () => {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [deletedNotificationIds, setDeletedNotificationIds] = useState<Set<string>>(new Set());
 
-  const updateNotifications = (newNotifications: Notification[]) => {
+  const updateNotifications = useCallback((newNotifications: Notification[]) => {
     const filteredNotifications = newNotifications.filter((n: Notification) => 
       !deletedNotificationIds.has(n.id)
     );
@@ -17,9 +17,9 @@ export const useNotificationState = () => {
     
     const unread = filteredNotifications.filter((n: Notification) => !n.read).length;
     setUnreadCount(unread);
-  };
+  }, [deletedNotificationIds]);
 
-  const addNotification = (notification: Notification) => {
+  const addNotification = useCallback((notification: Notification) => {
     if (deletedNotificationIds.has(notification.id)) return;
     
     setNotifications(current => {
@@ -30,10 +30,12 @@ export const useNotificationState = () => {
       console.log('Added new notification via realtime:', updated.length);
       return updated;
     });
-    setUnreadCount(prev => prev + 1);
-  };
+    if (!notification.read) {
+      setUnreadCount(prev => prev + 1);
+    }
+  }, [deletedNotificationIds]);
 
-  const updateNotification = (updatedNotification: Notification) => {
+  const updateNotification = useCallback((updatedNotification: Notification) => {
     if (deletedNotificationIds.has(updatedNotification.id)) return;
     
     setNotifications(current => {
@@ -44,44 +46,46 @@ export const useNotificationState = () => {
       setUnreadCount(unread);
       return newList;
     });
-  };
+  }, [deletedNotificationIds]);
 
-  const removeNotification = (notificationId: string) => {
+  const removeNotification = useCallback((notificationId: string) => {
     console.log('Real-time DELETE event for notification:', notificationId);
-    setDeletedNotificationIds(prev => new Set([...prev, notificationId]));
+    // This function handles the case where a notification is deleted on another device.
+    // It should remove the notification from the state.
     setNotifications(current => {
+      const notificationExists = current.some(n => n.id === notificationId);
+      if (!notificationExists) return current;
+
+      const wasRead = current.find(n => n.id === notificationId)?.read ?? true;
       const filtered = current.filter(n => n.id !== notificationId);
+      
       console.log('Filtered notifications after realtime delete:', filtered.length);
       
-      const unread = filtered.filter(n => !n.read).length;
-      setUnreadCount(unread);
+      if (!wasRead) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
       return filtered;
     });
-  };
+  }, []);
 
-  const markAsDeleted = (notificationId: string) => {
-    setDeletedNotificationIds(prev => new Set([...prev, notificationId]));
-  };
+  const markAsDeleted = useCallback((notificationId: string) => {
+    setDeletedNotificationIds(prev => new Set(prev).add(notificationId));
+  }, []);
 
-  const unmarkAsDeleted = (notificationId: string) => {
+  const unmarkAsDeleted = useCallback((notificationId: string) => {
     setDeletedNotificationIds(prev => {
       const newSet = new Set(prev);
       newSet.delete(notificationId);
       return newSet;
     });
-  };
+  }, []);
 
-  const removeFromState = (notificationId: string, wasRead: boolean) => {
-    setNotifications(current => {
-      const filtered = current.filter(n => n.id !== notificationId);
-      console.log('Notifications after filter:', filtered.length);
-      return filtered;
-    });
-
+  const removeFromState = useCallback((notificationId: string, wasRead: boolean) => {
+    setNotifications(current => current.filter(n => n.id !== notificationId));
     if (!wasRead) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
-  };
+  }, []);
 
   const sortedNotifications = [...notifications].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

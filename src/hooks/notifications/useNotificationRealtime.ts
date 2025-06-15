@@ -19,23 +19,21 @@ export const useNotificationRealtime = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const channelRef = useRef<any>(null);
-  const isSubscribedRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
-      if (channelRef.current && isSubscribedRef.current) {
+      if (channelRef.current) {
         console.log('Cleaning up notification subscription - user logged out');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
-        isSubscribedRef.current = false;
       }
       return;
     }
 
-    if (!channelRef.current && !isSubscribedRef.current) {
+    if (!channelRef.current) {
       console.log('Setting up real-time notification subscription for user:', user.id);
       
-      channelRef.current = supabase
+      const channel = supabase
         .channel(`notifications-${user.id}`)
         .on(
           'postgres_changes',
@@ -64,22 +62,26 @@ export const useNotificationRealtime = ({
               onNotificationDeleted(oldId);
             }
           }
-        );
-
-      channelRef.current.subscribe((status: string) => {
-        console.log('Notification channel subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          isSubscribedRef.current = true;
-        }
-      });
+        )
+        .subscribe((status: string, err: any) => {
+          console.log(`Notification channel subscription status: ${status}`);
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Subscription error:', err);
+            supabase.removeChannel(channel);
+            if (channelRef.current === channel) {
+              channelRef.current = null;
+            }
+          }
+        });
+      
+      channelRef.current = channel;
     }
 
     return () => {
-      if (channelRef.current && isSubscribedRef.current) {
+      if (channelRef.current) {
         console.log('Cleaning up notification subscription');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
-        isSubscribedRef.current = false;
       }
     };
   }, [user?.id, onNotificationAdded, onNotificationUpdated, onNotificationDeleted, toast]);
