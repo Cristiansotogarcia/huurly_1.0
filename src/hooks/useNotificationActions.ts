@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/NotificationService';
 import { logger } from '@/lib/logger';
@@ -27,6 +27,8 @@ export const useNotificationActions = () => {
   const [deletedNotificationIds, setDeletedNotificationIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
+  const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -55,87 +57,108 @@ export const useNotificationActions = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Clean up if user logs out
+      if (channelRef.current && isSubscribedRef.current) {
+        console.log('Cleaning up notification subscription - user logged out');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      }
+      return;
+    }
 
     // Load initial notifications
     loadNotifications();
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        payload => {
-          console.log('Real-time notification event:', payload.eventType, payload);
-          
-          if (payload.eventType === 'INSERT') {
-            const newNotif = payload.new as Notification;
-            // Don't add if it's in the deleted list
-            if (deletedNotificationIds.has(newNotif.id)) return;
+    // Only set up real-time subscription if we haven't already
+    if (!channelRef.current && !isSubscribedRef.current) {
+      console.log('Setting up real-time notification subscription for user:', user.id);
+      
+      channelRef.current = supabase
+        .channel(`notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          payload => {
+            console.log('Real-time notification event:', payload.eventType, payload);
             
-            setNotifications(current => {
-              // Check if notification already exists to prevent duplicates
-              const exists = current.find(n => n.id === newNotif.id);
-              if (exists) return current;
+            if (payload.eventType === 'INSERT') {
+              const newNotif = payload.new as Notification;
+              // Don't add if it's in the deleted list
+              if (deletedNotificationIds.has(newNotif.id)) return;
               
-              const updated = [newNotif, ...current];
-              console.log('Added new notification via realtime:', updated.length);
-              return updated;
-            });
-            setUnreadCount(prev => prev + 1);
-            toast({ title: newNotif.title, description: newNotif.message });
-          }
-          
-          if (payload.eventType === 'UPDATE') {
-            const updated = payload.new as Notification;
-            // Don't update if it's in the deleted list
-            if (deletedNotificationIds.has(updated.id)) return;
+              setNotifications(current => {
+                // Check if notification already exists to prevent duplicates
+                const exists = current.find(n => n.id === newNotif.id);
+                if (exists) return current;
+                
+                const updated = [newNotif, ...current];
+                console.log('Added new notification via realtime:', updated.length);
+                return updated;
+              });
+              setUnreadCount(prev => prev + 1);
+              toast({ title: newNotif.title, description: newNotif.message });
+            }
             
-            setNotifications(current => {
-              const newList = current.map(n => (n.id === updated.id ? updated : n));
-              console.log('Updated notification via realtime:', newList.length);
-              return newList;
-            });
-            // Recalculate unread count
-            setNotifications(current => {
-              const unread = current.filter(n => !n.read).length;
-              setUnreadCount(unread);
-              return current;
-            });
+            if (payload.eventType === 'UPDATE') {
+              const updated = payload.new as Notification;
+              // Don't update if it's in the deleted list
+              if (deletedNotificationIds.has(updated.id)) return;
+              
+              setNotifications(current => {
+                const newList = current.map(n => (n.id === updated.id ? updated : n));
+                console.log('Updated notification via realtime:', newList.length);
+                
+                // Recalculate unread count
+                const unread = newList.filter(n => !n.read).length;
+                setUnreadCount(unread);
+                return newList;
+              });
+            }
+            
+            if (payload.eventType === 'DELETE') {
+              const oldId = (payload.old as Notification).id;
+              console.log('Real-time DELETE event for notification:', oldId);
+              // Add to deleted list to prevent re-adding
+              setDeletedNotificationIds(prev => new Set([...prev, oldId]));
+              setNotifications(current => {
+                const filtered = current.filter(n => n.id !== oldId);
+                console.log('Filtered notifications after realtime delete:', filtered.length);
+                
+                // Recalculate unread count
+                const unread = filtered.filter(n => !n.read).length;
+                setUnreadCount(unread);
+                return filtered;
+              });
+            }
           }
-          
-          if (payload.eventType === 'DELETE') {
-            const oldId = (payload.old as Notification).id;
-            console.log('Real-time DELETE event for notification:', oldId);
-            // Add to deleted list to prevent re-adding
-            setDeletedNotificationIds(prev => new Set([...prev, oldId]));
-            setNotifications(current => {
-              const filtered = current.filter(n => n.id !== oldId);
-              console.log('Filtered notifications after realtime delete:', filtered.length);
-              return filtered;
-            });
-            // Recalculate unread count
-            setNotifications(current => {
-              const unread = current.filter(n => !n.read).length;
-              setUnreadCount(unread);
-              return current;
-            });
-          }
+        );
+
+      // Subscribe to the channel
+      channelRef.current.subscribe((status: string) => {
+        console.log('Notification channel subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          isSubscribedRef.current = true;
         }
-      )
-      .subscribe();
+      });
+    }
 
     return () => {
-      console.log('Cleaning up notification subscription');
-      supabase.removeChannel(channel);
+      // Only clean up on unmount, not on every effect run
+      if (channelRef.current && isSubscribedRef.current) {
+        console.log('Cleaning up notification subscription');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      }
     };
-  }, [user, toast, deletedNotificationIds]);
+  }, [user?.id]); // Only depend on user.id, not the entire user object or other dependencies
 
   const markAsRead = async (notificationId: string) => {
     try {
