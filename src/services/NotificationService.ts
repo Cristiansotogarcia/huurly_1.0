@@ -5,7 +5,7 @@ import { NotificationReadService } from './notifications/NotificationReadService
 import { NotificationBulkService } from './notifications/NotificationBulkService';
 import { NotificationStatisticsService } from './notifications/NotificationStatisticsService';
 
-export { CreateNotificationData, NotificationFilters } from './notifications/BaseNotificationService';
+export type { CreateNotificationData, NotificationFilters } from './notifications/BaseNotificationService';
 
 export class NotificationService {
   private baseService: BaseNotificationService;
