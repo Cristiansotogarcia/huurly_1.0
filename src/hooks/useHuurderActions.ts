@@ -104,20 +104,12 @@ export const useHuurderActions = () => {
     console.log("Document upload completion processed");
   };
 
-  const handleStartSearch = (hasProfile: boolean, onShowProfileModal: () => void, onShowSearchModal: () => void) => {
-    console.log("Starting property search, hasProfile:", hasProfile);
-    
-    if (!hasProfile) {
-      toast({
-        title: "Profiel vereist",
-        description: "Maak eerst je profiel aan voordat je kunt zoeken naar woningen.",
-        variant: "destructive",
-      });
-      onShowProfileModal();
-      return;
-    }
-
-    onShowSearchModal();
+  const handleStartSearch = () => {
+    console.log("Property search functionality is not available in this simplified version");
+    toast({
+      title: "Zoekfunctie",
+      description: "De zoekfunctie is momenteel niet beschikbaar.",
+    });
   };
 
   const handleReportIssue = () => {
