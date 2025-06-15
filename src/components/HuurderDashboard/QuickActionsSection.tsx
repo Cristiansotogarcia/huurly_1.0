@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { User, Upload, Bell, Settings, Loader2 } from "lucide-react";
+import { User, Bell, Settings, Loader2 } from "lucide-react";
 
 interface QuickActionsSectionProps {
   hasProfile: boolean;
@@ -90,14 +90,6 @@ export const QuickActionsSection = ({
             )}
           </Button>
         </div>
-        
-        <Button 
-          className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-500 shadow-md" 
-          onClick={onShowDocumentModal}
-        >
-          <Upload className="mb-2 h-5 w-5" />
-          <span className="text-center">Documenten Uploaden</span>
-        </Button>
         
         <Button 
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] shadow-md" 
