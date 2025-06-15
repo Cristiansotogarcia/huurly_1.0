@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
 import { userService } from "@/services/UserService";
 import { dashboardDataService } from "@/services/DashboardDataService";
+import { NotificationService } from "@/services/NotificationService";
 
 export const useHuurderActions = () => {
   const { user } = useAuthStore();
@@ -77,6 +78,23 @@ export const useHuurderActions = () => {
 
   const handleDocumentUploadComplete = async (documents: any[], onComplete: () => void) => {
     console.log("Processing document upload completion for", documents.length, "documents");
+    
+    // Send notifications for each uploaded document
+    if (user?.id) {
+      documents.forEach(async (doc) => {
+        const documentTypeName = doc.document_type === "identity"
+          ? "identiteitsbewijs"
+          : doc.document_type === "payslip"
+            ? "loonstrook"
+            : doc.document_type === "employment_contract"
+              ? "arbeidscontract"
+              : doc.document_type === "reference"
+                ? "referentie"
+                : "document";
+        
+        await NotificationService.notifyDocumentUploaded(user.id, documentTypeName);
+      });
+    }
     
     toast({
       title: "Documenten geüpload",
