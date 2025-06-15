@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
 import { userService } from "@/services/UserService";
+import { dashboardDataService } from "@/services/DashboardDataService";
 import { notifyDocumentUploaded } from "@/hooks/useNotifications";
 
 export const useHuurderActions = () => {
@@ -18,9 +19,9 @@ export const useHuurderActions = () => {
     setIsUpdatingStatus(true);
     
     try {
-      const result = await userService.updateProfile(user.id, {
-        is_looking_for_place: newStatus
-      } as any);
+      console.log("Updating profile visibility status to:", newStatus);
+      
+      const result = await dashboardDataService.updateProfileVisibility(user.id, newStatus);
       
       if (result.success) {
         setIsLookingForPlace(newStatus);
@@ -30,12 +31,14 @@ export const useHuurderActions = () => {
             ? "Je profiel is nu zichtbaar voor verhuurders"
             : "Je profiel is nu niet zichtbaar voor verhuurders",
         });
+        console.log("Profile visibility updated successfully");
       } else {
         toast({
           title: "Fout bij bijwerken status",
           description: result.error?.message || "Er is iets misgegaan bij het bijwerken van je status.",
           variant: "destructive",
         });
+        console.error("Failed to update profile visibility:", result.error);
       }
     } catch (error) {
       console.error("Error updating looking status:", error);
@@ -52,6 +55,8 @@ export const useHuurderActions = () => {
   const handleProfileComplete = async (profileData: any, onComplete: () => void) => {
     if (!user?.id) return;
     
+    console.log("Completing profile update with live data service");
+    
     const result = await userService.updateTenantProfile(profileData);
     
     if (result.success) {
@@ -60,16 +65,20 @@ export const useHuurderActions = () => {
         description: "Je profiel is succesvol bijgewerkt en is nu zichtbaar voor verhuurders.",
       });
       onComplete();
+      console.log("Profile completed successfully");
     } else {
       toast({
         title: "Fout bij bijwerken profiel",
         description: result.error?.message || 'Er is iets misgegaan.',
         variant: "destructive",
       });
+      console.error("Failed to complete profile:", result.error);
     }
   };
 
   const handleDocumentUploadComplete = async (documents: any[], onComplete: () => void) => {
+    console.log("Processing document upload completion for", documents.length, "documents");
+    
     documents.forEach((doc) => {
       notifyDocumentUploaded(
         user?.name || "Onbekende gebruiker",
@@ -92,9 +101,12 @@ export const useHuurderActions = () => {
     });
 
     onComplete();
+    console.log("Document upload completion processed");
   };
 
   const handleStartSearch = (hasProfile: boolean, onShowProfileModal: () => void, onShowSearchModal: () => void) => {
+    console.log("Starting property search, hasProfile:", hasProfile);
+    
     if (!hasProfile) {
       toast({
         title: "Profiel vereist",
@@ -109,6 +121,7 @@ export const useHuurderActions = () => {
   };
 
   const handleReportIssue = () => {
+    console.log("Issue reported by user");
     toast({
       title: "Issue gerapporteerd",
       description: "Je probleem is gerapporteerd en wordt onderzocht door ons team.",
@@ -116,6 +129,7 @@ export const useHuurderActions = () => {
   };
 
   const handleSettings = () => {
+    console.log("Settings accessed");
     toast({
       title: "Instellingen",
       description: "Instellingen functionaliteit wordt binnenkort toegevoegd.",
@@ -123,6 +137,7 @@ export const useHuurderActions = () => {
   };
 
   const handleHelpSupport = () => {
+    console.log("Help & Support accessed");
     toast({
       title: "Help & Support",
       description: "Help & Support functionaliteit wordt binnenkort toegevoegd.",
@@ -131,6 +146,7 @@ export const useHuurderActions = () => {
 
   const handleLogout = async () => {
     try {
+      console.log("User logging out");
       const { createClient } = await import("@supabase/supabase-js");
       const supabase = createClient(
         import.meta.env.VITE_SUPABASE_URL,
@@ -141,6 +157,7 @@ export const useHuurderActions = () => {
       localStorage.removeItem('auth-storage');
       useAuthStore.getState().logout();
       window.location.href = '/';
+      console.log("Logout completed");
     } catch (error) {
       console.error('Logout error:', error);
       localStorage.removeItem('auth-storage');
@@ -150,6 +167,7 @@ export const useHuurderActions = () => {
   };
 
   const handleGoHome = () => {
+    console.log("Navigating to home page");
     window.location.href = "/";
   };
 
