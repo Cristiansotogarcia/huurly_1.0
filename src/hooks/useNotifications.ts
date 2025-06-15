@@ -4,19 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from '@/services/NotificationService';
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-  updated_at?: string;
-  related_id?: string;
-  related_type?: string;
-}
+import { Notification } from './notifications/types';
 
 export const useNotifications = () => {
   const { user } = useAuthStore();
@@ -77,7 +65,7 @@ export const useNotifications = () => {
   ) => {
     await notificationService.createNotification({
       userId: notification.user_id,
-      type: notification.type as any,
+      type: notification.type,
       title: notification.title,
       message: notification.message,
       relatedId: notification.related_id,
@@ -117,7 +105,7 @@ export const notifyDocumentUploaded = async (
 ) => {
   await notificationService.createNotification({
     userId: beoordelaarId,
-    type: 'document_approved', // Changed from document_uploaded to match allowed types
+    type: 'document_approved',
     title: 'Nieuw document te beoordelen',
     message: `${uploaderName} heeft een ${documentType} document geüpload.`
   });
@@ -171,7 +159,7 @@ export const notifyApplicationReceived = async (
 ) => {
   await notificationService.createNotification({
     userId: verhuurderUserId,
-    type: 'property_application', // Changed from application_received to match allowed types
+    type: 'property_application',
     title: 'Nieuwe huuranvraag',
     message: `${huurderName} heeft een aanvraag ingediend voor ${propertyAddress}.`
   });
@@ -184,7 +172,7 @@ export const notifyUserSuspended = async (
 ) => {
   await notificationService.createNotification({
     userId,
-    type: 'system_announcement', // Changed from user_suspended to match allowed types
+    type: 'system_announcement',
     title: 'Account geschorst',
     message: `Je account is tijdelijk geschorst. Reden: ${reason}`
   });
@@ -197,7 +185,7 @@ export const notifyIssueResolved = async (
 ) => {
   await notificationService.createNotification({
     userId,
-    type: 'system_announcement', // Changed from issue_resolved to match allowed types
+    type: 'system_announcement',
     title: 'Issue opgelost',
     message: `Je gemelde issue "${issueTitle}" is opgelost. ${resolution}`
   });
