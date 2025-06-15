@@ -20,9 +20,7 @@ export const useNotificationActions = () => {
     addNotification,
     updateNotification,
     removeNotification,
-    markAsDeleted,
-    unmarkAsDeleted,
-    removeFromState
+    removeNotificationImmediate
   } = useNotificationState();
 
   const loadNotifications = async () => {
@@ -33,11 +31,16 @@ export const useNotificationActions = () => {
       console.log('Loading notifications for user:', user.id);
       const result = await notificationService.getUserNotifications();
       if (result.success && result.data) {
-        console.log('Loaded notifications:', result.data.length);
+        console.log('Loaded notifications from server:', result.data.length);
         updateNotifications(result.data);
+      } else {
+        console.error('Failed to load notifications:', result.error);
+        // Clear notifications on error to prevent stale data
+        updateNotifications([]);
       }
     } catch (error) {
       logger.error('Error loading notifications:', error);
+      updateNotifications([]);
     } finally {
       setIsLoading(false);
     }
@@ -46,6 +49,9 @@ export const useNotificationActions = () => {
   useEffect(() => {
     if (user) {
       loadNotifications();
+    } else {
+      // Clear notifications when user logs out
+      updateNotifications([]);
     }
   }, [user?.id]);
 
@@ -57,9 +63,7 @@ export const useNotificationActions = () => {
 
   const actions = useNotificationActionsLogic({
     onReload: loadNotifications,
-    onMarkAsDeleted: markAsDeleted,
-    onUnmarkAsDeleted: unmarkAsDeleted,
-    onRemoveFromState: removeFromState,
+    onRemoveFromState: removeNotificationImmediate,
     setIsDeleting
   });
 
