@@ -34,7 +34,6 @@ export const QuickActionsSection = ({
         </div>
         <div className="text-center">
           <h1 className="text-2xl font-bold">Snelle Acties</h1>
-          <p className="text-blue-100">Handige links voor snelle toegang</p>
         </div>
       </div>
 
@@ -91,16 +90,6 @@ export const QuickActionsSection = ({
             )}
           </Button>
         </div>
-
-        {!hasProfile && (
-          <Button 
-            className="bg-blue-500 text-white hover:bg-blue-400 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] shadow-md" 
-            onClick={onShowProfileModal}
-          >
-            <User className="mb-2 h-5 w-5" />
-            <span className="text-center">Maak Profiel Aan</span>
-          </Button>
-        )}
         
         <Button 
           className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-sm py-3 px-4 h-auto flex-col items-center justify-center min-h-[80px] border border-blue-500 shadow-md" 
