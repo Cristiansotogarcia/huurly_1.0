@@ -1,10 +1,11 @@
+
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { notificationService } from '@/services/NotificationService';
 import { logger } from '@/lib/logger';
 import { useNotificationState } from './notifications/useNotificationState';
 import { useNotificationRealtime } from './notifications/useNotificationRealtime';
-import { useNotificationActions } from './notifications/useNotificationActions';
+import { useNotificationActions as useNotificationActionsLogic } from './notifications/useNotificationActions';
 
 export const useNotificationActions = () => {
   const { user } = useAuth();
@@ -13,7 +14,6 @@ export const useNotificationActions = () => {
     unreadCount,
     isLoading,
     isDeleting,
-    deletedNotificationIds,
     setIsLoading,
     setIsDeleting,
     updateNotifications,
@@ -55,7 +55,7 @@ export const useNotificationActions = () => {
     onNotificationDeleted: removeNotification
   });
 
-  const actions = useNotificationActions({
+  const actions = useNotificationActionsLogic({
     onReload: loadNotifications,
     onMarkAsDeleted: markAsDeleted,
     onUnmarkAsDeleted: unmarkAsDeleted,
