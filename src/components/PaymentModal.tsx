@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
 import { paymentService } from "@/services/PaymentService";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -73,15 +73,29 @@ export const PaymentModal = ({
     }
   };
 
-  const Content = persistent ? PersistentDialogContent : DialogContent;
+  // Always use PersistentDialogContent for payment modal to prevent closing
+  const Content = PersistentDialogContent;
 
   return (
-    <Dialog open={isOpen} {...(persistent ? {} : { onOpenChange: onClose })}>
+    <Dialog open={isOpen} onOpenChange={persistent ? undefined : onClose}>
       <Content className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-dutch-blue">
-            Account activeren
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-center text-dutch-blue flex-1">
+              Account activeren
+            </DialogTitle>
+            {/* Only show close button if not persistent */}
+            {!persistent && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-6 w-6 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -90,11 +104,13 @@ export const PaymentModal = ({
               <span className="text-white text-2xl">€</span>
             </div>
             <h3 className="text-xl font-semibold mb-2">
-              Premium Toegang Vereist
+              {persistent ? "Betaling Vereist" : "Premium Toegang Vereist"}
             </h3>
             <p className="text-gray-600">
-              Om gebruik te maken van alle functies van Huurly, heb je een
-              actief abonnement nodig.
+              {persistent 
+                ? "Je account moet geactiveerd worden met een geldige betaling om toegang te krijgen tot alle functies."
+                : "Om gebruik te maken van alle functies van Huurly, heb je een actief abonnement nodig."
+              }
             </p>
           </div>
 
@@ -133,6 +149,7 @@ export const PaymentModal = ({
 
           <p className="text-xs text-gray-500 text-center">
             Door je abonnement af te sluiten ga je akkoord met onze voorwaarden.
+            {persistent && " Deze melding verdwijnt automatisch na succesvolle betaling."}
           </p>
         </div>
       </Content>

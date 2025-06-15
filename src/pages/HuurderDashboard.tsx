@@ -52,7 +52,7 @@ const HuurderDashboard = () => {
       await initializeDashboard();
       
       if (user) {
-        // Simple payment modal logic - show if no payment
+        // Show persistent payment modal if no payment
         setShowPaymentModal(!user.hasPayment);
       }
     };
@@ -116,7 +116,7 @@ const HuurderDashboard = () => {
     <>
       <div
         className={
-          showPaymentModal
+          showPaymentModal && !user.hasPayment
             ? "min-h-screen bg-gray-50 filter blur-sm pointer-events-none select-none"
             : "min-h-screen bg-gray-50"
         }
@@ -150,12 +150,12 @@ const HuurderDashboard = () => {
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
         showSearchModal={showSearchModal}
-        showPaymentModal={showPaymentModal}
+        showPaymentModal={showPaymentModal && !user.hasPayment}
         hasProfile={hasProfile}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
         setShowSearchModal={setShowSearchModal}
-        setShowPaymentModal={setShowPaymentModal}
+        setShowPaymentModal={() => {}} // Don't allow closing persistent payment modal
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}
       />
