@@ -278,31 +278,116 @@ export function EnhancedProfileCreationModal({
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const { toast } = useToast();
 
   const totalSteps = 8;
 
-  // Load user data from auth metadata on mount
+  // Fetch & load tenant profile when opening in editMode
   useEffect(() => {
-    const loadUserData = async () => {
+    const fetchProfile = async () => {
+      setIsLoadingProfile(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.user_metadata) {
-          setFormData(prev => ({
-            ...prev,
-            first_name: user.user_metadata.first_name || '',
-            last_name: user.user_metadata.last_name || ''
-          }));
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (!user || !user.id) {
+          setIsLoadingProfile(false);
+          return;
         }
-      } catch (error) {
-        console.error('Error loading user data:', error);
+        // Fetch profile from tenant_profiles table
+        const { data: tenantProfile, error } = await supabase
+          .from('tenant_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading tenant profile:', error);
+          setIsLoadingProfile(false);
+          return;
+        }
+        if (!tenantProfile) {
+          setIsLoadingProfile(false);
+          return;
+        }
+
+        // Map DB to modal fields (converting types as needed)
+        setFormData({
+          first_name: tenantProfile.first_name || '',
+          last_name: tenantProfile.last_name || '',
+          date_of_birth: tenantProfile.date_of_birth ? new Date(tenantProfile.date_of_birth) : undefined,
+          phone: tenantProfile.phone || '',
+          sex: tenantProfile.sex || '',
+          nationality: tenantProfile.nationality || 'Nederlandse',
+          marital_status: tenantProfile.marital_status || 'single',
+          
+          profession: tenantProfile.profession || '',
+          employer: tenantProfile.employer || '',
+          employment_status: tenantProfile.employment_status || '',
+          work_contract_type: tenantProfile.work_contract_type || '',
+          monthly_income: tenantProfile.monthly_income ? Number(tenantProfile.monthly_income) : 0,
+          work_from_home: !!tenantProfile.work_from_home,
+
+          has_partner: !!tenantProfile.has_partner,
+          partner_name: tenantProfile.partner_name || '',
+          partner_profession: tenantProfile.partner_profession || '',
+          partner_employment_status: tenantProfile.partner_employment_status || '',
+          partner_monthly_income: tenantProfile.partner_monthly_income ? Number(tenantProfile.partner_monthly_income) : 0,
+
+          has_children: !!tenantProfile.has_children,
+          number_of_children: tenantProfile.number_of_children ? Number(tenantProfile.number_of_children) : 0,
+
+          preferred_city: tenantProfile.preferred_city || '',
+          preferred_property_type: tenantProfile.preferred_property_type || '',
+          preferred_bedrooms: tenantProfile.preferred_bedrooms ? Number(tenantProfile.preferred_bedrooms) : 1,
+          max_budget: tenantProfile.max_budget ? Number(tenantProfile.max_budget) : 0,
+          min_budget: tenantProfile.min_budget ? Number(tenantProfile.min_budget) : 0,
+          furnished_preference: tenantProfile.furnished_preference || 'geen_voorkeur',
+          parking_required: !!tenantProfile.parking_required,
+          storage_needs: tenantProfile.storage_needs || '',
+
+          move_in_date_preferred: tenantProfile.move_in_date_preferred ? new Date(tenantProfile.move_in_date_preferred) : undefined,
+          move_in_date_earliest: tenantProfile.move_in_date_earliest ? new Date(tenantProfile.move_in_date_earliest) : undefined,
+          availability_flexible: !!tenantProfile.availability_flexible,
+          lease_duration_preference: tenantProfile.lease_duration_preference || '',
+
+          guarantor_available: !!tenantProfile.guarantor_available,
+          guarantor_name: tenantProfile.guarantor_name || '',
+          guarantor_phone: tenantProfile.guarantor_phone || '',
+          guarantor_income: tenantProfile.guarantor_income ? Number(tenantProfile.guarantor_income) : 0,
+          guarantor_relationship: tenantProfile.guarantor_relationship || '',
+          income_proof_available: !!tenantProfile.income_proof_available,
+
+          emergency_contact_name: tenantProfile.emergency_contact_name || '',
+          emergency_contact_phone: tenantProfile.emergency_contact_phone || '',
+          emergency_contact_relationship: tenantProfile.emergency_contact_relationship || '',
+
+          has_pets: !!tenantProfile.has_pets,
+          pet_details: tenantProfile.pet_details || '',
+
+          smokes: !!tenantProfile.smokes,
+          smoking_details: tenantProfile.smoking_details || '',
+
+          references_available: !!tenantProfile.references_available,
+          rental_history_years: tenantProfile.rental_history_years ? Number(tenantProfile.rental_history_years) : 0,
+          reason_for_moving: tenantProfile.reason_for_moving || '',
+
+          bio: tenantProfile.bio || '',
+          motivation: tenantProfile.motivation || ''
+        });
+      } catch (err) {
+        console.error('Error loading profile:', err);
       }
+      setIsLoadingProfile(false);
     };
 
-    if (open) {
-      loadUserData();
+    if (open && editMode) {
+      fetchProfile();
+    } else if (open && !editMode) {
+      // clear form if opening as new profile
+      setFormData(initialFormData);
     }
-  }, [open]);
+  // Don't add formData as dependency to avoid reload on every keystroke
+  }, [open, editMode]);
 
   // Calculate household size automatically
   const calculateHouseholdSize = () => {
@@ -500,6 +585,31 @@ export function EnhancedProfileCreationModal({
   };
 
   const renderStep = () => {
+    if (isLoadingProfile) {
+      // Show spinner while loading
+      return (
+        <div className="flex flex-col items-center py-14">
+          <svg className="animate-spin h-8 w-8 text-blue-600 mb-2" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <p className="text-sm mt-2 text-blue-700">Profielgegevens laden...</p>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 1:
         return (
