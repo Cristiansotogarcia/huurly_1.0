@@ -6,30 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
 import { User, Calendar, Phone, Globe } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-
-const EnhancedDatePicker = ({ 
-  selected, 
-  onSelect, 
-  placeholder = "Selecteer datum",
-  disabled
-}: {
-  selected: Date | undefined;
-  onSelect: (date: Date | undefined) => void;
-  placeholder?: string;
-  disabled?: (date: Date) => boolean;
-}) => {
-  return (
-    <Input
-      type="date"
-      value={selected ? selected.toISOString().split('T')[0] : ''}
-      onChange={(e) => {
-        const date = e.target.value ? new Date(e.target.value) : undefined;
-        onSelect(date);
-      }}
-      placeholder={placeholder}
-    />
-  );
-};
+import EnhancedDatePicker from '../EnhancedDatePicker';
 
 interface Step1PersonalInfoProps {
   formData: any;
@@ -97,13 +74,15 @@ export default function Step1PersonalInfo({
         <div className="space-y-2">
           <Label htmlFor="date_of_birth">Geboortedatum *</Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <EnhancedDatePicker
-              selected={formData.date_of_birth}
-              onSelect={(date) => handleDateSelect('date_of_birth', date)}
-              placeholder="Selecteer je geboortedatum"
-              disabled={(date) => date > new Date() || date < new Date(1900, 0, 1)}
-            />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+            <div className="pl-10">
+              <EnhancedDatePicker
+                selected={formData.date_of_birth}
+                onSelect={(date) => handleDateSelect('date_of_birth', date)}
+                placeholder="Selecteer je geboortedatum"
+                disabled={(date) => date > new Date() || date < new Date(1900, 0, 1)}
+              />
+            </div>
           </div>
         </div>
 

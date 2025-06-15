@@ -5,30 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Calendar } from 'lucide-react';
-
-const EnhancedDatePicker = ({ 
-  selected, 
-  onSelect, 
-  placeholder = "Selecteer datum",
-  disabled
-}: {
-  selected: Date | undefined;
-  onSelect: (date: Date | undefined) => void;
-  placeholder?: string;
-  disabled?: (date: Date) => boolean;
-}) => {
-  return (
-    <Input
-      type="date"
-      value={selected ? selected.toISOString().split('T')[0] : ''}
-      onChange={(e) => {
-        const date = e.target.value ? new Date(e.target.value) : undefined;
-        onSelect(date);
-      }}
-      placeholder={placeholder}
-    />
-  );
-};
+import EnhancedDatePicker from '../EnhancedDatePicker';
 
 interface Step5TimingProps {
   formData: any;
@@ -53,24 +30,28 @@ export default function Step5Timing({ formData, handleInputChange, handleDateSel
         <div className="space-y-2">
           <Label htmlFor="move_in_date_preferred">Gewenste inhuurdatum</Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <EnhancedDatePicker
-              selected={formData.move_in_date_preferred}
-              onSelect={(date) => handleDateSelect('move_in_date_preferred', date)}
-              placeholder="Gewenste datum"
-            />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+            <div className="pl-10">
+              <EnhancedDatePicker
+                selected={formData.move_in_date_preferred}
+                onSelect={(date) => handleDateSelect('move_in_date_preferred', date)}
+                placeholder="Gewenste datum"
+              />
+            </div>
           </div>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="move_in_date_earliest">Vroegst mogelijke datum</Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <EnhancedDatePicker
-              selected={formData.move_in_date_earliest}
-              onSelect={(date) => handleDateSelect('move_in_date_earliest', date)}
-              placeholder="Vroegste datum"
-            />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+            <div className="pl-10">
+              <EnhancedDatePicker
+                selected={formData.move_in_date_earliest}
+                onSelect={(date) => handleDateSelect('move_in_date_earliest', date)}
+                placeholder="Vroegste datum"
+              />
+            </div>
           </div>
         </div>
       </div>

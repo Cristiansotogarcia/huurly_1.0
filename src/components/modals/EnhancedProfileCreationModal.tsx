@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -143,7 +149,7 @@ const initialFormData: ProfileFormData = {
 // Define allowed furnished_preference values - now using Dutch values
 const ALLOWED_FURNISHED_PREFERENCES = ["gemeubileerd", "ongemeubileerd", "geen_voorkeur"];
 
-// Enhanced Date Picker with Year Navigation
+// Enhanced Date Picker with Year Navigation - Fixed format to dd/MM/yyyy
 const EnhancedDatePicker = ({ 
   selected, 
   onSelect, 
