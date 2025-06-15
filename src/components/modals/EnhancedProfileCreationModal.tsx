@@ -1,19 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, User, Heart, Home, Building, Car, Briefcase, Shield, Clock, MapPin, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 interface EnhancedProfileCreationModalProps {
   open: boolean;
@@ -92,6 +81,9 @@ interface ProfileFormData {
   // Profile Content
   bio: string;
   motivation: string;
+  
+  // Profile Picture
+  profilePictureUrl: string;
 }
 
 const initialFormData: ProfileFormData = {
@@ -144,7 +136,8 @@ const initialFormData: ProfileFormData = {
   rental_history_years: 0,
   reason_for_moving: '',
   bio: '',
-  motivation: ''
+  motivation: '',
+  profilePictureUrl: ''
 };
 
 // Define allowed furnished_preference values - now using Dutch values
@@ -302,7 +295,7 @@ export function EnhancedProfileCreationModal({
           setIsLoadingProfile(false);
           return;
         }
-        // Fetch profile from tenant_profiles table
+        
         const { data: tenantProfile, error } = await supabase
           .from('tenant_profiles')
           .select('*')
@@ -381,7 +374,9 @@ export function EnhancedProfileCreationModal({
           reason_for_moving: tenantProfile.reason_for_moving || '',
 
           bio: tenantProfile.bio || '',
-          motivation: tenantProfile.motivation || ''
+          motivation: tenantProfile.motivation || '',
+          
+          profilePictureUrl: tenantProfile.profile_picture_url || ''
         });
       } catch (err) {
         console.error('Error loading profile:', err);
@@ -392,10 +387,8 @@ export function EnhancedProfileCreationModal({
     if (open && editMode) {
       fetchProfile();
     } else if (open && !editMode) {
-      // clear form if opening as new profile
       setFormData(initialFormData);
     }
-  // Don't add formData as dependency to avoid reload on every keystroke
   }, [open, editMode]);
 
   // Calculate household size automatically
@@ -560,7 +553,8 @@ export function EnhancedProfileCreationModal({
         // Auto-calculated household size
         household_size: householdSize,
         profile_completed: true,
-        profile_completion_percentage: 100
+        profile_completion_percentage: 100,
+        profile_picture_url: formData.profilePictureUrl || null
       };
 
       console.log('Submitting profile data with furnished_preference:', validFurnishedPreference);

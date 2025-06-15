@@ -482,6 +482,10 @@ export type Database = {
         Args: { date_of_birth: string }
         Returns: number
       }
+      get_profile_picture_url: {
+        Args: { user_id: string; filename: string }
+        Returns: string
+      }
       user_has_active_subscription: {
         Args: { user_uuid: string }
         Returns: boolean
