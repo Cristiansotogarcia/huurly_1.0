@@ -75,7 +75,7 @@ export const PersonalInfoStep = ({ profileData, updateField }: StepProps) => {
               {profileData.dateOfBirth ? format(profileData.dateOfBirth, "PPP") : <span>Selecteer geboortedatum</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
             <Calendar
               mode="single"
               selected={profileData.dateOfBirth}
@@ -84,7 +84,7 @@ export const PersonalInfoStep = ({ profileData, updateField }: StepProps) => {
                 date > new Date() || date < new Date("1900-01-01")
               }
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className="p-3 pointer-events-auto"
             />
           </PopoverContent>
         </Popover>

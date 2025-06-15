@@ -68,21 +68,28 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     setIsSubmitting(true);
     
     try {
-      const result = await userService.createTenantProfile({
+      console.log('Submitting profile data:', profileData);
+      
+      // Format the data to match database schema exactly
+      const formattedData = {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         phone: profileData.phone,
         dateOfBirth: profileData.dateOfBirth ? format(profileData.dateOfBirth, 'yyyy-MM-dd') : '',
         profession: profileData.profession,
-        monthlyIncome: profileData.monthlyIncome,
+        monthlyIncome: Number(profileData.monthlyIncome),
         bio: profileData.bio,
         city: profileData.city,
-        minBudget: profileData.minBudget,
-        maxBudget: profileData.maxBudget,
-        bedrooms: profileData.bedrooms,
+        minBudget: Number(profileData.minBudget),
+        maxBudget: Number(profileData.maxBudget),
+        bedrooms: Number(profileData.bedrooms),
         propertyType: profileData.propertyType,
         motivation: profileData.motivation,
-      });
+      };
+
+      console.log('Formatted data for submission:', formattedData);
+
+      const result = await userService.createTenantProfile(formattedData);
 
       if (result.success && result.data) {
         toast({
@@ -94,9 +101,11 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
         onOpenChange(false);
         setCurrentStep(1);
       } else {
+        console.error('Profile creation failed:', result.error);
         throw result.error || new Error('Profiel aanmaken mislukt');
       }
     } catch (error) {
+      console.error('Profile submission error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan. Probeer het opnieuw.';
       toast({
         title: "Fout bij aanmaken profiel",
