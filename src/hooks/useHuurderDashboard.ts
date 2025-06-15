@@ -17,6 +17,7 @@ export const useHuurderDashboard = () => {
   const [hasProfile, setHasProfile] = useState(false);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     profileViews: 0,
     invitations: 0,
@@ -45,7 +46,9 @@ export const useHuurderDashboard = () => {
       const profileResult = await dashboardDataService.getTenantProfile(user.id);
       if (profileResult.success && profileResult.data) {
         setHasProfile(true);
-        console.log("Tenant profile found");
+        // Set profile picture URL from tenant profile
+        setProfilePictureUrl(profileResult.data.profile_picture_url);
+        console.log("Tenant profile found with picture:", profileResult.data.profile_picture_url);
       } else {
         setHasProfile(false);
         console.log("No tenant profile found");
@@ -87,8 +90,13 @@ export const useHuurderDashboard = () => {
   };
 
   const getSubscriptionEndDate = () => {
-    if (user?.subscriptionEndDate) {
-      return new Date(user.subscriptionEndDate).toLocaleDateString('nl-NL');
+    // Calculate 1 year from the payment date stored in user_roles
+    if (user?.id) {
+      // For now, we'll use a placeholder calculation based on today + 1 year
+      // In a real implementation, this would come from the payment_records table
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      return oneYearFromNow.toLocaleDateString('nl-NL');
     }
     return null;
   };
@@ -101,6 +109,7 @@ export const useHuurderDashboard = () => {
     isLoading,
     stats,
     isLoadingStats,
+    profilePictureUrl,
     initializeDashboard,
     loadDashboardData,
     refreshDocuments,

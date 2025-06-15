@@ -9,6 +9,7 @@ interface DashboardHeaderProps {
   userName: string;
   hasPayment: boolean;
   subscriptionEndDate: string | null;
+  profilePictureUrl?: string | null;
   onSettings: () => void;
   onLogout: () => void;
 }
@@ -16,7 +17,8 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ 
   userName, 
   hasPayment, 
-  subscriptionEndDate, 
+  subscriptionEndDate,
+  profilePictureUrl,
   onSettings, 
   onLogout 
 }: DashboardHeaderProps) => {
@@ -73,7 +75,7 @@ export const DashboardHeader = ({
             <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
               <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm">
                 <AvatarImage 
-                  src={`https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=100&h=100&fit=crop&crop=face`} 
+                  src={profilePictureUrl || `https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=100&h=100&fit=crop&crop=face`} 
                   alt={userName}
                 />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-medium">
@@ -101,7 +103,7 @@ export const DashboardHeader = ({
             <div className="flex items-center space-x-2">
               <Avatar className="h-8 w-8 ring-1 ring-gray-200">
                 <AvatarImage 
-                  src={`https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=100&h=100&fit=crop&crop=face`} 
+                  src={profilePictureUrl || `https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=100&h=100&fit=crop&crop=face`} 
                   alt={userName}
                 />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-medium">
