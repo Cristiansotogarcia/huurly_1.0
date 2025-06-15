@@ -15,6 +15,19 @@ const NotificationBell = () => {
   const { notifications, unreadCount, isLoading } = useNotificationState();
   const { markAsRead, deleteNotification, markAllAsRead } = useNotificationActions();
 
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+  };
+
+  const handleDeleteNotification = (notificationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    deleteNotification(notificationId);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -34,6 +47,8 @@ const NotificationBell = () => {
         <div className="max-h-96 flex flex-col">
           <NotificationHeader 
             unreadCount={unreadCount}
+            totalCount={notifications.length}
+            isLoading={isLoading}
             onMarkAllAsRead={markAllAsRead}
           />
           
@@ -47,8 +62,9 @@ const NotificationBell = () => {
             ) : (
               <NotificationList
                 notifications={notifications}
-                onMarkAsRead={markAsRead}
-                onDelete={deleteNotification}
+                isDeleting={null}
+                onNotificationClick={handleNotificationClick}
+                onDeleteNotification={handleDeleteNotification}
               />
             )}
           </ScrollArea>
