@@ -1,4 +1,7 @@
+
 import { useState } from 'react';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,12 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { userService } from '@/services/UserService';
 import { User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, Briefcase } from 'lucide-react';
 import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
+import { cn } from '@/lib/utils';
 
 interface ProfileCreationModalProps {
   open: boolean;
@@ -25,7 +31,7 @@ interface ProfileData {
   lastName: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
+  dateOfBirth: Date | undefined;
   profession: string;
   monthlyIncome: number;
   bio: string;
@@ -53,7 +59,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     lastName: user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: '',
-    dateOfBirth: '',
+    dateOfBirth: undefined,
     profession: '',
     monthlyIncome: 0,
     bio: '',
@@ -92,7 +98,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         phone: profileData.phone,
-        dateOfBirth: profileData.dateOfBirth,
+        dateOfBirth: profileData.dateOfBirth ? format(profileData.dateOfBirth, 'yyyy-MM-dd') : '',
         profession: profileData.profession,
         monthlyIncome: profileData.monthlyIncome,
         bio: profileData.bio,
@@ -199,12 +205,32 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
             
             <div>
               <Label htmlFor="dateOfBirth">Geboortedatum *</Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={profileData.dateOfBirth}
-                onChange={(e) => updateField('dateOfBirth', e.target.value)}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !profileData.dateOfBirth && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {profileData.dateOfBirth ? format(profileData.dateOfBirth, "PPP") : <span>Selecteer geboortedatum</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={profileData.dateOfBirth}
+                    onSelect={(date) => updateField('dateOfBirth', date)}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div>
@@ -368,6 +394,10 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
                 <div className="flex justify-between">
                   <span className="text-gray-600">Telefoon:</span>
                   <span>{profileData.phone}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Geboortedatum:</span>
+                  <span>{profileData.dateOfBirth ? format(profileData.dateOfBirth, "PPP") : 'Niet ingevuld'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Beroep:</span>

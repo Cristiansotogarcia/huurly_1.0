@@ -121,13 +121,15 @@ export interface IssueNote {
 
 export interface Notification {
   id: string;
-  userId: string;
-  type: 'viewing_invitation' | 'document_status' | 'payment_required' | 'profile_match' | 'system';
+  user_id: string;
+  type: 'profile_match' | 'viewing_invitation' | 'payment_success' | 'payment_failed' | 'subscription_cancelled' | 'document_approved' | 'document_rejected' | 'property_application' | 'system_announcement';
   title: string;
   message: string;
-  isRead: boolean;
-  createdAt: string;
-  relatedId?: string;
+  read: boolean;
+  created_at: string;
+  updated_at?: string;
+  related_id?: string;
+  related_type?: string;
 }
 
 export interface PaymentStatus {
