@@ -42,8 +42,11 @@ export const useHuurderDashboard = () => {
     try {
       setIsLoadingStats(true);
 
-      // Load tenant profile
+      // Load tenant profile with proper error handling
+      console.log("Fetching tenant profile...");
       const profileResult = await dashboardDataService.getTenantProfile(user.id);
+      console.log("Profile result:", profileResult);
+      
       if (profileResult.success && profileResult.data) {
         setHasProfile(true);
         // Set profile picture URL from tenant profile
@@ -51,21 +54,31 @@ export const useHuurderDashboard = () => {
         console.log("Tenant profile found with picture:", profileResult.data.profile_picture_url);
       } else {
         setHasProfile(false);
-        console.log("No tenant profile found");
+        console.log("No tenant profile found or error:", profileResult.error);
       }
 
       // Load user documents
+      console.log("Fetching user documents...");
       const documentsResult = await dashboardDataService.getUserDocuments(user.id);
+      console.log("Documents result:", documentsResult);
+      
       if (documentsResult.success) {
         setUserDocuments(documentsResult.data || []);
         console.log("User documents loaded:", documentsResult.data?.length || 0);
+      } else {
+        console.log("Error loading documents:", documentsResult.error);
       }
 
       // Load dashboard stats
+      console.log("Fetching dashboard stats...");
       const statsResult = await dashboardDataService.getTenantDashboardStats(user.id);
+      console.log("Stats result:", statsResult);
+      
       if (statsResult.success && statsResult.data) {
         setStats(statsResult.data);
         console.log("Dashboard stats loaded:", statsResult.data);
+      } else {
+        console.log("Error loading stats:", statsResult.error);
       }
 
     } catch (error) {
