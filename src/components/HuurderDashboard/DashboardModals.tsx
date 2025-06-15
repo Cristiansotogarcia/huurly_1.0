@@ -39,6 +39,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         open={showProfileModal}
         onOpenChange={setShowProfileModal}
         onComplete={onProfileComplete}
+        editMode={false}
       />
 
       {/* Document Upload Modal */}
@@ -52,7 +53,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       <PropertySearchModal
         open={showSearchModal}
         onOpenChange={setShowSearchModal}
-        hasProfile={hasProfile}
       />
 
       {/* Persistent Payment Modal - cannot be closed without payment */}
