@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, User, Heart, Home, Building, Car, Briefcase, Shield, Clock, MapPin, Users, FileText } from 'lucide-react';
+import { CalendarIcon, User, Heart, Home, Building, Car, Briefcase, Shield, Clock, MapPin, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +49,6 @@ interface ProfileFormData {
   partner_monthly_income: number;
   has_children: boolean;
   number_of_children: number;
-  household_size: number;
   
   // Housing Preferences
   preferred_city: string;
@@ -116,13 +116,12 @@ const initialFormData: ProfileFormData = {
   partner_monthly_income: 0,
   has_children: false,
   number_of_children: 0,
-  household_size: 1,
   preferred_city: '',
   preferred_property_type: '',
   preferred_bedrooms: 1,
   max_budget: 0,
   min_budget: 0,
-  furnished_preference: '',
+  furnished_preference: 'geen_voorkeur',
   parking_required: false,
   storage_needs: '',
   move_in_date_preferred: undefined,
@@ -149,6 +148,125 @@ const initialFormData: ProfileFormData = {
   motivation: ''
 };
 
+// Enhanced Date Picker with Year Navigation
+const EnhancedDatePicker = ({ 
+  selected, 
+  onSelect, 
+  placeholder = "Selecteer datum",
+  disabled
+}: {
+  selected: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  placeholder?: string;
+  disabled?: (date: Date) => boolean;
+}) => {
+  const [currentYear, setCurrentYear] = useState(selected?.getFullYear() || new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(selected?.getMonth() || new Date().getMonth());
+
+  const navigateYear = (direction: 'prev' | 'next') => {
+    setCurrentYear(prev => direction === 'prev' ? prev - 1 : prev + 1);
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(prev => prev - 1);
+      } else {
+        setCurrentMonth(prev => prev - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(prev => prev + 1);
+      } else {
+        setCurrentMonth(prev => prev + 1);
+      }
+    }
+  };
+
+  const displayDate = new Date(currentYear, currentMonth, 1);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !selected && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selected ? (
+            format(selected, "dd/MM/yyyy", { locale: nl })
+          ) : (
+            <span>{placeholder}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="p-3">
+          {/* Year and Month Navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateYear('prev')}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth('prev')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <span className="text-sm font-medium min-w-[120px] text-center">
+                {format(displayDate, "MMMM yyyy", { locale: nl })}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth('next')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateYear('next')}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={onSelect}
+          month={displayDate}
+          onMonthChange={(date) => {
+            setCurrentYear(date.getFullYear());
+            setCurrentMonth(date.getMonth());
+          }}
+          disabled={disabled}
+          locale={nl}
+          className="pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 export function EnhancedProfileCreationModal({ 
   open, 
   onOpenChange, 
@@ -161,6 +279,36 @@ export function EnhancedProfileCreationModal({
   const { toast } = useToast();
 
   const totalSteps = 8;
+
+  // Load user data from auth metadata on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata) {
+          setFormData(prev => ({
+            ...prev,
+            first_name: user.user_metadata.first_name || '',
+            last_name: user.user_metadata.last_name || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    if (open) {
+      loadUserData();
+    }
+  }, [open]);
+
+  // Calculate household size automatically
+  const calculateHouseholdSize = () => {
+    let size = 1; // User always counts as 1
+    if (formData.has_partner) size += 1;
+    if (formData.has_children) size += formData.number_of_children;
+    return size;
+  };
 
   const handleInputChange = (field: keyof ProfileFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -193,6 +341,9 @@ export function EnhancedProfileCreationModal({
         throw new Error('User not authenticated');
       }
 
+      // Calculate household size
+      const householdSize = calculateHouseholdSize();
+
       // Convert Date objects to strings for database
       const profileData = {
         user_id: user.id,
@@ -201,15 +352,20 @@ export function EnhancedProfileCreationModal({
         date_of_birth: formData.date_of_birth ? formData.date_of_birth.toISOString().split('T')[0] : null,
         move_in_date_preferred: formData.move_in_date_preferred ? formData.move_in_date_preferred.toISOString().split('T')[0] : null,
         move_in_date_earliest: formData.move_in_date_earliest ? formData.move_in_date_earliest.toISOString().split('T')[0] : null,
+        // Auto-calculated household size
+        household_size: householdSize,
         profile_completed: true,
         profile_completion_percentage: 100
       };
+
+      console.log('Submitting profile data:', profileData);
 
       const { error } = await supabase
         .from('tenant_profiles')
         .insert(profileData);
 
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
 
@@ -224,7 +380,7 @@ export function EnhancedProfileCreationModal({
       console.error('Error creating profile:', error);
       toast({
         title: "Fout bij aanmaken profiel",
-        description: "Er is een fout opgetreden. Probeer het opnieuw.",
+        description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het opnieuw.",
         variant: "destructive",
       });
     } finally {
@@ -265,33 +421,12 @@ export function EnhancedProfileCreationModal({
 
             <div>
               <Label>Geboortedatum *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.date_of_birth && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date_of_birth ? (
-                      format(formData.date_of_birth, "dd/MM/yyyy", { locale: nl })
-                    ) : (
-                      <span>Selecteer geboortedatum</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date_of_birth}
-                    onSelect={(date) => handleDateSelect('date_of_birth', date)}
-                    initialFocus
-                    locale={nl}
-                  />
-                </PopoverContent>
-              </Popover>
+              <EnhancedDatePicker
+                selected={formData.date_of_birth}
+                onSelect={(date) => handleDateSelect('date_of_birth', date)}
+                placeholder="Selecteer geboortedatum"
+                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -504,16 +639,13 @@ export function EnhancedProfileCreationModal({
                 </div>
               )}
 
-              <div>
-                <Label htmlFor="household_size">Totaal aantal personen in huishouden</Label>
-                <Input
-                  id="household_size"
-                  type="number"
-                  value={formData.household_size || ''}
-                  onChange={(e) => handleInputChange('household_size', Number(e.target.value))}
-                  placeholder="1"
-                  min="1"
-                />
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <Label className="text-sm font-medium text-blue-800">
+                  Totaal aantal personen in huishouden: {calculateHouseholdSize()}
+                </Label>
+                <p className="text-xs text-blue-600 mt-1">
+                  Dit wordt automatisch berekend op basis van je gezinssamenstelling
+                </p>
               </div>
             </div>
           </div>
@@ -654,64 +786,20 @@ export function EnhancedProfileCreationModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Gewenste intrekdatum</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.move_in_date_preferred && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.move_in_date_preferred ? (
-                        format(formData.move_in_date_preferred, "dd/MM/yyyy", { locale: nl })
-                      ) : (
-                        <span>Selecteer datum</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.move_in_date_preferred}
-                      onSelect={(date) => handleDateSelect('move_in_date_preferred', date)}
-                      initialFocus
-                      locale={nl}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <EnhancedDatePicker
+                  selected={formData.move_in_date_preferred}
+                  onSelect={(date) => handleDateSelect('move_in_date_preferred', date)}
+                  placeholder="Selecteer datum"
+                />
               </div>
               
               <div>
                 <Label>Vroegst mogelijke intrekdatum</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.move_in_date_earliest && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.move_in_date_earliest ? (
-                        format(formData.move_in_date_earliest, "dd/MM/yyyy", { locale: nl })
-                      ) : (
-                        <span>Selecteer datum</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.move_in_date_earliest}
-                      onSelect={(date) => handleDateSelect('move_in_date_earliest', date)}
-                      initialFocus
-                      locale={nl}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <EnhancedDatePicker
+                  selected={formData.move_in_date_earliest}
+                  onSelect={(date) => handleDateSelect('move_in_date_earliest', date)}
+                  placeholder="Selecteer datum"
+                />
               </div>
             </div>
 
