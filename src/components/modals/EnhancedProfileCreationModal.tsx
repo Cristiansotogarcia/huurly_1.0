@@ -147,7 +147,7 @@ const initialFormData: ProfileFormData = {
   motivation: ''
 };
 
-// Define allowed furnished_preference values globally in this component file
+// Define allowed furnished_preference values - now using Dutch values
 const ALLOWED_FURNISHED_PREFERENCES = ["gemeubileerd", "ongemeubileerd", "geen_voorkeur"];
 
 // Enhanced Date Picker with Year Navigation
@@ -312,11 +312,16 @@ export function EnhancedProfileCreationModal({
     return size;
   };
 
-  // Defensive furnished_preference fix: always set to allowed value
+  // Updated sanitize function to ensure Dutch values
   const sanitizeFurnishedPreference = (value: string) => {
     if (ALLOWED_FURNISHED_PREFERENCES.includes(value)) return value;
+    // Convert English values to Dutch
+    if (value === 'furnished') return 'gemeubileerd';
+    if (value === 'unfurnished') return 'ongemeubileerd';
+    if (value === 'no_preference') return 'geen_voorkeur';
+    
     console.warn(
-      "Invalid furnished_preference detected in form, resetting to 'geen_voorkeur'. Value was:",
+      "Invalid furnished_preference detected in form, converting to 'geen_voorkeur'. Value was:",
       value
     );
     return "geen_voorkeur";
@@ -376,18 +381,7 @@ export function EnhancedProfileCreationModal({
       // Calculate household size
       const householdSize = calculateHouseholdSize();
 
-      // Defensive: sanitize AGAIN just before submission
-      const furnished_pref_before = formData.furnished_preference;
-      const safeFurnishedPreference = sanitizeFurnishedPreference(furnished_pref_before);
-      if (furnished_pref_before !== safeFurnishedPreference) {
-        setFormData(prev => ({
-          ...prev,
-          furnished_preference: safeFurnishedPreference,
-        }));
-      }
-      console.log("Handle submit: furnished_preference before submit = ", safeFurnishedPreference);
-
-      // Ensure furnished_preference has a valid value
+      // Ensure furnished_preference has a valid Dutch value
       const validFurnishedPreference = sanitizeFurnishedPreference(formData.furnished_preference);
       
       // Ensure sex has a valid value if provided
@@ -475,7 +469,7 @@ export function EnhancedProfileCreationModal({
         profile_completion_percentage: 100
       };
 
-      console.log('Submitting profile data:', profileData);
+      console.log('Submitting profile data with furnished_preference:', validFurnishedPreference);
 
       const { error } = await supabase
         .from('tenant_profiles')
