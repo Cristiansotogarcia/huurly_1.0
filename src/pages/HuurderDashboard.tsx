@@ -39,7 +39,6 @@ const HuurderDashboard = () => {
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   console.log("HuurderDashboard: Current user:", user);
@@ -78,7 +77,12 @@ const HuurderDashboard = () => {
   };
 
   const onStartSearch = () => {
-    handleStartSearch(hasProfile, () => setShowProfileModal(true), () => setShowSearchModal(true));
+    if (!hasProfile) {
+      setShowProfileModal(true);
+      return;
+    }
+    // For now, just show a message since we removed the search modal
+    console.log("Property search functionality will be implemented later");
   };
 
   // Show loading state while initializing
@@ -149,12 +153,10 @@ const HuurderDashboard = () => {
       <DashboardModals
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
-        showSearchModal={showSearchModal}
         showPaymentModal={showPaymentModal && !user.hasPayment}
         hasProfile={hasProfile}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
-        setShowSearchModal={setShowSearchModal}
         setShowPaymentModal={setShowPaymentModal}
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}

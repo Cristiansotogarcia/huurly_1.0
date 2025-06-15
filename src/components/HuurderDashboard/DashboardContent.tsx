@@ -59,14 +59,13 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         <ProfileStatusCard
           isLookingForPlace={isLookingForPlace}
           isUpdatingStatus={isUpdatingStatus}
-          onShowProfileModal={onShowProfileModal}
           onToggleLookingStatus={onToggleLookingStatus}
         />
       </div>
 
       {/* Stats Grid */}
       <div className="mb-8">
-        <StatsGrid stats={stats} isLoading={isLoadingStats} />
+        <StatsGrid stats={stats} isLoadingStats={isLoadingStats} />
       </div>
 
       {/* Quick Actions */}
@@ -86,15 +85,15 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
 
       {/* Documents Section */}
       <div className="mb-8">
-        <DocumentsSection userDocuments={userDocuments} />
+        <DocumentsSection 
+          userDocuments={userDocuments}
+          onShowDocumentModal={onShowDocumentModal}
+        />
       </div>
 
       {/* Important Information */}
       <div className="mb-8">
-        <ImportantInfoSection
-          onReportIssue={onReportIssue}
-          onHelpSupport={onHelpSupport}
-        />
+        <ImportantInfoSection />
       </div>
     </main>
   );
