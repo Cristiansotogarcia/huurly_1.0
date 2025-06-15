@@ -2,9 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Settings, User, Menu } from "lucide-react";
+import { Settings, User } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import NotificationBell from "@/components/NotificationBell";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -60,9 +59,6 @@ export const DashboardHeader = ({
               </div>
             )}
             
-            {/* Notification Bell */}
-            <NotificationBell />
-            
             {/* Settings Button */}
             <Button 
               variant="ghost" 
@@ -101,8 +97,6 @@ export const DashboardHeader = ({
 
           {/* Right Section - Mobile */}
           <div className="sm:hidden flex items-center space-x-3">
-            <NotificationBell />
-            
             {/* User Profile - Mobile */}
             <div className="flex items-center space-x-2">
               <Avatar className="h-8 w-8 ring-1 ring-gray-200">
