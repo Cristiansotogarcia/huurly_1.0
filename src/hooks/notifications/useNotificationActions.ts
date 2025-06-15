@@ -54,7 +54,6 @@ export const useNotificationActions = ({
 
     console.log('Delete notification clicked for ID:', notificationId);
     
-    // Immediately remove from UI to prevent user confusion
     onRemoveFromState(notificationId);
     setIsDeleting(notificationId);
 
@@ -66,12 +65,10 @@ export const useNotificationActions = ({
         console.log('Notification successfully deleted from database:', notificationId);
       } else {
         console.error('Failed to delete notification from database:', result.error);
-        // If deletion failed, reload to restore correct state
         await onReload();
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // If deletion failed, reload to restore correct state
       await onReload();
     } finally {
       setIsDeleting(null);
