@@ -1,8 +1,9 @@
 
-import { EnhancedProfileCreationModal } from "@/components/modals/EnhancedProfileCreationModal";
-import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
-import PropertySearchModal from "@/components/modals/PropertySearchModal";
-import { PaymentModal } from "@/components/PaymentModal";
+import React from 'react';
+import { EnhancedProfileCreationModal } from '@/components/modals/EnhancedProfileCreationModal';
+import { DocumentUploadModal } from '@/components/modals/DocumentUploadModal';
+import { PropertySearchModal } from '@/components/modals/PropertySearchModal';
+import { PaymentModal } from '@/components/PaymentModal';
 
 interface DashboardModalsProps {
   showProfileModal: boolean;
@@ -18,7 +19,7 @@ interface DashboardModalsProps {
   onDocumentUploadComplete: (documents: any[]) => Promise<void>;
 }
 
-export const DashboardModals = ({
+export const DashboardModals: React.FC<DashboardModalsProps> = ({
   showProfileModal,
   showDocumentModal,
   showSearchModal,
@@ -29,40 +30,37 @@ export const DashboardModals = ({
   setShowSearchModal,
   setShowPaymentModal,
   onProfileComplete,
-  onDocumentUploadComplete
-}: DashboardModalsProps) => {
+  onDocumentUploadComplete,
+}) => {
   return (
     <>
-      {showProfileModal && (
-        <EnhancedProfileCreationModal
-          open={showProfileModal}
-          onOpenChange={setShowProfileModal}
-          onComplete={onProfileComplete}
-          editMode={hasProfile}
-        />
-      )}
+      {/* Profile Creation Modal */}
+      <EnhancedProfileCreationModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onComplete={onProfileComplete}
+      />
 
-      {showDocumentModal && (
-        <DocumentUploadModal
-          open={showDocumentModal}
-          onOpenChange={setShowDocumentModal}
-          onUploadComplete={onDocumentUploadComplete}
-        />
-      )}
+      {/* Document Upload Modal */}
+      <DocumentUploadModal
+        isOpen={showDocumentModal}
+        onClose={() => setShowDocumentModal(false)}
+        onUploadComplete={onDocumentUploadComplete}
+      />
 
-      {showSearchModal && (
-        <PropertySearchModal
-          open={showSearchModal}
-          onOpenChange={setShowSearchModal}
-        />
-      )}
+      {/* Property Search Modal */}
+      <PropertySearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        hasProfile={hasProfile}
+      />
 
-      {showPaymentModal && (
-        <PaymentModal 
-          isOpen={showPaymentModal} 
-          onClose={() => setShowPaymentModal(false)} 
-        />
-      )}
+      {/* Persistent Payment Modal - cannot be closed without payment */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={setShowPaymentModal}
+        persistent={true}
+      />
     </>
   );
 };

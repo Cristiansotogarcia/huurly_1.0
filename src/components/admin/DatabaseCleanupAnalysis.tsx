@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,25 +34,19 @@ const DatabaseCleanupAnalysis: React.FC = () => {
   const [selectedTable, setSelectedTable] = useState<string>('');
   const { toast } = useToast();
 
-  // Use the SQL migration approach for analysis
+  // Simplified analysis approach
   const runFullAnalysis = async () => {
     setLoading(true);
     
     try {
-      // Execute the analysis SQL directly
-      const { data, error } = await supabase.rpc('execute_analysis');
-      
-      if (error) {
-        console.error('Analysis error:', error);
-        // Fallback to simplified analysis
-        await runSimplifiedAnalysis();
-      } else {
-        // Process the results from the SQL analysis
-        processAnalysisResults(data);
-      }
+      await runSimplifiedAnalysis();
     } catch (error) {
       console.error('Error running analysis:', error);
-      await runSimplifiedAnalysis();
+      toast({
+        title: "Analysis Error",
+        description: "Failed to analyze database. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -106,18 +99,8 @@ const DatabaseCleanupAnalysis: React.FC = () => {
     setTableAnalyses(analyses);
     
     toast({
-      title: "Simplified Analysis Complete",
-      description: `Analyzed ${analyses.length} tables. Some advanced features require database function setup.`
-    });
-  };
-
-  const processAnalysisResults = (data: any) => {
-    // Process SQL analysis results when available
-    setTableAnalyses(data || []);
-    
-    toast({
       title: "Analysis Complete",
-      description: `Analyzed database for cleanup opportunities.`
+      description: `Analyzed ${analyses.length} tables with simplified analysis.`
     });
   };
 
