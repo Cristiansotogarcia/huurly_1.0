@@ -1,5 +1,5 @@
 
-import EnhancedProfileCreationModal from "@/components/modals/EnhancedProfileCreationModal";
+import { EnhancedProfileCreationModal } from "@/components/modals/EnhancedProfileCreationModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
 import PropertySearchModal from "@/components/modals/PropertySearchModal";
 import { PaymentModal } from "@/components/PaymentModal";

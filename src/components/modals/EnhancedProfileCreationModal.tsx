@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -17,10 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface EnhancedProfileCreationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onProfileCreated: () => void;
-  userId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onComplete: (profileData: any) => Promise<void>;
+  editMode: boolean;
 }
 
 interface ProfileFormData {
@@ -151,10 +150,10 @@ const initialFormData: ProfileFormData = {
 };
 
 export function EnhancedProfileCreationModal({ 
-  isOpen, 
-  onClose, 
-  onProfileCreated, 
-  userId 
+  open, 
+  onOpenChange, 
+  onComplete, 
+  editMode 
 }: EnhancedProfileCreationModalProps) {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
@@ -187,9 +186,21 @@ export function EnhancedProfileCreationModal({
     setIsSubmitting(true);
     
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Convert Date objects to strings for database
       const profileData = {
-        user_id: userId,
+        user_id: user.id,
         ...formData,
+        // Convert dates to ISO strings or null
+        date_of_birth: formData.date_of_birth ? formData.date_of_birth.toISOString().split('T')[0] : null,
+        move_in_date_preferred: formData.move_in_date_preferred ? formData.move_in_date_preferred.toISOString().split('T')[0] : null,
+        move_in_date_earliest: formData.move_in_date_earliest ? formData.move_in_date_earliest.toISOString().split('T')[0] : null,
         profile_completed: true,
         profile_completion_percentage: 100
       };
@@ -207,8 +218,8 @@ export function EnhancedProfileCreationModal({
         description: "Je profiel is compleet en je kunt nu zoeken naar woningen.",
       });
 
-      onProfileCreated();
-      onClose();
+      await onComplete(profileData);
+      onOpenChange(false);
     } catch (error) {
       console.error('Error creating profile:', error);
       toast({
@@ -954,7 +965,7 @@ export function EnhancedProfileCreationModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
