@@ -1,13 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ProfileStatusCard } from './ProfileStatusCard';
 import { QuickActionsSection } from './QuickActionsSection';
 import { StatsGrid } from './StatsGrid';
 import { DocumentsSection } from './DocumentsSection';
 import { ImportantInfoSection } from './ImportantInfoSection';
-import { NotificationTester } from '@/components/notifications/NotificationTester';
-import { Button } from '@/components/ui/button';
-import { TestTube } from 'lucide-react';
 
 interface DashboardContentProps {
   userName: string;
@@ -45,8 +42,6 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   onReportIssue,
   onHelpSupport,
 }) => {
-  const [showNotificationTester, setShowNotificationTester] = useState(false);
-
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Welcome Section */}
@@ -57,32 +52,11 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         <p className="text-gray-600">
           Beheer je profiel, documenten en vind jouw ideale woning.
         </p>
-        
-        {/* Test Tools Section */}
-        <div className="mt-4 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowNotificationTester(!showNotificationTester)}
-            className="text-blue-600 border-blue-200"
-          >
-            <TestTube className="w-4 h-4 mr-2" />
-            {showNotificationTester ? 'Verberg' : 'Toon'} Notificatie Tester
-          </Button>
-        </div>
       </div>
-
-      {/* Notification Tester */}
-      {showNotificationTester && (
-        <div className="mb-8">
-          <NotificationTester />
-        </div>
-      )}
 
       {/* Profile Status Card */}
       <div className="mb-8">
         <ProfileStatusCard
-          hasProfile={hasProfile}
           isLookingForPlace={isLookingForPlace}
           isUpdatingStatus={isUpdatingStatus}
           onShowProfileModal={onShowProfileModal}
@@ -99,15 +73,20 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
       <div className="mb-8">
         <QuickActionsSection
           hasProfile={hasProfile}
+          isLookingForPlace={isLookingForPlace}
+          isUpdatingStatus={isUpdatingStatus}
           onShowProfileModal={onShowProfileModal}
           onShowDocumentModal={onShowDocumentModal}
           onStartSearch={onStartSearch}
+          onToggleLookingStatus={onToggleLookingStatus}
+          onReportIssue={onReportIssue}
+          onHelpSupport={onHelpSupport}
         />
       </div>
 
       {/* Documents Section */}
       <div className="mb-8">
-        <DocumentsSection documents={userDocuments} />
+        <DocumentsSection userDocuments={userDocuments} />
       </div>
 
       {/* Important Information */}
