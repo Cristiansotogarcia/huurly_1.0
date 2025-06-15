@@ -35,7 +35,6 @@ export const useNotificationActions = () => {
         updateNotifications(result.data);
       } else {
         console.error('Failed to load notifications:', result.error);
-        // Clear notifications on error to prevent stale data
         updateNotifications([]);
       }
     } catch (error) {
@@ -50,7 +49,6 @@ export const useNotificationActions = () => {
     if (user) {
       loadNotifications();
     } else {
-      // Clear notifications when user logs out
       updateNotifications([]);
     }
   }, [user?.id]);

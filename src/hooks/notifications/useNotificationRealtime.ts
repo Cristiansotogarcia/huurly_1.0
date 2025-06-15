@@ -18,11 +18,8 @@ export const useNotificationRealtime = ({
 }: UseNotificationRealtimeProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  // Stores the channel object
   const channelRef = useRef<any>(null);
-  // Used to await removal if in progress
   const cleanupPromiseRef = useRef<Promise<any> | null>(null);
-  // Store the latest callback handlers
   const callbacksRef = useRef({
     onNotificationAdded,
     onNotificationUpdated,
@@ -54,7 +51,6 @@ export const useNotificationRealtime = ({
         return;
       }
 
-      // If a channel already exists, clean it up first AND only after that's done make a new one
       if (channelRef.current) {
         console.log('[Realtime Notifications] Existing channel found, cleaning up before creating new one');
         cleanupPromiseRef.current = supabase.removeChannel(channelRef.current);
@@ -63,14 +59,12 @@ export const useNotificationRealtime = ({
         cleanupPromiseRef.current = null;
       }
 
-      // Defensive guard: If another cleanup is in progress, wait for it before creating a channel
       if (cleanupPromiseRef.current) {
         console.log('[Realtime Notifications] Awaiting previous cleanup before setting up new channel');
         await cleanupPromiseRef.current;
         cleanupPromiseRef.current = null;
       }
 
-      // Now safely create a new channel and subscribe ONLY ONCE for this user id
       console.log('[Realtime Notifications] Setting up subscription for user:', user.id);
       const channel = supabase
         .channel(`notifications-${user.id}`)
@@ -125,16 +119,13 @@ export const useNotificationRealtime = ({
 
     setupChannel();
 
-    // Cleanup function for when component unmounts or user id changes
     return () => {
       isMounted = false;
       if (channelRef.current) {
         console.log('[Realtime Notifications] Cleanup on effect cleanup');
         cleanupPromiseRef.current = supabase.removeChannel(channelRef.current);
-        // Not awaited here since we are unmounting, but next mount will wait for existing cleanup!
         channelRef.current = null;
       }
     };
-    // Only re-run if the actual user id changes
   }, [user?.id]);
 };
