@@ -84,27 +84,33 @@ export const useNotificationRealtime = ({
           },
           payload => {
             const { onNotificationAdded, onNotificationUpdated, onNotificationDeleted, toast } = callbacksRef.current;
-            console.log('[Realtime Notifications] Event:', payload.eventType, payload);
+            console.log('[Realtime Notifications] Event received:', payload.eventType, payload);
 
             if (payload.eventType === 'INSERT') {
               const newNotif = payload.new as Notification;
+              console.log('[Realtime Notifications] Adding notification:', newNotif.id);
               onNotificationAdded(newNotif);
               toast({ title: newNotif.title, description: newNotif.message });
             }
 
             if (payload.eventType === 'UPDATE') {
               const updated = payload.new as Notification;
+              console.log('[Realtime Notifications] Updating notification:', updated.id);
               onNotificationUpdated(updated);
             }
 
             if (payload.eventType === 'DELETE') {
               const oldId = (payload.old as Notification).id;
+              console.log('[Realtime Notifications] Deleting notification:', oldId);
               onNotificationDeleted(oldId);
             }
           }
         )
         .subscribe((status: string, err: any) => {
           console.log('[Realtime Notifications] Channel subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('[Realtime Notifications] Successfully subscribed to real-time updates');
+          }
           if (status === 'CHANNEL_ERROR') {
             console.error('[Realtime Notifications] Subscription error:', err);
             supabase.removeChannel(channel);
