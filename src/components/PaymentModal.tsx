@@ -16,7 +16,7 @@ import { Loader2, X } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (show: boolean) => void;
   /** Display the modal without a close button and ignore outside clicks */
   persistent?: boolean;
 }
@@ -77,7 +77,7 @@ export const PaymentModal = ({
   const Content = PersistentDialogContent;
 
   return (
-    <Dialog open={isOpen} onOpenChange={persistent ? undefined : onClose}>
+    <Dialog open={isOpen} onOpenChange={persistent ? undefined : (open) => onClose(open)}>
       <Content className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -89,7 +89,7 @@ export const PaymentModal = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onClose}
+                onClick={() => onClose(false)}
                 className="h-6 w-6 rounded-full"
               >
                 <X className="h-4 w-4" />
