@@ -132,4 +132,3 @@ export const useNotificationRealtime = ({
     // Only re-run if the actual user id changes
   }, [user?.id]);
 };
-
