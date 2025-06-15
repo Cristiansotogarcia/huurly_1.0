@@ -50,7 +50,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
           Welkom terug, {userName}!
         </h1>
         <p className="text-gray-600">
-          Beheer je profiel, documenten en vind jouw ideale woning.
+          Beheer je profiel, documenten en laat de woning jouw vinden.
         </p>
       </div>
 

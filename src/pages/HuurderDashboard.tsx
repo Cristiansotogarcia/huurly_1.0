@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useHuurderDashboard } from "@/hooks/useHuurderDashboard";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
@@ -16,6 +17,7 @@ const HuurderDashboard = () => {
     isLoading,
     stats,
     isLoadingStats,
+    profilePictureUrl,
     initializeDashboard,
     loadDashboardData,
     refreshDocuments,
@@ -130,6 +132,7 @@ const HuurderDashboard = () => {
           userName={user.name}
           hasPayment={user.hasPayment}
           subscriptionEndDate={getSubscriptionEndDate()}
+          profilePictureUrl={profilePictureUrl}
           onSettings={handleSettings}
           onLogout={handleLogout}
         />
