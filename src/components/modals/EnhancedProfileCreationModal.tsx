@@ -344,14 +344,88 @@ export function EnhancedProfileCreationModal({
       // Calculate household size
       const householdSize = calculateHouseholdSize();
 
+      // Ensure furnished_preference has a valid value
+      const validFurnishedPreference = formData.furnished_preference || 'geen_voorkeur';
+      
+      // Ensure sex has a valid value if provided
+      const validSex = formData.sex && ['man', 'vrouw', 'anders', 'geen_antwoord'].includes(formData.sex) 
+        ? formData.sex 
+        : null;
+
+      // Ensure marital_status has a valid value
+      const validMaritalStatus = formData.marital_status && ['single', 'relationship', 'married', 'divorced', 'widowed'].includes(formData.marital_status)
+        ? formData.marital_status 
+        : 'single';
+
+      // Ensure employment_status has a valid value if provided
+      const validEmploymentStatus = formData.employment_status && ['vast_contract', 'tijdelijk_contract', 'zzp', 'student', 'werkloos', 'pensioen'].includes(formData.employment_status)
+        ? formData.employment_status 
+        : null;
+
+      // Ensure guarantor_relationship has a valid value if provided
+      const validGuarantorRelationship = formData.guarantor_relationship && ['ouder', 'familie', 'vriend', 'werkgever', 'anders'].includes(formData.guarantor_relationship)
+        ? formData.guarantor_relationship 
+        : null;
+
+      // Ensure lease_duration_preference has a valid value if provided
+      const validLeaseDurationPreference = formData.lease_duration_preference && ['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel'].includes(formData.lease_duration_preference)
+        ? formData.lease_duration_preference 
+        : null;
+
       // Convert Date objects to strings for database
       const profileData = {
         user_id: user.id,
-        ...formData,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
         // Convert dates to ISO strings or null
         date_of_birth: formData.date_of_birth ? formData.date_of_birth.toISOString().split('T')[0] : null,
+        sex: validSex,
+        nationality: formData.nationality,
+        marital_status: validMaritalStatus,
+        profession: formData.profession,
+        employer: formData.employer,
+        employment_status: validEmploymentStatus,
+        work_contract_type: formData.work_contract_type,
+        monthly_income: formData.monthly_income,
+        work_from_home: formData.work_from_home,
+        has_partner: formData.has_partner,
+        partner_name: formData.partner_name,
+        partner_profession: formData.partner_profession,
+        partner_employment_status: formData.partner_employment_status,
+        partner_monthly_income: formData.partner_monthly_income,
+        has_children: formData.has_children,
+        number_of_children: formData.number_of_children,
+        preferred_city: formData.preferred_city,
+        preferred_property_type: formData.preferred_property_type,
+        preferred_bedrooms: formData.preferred_bedrooms,
+        max_budget: formData.max_budget,
+        min_budget: formData.min_budget,
+        furnished_preference: validFurnishedPreference,
+        parking_required: formData.parking_required,
+        storage_needs: formData.storage_needs,
         move_in_date_preferred: formData.move_in_date_preferred ? formData.move_in_date_preferred.toISOString().split('T')[0] : null,
         move_in_date_earliest: formData.move_in_date_earliest ? formData.move_in_date_earliest.toISOString().split('T')[0] : null,
+        availability_flexible: formData.availability_flexible,
+        lease_duration_preference: validLeaseDurationPreference,
+        guarantor_available: formData.guarantor_available,
+        guarantor_name: formData.guarantor_name,
+        guarantor_phone: formData.guarantor_phone,
+        guarantor_income: formData.guarantor_income,
+        guarantor_relationship: validGuarantorRelationship,
+        income_proof_available: formData.income_proof_available,
+        emergency_contact_name: formData.emergency_contact_name,
+        emergency_contact_phone: formData.emergency_contact_phone,
+        emergency_contact_relationship: formData.emergency_contact_relationship,
+        has_pets: formData.has_pets,
+        pet_details: formData.pet_details,
+        smokes: formData.smokes,
+        smoking_details: formData.smoking_details,
+        references_available: formData.references_available,
+        rental_history_years: formData.rental_history_years,
+        reason_for_moving: formData.reason_for_moving,
+        bio: formData.bio,
+        motivation: formData.motivation,
         // Auto-calculated household size
         household_size: householdSize,
         profile_completed: true,
@@ -362,7 +436,7 @@ export function EnhancedProfileCreationModal({
 
       const { error } = await supabase
         .from('tenant_profiles')
-        .insert(profileData);
+        .upsert(profileData);
 
       if (error) {
         console.error('Supabase error:', error);
