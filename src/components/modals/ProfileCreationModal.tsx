@@ -1,23 +1,20 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { userService } from '@/services/UserService';
-import { User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, Briefcase } from 'lucide-react';
+import { User, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
-import { cn } from '@/lib/utils';
+import { PersonalInfoStep } from './ProfileCreation/PersonalInfoStep';
+import { HousingPreferencesStep } from './ProfileCreation/HousingPreferencesStep';
+import { PersonalDescriptionStep } from './ProfileCreation/PersonalDescriptionStep';
+import { ProfileOverviewStep } from './ProfileCreation/ProfileOverviewStep';
+import { StepIndicator } from './ProfileCreation/StepIndicator';
+import { useProfileValidation } from './ProfileCreation/useProfileValidation';
+import { ProfileData } from './ProfileCreation/types';
 
 interface ProfileCreationModalProps {
   open: boolean;
@@ -25,34 +22,12 @@ interface ProfileCreationModalProps {
   onComplete: (profileData: any) => void;
 }
 
-interface ProfileData {
-  // Personal Information
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: Date | undefined;
-  profession: string;
-  monthlyIncome: number;
-  bio: string;
-  
-  // Housing Preferences
-  city: string;
-  minBudget: number;
-  maxBudget: number;
-  bedrooms: number;
-  propertyType: string;
-  
-  // Additional Info
-  motivation: string;
-  hasDocuments: boolean;
-}
-
 const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreationModalProps) => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const { isSubmitting, setIsSubmitting } = useModalState();
+  const { isStepValid } = useProfileValidation();
   
   const initialData: ProfileData = {
     firstName: user?.name?.split(' ')[0] || '',
@@ -72,7 +47,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     hasDocuments: false,
   };
 
-  const { data: profileData, updateField, resetForm } = useModalForm(initialData);
+  const { data: profileData, updateField } = useModalForm(initialData);
 
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
@@ -93,7 +68,6 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     setIsSubmitting(true);
     
     try {
-      // Create tenant profile using UserService
       const result = await userService.createTenantProfile({
         firstName: profileData.firstName,
         lastName: profileData.lastName,
@@ -134,318 +108,18 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
     }
   };
 
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return profileData.firstName && profileData.lastName && profileData.phone && 
-               profileData.dateOfBirth && profileData.profession && profileData.monthlyIncome > 0;
-      case 2:
-        return profileData.city && profileData.minBudget > 0 && profileData.maxBudget > profileData.minBudget;
-      case 3:
-        return profileData.bio && profileData.motivation;
-      case 4:
-        return true;
-      default:
-        return false;
-    }
-  };
-
   const renderStep = () => {
+    const stepProps = { profileData, updateField };
+    
     switch (currentStep) {
       case 1:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <User className="w-12 h-12 mx-auto mb-4 text-dutch-blue" />
-              <h3 className="text-lg font-semibold">Persoonlijke Informatie</h3>
-              <p className="text-gray-600">Vertel ons iets over jezelf</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">Voornaam *</Label>
-                <Input
-                  id="firstName"
-                  value={profileData.firstName}
-                  onChange={(e) => updateField('firstName', e.target.value)}
-                  placeholder="Emma"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Achternaam *</Label>
-                <Input
-                  id="lastName"
-                  value={profileData.lastName}
-                  onChange={(e) => updateField('lastName', e.target.value)}
-                  placeholder="Bakker"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="email">E-mailadres</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profileData.email}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="phone">Telefoonnummer *</Label>
-              <Input
-                id="phone"
-                value={profileData.phone}
-                onChange={(e) => updateField('phone', e.target.value)}
-                placeholder="+31 6 12345678"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="dateOfBirth">Geboortedatum *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !profileData.dateOfBirth && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {profileData.dateOfBirth ? format(profileData.dateOfBirth, "PPP") : <span>Selecteer geboortedatum</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={profileData.dateOfBirth}
-                    onSelect={(date) => updateField('dateOfBirth', date)}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div>
-              <Label htmlFor="profession">Beroep *</Label>
-              <Input
-                id="profession"
-                value={profileData.profession}
-                onChange={(e) => updateField('profession', e.target.value)}
-                placeholder="Software Developer"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="monthlyIncome">Maandelijks bruto inkomen * (€)</Label>
-              <Input
-                id="monthlyIncome"
-                type="number"
-                value={profileData.monthlyIncome || ''}
-                onChange={(e) => updateField('monthlyIncome', parseInt(e.target.value) || 0)}
-                placeholder="4500"
-              />
-            </div>
-          </div>
-        );
-
+        return <PersonalInfoStep {...stepProps} />;
       case 2:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Home className="w-12 h-12 mx-auto mb-4 text-dutch-orange" />
-              <h3 className="text-lg font-semibold">Woonvoorkeuren</h3>
-              <p className="text-gray-600">Wat voor woning zoek je?</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="city">Gewenste stad *</Label>
-              <Select value={profileData.city} onValueChange={(value) => updateField('city', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Amsterdam">Amsterdam</SelectItem>
-                  <SelectItem value="Rotterdam">Rotterdam</SelectItem>
-                  <SelectItem value="Den Haag">Den Haag</SelectItem>
-                  <SelectItem value="Utrecht">Utrecht</SelectItem>
-                  <SelectItem value="Eindhoven">Eindhoven</SelectItem>
-                  <SelectItem value="Groningen">Groningen</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="minBudget">Minimum budget * (€/maand)</Label>
-                <Input
-                  id="minBudget"
-                  type="number"
-                  value={profileData.minBudget || ''}
-                  onChange={(e) => updateField('minBudget', parseInt(e.target.value) || 0)}
-                  placeholder="1000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="maxBudget">Maximum budget * (€/maand)</Label>
-                <Input
-                  id="maxBudget"
-                  type="number"
-                  value={profileData.maxBudget || ''}
-                  onChange={(e) => updateField('maxBudget', parseInt(e.target.value) || 0)}
-                  placeholder="2000"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="bedrooms">Aantal slaapkamers</Label>
-              <Select value={profileData.bedrooms.toString()} onValueChange={(value) => updateField('bedrooms', parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 slaapkamer</SelectItem>
-                  <SelectItem value="2">2 slaapkamers</SelectItem>
-                  <SelectItem value="3">3 slaapkamers</SelectItem>
-                  <SelectItem value="4">4+ slaapkamers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="propertyType">Type woning</Label>
-              <Select value={profileData.propertyType} onValueChange={(value) => updateField('propertyType', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Appartement">Appartement</SelectItem>
-                  <SelectItem value="Studio">Studio</SelectItem>
-                  <SelectItem value="Huis">Huis</SelectItem>
-                  <SelectItem value="Kamer">Kamer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
+        return <HousingPreferencesStep {...stepProps} />;
       case 3:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Briefcase className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold">Over Jezelf</h3>
-              <p className="text-gray-600">Maak een goede eerste indruk</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="bio">Korte beschrijving van jezelf *</Label>
-              <Textarea
-                id="bio"
-                value={profileData.bio}
-                onChange={(e) => updateField('bio', e.target.value)}
-                placeholder="Vertel iets over jezelf, je hobby's, werk en wat voor huurder je bent..."
-                rows={4}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                {profileData.bio.length}/500 karakters
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="motivation">Waarom ben je op zoek naar een woning? *</Label>
-              <Textarea
-                id="motivation"
-                value={profileData.motivation}
-                onChange={(e) => updateField('motivation', e.target.value)}
-                placeholder="Bijvoorbeeld: nieuwe baan, studie, samenwonen..."
-                rows={3}
-              />
-            </div>
-          </div>
-        );
-
+        return <PersonalDescriptionStep {...stepProps} />;
       case 4:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold">Profiel Overzicht</h3>
-              <p className="text-gray-600">Controleer je gegevens voordat je het profiel aanmaakt</p>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Persoonlijke Informatie</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Naam:</span>
-                  <span>{profileData.firstName} {profileData.lastName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Telefoon:</span>
-                  <span>{profileData.phone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Geboortedatum:</span>
-                  <span>{profileData.dateOfBirth ? format(profileData.dateOfBirth, "PPP") : 'Niet ingevuld'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Beroep:</span>
-                  <span>{profileData.profession}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Inkomen:</span>
-                  <span>€{profileData.monthlyIncome.toLocaleString()}/maand</span>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Woonvoorkeuren</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Stad:</span>
-                  <span>{profileData.city}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Budget:</span>
-                  <span>€{profileData.minBudget} - €{profileData.maxBudget}/maand</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Slaapkamers:</span>
-                  <span>{profileData.bedrooms}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Type:</span>
-                  <span>{profileData.propertyType}</span>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Volgende stappen:</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Je profiel wordt zichtbaar voor verhuurders</li>
-                <li>• Upload je documenten voor verificatie</li>
-                <li>• Begin met zoeken naar woningen</li>
-                <li>• Ontvang uitnodigingen voor bezichtigingen</li>
-              </ul>
-            </div>
-          </div>
-        );
-
+        return <ProfileOverviewStep profileData={profileData} />;
       default:
         return null;
     }
@@ -470,24 +144,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
         </div>
         
         {/* Step Indicators */}
-        <div className="flex justify-between">
-          {[1, 2, 3, 4].map((step) => (
-            <div key={step} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step < currentStep ? 'bg-green-500 text-white' :
-                step === currentStep ? 'bg-dutch-blue text-white' :
-                'bg-gray-200 text-gray-600'
-              }`}>
-                {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
-              </div>
-              {step < 4 && (
-                <div className={`w-12 h-1 mx-2 ${
-                  step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
+        <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
         
         {/* Step Content */}
         <div className="min-h-[400px]">
@@ -509,7 +166,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               {currentStep < totalSteps ? (
                 <Button
                   onClick={nextStep}
-                  disabled={!isStepValid()}
+                  disabled={!isStepValid(currentStep, profileData)}
                 >
                   Volgende
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -517,7 +174,7 @@ const ProfileCreationModal = ({ open, onOpenChange, onComplete }: ProfileCreatio
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={!isStepValid() || isSubmitting}
+                  disabled={!isStepValid(currentStep, profileData) || isSubmitting}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {isSubmitting ? 'Profiel aanmaken...' : 'Profiel Aanmaken'}

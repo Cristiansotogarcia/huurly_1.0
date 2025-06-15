@@ -7,7 +7,7 @@ export interface Notification {
   message: string;
   read: boolean;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
   related_id?: string;
   related_type?: string;
 }
