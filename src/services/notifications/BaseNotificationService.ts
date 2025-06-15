@@ -139,7 +139,7 @@ export class BaseNotificationService extends DatabaseService {
   }
 
   /**
-   * Delete notification
+   * Delete notification - IMPROVED VERSION
    */
   async deleteNotification(notificationId: string): Promise<DatabaseResponse<boolean>> {
     const currentUserId = await this.getCurrentUserId();
@@ -155,47 +155,47 @@ export class BaseNotificationService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // Get notification to check ownership
-      console.log('Fetching notification to verify ownership...');
+      // First verify the notification exists and belongs to the user
+      console.log('Checking if notification exists and belongs to user...');
       const { data: notification, error: fetchError } = await supabase
         .from('notifications')
         .select('*')
         .eq('id', notificationId)
+        .eq('user_id', currentUserId) // Add user check to the query
         .single();
 
-      if (fetchError) {
-        console.error('Error fetching notification:', fetchError);
-        throw new Error('Notificatie niet gevonden');
+      if (fetchError || !notification) {
+        console.error('Notification not found or access denied:', fetchError);
+        throw new Error('Notificatie niet gevonden of geen toegang');
       }
 
-      if (!notification) {
-        console.error('Notification not found in database');
-        throw new Error('Notificatie niet gevonden');
-      }
+      console.log('Found notification, proceeding with deletion:', notification);
 
-      console.log('Found notification:', notification);
-
-      // Check if user owns this notification
-      if (notification.user_id !== currentUserId) {
-        console.error('User does not own this notification:', notification.user_id, 'vs', currentUserId);
-        const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-        if (!hasPermission) {
-          throw new Error('Geen toegang tot deze notificatie');
-        }
-      }
-
-      console.log('Attempting to delete notification from database...');
+      // Delete the notification
       const { error: deleteError } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', notificationId);
+        .eq('id', notificationId)
+        .eq('user_id', currentUserId); // Double-check user ownership
 
       if (deleteError) {
         console.error('Database delete error:', deleteError);
         throw this.handleDatabaseError(deleteError);
       }
 
-      console.log('Notification successfully deleted from database');
+      // Verify deletion by trying to fetch the notification again
+      const { data: verifyData } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('id', notificationId)
+        .single();
+
+      if (verifyData) {
+        console.error('Notification still exists after deletion attempt');
+        throw new Error('Verwijdering mislukt - notificatie bestaat nog steeds');
+      }
+
+      console.log('Notification successfully deleted and verified');
 
       await this.createAuditLog('DELETE', 'notifications', notificationId, notification);
 
