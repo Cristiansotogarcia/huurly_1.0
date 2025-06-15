@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useHuurderDashboard } from "@/hooks/useHuurderDashboard";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
@@ -49,15 +48,17 @@ const HuurderDashboard = () => {
   useEffect(() => {
     const initialize = async () => {
       await initializeDashboard();
-      
-      if (user) {
-        // Show persistent payment modal if no payment
-        setShowPaymentModal(!user.hasPayment);
+
+      // Only show payment modal if user.hasPayment is false
+      if (user && user.hasPayment === false) {
+        setShowPaymentModal(true);
+      } else {
+        setShowPaymentModal(false);
       }
     };
 
     initialize();
-  }, [user]);
+  }, [user, initializeDashboard]);
 
   // Load profile, documents, and stats
   useEffect(() => {
@@ -120,7 +121,7 @@ const HuurderDashboard = () => {
     <>
       <div
         className={
-          showPaymentModal && !user.hasPayment
+          showPaymentModal && user && user.hasPayment === false
             ? "min-h-screen bg-gray-50 filter blur-sm pointer-events-none select-none"
             : "min-h-screen bg-gray-50"
         }
@@ -153,7 +154,7 @@ const HuurderDashboard = () => {
       <DashboardModals
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
-        showPaymentModal={showPaymentModal && !user.hasPayment}
+        showPaymentModal={showPaymentModal && user && user.hasPayment === false}
         hasProfile={hasProfile}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}

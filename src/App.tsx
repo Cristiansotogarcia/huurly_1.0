@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HuurderRoute } from "@/components/auth/ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
 import CookieConsent from "@/components/CookieConsent";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -47,6 +47,7 @@ const App = () => (
                 </HuurderRoute>
               } 
             />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
           </Routes>
         </Suspense>
         <CookieConsent />
