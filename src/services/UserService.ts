@@ -58,7 +58,7 @@ export interface CreateTenantProfileData {
   preferredDistricts?: string[];
   maxCommuteTime?: number;
   transportationPreference?: string;
-  furnishedPreference?: 'furnished' | 'unfurnished' | 'no_preference';
+  furnishedPreference?: 'gemeubileerd' | 'ongemeubileerd' | 'geen_voorkeur';
   desiredAmenities?: string[];
   
   // Priority 1: Guarantor Information
@@ -106,13 +106,18 @@ export interface TenantSearchFilters {
   preferredDistricts?: string[];
 }
 
-// Utility function for sanitizing furnishedPreference everywhere
+// Updated utility function for sanitizing furnishedPreference with Dutch values
 function sanitizeFurnishedPreference(value: any): "gemeubileerd" | "ongemeubileerd" | "geen_voorkeur" {
   if (value === "gemeubileerd" || value === "ongemeubileerd" || value === "geen_voorkeur") {
     return value;
   }
+  // Convert English values to Dutch values
+  if (value === "furnished") return "gemeubileerd";
+  if (value === "unfurnished") return "ongemeubileerd";
+  if (value === "no_preference") return "geen_voorkeur";
+  
   // Log whenever a value needs sanitizing
-  logger.warn("UserService: Invalid furnishedPreference value detected, resetting to 'geen_voorkeur'. Provided value:", value);
+  logger.warn("UserService: Invalid furnishedPreference value detected, converting to 'geen_voorkeur'. Provided value:", value);
   return "geen_voorkeur";
 }
 
@@ -241,7 +246,7 @@ export class UserService extends DatabaseService {
 
       const sanitizedData = this.sanitizeInput(data);
 
-      // Defensive force furnishedPreference valid here too
+      // Ensure furnished_preference uses correct Dutch values
       sanitizedData.furnishedPreference = sanitizeFurnishedPreference(sanitizedData.furnishedPreference);
       logger.info("createTenantProfile: sanitizedData.furnishedPreference =", sanitizedData.furnishedPreference);
 
@@ -266,94 +271,94 @@ export class UserService extends DatabaseService {
       }
 
       return this.executeQuery(async () => {
-      // 1. Update basic profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
+        // 1. Update basic profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: sanitizedData.firstName,
+            last_name: sanitizedData.lastName,
+            is_looking_for_place: true,
+          })
+          .eq('id', currentUserId);
+
+        if (profileError) {
+          throw this.handleDatabaseError(profileError);
+        }
+
+        // 2. Create or update tenant profile with all enhanced fields
+        const tenantProfileData: any = {
+          user_id: currentUserId,
           first_name: sanitizedData.firstName,
           last_name: sanitizedData.lastName,
-          is_looking_for_place: true,
-        })
-        .eq('id', currentUserId);
+          phone: sanitizedData.phone,
+          date_of_birth: sanitizedData.dateOfBirth,
+          profession: sanitizedData.profession,
+          monthly_income: sanitizedData.monthlyIncome,
+          bio: sanitizedData.bio,
+          preferred_city: sanitizedData.city,
+          min_budget: sanitizedData.minBudget,
+          max_budget: sanitizedData.maxBudget,
+          preferred_bedrooms: sanitizedData.bedrooms,
+          preferred_property_type: sanitizedData.propertyType,
+          motivation: sanitizedData.motivation,
+          profile_completed: true,
+          
+          // Existing fields
+          employer: sanitizedData.employer || null,
+          employment_status: sanitizedData.employmentStatus || 'employed',
+          work_contract_type: sanitizedData.workContractType || 'permanent',
+          housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
+          has_pets: sanitizedData.hasPets || false,
+          pet_details: sanitizedData.petDetails || null,
+          smokes: sanitizedData.smokes || false,
+          
+          // Enhanced fields from 7-step modal
+          nationality: sanitizedData.nationality || 'Nederlandse',
+          sex: sanitizedData.sex || null,
+          marital_status: sanitizedData.maritalStatus || 'single',
+          has_children: sanitizedData.hasChildren || false,
+          number_of_children: sanitizedData.numberOfChildren || 0,
+          children_ages: sanitizedData.childrenAges || [],
+          has_partner: sanitizedData.hasPartner || false,
+          partner_name: sanitizedData.partnerName || null,
+          partner_profession: sanitizedData.partnerProfession || null,
+          partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
+          partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
+          preferred_districts: sanitizedData.preferredDistricts || null,
+          max_commute_time: sanitizedData.maxCommuteTime || 30,
+          transportation_preference: sanitizedData.transportationPreference || 'public_transport',
+          furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
+          desired_amenities: sanitizedData.desiredAmenities || [],
+          smoking_details: sanitizedData.smokingDetails || null,
+          profile_picture_url: sanitizedData.profilePictureUrl || null,
+          
+          // Priority 1: Guarantor Information
+          guarantor_available: sanitizedData.guarantorAvailable || false,
+          guarantor_name: sanitizedData.guarantorName || null,
+          guarantor_phone: sanitizedData.guarantorPhone || null,
+          guarantor_income: sanitizedData.guarantorIncome || 0,
+          guarantor_relationship: sanitizedData.guarantorRelationship || null,
+          income_proof_available: sanitizedData.incomeProofAvailable || false,
+          
+          // Priority 2: Timing Information
+          move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
+          move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
+          availability_flexible: sanitizedData.availabilityFlexible || false,
+        };
 
-      if (profileError) {
-        throw this.handleDatabaseError(profileError);
-      }
+        const { data: tenantProfile, error: tenantError } = await supabase
+          .from('tenant_profiles')
+          .upsert(tenantProfileData)
+          .select()
+          .single();
 
-      // 2. Create or update tenant profile with all enhanced fields
-      const tenantProfileData: any = {
-        user_id: currentUserId,
-        first_name: sanitizedData.firstName,
-        last_name: sanitizedData.lastName,
-        phone: sanitizedData.phone,
-        date_of_birth: sanitizedData.dateOfBirth,
-        profession: sanitizedData.profession,
-        monthly_income: sanitizedData.monthlyIncome,
-        bio: sanitizedData.bio,
-        preferred_city: sanitizedData.city,
-        min_budget: sanitizedData.minBudget,
-        max_budget: sanitizedData.maxBudget,
-        preferred_bedrooms: sanitizedData.bedrooms,
-        preferred_property_type: sanitizedData.propertyType,
-        motivation: sanitizedData.motivation,
-        profile_completed: true,
-        
-        // Existing fields
-        employer: sanitizedData.employer || null,
-        employment_status: sanitizedData.employmentStatus || 'employed',
-        work_contract_type: sanitizedData.workContractType || 'permanent',
-        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
-        has_pets: sanitizedData.hasPets || false,
-        pet_details: sanitizedData.petDetails || null,
-        smokes: sanitizedData.smokes || false,
-        
-        // Enhanced fields from 7-step modal (now supported by database schema)
-        nationality: sanitizedData.nationality || 'Nederlandse',
-        sex: sanitizedData.sex || null,
-        marital_status: sanitizedData.maritalStatus || 'single',
-        has_children: sanitizedData.hasChildren || false,
-        number_of_children: sanitizedData.numberOfChildren || 0,
-        children_ages: sanitizedData.childrenAges || [],
-        has_partner: sanitizedData.hasPartner || false,
-        partner_name: sanitizedData.partnerName || null,
-        partner_profession: sanitizedData.partnerProfession || null,
-        partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
-        partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
-        preferred_districts: sanitizedData.preferredDistricts || null,
-        max_commute_time: sanitizedData.maxCommuteTime || 30,
-        transportation_preference: sanitizedData.transportationPreference || 'public_transport',
-        furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
-        desired_amenities: sanitizedData.desiredAmenities || [],
-        smoking_details: sanitizedData.smokingDetails || null,
-        profile_picture_url: sanitizedData.profilePictureUrl || null,
-        
-        // Priority 1: Guarantor Information
-        guarantor_available: sanitizedData.guarantorAvailable || false,
-        guarantor_name: sanitizedData.guarantorName || null,
-        guarantor_phone: sanitizedData.guarantorPhone || null,
-        guarantor_income: sanitizedData.guarantorIncome || 0,
-        guarantor_relationship: sanitizedData.guarantorRelationship || null,
-        income_proof_available: sanitizedData.incomeProofAvailable || false,
-        
-        // Priority 2: Timing Information
-        move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
-        move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
-        availability_flexible: sanitizedData.availabilityFlexible || false,
-      };
+        if (tenantError) {
+          throw this.handleDatabaseError(tenantError);
+        }
 
-      const { data: tenantProfile, error: tenantError } = await supabase
-        .from('tenant_profiles')
-        .upsert(tenantProfileData)
-        .select()
-        .single();
+        await this.createAuditLog('CREATE', 'tenant_profiles', currentUserId, null, tenantProfile);
 
-      if (tenantError) {
-        throw this.handleDatabaseError(tenantError);
-      }
-
-      await this.createAuditLog('CREATE', 'tenant_profiles', currentUserId, null, tenantProfile);
-
-      return { data: tenantProfile, error: null };
+        return { data: tenantProfile, error: null };
       });
     });
   }
@@ -389,7 +394,7 @@ export class UserService extends DatabaseService {
 
       const sanitizedData = this.sanitizeInput(data);
 
-      // Defensive force furnishedPreference valid here too
+      // Ensure furnished_preference uses correct Dutch values
       sanitizedData.furnishedPreference = sanitizeFurnishedPreference(sanitizedData.furnishedPreference);
       logger.info("updateTenantProfile: sanitizedData.furnishedPreference =", sanitizedData.furnishedPreference);
 
@@ -414,101 +419,101 @@ export class UserService extends DatabaseService {
       }
 
       return this.executeQuery(async () => {
-      // 1. Update basic profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
+        // 1. Update basic profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: sanitizedData.firstName,
+            last_name: sanitizedData.lastName,
+            is_looking_for_place: true,
+          })
+          .eq('id', currentUserId);
+
+        if (profileError) {
+          throw this.handleDatabaseError(profileError);
+        }
+
+        // 2. Update tenant profile with all enhanced fields
+        const tenantProfileData: any = {
           first_name: sanitizedData.firstName,
           last_name: sanitizedData.lastName,
-          is_looking_for_place: true,
-        })
-        .eq('id', currentUserId);
+          phone: sanitizedData.phone,
+          date_of_birth: sanitizedData.dateOfBirth,
+          profession: sanitizedData.profession,
+          monthly_income: sanitizedData.monthlyIncome,
+          bio: sanitizedData.bio,
+          preferred_city: sanitizedData.city,
+          min_budget: sanitizedData.minBudget,
+          max_budget: sanitizedData.maxBudget,
+          preferred_bedrooms: sanitizedData.bedrooms,
+          preferred_property_type: sanitizedData.propertyType,
+          motivation: sanitizedData.motivation,
+          profile_completed: true,
+          
+          // Core existing fields
+          employer: sanitizedData.employer || null,
+          employment_status: sanitizedData.employmentStatus || 'employed',
+          work_contract_type: sanitizedData.workContractType || 'permanent',
+          housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
+          has_pets: sanitizedData.hasPets || false,
+          pet_details: sanitizedData.petDetails || null,
+          smokes: sanitizedData.smokes || false,
+          
+          // Enhanced fields from 7-step modal
+          nationality: sanitizedData.nationality || 'Nederlandse',
+          sex: sanitizedData.sex || null,
+          marital_status: sanitizedData.maritalStatus || 'single',
+          has_children: sanitizedData.hasChildren || false,
+          number_of_children: sanitizedData.numberOfChildren || 0,
+          children_ages: sanitizedData.childrenAges || [],
+          has_partner: sanitizedData.hasPartner || false,
+          partner_name: sanitizedData.partnerName || null,
+          partner_profession: sanitizedData.partnerProfession || null,
+          partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
+          partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
+          preferred_districts: sanitizedData.preferredDistricts || [],
+          max_commute_time: sanitizedData.maxCommuteTime || 30,
+          transportation_preference: sanitizedData.transportationPreference || 'public_transport',
+          furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
+          desired_amenities: sanitizedData.desiredAmenities || [],
+          smoking_details: sanitizedData.smokingDetails || null,
+          profile_picture_url: sanitizedData.profilePictureUrl || null,
+          
+          // Priority 1: Guarantor Information
+          guarantor_available: sanitizedData.guarantorAvailable || false,
+          guarantor_name: sanitizedData.guarantorName || null,
+          guarantor_phone: sanitizedData.guarantorPhone || null,
+          guarantor_income: sanitizedData.guarantorIncome || 0,
+          guarantor_relationship: sanitizedData.guarantorRelationship || null,
+          income_proof_available: sanitizedData.incomeProofAvailable || false,
+          
+          // Priority 2: Timing Information
+          move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
+          move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
+          availability_flexible: sanitizedData.availabilityFlexible || false,
+        };
 
-      if (profileError) {
-        throw this.handleDatabaseError(profileError);
-      }
+        // Get current data for audit log
+        const { data: currentData } = await supabase
+          .from('tenant_profiles')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .single();
 
-      // 2. Update tenant profile with all enhanced fields (now that schema is complete)
-      const tenantProfileData: any = {
-        first_name: sanitizedData.firstName,
-        last_name: sanitizedData.lastName,
-        phone: sanitizedData.phone,
-        date_of_birth: sanitizedData.dateOfBirth,
-        profession: sanitizedData.profession,
-        monthly_income: sanitizedData.monthlyIncome,
-        bio: sanitizedData.bio,
-        preferred_city: sanitizedData.city,
-        min_budget: sanitizedData.minBudget,
-        max_budget: sanitizedData.maxBudget,
-        preferred_bedrooms: sanitizedData.bedrooms,
-        preferred_property_type: sanitizedData.propertyType,
-        motivation: sanitizedData.motivation,
-        profile_completed: true,
-        
-        // Core existing fields
-        employer: sanitizedData.employer || null,
-        employment_status: sanitizedData.employmentStatus || 'employed',
-        work_contract_type: sanitizedData.workContractType || 'permanent',
-        housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
-        has_pets: sanitizedData.hasPets || false,
-        pet_details: sanitizedData.petDetails || null,
-        smokes: sanitizedData.smokes || false,
-        
-        // Enhanced fields from 7-step modal (now supported by database schema)
-        nationality: sanitizedData.nationality || 'Nederlandse',
-        sex: sanitizedData.sex || null,
-        marital_status: sanitizedData.maritalStatus || 'single',
-        has_children: sanitizedData.hasChildren || false,
-        number_of_children: sanitizedData.numberOfChildren || 0,
-        children_ages: sanitizedData.childrenAges || [],
-        has_partner: sanitizedData.hasPartner || false,
-        partner_name: sanitizedData.partnerName || null,
-        partner_profession: sanitizedData.partnerProfession || null,
-        partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
-        partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
-        preferred_districts: sanitizedData.preferredDistricts || [],
-        max_commute_time: sanitizedData.maxCommuteTime || 30,
-        transportation_preference: sanitizedData.transportationPreference || 'public_transport',
-        furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
-        desired_amenities: sanitizedData.desiredAmenities || [],
-        smoking_details: sanitizedData.smokingDetails || null,
-        profile_picture_url: sanitizedData.profilePictureUrl || null,
-        
-        // Priority 1: Guarantor Information
-        guarantor_available: sanitizedData.guarantorAvailable || false,
-        guarantor_name: sanitizedData.guarantorName || null,
-        guarantor_phone: sanitizedData.guarantorPhone || null,
-        guarantor_income: sanitizedData.guarantorIncome || 0,
-        guarantor_relationship: sanitizedData.guarantorRelationship || null,
-        income_proof_available: sanitizedData.incomeProofAvailable || false,
-        
-        // Priority 2: Timing Information
-        move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
-        move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
-        availability_flexible: sanitizedData.availabilityFlexible || false,
-      };
+        const { data: tenantProfile, error: tenantError } = await supabase
+          .from('tenant_profiles')
+          .update(tenantProfileData)
+          .eq('user_id', currentUserId)
+          .select()
+          .single();
 
-      // Get current data for audit log
-      const { data: currentData } = await supabase
-        .from('tenant_profiles')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .single();
+        if (tenantError) {
+          throw this.handleDatabaseError(tenantError);
+        }
 
-      const { data: tenantProfile, error: tenantError } = await supabase
-        .from('tenant_profiles')
-        .update(tenantProfileData)
-        .eq('user_id', currentUserId)
-        .select()
-        .single();
+        await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, currentData, tenantProfile);
 
-      if (tenantError) {
-        throw this.handleDatabaseError(tenantError);
-      }
-
-      await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, currentData, tenantProfile);
-
-      return { data: tenantProfile, error: null };
+        return { data: tenantProfile, error: null };
       });
     });
   }
