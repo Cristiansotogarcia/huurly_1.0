@@ -713,21 +713,30 @@ export type Database = {
       tenant_profiles: {
         Row: {
           age: number | null
+          availability_flexible: boolean | null
           available_from: string | null
           bio: string | null
           children_ages: Json | null
+          computed_age: number | null
           contract_type: string | null
           created_at: string | null
           current_housing_situation: string | null
           date_of_birth: string | null
           desired_amenities: string[] | null
           documents_verified: boolean | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           employer: string | null
           employment_status: string | null
           family_composition: string | null
           first_name: string | null
           furnished_preference: string | null
           guarantor_available: boolean | null
+          guarantor_income: number | null
+          guarantor_name: string | null
+          guarantor_phone: string | null
+          guarantor_relationship: string | null
           has_children: boolean | null
           has_partner: boolean | null
           has_pets: boolean | null
@@ -735,8 +744,10 @@ export type Database = {
           household_size: number | null
           housing_allowance_eligible: boolean | null
           id: string
+          income_proof_available: boolean | null
           landlord_interest: number | null
           last_name: string | null
+          lease_duration_preference: string | null
           marital_status: string | null
           max_budget: number | null
           max_commute_time: number | null
@@ -744,9 +755,12 @@ export type Database = {
           min_budget: number | null
           monthly_income: number | null
           motivation: string | null
+          move_in_date_earliest: string | null
+          move_in_date_preferred: string | null
           move_in_flexibility: string | null
           nationality: string | null
           number_of_children: number | null
+          parking_required: boolean | null
           partner_employment_status: string | null
           partner_monthly_income: number | null
           partner_name: string | null
@@ -765,34 +779,49 @@ export type Database = {
           profile_completion_percentage: number | null
           profile_picture_url: string | null
           profile_views: number | null
+          reason_for_moving: string | null
+          references_available: boolean | null
           rental_history: string | null
+          rental_history_years: number | null
           sex: string | null
           smokes: boolean | null
           smoking_details: string | null
           smoking_policy_preference: string | null
+          storage_needs: string | null
+          total_guaranteed_income: number | null
           total_household_income: number | null
           transportation_preference: string | null
           updated_at: string | null
           user_id: string | null
           work_contract_type: string | null
+          work_from_home: boolean | null
         }
         Insert: {
           age?: number | null
+          availability_flexible?: boolean | null
           available_from?: string | null
           bio?: string | null
           children_ages?: Json | null
+          computed_age?: number | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
           desired_amenities?: string[] | null
           documents_verified?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employer?: string | null
           employment_status?: string | null
           family_composition?: string | null
           first_name?: string | null
           furnished_preference?: string | null
           guarantor_available?: boolean | null
+          guarantor_income?: number | null
+          guarantor_name?: string | null
+          guarantor_phone?: string | null
+          guarantor_relationship?: string | null
           has_children?: boolean | null
           has_partner?: boolean | null
           has_pets?: boolean | null
@@ -800,8 +829,10 @@ export type Database = {
           household_size?: number | null
           housing_allowance_eligible?: boolean | null
           id?: string
+          income_proof_available?: boolean | null
           landlord_interest?: number | null
           last_name?: string | null
+          lease_duration_preference?: string | null
           marital_status?: string | null
           max_budget?: number | null
           max_commute_time?: number | null
@@ -809,9 +840,12 @@ export type Database = {
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
+          move_in_date_earliest?: string | null
+          move_in_date_preferred?: string | null
           move_in_flexibility?: string | null
           nationality?: string | null
           number_of_children?: number | null
+          parking_required?: boolean | null
           partner_employment_status?: string | null
           partner_monthly_income?: number | null
           partner_name?: string | null
@@ -830,34 +864,49 @@ export type Database = {
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
+          reason_for_moving?: string | null
+          references_available?: boolean | null
           rental_history?: string | null
+          rental_history_years?: number | null
           sex?: string | null
           smokes?: boolean | null
           smoking_details?: string | null
           smoking_policy_preference?: string | null
+          storage_needs?: string | null
+          total_guaranteed_income?: number | null
           total_household_income?: number | null
           transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
+          work_from_home?: boolean | null
         }
         Update: {
           age?: number | null
+          availability_flexible?: boolean | null
           available_from?: string | null
           bio?: string | null
           children_ages?: Json | null
+          computed_age?: number | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
           desired_amenities?: string[] | null
           documents_verified?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employer?: string | null
           employment_status?: string | null
           family_composition?: string | null
           first_name?: string | null
           furnished_preference?: string | null
           guarantor_available?: boolean | null
+          guarantor_income?: number | null
+          guarantor_name?: string | null
+          guarantor_phone?: string | null
+          guarantor_relationship?: string | null
           has_children?: boolean | null
           has_partner?: boolean | null
           has_pets?: boolean | null
@@ -865,8 +914,10 @@ export type Database = {
           household_size?: number | null
           housing_allowance_eligible?: boolean | null
           id?: string
+          income_proof_available?: boolean | null
           landlord_interest?: number | null
           last_name?: string | null
+          lease_duration_preference?: string | null
           marital_status?: string | null
           max_budget?: number | null
           max_commute_time?: number | null
@@ -874,9 +925,12 @@ export type Database = {
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
+          move_in_date_earliest?: string | null
+          move_in_date_preferred?: string | null
           move_in_flexibility?: string | null
           nationality?: string | null
           number_of_children?: number | null
+          parking_required?: boolean | null
           partner_employment_status?: string | null
           partner_monthly_income?: number | null
           partner_name?: string | null
@@ -895,16 +949,22 @@ export type Database = {
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
+          reason_for_moving?: string | null
+          references_available?: boolean | null
           rental_history?: string | null
+          rental_history_years?: number | null
           sex?: string | null
           smokes?: boolean | null
           smoking_details?: string | null
           smoking_policy_preference?: string | null
+          storage_needs?: string | null
+          total_guaranteed_income?: number | null
           total_household_income?: number | null
           transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
+          work_from_home?: boolean | null
         }
         Relationships: [
           {
@@ -1090,6 +1150,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_age_from_dob: {
+        Args: { date_of_birth: string }
+        Returns: number
+      }
       user_has_active_subscription: {
         Args: { user_uuid: string }
         Returns: boolean

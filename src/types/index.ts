@@ -15,25 +15,88 @@ export interface User {
 export interface TenantProfile {
   id: string;
   userId: string;
+  
+  // Basic Information
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   dateOfBirth: string;
+  sex?: string;
+  nationality?: string;
+  maritalStatus?: string;
+  
+  // Employment & Income
   profession: string;
+  employer?: string;
+  employmentStatus?: string;
+  workContractType?: string;
   income: number;
   monthlyIncome?: number;
+  workFromHome?: boolean;
+  
+  // Household Composition
+  hasPartner?: boolean;
+  partnerName?: string;
+  partnerProfession?: string;
+  partnerEmploymentStatus?: string;
+  partnerMonthlyIncome?: number;
+  hasChildren?: boolean;
+  numberOfChildren?: number;
+  householdSize?: number;
+  
+  // Profile Content
   bio: string;
   motivation: string;
   profilePicture?: string;
   isLookingForPlace: boolean;
+  
+  // Housing Preferences
   preferences: {
     minBudget: number;
     maxBudget: number;
     city: string;
     bedrooms: number;
     propertyType: string;
+    furnishedPreference?: string;
+    parkingRequired?: boolean;
+    storageNeeds?: string;
+    leaseDurationPreference?: string;
   };
+  
+  // Timing & Availability
+  moveInDatePreferred?: string;
+  moveInDateEarliest?: string;
+  availabilityFlexible?: boolean;
+  reasonForMoving?: string;
+  
+  // Guarantor Information
+  guarantorAvailable?: boolean;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorIncome?: number;
+  guarantorRelationship?: string;
+  incomeProofAvailable?: boolean;
+  
+  // Emergency Contact
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
+  
+  // Lifestyle & Preferences
+  hasPets?: boolean;
+  petDetails?: string;
+  smokes?: boolean;
+  smokingDetails?: string;
+  
+  // References & History
+  referencesAvailable?: boolean;
+  rentalHistoryYears?: number;
+  
+  // Computed Fields
+  computedAge?: number;
+  totalGuaranteedIncome?: number;
+  
   documents: Document[];
   verificationStatus: 'pending' | 'approved' | 'rejected';
 }
@@ -69,6 +132,13 @@ export interface Property {
   availableFrom?: string;
   deposit?: number;
   utilities?: number;
+  
+  // Enhanced property fields
+  furnished?: boolean;
+  parkingAvailable?: boolean;
+  smokingAllowed?: boolean;
+  petsAllowed?: boolean;
+  availableUntil?: string;
 }
 
 export interface Document {
@@ -136,4 +206,56 @@ export interface PaymentStatus {
   hasValidPayment: boolean;
   subscriptionType: 'basic' | 'premium';
   expiresAt?: string;
+}
+
+// Enhanced matching interfaces
+export interface EnhancedMatchCriteria {
+  financial: {
+    maxBudget: number;
+    minBudget: number;
+    totalGuaranteedIncome: number;
+    hasGuarantor: boolean;
+    hasIncomeProof: boolean;
+  };
+  location: {
+    preferredCities: string[];
+    maxCommuteTime?: number;
+  };
+  property: {
+    bedrooms: number;
+    propertyTypes: string[];
+    furnished?: boolean;
+    parkingRequired?: boolean;
+  };
+  lifestyle: {
+    petsAllowed?: boolean;
+    smokingAllowed?: boolean;
+    workFromHome?: boolean;
+  };
+  timing: {
+    moveInDatePreferred?: string;
+    moveInDateEarliest?: string;
+    availabilityFlexible?: boolean;
+    leaseDurationPreference?: string;
+  };
+  documentation: {
+    hasReferences: boolean;
+    rentalHistoryYears: number;
+  };
+}
+
+export interface EnhancedMatch {
+  matchScore: number;
+  landlordConfidence?: number;
+  tenantQuality?: number;
+  matchReasons: string[];
+  riskFactors?: string[];
+  strengths?: string[];
+  compatibility: {
+    financial: number;
+    location: number;
+    lifestyle: number;
+    timing: number;
+    documentation: number;
+  };
 }
