@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { ProfileStatusCard } from './ProfileStatusCard';
 import { QuickActionsSection } from './QuickActionsSection';
 import { StatsGrid } from './StatsGrid';
 import { DocumentsSection } from './DocumentsSection';
@@ -52,15 +51,6 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         <p className="text-gray-600">
           Beheer je profiel, documenten en laat de woning jouw vinden.
         </p>
-      </div>
-
-      {/* Profile Status Card */}
-      <div className="mb-8">
-        <ProfileStatusCard
-          isLookingForPlace={isLookingForPlace}
-          isUpdatingStatus={isUpdatingStatus}
-          onToggleLookingStatus={onToggleLookingStatus}
-        />
       </div>
 
       {/* Stats Grid */}
