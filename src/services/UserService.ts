@@ -106,6 +106,16 @@ export interface TenantSearchFilters {
   preferredDistricts?: string[];
 }
 
+// Utility function for sanitizing furnishedPreference everywhere
+function sanitizeFurnishedPreference(value: any): "gemeubileerd" | "ongemeubileerd" | "geen_voorkeur" {
+  if (value === "gemeubileerd" || value === "ongemeubileerd" || value === "geen_voorkeur") {
+    return value;
+  }
+  // Log whenever a value needs sanitizing
+  logger.warn("UserService: Invalid furnishedPreference value detected, resetting to 'geen_voorkeur'. Provided value:", value);
+  return "geen_voorkeur";
+}
+
 export class UserService extends DatabaseService {
   /**
    * Validate authentication and refresh session if needed
@@ -230,7 +240,11 @@ export class UserService extends DatabaseService {
       }
 
       const sanitizedData = this.sanitizeInput(data);
-      
+
+      // Defensive force furnishedPreference valid here too
+      sanitizedData.furnishedPreference = sanitizeFurnishedPreference(sanitizedData.furnishedPreference);
+      logger.info("createTenantProfile: sanitizedData.furnishedPreference =", sanitizedData.furnishedPreference);
+
       const validation = this.validateRequiredFields(sanitizedData, [
         'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
         'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
@@ -308,7 +322,7 @@ export class UserService extends DatabaseService {
         preferred_districts: sanitizedData.preferredDistricts || null,
         max_commute_time: sanitizedData.maxCommuteTime || 30,
         transportation_preference: sanitizedData.transportationPreference || 'public_transport',
-        furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
+        furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
         desired_amenities: sanitizedData.desiredAmenities || [],
         smoking_details: sanitizedData.smokingDetails || null,
         profile_picture_url: sanitizedData.profilePictureUrl || null,
@@ -374,7 +388,11 @@ export class UserService extends DatabaseService {
       }
 
       const sanitizedData = this.sanitizeInput(data);
-      
+
+      // Defensive force furnishedPreference valid here too
+      sanitizedData.furnishedPreference = sanitizeFurnishedPreference(sanitizedData.furnishedPreference);
+      logger.info("updateTenantProfile: sanitizedData.furnishedPreference =", sanitizedData.furnishedPreference);
+
       const validation = this.validateRequiredFields(sanitizedData, [
         'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
         'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
@@ -451,7 +469,7 @@ export class UserService extends DatabaseService {
         preferred_districts: sanitizedData.preferredDistricts || [],
         max_commute_time: sanitizedData.maxCommuteTime || 30,
         transportation_preference: sanitizedData.transportationPreference || 'public_transport',
-        furnished_preference: sanitizedData.furnishedPreference || 'no_preference',
+        furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
         desired_amenities: sanitizedData.desiredAmenities || [],
         smoking_details: sanitizedData.smokingDetails || null,
         profile_picture_url: sanitizedData.profilePictureUrl || null,

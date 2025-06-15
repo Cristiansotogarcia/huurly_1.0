@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -147,6 +146,9 @@ const initialFormData: ProfileFormData = {
   bio: '',
   motivation: ''
 };
+
+// Define allowed furnished_preference values globally in this component file
+const ALLOWED_FURNISHED_PREFERENCES = ["gemeubileerd", "ongemeubileerd", "geen_voorkeur"];
 
 // Enhanced Date Picker with Year Navigation
 const EnhancedDatePicker = ({ 
@@ -310,8 +312,38 @@ export function EnhancedProfileCreationModal({
     return size;
   };
 
+  // Defensive furnished_preference fix: always set to allowed value
+  const sanitizeFurnishedPreference = (value: string) => {
+    if (ALLOWED_FURNISHED_PREFERENCES.includes(value)) return value;
+    console.warn(
+      "Invalid furnished_preference detected in form, resetting to 'geen_voorkeur'. Value was:",
+      value
+    );
+    return "geen_voorkeur";
+  };
+
+  useEffect(() => {
+    // Log furnished_preference on every modal open
+    if (open) {
+      console.debug(
+        "Modal opened, current furnished_preference:", formData.furnished_preference
+      );
+    }
+  }, [open]);
+
   const handleInputChange = (field: keyof ProfileFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // If updating furnished_preference, sanitize and log
+    if (field === "furnished_preference") {
+      const sanitized = sanitizeFurnishedPreference(value);
+      setFormData(prev => ({ ...prev, [field]: sanitized }));
+      console.debug("furnished_preference changed to:", sanitized);
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      // For debugging all values during profile creation process
+      if (typeof value !== "object") {
+        console.debug(`Field changed: ${field} =`, value);
+      }
+    }
   };
 
   const handleDateSelect = (field: 'date_of_birth' | 'move_in_date_preferred' | 'move_in_date_earliest', date: Date | undefined) => {
@@ -344,8 +376,19 @@ export function EnhancedProfileCreationModal({
       // Calculate household size
       const householdSize = calculateHouseholdSize();
 
+      // Defensive: sanitize AGAIN just before submission
+      const furnished_pref_before = formData.furnished_preference;
+      const safeFurnishedPreference = sanitizeFurnishedPreference(furnished_pref_before);
+      if (furnished_pref_before !== safeFurnishedPreference) {
+        setFormData(prev => ({
+          ...prev,
+          furnished_preference: safeFurnishedPreference,
+        }));
+      }
+      console.log("Handle submit: furnished_preference before submit = ", safeFurnishedPreference);
+
       // Ensure furnished_preference has a valid value
-      const validFurnishedPreference = formData.furnished_preference || 'geen_voorkeur';
+      const validFurnishedPreference = sanitizeFurnishedPreference(formData.furnished_preference);
       
       // Ensure sex has a valid value if provided
       const validSex = formData.sex && ['man', 'vrouw', 'anders', 'geen_antwoord'].includes(formData.sex) 
