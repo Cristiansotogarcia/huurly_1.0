@@ -12,3 +12,5 @@
       "description": "Create new rules when mistakes are identified to prevent similar errors in the future",
       "rule": "When I notice I've made a mistake or the user points out an error in my reasoning, I must: 1) Acknowledge the mistake clearly, 2) Analyze WHY the mistake happened (root cause), 3) Create a specific rule to prevent this type of mistake in the future, 4) Add that rule to this rules file. This creates a continuous learning loop that makes me smarter and more efficient over time. create a self-improvement.md and update it as I go."
   
+
+  Reffrence docs directory to make sure you are staying in the project scope.
