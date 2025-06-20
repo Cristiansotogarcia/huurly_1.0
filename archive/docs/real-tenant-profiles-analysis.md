@@ -48,13 +48,17 @@ Comprehensive analysis of the actual `tenant_profiles` table structure compared 
 
 Based on typical database schemas and common patterns, these columns are likely present but unused:
 
-### 🗑️ Columns to Consider Removing
+## 🔍 Identified Issues & Recommendations
 
-#### Legacy/Duplicate Fields
-- `email` - Already in profiles table
-- `name` - Replaced by first_name/last_name
-- `city` - Replaced by preferred_city
-- `budget` - Replaced by min_budget/max_budget
+### 1. 🗑️ Columns to Consider Removing (Unused/Redundant)
+
+Based on typical database schemas, these columns are likely unused:
+
+#### Duplicate/Legacy Fields
+- `email` (already in profiles table)
+- `name` (replaced by first_name/last_name)
+- `city` (replaced by preferred_city)
+- `budget` (replaced by min_budget/max_budget)
 - `bedrooms` - Replaced by preferred_bedrooms
 - `property_type` - Replaced by preferred_property_type
 
