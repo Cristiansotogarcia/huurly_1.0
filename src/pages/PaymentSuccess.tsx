@@ -1,53 +1,46 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { logger } from '@/lib/logger';
+
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
+import { toast } from "@/hooks/use-toast";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { toast } = useToast();
+  const { user, updateUser } = useAuthStore();
 
   useEffect(() => {
-    // Get the session ID from the URL
-    const sessionId = searchParams.get('session_id');
-    
-    // Log the payment success
-    if (sessionId) {
-      logger.info('Payment success redirect with session ID:', sessionId);
-      
-      // Set the localStorage flag for the success popup
-      localStorage.setItem('hasShownPaymentSuccessPopup', 'true');
-      
-      // Show a brief toast message
-      toast({
-        title: 'Betaling ontvangen',
-        description: 'Je wordt doorgestuurd naar je dashboard...',
-      });
-    }
-    
-    // Immediately redirect to the dashboard with the payment success flag
-    // The dashboard will handle the verification logic
-    navigate('/huurder-dashboard?payment=success', { replace: true });
-    
-  }, [navigate, searchParams, toast]);
+    // On visit, show toast and mark as paid in store
+    toast({
+      title: "Betaling ontvangen!",
+      description: "Je account is nu geactiveerd en je hebt toegang tot alle functies.",
+      variant: "default",
+    });
 
-  // Simple loading screen while redirecting
+    // Mark user as paid
+    // If user is not yet updated, still set so modal closes immediately
+    if (user && user.hasPayment !== true) {
+      updateUser({ hasPayment: true });
+    }
+
+    // Redirect after a short delay to dashboard
+    const timeout = setTimeout(() => {
+      navigate("/huurder-dashboard", { replace: true });
+    }, 1400);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <Loader2 className="w-16 h-16 mx-auto mb-4 text-dutch-blue animate-spin" />
-            <h2 className="text-xl font-semibold mb-2">Betaling verwerken...</h2>
-            <p className="text-gray-600">
-              Je wordt doorgestuurd naar je dashboard...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="flex items-center space-x-3 mb-4">
+        <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+        <span className="font-semibold text-lg text-dutch-blue">Betaling succesvol!</span>
+      </div>
+      <div className="text-gray-600 mb-5">
+        Je wordt zo doorgestuurd naar je dashboard.
+      </div>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400" />
     </div>
   );
 };

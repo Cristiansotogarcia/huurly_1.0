@@ -57,43 +57,12 @@ export class DashboardService {
         logger.error('Error fetching tenant profile:', profileError);
       }
 
-      // Get invitations count from property_applications
-      const { count: invitationsCount, error: invitationsError } = await supabase
-        .from('property_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', userId)
-        .eq('status', 'invited');
-
-      if (invitationsError) {
-        logger.error('Error fetching invitations count:', invitationsError);
-      }
-
-      // Get total applications count
-      const { count: applicationsCount, error: applicationsError } = await supabase
-        .from('property_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', userId);
-
-      if (applicationsError) {
-        logger.error('Error fetching applications count:', applicationsError);
-      }
-
-      // Get accepted applications count
-      const { count: acceptedCount, error: acceptedError } = await supabase
-        .from('property_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', userId)
-        .eq('status', 'accepted');
-
-      if (acceptedError) {
-        logger.error('Error fetching accepted applications count:', acceptedError);
-      }
-
+      // Since property_applications table doesn't exist, return mock data
       const stats: DashboardStats = {
         profileViews: tenantProfile?.profile_views || 0,
-        invitations: invitationsCount || 0,
-        applications: applicationsCount || 0,
-        acceptedApplications: acceptedCount || 0
+        invitations: 0,
+        applications: 0,
+        acceptedApplications: 0
       };
 
       logger.info('Huurder stats fetched successfully:', stats);
@@ -112,69 +81,13 @@ export class DashboardService {
     try {
       logger.info('Fetching verhuurder stats for user:', userId);
 
-      // Get total properties count
-      const { count: totalPropertiesCount, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('landlord_id', userId);
-
-      if (propertiesError) {
-        logger.error('Error fetching total properties count:', propertiesError);
-      }
-
-      // Get active properties count
-      const { count: activePropertiesCount, error: activeError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('landlord_id', userId)
-        .eq('status', 'active');
-
-      if (activeError) {
-        logger.error('Error fetching active properties count:', activeError);
-      }
-
-      // Get rented properties count (total tenants)
-      const { count: totalTenantsCount, error: tenantsError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('landlord_id', userId)
-        .eq('status', 'rented');
-
-      if (tenantsError) {
-        logger.error('Error fetching total tenants count:', tenantsError);
-      }
-
-      // Get pending applications count
-      const { count: pendingApplicationsCount, error: pendingError } = await supabase
-        .from('property_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-
-      if (pendingError) {
-        logger.error('Error fetching pending applications count:', pendingError);
-      }
-
-      // Calculate monthly revenue from rented properties
-      const { data: rentedProperties, error: rentError } = await supabase
-        .from('properties')
-        .select('rent_amount')
-        .eq('landlord_id', userId)
-        .eq('status', 'rented');
-
-      if (rentError) {
-        logger.error('Error fetching rented properties for revenue:', rentError);
-      }
-
-      const monthlyRevenue = rentedProperties?.reduce((total, property) => {
-        return total + (Number(property.rent_amount) || 0);
-      }, 0) || 0;
-
+      // Since properties table doesn't exist, return mock data
       const stats: VerhuurderStats = {
-        totalProperties: totalPropertiesCount || 0,
-        activeProperties: activePropertiesCount || 0,
-        totalTenants: totalTenantsCount || 0,
-        pendingApplications: pendingApplicationsCount || 0,
-        monthlyRevenue
+        totalProperties: 0,
+        activeProperties: 0,
+        totalTenants: 0,
+        pendingApplications: 0,
+        monthlyRevenue: 0
       };
 
       logger.info('Verhuurder stats fetched successfully:', stats);
@@ -272,15 +185,6 @@ export class DashboardService {
         logger.error('Error fetching active users count:', activeError);
       }
 
-      // Get total properties count
-      const { count: totalPropertiesCount, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true });
-
-      if (propertiesError) {
-        logger.error('Error fetching total properties count:', propertiesError);
-      }
-
       // Calculate total revenue from payments
       const { data: payments, error: paymentsError } = await supabase
         .from('payment_records')
@@ -301,7 +205,7 @@ export class DashboardService {
       const stats: BeheerderStats = {
         totalUsers: totalUsersCount || 0,
         activeUsers: activeUsersCount || 0,
-        totalProperties: totalPropertiesCount || 0,
+        totalProperties: 0, // No properties table exists
         totalRevenue,
         systemHealth
       };
@@ -326,32 +230,13 @@ export class DashboardService {
       
       switch (role) {
         case 'huurder':
-          const { data: huurderData, error: huurderError } = await supabase
-            .from('property_applications')
-            .select('id, status, applied_at')
-            .eq('tenant_id', userId)
-            .order('applied_at', { ascending: false })
-            .limit(limit);
-          
-          if (huurderError) {
-            logger.error('Error fetching huurder activity:', huurderError);
-            return { success: false, error: huurderError };
-          }
-          data = huurderData || [];
+          // Since property_applications doesn't exist, return empty array
+          data = [];
           break;
 
         case 'verhuurder':
-          const { data: verhuurderData, error: verhuurderError } = await supabase
-            .from('property_applications')
-            .select('id, status, applied_at')
-            .order('applied_at', { ascending: false })
-            .limit(limit);
-          
-          if (verhuurderError) {
-            logger.error('Error fetching verhuurder activity:', verhuurderError);
-            return { success: false, error: verhuurderError };
-          }
-          data = verhuurderData || [];
+          // Since property_applications doesn't exist, return empty array
+          data = [];
           break;
 
         case 'beoordelaar':

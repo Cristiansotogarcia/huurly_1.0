@@ -25,6 +25,7 @@ export const Logo = ({ className }: LogoProps) => {
           }
         }}
       />
+      <span className="ml-2 text-2xl font-bold text-dutch-blue">Huurly</span>
     </div>
   );
 };

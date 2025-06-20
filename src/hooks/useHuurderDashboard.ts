@@ -1,0 +1,131 @@
+
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import { useToast } from "@/hooks/use-toast";
+import { dashboardDataService } from "@/services/DashboardDataService";
+
+interface DashboardStats {
+  profileViews: number;
+  invitations: number;
+  applications: number;
+  acceptedApplications: number;
+}
+
+export const useHuurderDashboard = () => {
+  const { user } = useAuthStore();
+  const { toast } = useToast();
+  const [hasProfile, setHasProfile] = useState(false);
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({
+    profileViews: 0,
+    invitations: 0,
+    applications: 0,
+    acceptedApplications: 0
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  const initializeDashboard = async () => {
+    console.log("Initializing dashboard...");
+    setIsLoading(false);
+  };
+
+  const loadDashboardData = async () => {
+    if (!user?.id) {
+      console.log("No user ID available for loading dashboard data");
+      return;
+    }
+
+    console.log("Loading dashboard data for user:", user.id);
+    
+    try {
+      setIsLoadingStats(true);
+
+      // Load tenant profile with proper error handling
+      console.log("Fetching tenant profile...");
+      const profileResult = await dashboardDataService.getTenantProfile(user.id);
+      console.log("Profile result:", profileResult);
+      
+      if (profileResult.success && profileResult.data) {
+        setHasProfile(true);
+        // Set profile picture URL from tenant profile
+        setProfilePictureUrl(profileResult.data.profile_picture_url);
+        console.log("Tenant profile found with picture:", profileResult.data.profile_picture_url);
+      } else {
+        setHasProfile(false);
+        console.log("No tenant profile found or error:", profileResult.error);
+      }
+
+      // Load user documents
+      console.log("Fetching user documents...");
+      const documentsResult = await dashboardDataService.getUserDocuments(user.id);
+      console.log("Documents result:", documentsResult);
+      
+      if (documentsResult.success) {
+        setUserDocuments(documentsResult.data || []);
+        console.log("User documents loaded:", documentsResult.data?.length || 0);
+      } else {
+        console.log("Error loading documents:", documentsResult.error);
+      }
+
+      // Load dashboard stats
+      console.log("Fetching dashboard stats...");
+      const statsResult = await dashboardDataService.getTenantDashboardStats(user.id);
+      console.log("Stats result:", statsResult);
+      
+      if (statsResult.success && statsResult.data) {
+        setStats(statsResult.data);
+        console.log("Dashboard stats loaded:", statsResult.data);
+      } else {
+        console.log("Error loading stats:", statsResult.error);
+      }
+
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      toast({
+        title: "Fout bij laden gegevens",
+        description: "Er is een fout opgetreden bij het laden van je dashboard gegevens.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  const refreshDocuments = async () => {
+    if (!user?.id) return;
+    
+    const result = await dashboardDataService.getUserDocuments(user.id);
+    if (result.success) {
+      setUserDocuments(result.data || []);
+    }
+  };
+
+  const getSubscriptionEndDate = () => {
+    // Calculate 1 year from the payment date stored in user_roles
+    if (user?.id) {
+      // For now, we'll use a placeholder calculation based on today + 1 year
+      // In a real implementation, this would come from the payment_records table
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      return oneYearFromNow.toLocaleDateString('nl-NL');
+    }
+    return null;
+  };
+
+  return {
+    user,
+    hasProfile,
+    setHasProfile,
+    userDocuments,
+    isLoading,
+    stats,
+    isLoadingStats,
+    profilePictureUrl,
+    initializeDashboard,
+    loadDashboardData,
+    refreshDocuments,
+    getSubscriptionEndDate
+  };
+};
