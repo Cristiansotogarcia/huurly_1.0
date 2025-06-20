@@ -1,173 +1,451 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/store/authStore';
-import { userService, AuthenticationError } from '@/services/UserService';
-import { 
-  User, ArrowLeft, ArrowRight, CheckCircle, Upload, MapPin, Euro, Home, 
-  Briefcase, Heart, Users, Baby, Camera, Clock, Car, Wifi, Bath, 
-  TreePine, ParkingCircle, WashingMachine, Utensils, Shield, Calendar 
-} from 'lucide-react';
 
 interface EnhancedProfileCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onComplete: (profileData: any) => void;
-  editMode?: boolean;
-  existingProfileId?: string;
+  onComplete: (profileData: any) => Promise<void>;
+  editMode: boolean;
 }
 
-interface EnhancedProfileData {
-  // Step 1: Personal Information
-  firstName: string;
-  lastName: string;
-  email: string;
+interface ProfileFormData {
+  // Basic Information
+  first_name: string;
+  last_name: string;
+  date_of_birth: Date | undefined;
   phone: string;
-  dateOfBirth: string;
+  sex: string;
   nationality: string;
-  sex: 'man' | 'vrouw' | 'anders' | 'zeg_ik_liever_niet' | '';
-  profilePicture?: File;
-  profilePictureUrl?: string;
+  marital_status: string;
   
-  // Step 2: Marital & Family Status
-  maritalStatus: 'single' | 'married' | 'partnership' | 'divorced' | 'widowed';
-  hasChildren: boolean;
-  numberOfChildren: number;
-  childrenAges: number[];
-  
-  // Step 3: Work & Employment + Guarantor Information
+  // Employment & Income
   profession: string;
   employer: string;
-  employmentStatus: string;
-  workContractType: string;
-  monthlyIncome: number;
-  housingAllowanceEligible: boolean;
-  // Priority 1: Guarantor Information
-  guarantorAvailable: boolean;
-  guarantorName: string;
-  guarantorPhone: string;
-  guarantorIncome: number;
-  guarantorRelationship: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders' | '';
-  incomeProofAvailable: boolean;
+  employment_status: string;
+  work_contract_type: string;
+  monthly_income: number;
+  work_from_home: boolean;
   
-  // Step 4: Partner Information
-  hasPartner: boolean;
-  partnerName: string;
-  partnerProfession: string;
-  partnerMonthlyIncome: number;
-  partnerEmploymentStatus: string;
+  // Household Composition
+  has_partner: boolean;
+  partner_name: string;
+  partner_profession: string;
+  partner_employment_status: string;
+  partner_monthly_income: number;
+  has_children: boolean;
+  number_of_children: number;
   
-  // Step 5: Location Preferences + Timing Information
-  city: string;
-  preferredDistricts: string[];
-  maxCommuteTime: number;
-  transportationPreference: string;
-  // Priority 2: Timing Information
-  moveInDatePreferred: string;
-  moveInDateEarliest: string;
-  availabilityFlexible: boolean;
+  // Housing Preferences
+  preferred_city: string;
+  preferred_property_type: string;
+  preferred_bedrooms: number;
+  max_budget: number;
+  min_budget: number;
+  furnished_preference: string;
+  parking_required: boolean;
+  storage_needs: string;
   
-  // Step 6: Housing & Lifestyle Preferences
-  minBudget: number;
-  maxBudget: number;
-  bedrooms: number;
-  propertyType: string;
-  furnishedPreference: 'furnished' | 'unfurnished' | 'no_preference';
-  desiredAmenities: string[];
-  hasPets: boolean;
-  petDetails: string;
+  // Timing & Availability
+  move_in_date_preferred: Date | undefined;
+  move_in_date_earliest: Date | undefined;
+  availability_flexible: boolean;
+  lease_duration_preference: string;
+  
+  // Guarantor Information
+  guarantor_available: boolean;
+  guarantor_name: string;
+  guarantor_phone: string;
+  guarantor_income: number;
+  guarantor_relationship: string;
+  income_proof_available: boolean;
+  
+  // Emergency Contact
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  emergency_contact_relationship: string;
+  
+  // Lifestyle & Preferences
+  has_pets: boolean;
+  pet_details: string;
   smokes: boolean;
-  smokingDetails: string;
+  smoking_details: string;
   
-  // Step 7: About You & Review
+  // References & History
+  references_available: boolean;
+  rental_history_years: number;
+  reason_for_moving: string;
+  
+  // Profile Content
   bio: string;
   motivation: string;
+  
+  // Profile Picture
+  profilePictureUrl: string;
 }
 
-const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode = false, existingProfileId }: EnhancedProfileCreationModalProps) => {
-  const { user } = useAuthStore();
-  const { toast } = useToast();
+const initialFormData: ProfileFormData = {
+  first_name: '',
+  last_name: '',
+  date_of_birth: undefined,
+  phone: '',
+  sex: '',
+  nationality: 'Nederlandse',
+  marital_status: 'single',
+  profession: '',
+  employer: '',
+  employment_status: '',
+  work_contract_type: '',
+  monthly_income: 0,
+  work_from_home: false,
+  has_partner: false,
+  partner_name: '',
+  partner_profession: '',
+  partner_employment_status: '',
+  partner_monthly_income: 0,
+  has_children: false,
+  number_of_children: 0,
+  preferred_city: '',
+  preferred_property_type: '',
+  preferred_bedrooms: 1,
+  max_budget: 0,
+  min_budget: 0,
+  furnished_preference: 'geen_voorkeur',
+  parking_required: false,
+  storage_needs: '',
+  move_in_date_preferred: undefined,
+  move_in_date_earliest: undefined,
+  availability_flexible: true,
+  lease_duration_preference: '',
+  guarantor_available: false,
+  guarantor_name: '',
+  guarantor_phone: '',
+  guarantor_income: 0,
+  guarantor_relationship: '',
+  income_proof_available: true,
+  emergency_contact_name: '',
+  emergency_contact_phone: '',
+  emergency_contact_relationship: '',
+  has_pets: false,
+  pet_details: '',
+  smokes: false,
+  smoking_details: '',
+  references_available: true,
+  rental_history_years: 0,
+  reason_for_moving: '',
+  bio: '',
+  motivation: '',
+  profilePictureUrl: ''
+};
+
+// Define allowed furnished_preference values - now using Dutch values
+const ALLOWED_FURNISHED_PREFERENCES = ["gemeubileerd", "ongemeubileerd", "geen_voorkeur"];
+
+// Enhanced Date Picker with Year Navigation - Fixed format to dd/MM/yyyy
+const EnhancedDatePicker = ({ 
+  selected, 
+  onSelect, 
+  placeholder = "Selecteer datum",
+  disabled
+}: {
+  selected: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  placeholder?: string;
+  disabled?: (date: Date) => boolean;
+}) => {
+  const [currentYear, setCurrentYear] = useState(selected?.getFullYear() || new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(selected?.getMonth() || new Date().getMonth());
+
+  const navigateYear = (direction: 'prev' | 'next') => {
+    setCurrentYear(prev => direction === 'prev' ? prev - 1 : prev + 1);
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(prev => prev - 1);
+      } else {
+        setCurrentMonth(prev => prev - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(prev => prev + 1);
+      } else {
+        setCurrentMonth(prev => prev + 1);
+      }
+    }
+  };
+
+  const displayDate = new Date(currentYear, currentMonth, 1);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !selected && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selected ? (
+            format(selected, "dd/MM/yyyy", { locale: nl })
+          ) : (
+            <span>{placeholder}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="p-3">
+          {/* Year and Month Navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateYear('prev')}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth('prev')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <span className="text-sm font-medium min-w-[120px] text-center">
+                {format(displayDate, "MMMM yyyy", { locale: nl })}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateMonth('next')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateYear('next')}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={onSelect}
+          month={displayDate}
+          onMonthChange={(date) => {
+            setCurrentYear(date.getFullYear());
+            setCurrentMonth(date.getMonth());
+          }}
+          disabled={disabled}
+          locale={nl}
+          className="pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+import Step1PersonalInfo from "./EnhancedProfileSteps/Step1PersonalInfo";
+import Step2Employment from "./EnhancedProfileSteps/Step2Employment";
+import Step3Household from "./EnhancedProfileSteps/Step3Household";
+import Step4Housing from "./EnhancedProfileSteps/Step4Housing";
+import Step5Timing from "./EnhancedProfileSteps/Step5Timing";
+import Step6Guarantor from "./EnhancedProfileSteps/Step6Guarantor";
+import Step7References from "./EnhancedProfileSteps/Step7References";
+import Step8ProfileMotivation from "./EnhancedProfileSteps/Step8ProfileMotivation";
+
+export function EnhancedProfileCreationModal({ 
+  open, 
+  onOpenChange, 
+  onComplete, 
+  editMode 
+}: EnhancedProfileCreationModalProps) {
+  const [formData, setFormData] = useState<ProfileFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [profileData, setProfileData] = useState<EnhancedProfileData>({
-    // Step 1: Personal Information
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
-    email: user?.email || '',
-    phone: '',
-    dateOfBirth: '',
-    nationality: 'Nederlandse',
-    sex: '',
-    
-    // Step 2: Marital & Family Status
-    maritalStatus: 'single',
-    hasChildren: false,
-    numberOfChildren: 0,
-    childrenAges: [],
-    
-    // Step 3: Work & Employment + Guarantor Information
-    profession: '',
-    employer: '',
-    employmentStatus: 'employed',
-    workContractType: 'permanent',
-    monthlyIncome: 0,
-    housingAllowanceEligible: false,
-    guarantorAvailable: false,
-    guarantorName: '',
-    guarantorPhone: '',
-    guarantorIncome: 0,
-    guarantorRelationship: '',
-    incomeProofAvailable: false,
-    
-    // Step 4: Partner Information
-    hasPartner: false,
-    partnerName: '',
-    partnerProfession: '',
-    partnerMonthlyIncome: 0,
-    partnerEmploymentStatus: 'employed',
-    
-    // Step 5: Location Preferences + Timing Information
-    city: 'Amsterdam',
-    preferredDistricts: [],
-    maxCommuteTime: 30,
-    transportationPreference: 'public_transport',
-    moveInDatePreferred: '',
-    moveInDateEarliest: '',
-    availabilityFlexible: false,
-    
-    // Step 6: Housing & Lifestyle Preferences
-    minBudget: 1000,
-    maxBudget: 2000,
-    bedrooms: 1,
-    propertyType: 'Appartement',
-    furnishedPreference: 'no_preference',
-    desiredAmenities: [],
-    hasPets: false,
-    petDetails: '',
-    smokes: false,
-    smokingDetails: '',
-    
-    // Step 7: About You & Review
-    bio: '',
-    motivation: '',
-  });
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const { toast } = useToast();
 
-  const totalSteps = 7;
-  const progress = (currentStep / totalSteps) * 100;
+  const totalSteps = 8;
 
-  const updateProfileData = (field: keyof EnhancedProfileData, value: any) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
+  // Fetch & load tenant profile when opening in editMode
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoadingProfile(true);
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (!user || !user.id) {
+          setIsLoadingProfile(false);
+          return;
+        }
+        
+        const { data: tenantProfile, error } = await supabase
+          .from('tenant_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading tenant profile:', error);
+          setIsLoadingProfile(false);
+          return;
+        }
+        if (!tenantProfile) {
+          setIsLoadingProfile(false);
+          return;
+        }
+
+        // Map DB to modal fields (converting types as needed)
+        setFormData({
+          first_name: tenantProfile.first_name || '',
+          last_name: tenantProfile.last_name || '',
+          date_of_birth: tenantProfile.date_of_birth ? new Date(tenantProfile.date_of_birth) : undefined,
+          phone: tenantProfile.phone || '',
+          sex: tenantProfile.sex || '',
+          nationality: tenantProfile.nationality || 'Nederlandse',
+          marital_status: tenantProfile.marital_status || 'single',
+          
+          profession: tenantProfile.profession || '',
+          employer: tenantProfile.employer || '',
+          employment_status: tenantProfile.employment_status || '',
+          work_contract_type: tenantProfile.work_contract_type || '',
+          monthly_income: tenantProfile.monthly_income ? Number(tenantProfile.monthly_income) : 0,
+          work_from_home: !!tenantProfile.work_from_home,
+
+          has_partner: !!tenantProfile.has_partner,
+          partner_name: tenantProfile.partner_name || '',
+          partner_profession: tenantProfile.partner_profession || '',
+          partner_employment_status: tenantProfile.partner_employment_status || '',
+          partner_monthly_income: tenantProfile.partner_monthly_income ? Number(tenantProfile.partner_monthly_income) : 0,
+
+          has_children: !!tenantProfile.has_children,
+          number_of_children: tenantProfile.number_of_children ? Number(tenantProfile.number_of_children) : 0,
+
+          preferred_city: tenantProfile.preferred_city || '',
+          preferred_property_type: tenantProfile.preferred_property_type || '',
+          preferred_bedrooms: tenantProfile.preferred_bedrooms ? Number(tenantProfile.preferred_bedrooms) : 1,
+          max_budget: tenantProfile.max_budget ? Number(tenantProfile.max_budget) : 0,
+          min_budget: tenantProfile.min_budget ? Number(tenantProfile.min_budget) : 0,
+          furnished_preference: tenantProfile.furnished_preference || 'geen_voorkeur',
+          parking_required: !!tenantProfile.parking_required,
+          storage_needs: tenantProfile.storage_needs || '',
+
+          move_in_date_preferred: tenantProfile.move_in_date_preferred ? new Date(tenantProfile.move_in_date_preferred) : undefined,
+          move_in_date_earliest: tenantProfile.move_in_date_earliest ? new Date(tenantProfile.move_in_date_earliest) : undefined,
+          availability_flexible: !!tenantProfile.availability_flexible,
+          lease_duration_preference: tenantProfile.lease_duration_preference || '',
+
+          guarantor_available: !!tenantProfile.guarantor_available,
+          guarantor_name: tenantProfile.guarantor_name || '',
+          guarantor_phone: tenantProfile.guarantor_phone || '',
+          guarantor_income: tenantProfile.guarantor_income ? Number(tenantProfile.guarantor_income) : 0,
+          guarantor_relationship: tenantProfile.guarantor_relationship || '',
+          income_proof_available: !!tenantProfile.income_proof_available,
+
+          emergency_contact_name: tenantProfile.emergency_contact_name || '',
+          emergency_contact_phone: tenantProfile.emergency_contact_phone || '',
+          emergency_contact_relationship: tenantProfile.emergency_contact_relationship || '',
+
+          has_pets: !!tenantProfile.has_pets,
+          pet_details: tenantProfile.pet_details || '',
+
+          smokes: !!tenantProfile.smokes,
+          smoking_details: tenantProfile.smoking_details || '',
+
+          references_available: !!tenantProfile.references_available,
+          rental_history_years: tenantProfile.rental_history_years ? Number(tenantProfile.rental_history_years) : 0,
+          reason_for_moving: tenantProfile.reason_for_moving || '',
+
+          bio: tenantProfile.bio || '',
+          motivation: tenantProfile.motivation || '',
+          
+          profilePictureUrl: tenantProfile.profile_picture_url || ''
+        });
+      } catch (err) {
+        console.error('Error loading profile:', err);
+      }
+      setIsLoadingProfile(false);
+    };
+
+    if (open && editMode) {
+      fetchProfile();
+    } else if (open && !editMode) {
+      setFormData(initialFormData);
+    }
+  }, [open, editMode]);
+
+  // Calculate household size automatically
+  const calculateHouseholdSize = () => {
+    let size = 1; // User always counts as 1
+    if (formData.has_partner) size += 1;
+    if (formData.has_children) size += formData.number_of_children;
+    return size;
+  };
+
+  // Updated sanitize function to ensure Dutch values
+  const sanitizeFurnishedPreference = (value: string) => {
+    if (ALLOWED_FURNISHED_PREFERENCES.includes(value)) return value;
+    // Convert English values to Dutch
+    if (value === 'furnished') return 'gemeubileerd';
+    if (value === 'unfurnished') return 'ongemeubileerd';
+    if (value === 'no_preference') return 'geen_voorkeur';
+    
+    console.warn(
+      "Invalid furnished_preference detected in form, converting to 'geen_voorkeur'. Value was:",
+      value
+    );
+    return "geen_voorkeur";
+  };
+
+  useEffect(() => {
+    // Log furnished_preference on every modal open
+    if (open) {
+      console.debug(
+        "Modal opened, current furnished_preference:", formData.furnished_preference
+      );
+    }
+  }, [open]);
+
+  const handleInputChange = (field: keyof ProfileFormData, value: any) => {
+    // If updating furnished_preference, sanitize and log
+    if (field === "furnished_preference") {
+      const sanitized = sanitizeFurnishedPreference(value);
+      setFormData(prev => ({ ...prev, [field]: sanitized }));
+      console.debug("furnished_preference changed to:", sanitized);
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      // For debugging all values during profile creation process
+      if (typeof value !== "object") {
+        console.debug(`Field changed: ${field} =`, value);
+      }
+    }
+  };
+
+  const handleDateSelect = (field: 'date_of_birth' | 'move_in_date_preferred' | 'move_in_date_earliest', date: Date | undefined) => {
+    setFormData(prev => ({ ...prev, [field]: date }));
   };
 
   const nextStep = () => {
@@ -186,1257 +464,229 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
     setIsSubmitting(true);
     
     try {
-      const profileDataToSubmit = {
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        phone: profileData.phone,
-        dateOfBirth: profileData.dateOfBirth,
-        profession: profileData.profession,
-        monthlyIncome: profileData.monthlyIncome,
-        bio: profileData.bio,
-        city: profileData.city,
-        minBudget: profileData.minBudget,
-        maxBudget: profileData.maxBudget,
-        bedrooms: profileData.bedrooms,
-        propertyType: profileData.propertyType,
-        motivation: profileData.motivation,
-        // Enhanced fields
-        employer: profileData.employer,
-        employmentStatus: profileData.employmentStatus,
-        workContractType: profileData.workContractType,
-        housingAllowanceEligible: profileData.housingAllowanceEligible,
-        hasPets: profileData.hasPets,
-        petDetails: profileData.petDetails,
-        smokes: profileData.smokes,
-        smokingDetails: profileData.smokingDetails,
-        // New enhanced fields
-        nationality: profileData.nationality,
-        sex: profileData.sex,
-        maritalStatus: profileData.maritalStatus,
-        hasChildren: profileData.hasChildren,
-        numberOfChildren: profileData.numberOfChildren,
-        childrenAges: profileData.childrenAges,
-        hasPartner: profileData.hasPartner,
-        partnerName: profileData.partnerName,
-        partnerProfession: profileData.partnerProfession,
-        partnerMonthlyIncome: profileData.partnerMonthlyIncome,
-        partnerEmploymentStatus: profileData.partnerEmploymentStatus,
-        preferredDistricts: profileData.preferredDistricts,
-        maxCommuteTime: profileData.maxCommuteTime,
-        transportationPreference: profileData.transportationPreference,
-        furnishedPreference: profileData.furnishedPreference,
-        desiredAmenities: profileData.desiredAmenities,
-        profilePictureUrl: profileData.profilePictureUrl,
-        
-        // Priority 1: Guarantor Information
-        guarantorAvailable: profileData.guarantorAvailable,
-        guarantorName: profileData.guarantorName,
-        guarantorPhone: profileData.guarantorPhone,
-        guarantorIncome: profileData.guarantorIncome,
-        guarantorRelationship: profileData.guarantorRelationship,
-        incomeProofAvailable: profileData.incomeProofAvailable,
-        
-        // Priority 2: Timing Information
-        moveInDatePreferred: profileData.moveInDatePreferred,
-        moveInDateEarliest: profileData.moveInDateEarliest,
-        availabilityFlexible: profileData.availabilityFlexible,
-      } as any;
-
-      // Use the appropriate method based on edit mode
-      const result = editMode 
-        ? await userService.updateTenantProfile(profileDataToSubmit)
-        : await userService.createTenantProfile(profileDataToSubmit);
-
-      if (result.success && result.data) {
-        toast({
-          title: editMode ? "Profiel bijgewerkt!" : "Profiel aangemaakt!",
-          description: editMode 
-            ? "Je profiel is succesvol bijgewerkt."
-            : "Je complete profiel is succesvol aangemaakt en is nu zichtbaar voor verhuurders."
-        });
-        
-        onComplete(result.data);
-        onOpenChange(false);
-        setCurrentStep(1);
-      } else {
-        throw result.error || new Error(editMode ? 'Profiel bijwerken mislukt' : 'Profiel aanmaken mislukt');
-      }
-    } catch (error) {
-      console.error('Profile submission error:', error);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (error instanceof AuthenticationError) {
-        toast({
-          title: "Sessie verlopen",
-          description: "Je sessie is verlopen. Je wordt automatisch uitgelogd. Log opnieuw in om door te gaan.",
-          variant: "destructive"
-        });
-        
-        onOpenChange(false);
-        return;
+      if (!user) {
+        throw new Error('User not authenticated');
       }
+
+      // Calculate household size
+      const householdSize = calculateHouseholdSize();
+
+      // Ensure furnished_preference has a valid Dutch value
+      const validFurnishedPreference = sanitizeFurnishedPreference(formData.furnished_preference);
       
-      const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan. Probeer het opnieuw.';
+      // Ensure sex has a valid value if provided
+      const validSex = formData.sex && ['man', 'vrouw', 'anders', 'geen_antwoord'].includes(formData.sex) 
+        ? formData.sex 
+        : null;
+
+      // Ensure marital_status has a valid value
+      const validMaritalStatus = formData.marital_status && ['single', 'relationship', 'married', 'divorced', 'widowed'].includes(formData.marital_status)
+        ? formData.marital_status 
+        : 'single';
+
+      // Ensure employment_status has a valid value if provided
+      const validEmploymentStatus = formData.employment_status && ['vast_contract', 'tijdelijk_contract', 'zzp', 'student', 'werkloos', 'pensioen'].includes(formData.employment_status)
+        ? formData.employment_status 
+        : null;
+
+      // Ensure guarantor_relationship has a valid value if provided
+      const validGuarantorRelationship = formData.guarantor_relationship && ['ouder', 'familie', 'vriend', 'werkgever', 'anders'].includes(formData.guarantor_relationship)
+        ? formData.guarantor_relationship 
+        : null;
+
+      // Ensure lease_duration_preference has a valid value if provided
+      const validLeaseDurationPreference = formData.lease_duration_preference && ['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel'].includes(formData.lease_duration_preference)
+        ? formData.lease_duration_preference 
+        : null;
+
+      // Convert Date objects to strings for database
+      const profileData = {
+        user_id: user.id,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        // Convert dates to ISO strings or null
+        date_of_birth: formData.date_of_birth ? formData.date_of_birth.toISOString().split('T')[0] : null,
+        sex: validSex,
+        nationality: formData.nationality,
+        marital_status: validMaritalStatus,
+        profession: formData.profession,
+        employer: formData.employer,
+        employment_status: validEmploymentStatus,
+        work_contract_type: formData.work_contract_type,
+        monthly_income: formData.monthly_income,
+        work_from_home: formData.work_from_home,
+        has_partner: formData.has_partner,
+        partner_name: formData.partner_name,
+        partner_profession: formData.partner_profession,
+        partner_employment_status: formData.partner_employment_status,
+        partner_monthly_income: formData.partner_monthly_income,
+        has_children: formData.has_children,
+        number_of_children: formData.number_of_children,
+        preferred_city: formData.preferred_city,
+        preferred_property_type: formData.preferred_property_type,
+        preferred_bedrooms: formData.preferred_bedrooms,
+        max_budget: formData.max_budget,
+        min_budget: formData.min_budget,
+        furnished_preference: validFurnishedPreference,
+        parking_required: formData.parking_required,
+        storage_needs: formData.storage_needs,
+        move_in_date_preferred: formData.move_in_date_preferred ? formData.move_in_date_preferred.toISOString().split('T')[0] : null,
+        move_in_date_earliest: formData.move_in_date_earliest ? formData.move_in_date_earliest.toISOString().split('T')[0] : null,
+        availability_flexible: formData.availability_flexible,
+        lease_duration_preference: validLeaseDurationPreference,
+        guarantor_available: formData.guarantor_available,
+        guarantor_name: formData.guarantor_name,
+        guarantor_phone: formData.guarantor_phone,
+        guarantor_income: formData.guarantor_income,
+        guarantor_relationship: validGuarantorRelationship,
+        income_proof_available: formData.income_proof_available,
+        emergency_contact_name: formData.emergency_contact_name,
+        emergency_contact_phone: formData.emergency_contact_phone,
+        emergency_contact_relationship: formData.emergency_contact_relationship,
+        has_pets: formData.has_pets,
+        pet_details: formData.pet_details,
+        smokes: formData.smokes,
+        smoking_details: formData.smoking_details,
+        references_available: formData.references_available,
+        rental_history_years: formData.rental_history_years,
+        reason_for_moving: formData.reason_for_moving,
+        bio: formData.bio,
+        motivation: formData.motivation,
+        // Auto-calculated household size
+        household_size: householdSize,
+        profile_completed: true,
+        profile_completion_percentage: 100,
+        profile_picture_url: formData.profilePictureUrl || null
+      };
+
+      console.log('Submitting profile data with furnished_preference:', validFurnishedPreference);
+
+      const { error } = await supabase
+        .from('tenant_profiles')
+        .upsert(profileData);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
       toast({
-        title: editMode ? "Fout bij bijwerken profiel" : "Fout bij aanmaken profiel",
-        description: errorMessage,
-        variant: "destructive"
+        title: "Profiel succesvol aangemaakt!",
+        description: "Je profiel is compleet en je kunt nu zoeken naar woningen.",
+      });
+
+      await onComplete(profileData);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      toast({
+        title: "Fout bij aanmaken profiel",
+        description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het opnieuw.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return profileData.firstName && profileData.lastName && profileData.phone && 
-               profileData.dateOfBirth && profileData.nationality;
-      case 2:
-        return profileData.maritalStatus && 
-               (!profileData.hasChildren || profileData.childrenAges.length === profileData.numberOfChildren);
-      case 3:
-        return profileData.profession && profileData.monthlyIncome > 0;
-      case 4:
-        return !profileData.hasPartner || 
-               (profileData.partnerName && profileData.partnerProfession && profileData.partnerMonthlyIncome > 0);
-      case 5:
-        return profileData.city && profileData.preferredDistricts.length > 0;
-      case 6:
-        return profileData.minBudget > 0 && profileData.maxBudget > profileData.minBudget;
-      case 7:
-        return profileData.bio && profileData.motivation;
-      default:
-        return false;
-    }
-  };
-
-  const calculateTotalHouseholdIncome = () => {
-    return profileData.monthlyIncome + (profileData.hasPartner ? profileData.partnerMonthlyIncome : 0);
-  };
-
-  const [dutchCities, setDutchCities] = useState<{[key: string]: string[]}>({});
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-
-  // Load existing profile data when in edit mode
-  useEffect(() => {
-    const loadExistingProfile = async () => {
-      if (!editMode || !user?.id || !open) return;
-      
-      setIsLoadingProfile(true);
-      try {
-        const result = await userService.getTenantProfile(user.id);
-        
-        if (result.success && result.data) {
-          const existingData = result.data;
-          const data = existingData as any;
-          
-          setProfileData({
-            firstName: existingData.first_name || '',
-            lastName: existingData.last_name || '',
-            email: user.email || '',
-            phone: existingData.phone || '',
-            dateOfBirth: existingData.date_of_birth || '',
-            nationality: data.nationality || 'Nederlandse',
-            sex: data.sex || '',
-            
-            maritalStatus: data.marital_status || 'single',
-            hasChildren: data.has_children || false,
-            numberOfChildren: data.number_of_children || 0,
-            childrenAges: data.children_ages || [],
-            
-            profession: existingData.profession || '',
-            employer: existingData.employer || '',
-            employmentStatus: existingData.employment_status || 'employed',
-            workContractType: existingData.work_contract_type || 'permanent',
-            monthlyIncome: existingData.monthly_income || 0,
-            housingAllowanceEligible: existingData.housing_allowance_eligible || false,
-            guarantorAvailable: data.guarantor_available || false,
-            guarantorName: data.guarantor_name || '',
-            guarantorPhone: data.guarantor_phone || '',
-            guarantorIncome: data.guarantor_income || 0,
-            guarantorRelationship: data.guarantor_relationship || '',
-            incomeProofAvailable: data.income_proof_available || false,
-            
-            hasPartner: data.has_partner || false,
-            partnerName: data.partner_name || '',
-            partnerProfession: data.partner_profession || '',
-            partnerMonthlyIncome: data.partner_monthly_income || 0,
-            partnerEmploymentStatus: data.partner_employment_status || 'employed',
-            
-            city: existingData.preferred_city || 'Amsterdam',
-            preferredDistricts: data.preferred_districts || [],
-            maxCommuteTime: data.max_commute_time || 30,
-            transportationPreference: data.transportation_preference || 'public_transport',
-            moveInDatePreferred: data.move_in_date_preferred || '',
-            moveInDateEarliest: data.move_in_date_earliest || '',
-            availabilityFlexible: data.availability_flexible || false,
-            
-            minBudget: existingData.min_budget || 1000,
-            maxBudget: existingData.max_budget || 2000,
-            bedrooms: existingData.preferred_bedrooms || 1,
-            propertyType: existingData.preferred_property_type || 'Appartement',
-            furnishedPreference: data.furnished_preference || 'no_preference',
-            desiredAmenities: data.desired_amenities || [],
-            hasPets: existingData.has_pets || false,
-            petDetails: existingData.pet_details || '',
-            smokes: existingData.smokes || false,
-            smokingDetails: data.smoking_details || '',
-            
-            bio: existingData.bio || '',
-            motivation: existingData.motivation || '',
-            profilePictureUrl: data.profile_picture_url || '',
-          });
-          
-          if (data.profile_picture_url) {
-            setImagePreview(data.profile_picture_url);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading existing profile:', error);
-        toast({
-          title: "Fout bij laden profiel",
-          description: "Er is een fout opgetreden bij het laden van je bestaande profiel.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    };
-
-    loadExistingProfile();
-  }, [editMode, user?.id, toast, open]);
-
-  // Initialize Dutch cities and neighborhoods data
-  useEffect(() => {
-    const dutchCitiesData = {
-      'Amsterdam': ['Centrum', 'Jordaan', 'Oud-Zuid', 'Oud-West', 'Noord', 'Oost', 'West', 'Zuid', 'Zuidoost', 'De Pijp', 'Vondelpark', 'Museumkwartier'],
-      'Rotterdam': ['Centrum', 'Noord', 'Delfshaven', 'Overschie', 'Hillegersberg-Schiebroek', 'Kralingen-Crooswijk', 'Feijenoord', 'IJsselmonde', 'Pernis', 'Prins Alexander'],
-      'Den Haag': ['Centrum', 'Scheveningen', 'Bezuidenhout', 'Haagse Hout', 'Laak', 'Leidschenveen-Ypenburg', 'Loosduinen', 'Segbroek', 'Escamp'],
-      'Utrecht': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Nieuwegein', 'Vleuten-De Meern', 'Zuilen', 'Overvecht', 'Kanaleneiland'],
-      'Eindhoven': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Woensel', 'Stratum', 'Gestel', 'Strijp'],
-      'Groningen': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid', 'Paddepoel', 'Vinkhuizen'],
-      'Tilburg': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Almere': ['Centrum', 'Haven', 'Stad', 'Buiten', 'Poort'],
-      'Breda': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Nijmegen': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Apeldoorn': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Haarlem': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Arnhem': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Zaanstad': ['Zaandam', 'Koog aan de Zaan', 'Zaandijk', 'Wormerveer'],
-      'Amersfoort': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Maastricht': ['Centrum', 'Noord', 'Oost', 'West', 'Zuid'],
-      'Dordrecht': ['Centrum', 'Noord', 'Oost', 'West'],
-      'Leiden': ['Centrum', 'Noord', 'Oost', 'West'],
-      'Haarlemmermeer': ['Hoofddorp', 'Nieuw-Vennep', 'Badhoevedorp'],
-      'Zoetermeer': ['Centrum', 'Noord', 'Oost', 'West'],
-      'Zwolle': ['Centrum', 'Noord', 'Oost', 'West']
-    };
-
-    setDutchCities(dutchCitiesData);
-    setAvailableCities(Object.keys(dutchCitiesData));
-  }, []);
-
-  const getDistrictsForCity = (city: string) => {
-    return dutchCities[city] || [];
-  };
-
-  // Profile picture upload functionality
-  const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Ongeldig bestandstype",
-        description: "Alleen JPEG, PNG en WebP bestanden zijn toegestaan.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Bestand te groot",
-        description: "De afbeelding mag maximaal 5MB groot zijn.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUploadingImage(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/profile-picture.${fileExt}`;
-
-      const { data, error } = await supabase.storage
-        .from('profile-pictures')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(fileName);
-
-      updateProfileData('profilePictureUrl', publicUrl);
-      updateProfileData('profilePicture', file);
-
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-
-      toast({
-        title: "Foto geüpload",
-        description: "Je profielfoto is succesvol geüpload."
-      });
-
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      toast({
-        title: "Upload mislukt",
-        description: "Er is een fout opgetreden bij het uploaden van je foto.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  const removeProfilePicture = () => {
-    updateProfileData('profilePictureUrl', '');
-    updateProfileData('profilePicture', undefined);
-    setImagePreview(null);
-  };
-
-  // Dutch date formatting functions
-  const formatDateToDutch = (isoDate: string) => {
-    if (!isoDate) return '';
-    const date = new Date(isoDate);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const handleDutchDateChange = (dutchDate: string) => {
-    // Remove any non-digit characters except /
-    let cleaned = dutchDate.replace(/[^\d/]/g, '');
-    
-    // Auto-format as user types
-    if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
-      cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
-    }
-    if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
-      cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
-    }
-    
-    // Limit to 10 characters (dd/mm/yyyy)
-    cleaned = cleaned.substring(0, 10);
-    
-    // Validate and convert to ISO format for storage
-    if (cleaned.length === 10) {
-      const parts = cleaned.split('/');
-      if (parts.length === 3) {
-        const day = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        const year = parseInt(parts[2]);
-        
-        // Basic validation
-        if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
-          // Convert to ISO format (yyyy-mm-dd) for database storage
-          const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-          updateProfileData('dateOfBirth', isoDate);
-          return;
-        }
-      }
-    }
-    
-    // If not a complete valid date, just store the partial input for display
-    // but don't update the actual dateOfBirth field until it's valid
-    if (cleaned !== dutchDate) {
-      // This is just for display formatting, we'll handle the actual update above
-    }
-  };
-
-  const amenitiesOptions = [
-    { id: 'balkon', label: 'Balkon', icon: TreePine },
-    { id: 'tuin', label: 'Tuin', icon: TreePine },
-    { id: 'parkeerplaats', label: 'Parkeerplaats', icon: ParkingCircle },
-    { id: 'lift', label: 'Lift', icon: ArrowRight },
-    { id: 'wasmachine', label: 'Wasmachine aansluiting', icon: WashingMachine },
-    { id: 'vaatwasser', label: 'Vaatwasser', icon: Utensils },
-    { id: 'wifi', label: 'Internet/WiFi', icon: Wifi },
-    { id: 'bad', label: 'Bad', icon: Bath },
-  ];
-
+  // Refactored renderStep
   const renderStep = () => {
+    if (isLoadingProfile) {
+      // Show spinner while loading
+      return (
+        <div className="flex flex-col items-center py-14">
+          <svg className="animate-spin h-8 w-8 text-blue-600 mb-2" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <p className="text-sm mt-2 text-blue-700">Profielgegevens laden...</p>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 1:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <User className="w-12 h-12 mx-auto mb-4 text-dutch-blue" />
-              <h3 className="text-lg font-semibold">Persoonlijke Informatie</h3>
-              <p className="text-gray-600">Vertel ons iets over jezelf</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">Voornaam *</Label>
-                <Input
-                  id="firstName"
-                  value={profileData.firstName}
-                  onChange={(e) => updateProfileData('firstName', e.target.value)}
-                  placeholder="Emma"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Achternaam *</Label>
-                <Input
-                  id="lastName"
-                  value={profileData.lastName}
-                  onChange={(e) => updateProfileData('lastName', e.target.value)}
-                  placeholder="Bakker"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="email">E-mailadres</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profileData.email}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="phone">Telefoonnummer *</Label>
-              <Input
-                id="phone"
-                value={profileData.phone}
-                onChange={(e) => updateProfileData('phone', e.target.value)}
-                placeholder="+31 6 12345678"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="dateOfBirth">Geboortedatum * (dd/mm/yyyy)</Label>
-              <Input
-                id="dateOfBirth"
-                type="text"
-                value={profileData.dateOfBirth ? formatDateToDutch(profileData.dateOfBirth) : ''}
-                onChange={(e) => handleDutchDateChange(e.target.value)}
-                placeholder="dd/mm/yyyy"
-                maxLength={10}
-                pattern="\d{2}/\d{2}/\d{4}"
-              />
-              <p className="text-xs text-gray-500 mt-1">Nederlandse datumnotatie: dag/maand/jaar (bijvoorbeeld: 15/03/1990)</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="nationality">Nationaliteit *</Label>
-              <Select value={profileData.nationality} onValueChange={(value) => updateProfileData('nationality', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Nederlandse">Nederlandse</SelectItem>
-                  <SelectItem value="Duitse">Duitse</SelectItem>
-                  <SelectItem value="Belgische">Belgische</SelectItem>
-                  <SelectItem value="Franse">Franse</SelectItem>
-                  <SelectItem value="Britse">Britse</SelectItem>
-                  <SelectItem value="Andere EU">Andere EU</SelectItem>
-                  <SelectItem value="Niet-EU">Niet-EU</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="sex">Geslacht</Label>
-              <Select value={profileData.sex} onValueChange={(value: any) => updateProfileData('sex', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer geslacht" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="man">Man</SelectItem>
-                  <SelectItem value="vrouw">Vrouw</SelectItem>
-                  <SelectItem value="anders">Anders</SelectItem>
-                  <SelectItem value="zeg_ik_liever_niet">Zeg ik liever niet</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="profilePicture">Profielfoto (optioneel)</Label>
-              <div className="flex items-center space-x-4 mt-2">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Profile preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <Camera className="w-6 h-6 text-gray-400" />
-                  )}
-                </div>
-                <div className="flex flex-col space-y-2">
-                  <input
-                    type="file"
-                    id="profilePictureInput"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleProfilePictureUpload}
-                    className="hidden"
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => document.getElementById('profilePictureInput')?.click()}
-                    disabled={isUploadingImage}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {isUploadingImage ? 'Uploaden...' : 'Upload foto'}
-                  </Button>
-                  {imagePreview && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={removeProfilePicture}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      Verwijder foto
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
+        return <Step1PersonalInfo formData={formData} handleInputChange={handleInputChange} handleDateSelect={handleDateSelect} />;
       case 2:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Users className="w-12 h-12 mx-auto mb-4 text-dutch-orange" />
-              <h3 className="text-lg font-semibold">Familie & Relatiestatus</h3>
-              <p className="text-gray-600">Informatie over je gezinssituatie</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="maritalStatus">Burgerlijke staat *</Label>
-              <Select value={profileData.maritalStatus} onValueChange={(value: any) => updateProfileData('maritalStatus', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Alleenstaand</SelectItem>
-                  <SelectItem value="married">Getrouwd</SelectItem>
-                  <SelectItem value="partnership">Samenwonend</SelectItem>
-                  <SelectItem value="divorced">Gescheiden</SelectItem>
-                  <SelectItem value="widowed">Weduwe/weduwnaar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="hasChildren"
-                checked={profileData.hasChildren}
-                onCheckedChange={(checked) => updateProfileData('hasChildren', checked)}
-              />
-              <Label htmlFor="hasChildren">Ik heb kinderen</Label>
-            </div>
-            
-            {profileData.hasChildren && (
-              <>
-                <div>
-                  <Label htmlFor="numberOfChildren">Aantal kinderen *</Label>
-                  <Input
-                    id="numberOfChildren"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={profileData.numberOfChildren}
-                    onChange={(e) => updateProfileData('numberOfChildren', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Leeftijden van kinderen *</Label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {Array.from({ length: profileData.numberOfChildren }, (_, index) => (
-                      <Input
-                        key={index}
-                        type="number"
-                        min="0"
-                        max="25"
-                        placeholder={`Kind ${index + 1}`}
-                        value={profileData.childrenAges[index] || ''}
-                        onChange={(e) => {
-                          const newAges = [...profileData.childrenAges];
-                          newAges[index] = parseInt(e.target.value) || 0;
-                          updateProfileData('childrenAges', newAges);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        );
-
+        return <Step2Employment formData={formData} handleInputChange={handleInputChange} />;
       case 3:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Briefcase className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold">Werk & Inkomen + Borg</h3>
-              <p className="text-gray-600">Informatie over je werk en financiële zekerheid</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="profession">Beroep *</Label>
-                <Input
-                  id="profession"
-                  value={profileData.profession}
-                  onChange={(e) => updateProfileData('profession', e.target.value)}
-                  placeholder="Software Developer"
-                />
-              </div>
-              <div>
-                <Label htmlFor="employer">Werkgever</Label>
-                <Input
-                  id="employer"
-                  value={profileData.employer}
-                  onChange={(e) => updateProfileData('employer', e.target.value)}
-                  placeholder="Tech Company B.V."
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="employmentStatus">Dienstverband</Label>
-                <Select value={profileData.employmentStatus} onValueChange={(value) => updateProfileData('employmentStatus', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employed">In dienst</SelectItem>
-                    <SelectItem value="self_employed">Zelfstandig</SelectItem>
-                    <SelectItem value="freelancer">Freelancer</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="unemployed">Werkloos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="workContractType">Contract type</Label>
-                <Select value={profileData.workContractType} onValueChange={(value) => updateProfileData('workContractType', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="permanent">Vast contract</SelectItem>
-                    <SelectItem value="temporary">Tijdelijk contract</SelectItem>
-                    <SelectItem value="freelance">Freelance</SelectItem>
-                    <SelectItem value="internship">Stage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="monthlyIncome">Maandelijks bruto inkomen * (€)</Label>
-              <Input
-                id="monthlyIncome"
-                type="number"
-                min="0"
-                value={profileData.monthlyIncome}
-                onChange={(e) => updateProfileData('monthlyIncome', parseInt(e.target.value) || 0)}
-                placeholder="3500"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="housingAllowanceEligible"
-                checked={profileData.housingAllowanceEligible}
-                onCheckedChange={(checked) => updateProfileData('housingAllowanceEligible', checked)}
-              />
-              <Label htmlFor="housingAllowanceEligible">Ik kom in aanmerking voor huurtoeslag</Label>
-            </div>
-            
-            {/* Guarantor Information */}
-            <div className="border-t pt-4 mt-6">
-              <h4 className="text-lg font-semibold mb-4 flex items-center">
-                <Shield className="w-5 h-5 mr-2" />
-                Borg/Garantstelling
-              </h4>
-              
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox
-                  id="guarantorAvailable"
-                  checked={profileData.guarantorAvailable}
-                  onCheckedChange={(checked) => updateProfileData('guarantorAvailable', checked)}
-                />
-                <Label htmlFor="guarantorAvailable">Ik heb een borg/garantsteller beschikbaar</Label>
-              </div>
-              
-              {profileData.guarantorAvailable && (
-                <div className="space-y-4 pl-6 border-l-2 border-green-200">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="guarantorName">Naam borg/garantsteller</Label>
-                      <Input
-                        id="guarantorName"
-                        value={profileData.guarantorName}
-                        onChange={(e) => updateProfileData('guarantorName', e.target.value)}
-                        placeholder="Jan Bakker"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="guarantorPhone">Telefoonnummer borg</Label>
-                      <Input
-                        id="guarantorPhone"
-                        value={profileData.guarantorPhone}
-                        onChange={(e) => updateProfileData('guarantorPhone', e.target.value)}
-                        placeholder="+31 6 12345678"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="guarantorIncome">Maandelijks inkomen borg (€)</Label>
-                      <Input
-                        id="guarantorIncome"
-                        type="number"
-                        min="0"
-                        value={profileData.guarantorIncome}
-                        onChange={(e) => updateProfileData('guarantorIncome', parseInt(e.target.value) || 0)}
-                        placeholder="4000"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="guarantorRelationship">Relatie tot borg</Label>
-                      <Select value={profileData.guarantorRelationship} onValueChange={(value: any) => updateProfileData('guarantorRelationship', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer relatie" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ouder">Ouder</SelectItem>
-                          <SelectItem value="familie">Familie</SelectItem>
-                          <SelectItem value="vriend">Vriend/Vriendin</SelectItem>
-                          <SelectItem value="werkgever">Werkgever</SelectItem>
-                          <SelectItem value="anders">Anders</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="incomeProofAvailable"
-                      checked={profileData.incomeProofAvailable}
-                      onCheckedChange={(checked) => updateProfileData('incomeProofAvailable', checked)}
-                    />
-                    <Label htmlFor="incomeProofAvailable">Ik kan inkomensbewijzen overleggen</Label>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
+        return <Step3Household formData={formData} handleInputChange={handleInputChange} calculateHouseholdSize={calculateHouseholdSize} />;
       case 4:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Heart className="w-12 h-12 mx-auto mb-4 text-pink-600" />
-              <h3 className="text-lg font-semibold">Partner Informatie</h3>
-              <p className="text-gray-600">Informatie over je partner (indien van toepassing)</p>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="hasPartner"
-                checked={profileData.hasPartner}
-                onCheckedChange={(checked) => updateProfileData('hasPartner', checked)}
-              />
-              <Label htmlFor="hasPartner">Ik heb een partner die mee gaat verhuizen</Label>
-            </div>
-            
-            {profileData.hasPartner && (
-              <div className="space-y-4 pl-6 border-l-2 border-pink-200">
-                <div>
-                  <Label htmlFor="partnerName">Naam partner</Label>
-                  <Input
-                    id="partnerName"
-                    value={profileData.partnerName}
-                    onChange={(e) => updateProfileData('partnerName', e.target.value)}
-                    placeholder="Alex Jansen"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="partnerProfession">Beroep partner</Label>
-                    <Input
-                      id="partnerProfession"
-                      value={profileData.partnerProfession}
-                      onChange={(e) => updateProfileData('partnerProfession', e.target.value)}
-                      placeholder="Grafisch ontwerper"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="partnerEmploymentStatus">Dienstverband partner</Label>
-                    <Select value={profileData.partnerEmploymentStatus} onValueChange={(value) => updateProfileData('partnerEmploymentStatus', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="employed">In dienst</SelectItem>
-                        <SelectItem value="self_employed">Zelfstandig</SelectItem>
-                        <SelectItem value="freelancer">Freelancer</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
-                        <SelectItem value="unemployed">Werkloos</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="partnerMonthlyIncome">Maandelijks bruto inkomen partner (€)</Label>
-                  <Input
-                    id="partnerMonthlyIncome"
-                    type="number"
-                    min="0"
-                    value={profileData.partnerMonthlyIncome}
-                    onChange={(e) => updateProfileData('partnerMonthlyIncome', parseInt(e.target.value) || 0)}
-                    placeholder="2800"
-                  />
-                </div>
-                
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Totaal huishoudinkomen:</strong> €{calculateTotalHouseholdIncome().toLocaleString('nl-NL')} per maand
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
+        return <Step4Housing formData={formData} handleInputChange={handleInputChange} />;
       case 5:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <MapPin className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Locatie & Timing</h3>
-              <p className="text-gray-600">Waar wil je wonen en wanneer?</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="city">Gewenste stad *</Label>
-              <Select value={profileData.city} onValueChange={(value) => updateProfileData('city', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCities.map((city) => (
-                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label>Gewenste wijken/buurten *</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2 max-h-40 overflow-y-auto">
-                {getDistrictsForCity(profileData.city).map((district) => (
-                  <div key={district} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`district-${district}`}
-                      checked={profileData.preferredDistricts.includes(district)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          updateProfileData('preferredDistricts', [...profileData.preferredDistricts, district]);
-                        } else {
-                          updateProfileData('preferredDistricts', profileData.preferredDistricts.filter(d => d !== district));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`district-${district}`} className="text-sm">{district}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="maxCommuteTime">Max reistijd naar werk (minuten)</Label>
-                <Input
-                  id="maxCommuteTime"
-                  type="number"
-                  min="5"
-                  max="120"
-                  value={profileData.maxCommuteTime}
-                  onChange={(e) => updateProfileData('maxCommuteTime', parseInt(e.target.value) || 30)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="transportationPreference">Vervoer voorkeur</Label>
-                <Select value={profileData.transportationPreference} onValueChange={(value) => updateProfileData('transportationPreference', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public_transport">Openbaar vervoer</SelectItem>
-                    <SelectItem value="bicycle">Fiets</SelectItem>
-                    <SelectItem value="car">Auto</SelectItem>
-                    <SelectItem value="walking">Lopen</SelectItem>
-                    <SelectItem value="mixed">Combinatie</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Timing Information */}
-            <div className="border-t pt-4 mt-6">
-              <h4 className="text-lg font-semibold mb-4 flex items-center">
-                <Calendar className="w-5 h-5 mr-2" />
-                Timing & Beschikbaarheid
-              </h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="moveInDatePreferred">Gewenste intrekdatum (dd/mm/yyyy)</Label>
-                  <Input
-                    id="moveInDatePreferred"
-                    type="text"
-                    value={profileData.moveInDatePreferred ? formatDateToDutch(profileData.moveInDatePreferred) : ''}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/[^\d/]/g, '');
-                      if (cleaned.length === 10) {
-                        const parts = cleaned.split('/');
-                        if (parts.length === 3) {
-                          const day = parseInt(parts[0]);
-                          const month = parseInt(parts[1]);
-                          const year = parseInt(parts[2]);
-                          if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2024) {
-                            const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                            updateProfileData('moveInDatePreferred', isoDate);
-                          }
-                        }
-                      }
-                    }}
-                    placeholder="dd/mm/yyyy"
-                    maxLength={10}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="moveInDateEarliest">Vroegst mogelijke intrekdatum (dd/mm/yyyy)</Label>
-                  <Input
-                    id="moveInDateEarliest"
-                    type="text"
-                    value={profileData.moveInDateEarliest ? formatDateToDutch(profileData.moveInDateEarliest) : ''}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/[^\d/]/g, '');
-                      if (cleaned.length === 10) {
-                        const parts = cleaned.split('/');
-                        if (parts.length === 3) {
-                          const day = parseInt(parts[0]);
-                          const month = parseInt(parts[1]);
-                          const year = parseInt(parts[2]);
-                          if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2024) {
-                            const isoDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                            updateProfileData('moveInDateEarliest', isoDate);
-                          }
-                        }
-                      }
-                    }}
-                    placeholder="dd/mm/yyyy"
-                    maxLength={10}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2 mt-4">
-                <Checkbox
-                  id="availabilityFlexible"
-                  checked={profileData.availabilityFlexible}
-                  onCheckedChange={(checked) => updateProfileData('availabilityFlexible', checked)}
-                />
-                <Label htmlFor="availabilityFlexible">Mijn timing is flexibel</Label>
-              </div>
-            </div>
-          </div>
-        );
-
+        return <Step5Timing formData={formData} handleInputChange={handleInputChange} handleDateSelect={handleDateSelect} />;
       case 6:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Home className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-              <h3 className="text-lg font-semibold">Woning & Lifestyle</h3>
-              <p className="text-gray-600">Wat voor woning zoek je?</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="minBudget">Minimum budget (€/maand) *</Label>
-                <Input
-                  id="minBudget"
-                  type="number"
-                  min="500"
-                  value={profileData.minBudget}
-                  onChange={(e) => updateProfileData('minBudget', parseInt(e.target.value) || 1000)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="maxBudget">Maximum budget (€/maand) *</Label>
-                <Input
-                  id="maxBudget"
-                  type="number"
-                  min="500"
-                  value={profileData.maxBudget}
-                  onChange={(e) => updateProfileData('maxBudget', parseInt(e.target.value) || 2000)}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="bedrooms">Aantal slaapkamers</Label>
-                <Select value={profileData.bedrooms.toString()} onValueChange={(value) => updateProfileData('bedrooms', parseInt(value))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 slaapkamer</SelectItem>
-                    <SelectItem value="2">2 slaapkamers</SelectItem>
-                    <SelectItem value="3">3 slaapkamers</SelectItem>
-                    <SelectItem value="4">4+ slaapkamers</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="propertyType">Type woning</Label>
-                <Select value={profileData.propertyType} onValueChange={(value) => updateProfileData('propertyType', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Appartement">Appartement</SelectItem>
-                    <SelectItem value="Studio">Studio</SelectItem>
-                    <SelectItem value="Huis">Huis</SelectItem>
-                    <SelectItem value="Kamer">Kamer</SelectItem>
-                    <SelectItem value="Loft">Loft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="furnishedPreference">Inrichting voorkeur</Label>
-              <Select value={profileData.furnishedPreference} onValueChange={(value: any) => updateProfileData('furnishedPreference', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="furnished">Gemeubileerd</SelectItem>
-                  <SelectItem value="unfurnished">Ongemeubileerd</SelectItem>
-                  <SelectItem value="no_preference">Geen voorkeur</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label>Gewenste voorzieningen</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {amenitiesOptions.map((amenity) => (
-                  <div key={amenity.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`amenity-${amenity.id}`}
-                      checked={profileData.desiredAmenities.includes(amenity.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          updateProfileData('desiredAmenities', [...profileData.desiredAmenities, amenity.id]);
-                        } else {
-                          updateProfileData('desiredAmenities', profileData.desiredAmenities.filter(a => a !== amenity.id));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`amenity-${amenity.id}`} className="text-sm flex items-center">
-                      <amenity.icon className="w-4 h-4 mr-1" />
-                      {amenity.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="hasPets"
-                    checked={profileData.hasPets}
-                    onCheckedChange={(checked) => updateProfileData('hasPets', checked)}
-                  />
-                  <Label htmlFor="hasPets">Ik heb huisdieren</Label>
-                </div>
-                {profileData.hasPets && (
-                  <Textarea
-                    className="mt-2"
-                    placeholder="Beschrijf je huisdieren..."
-                    value={profileData.petDetails}
-                    onChange={(e) => updateProfileData('petDetails', e.target.value)}
-                  />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="smokes"
-                    checked={profileData.smokes}
-                    onCheckedChange={(checked) => updateProfileData('smokes', checked)}
-                  />
-                  <Label htmlFor="smokes">Ik rook</Label>
-                </div>
-                {profileData.smokes && (
-                  <Textarea
-                    className="mt-2"
-                    placeholder="Details over roken..."
-                    value={profileData.smokingDetails}
-                    onChange={(e) => updateProfileData('smokingDetails', e.target.value)}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
+        return <Step6Guarantor formData={formData} handleInputChange={handleInputChange} />;
       case 7:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <User className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-lg font-semibold">Over Jou & Overzicht</h3>
-              <p className="text-gray-600">Vertel iets over jezelf en controleer je gegevens</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="bio">Persoonlijke beschrijving *</Label>
-              <Textarea
-                id="bio"
-                placeholder="Vertel iets over jezelf, je hobby's, levensstijl..."
-                value={profileData.bio}
-                onChange={(e) => updateProfileData('bio', e.target.value)}
-                rows={4}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="motivation">Waarom ben je op zoek naar een woning? *</Label>
-              <Textarea
-                id="motivation"
-                placeholder="Vertel waarom je op zoek bent naar een nieuwe woning..."
-                value={profileData.motivation}
-                onChange={(e) => updateProfileData('motivation', e.target.value)}
-                rows={3}
-              />
-            </div>
-            
-            {/* Profile Summary */}
-            <div className="border-t pt-6 mt-6">
-              <h4 className="text-lg font-semibold mb-4">Profiel Overzicht</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <p><strong>Naam:</strong> {profileData.firstName} {profileData.lastName}</p>
-                  <p><strong>Leeftijd:</strong> {profileData.dateOfBirth ? new Date().getFullYear() - new Date(profileData.dateOfBirth).getFullYear() : 'Niet ingevuld'}</p>
-                  <p><strong>Beroep:</strong> {profileData.profession || 'Niet ingevuld'}</p>
-                  <p><strong>Inkomen:</strong> €{profileData.monthlyIncome.toLocaleString('nl-NL')}/maand</p>
-                  {profileData.hasPartner && (
-                    <p><strong>Partner inkomen:</strong> €{profileData.partnerMonthlyIncome.toLocaleString('nl-NL')}/maand</p>
-                  )}
-                  <p><strong>Totaal huishoudinkomen:</strong> €{calculateTotalHouseholdIncome().toLocaleString('nl-NL')}/maand</p>
-                </div>
-                <div className="space-y-2">
-                  <p><strong>Gewenste stad:</strong> {profileData.city}</p>
-                  <p><strong>Budget:</strong> €{profileData.minBudget} - €{profileData.maxBudget}/maand</p>
-                  <p><strong>Slaapkamers:</strong> {profileData.bedrooms}</p>
-                  <p><strong>Type:</strong> {profileData.propertyType}</p>
-                  <p><strong>Borg beschikbaar:</strong> {profileData.guarantorAvailable ? 'Ja' : 'Nee'}</p>
-                  <p><strong>Huisdieren:</strong> {profileData.hasPets ? 'Ja' : 'Nee'}</p>
-                  <p><strong>Roken:</strong> {profileData.smokes ? 'Ja' : 'Nee'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
+        return <Step7References formData={formData} handleInputChange={handleInputChange} />;
+      case 8:
+        return <Step8ProfileMotivation formData={formData} handleInputChange={handleInputChange} />;
       default:
-        return <div>Step not found</div>;
+        return null;
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {editMode ? 'Profiel Bewerken' : 'Profiel Aanmaken'} - Stap {currentStep} van {totalSteps}
+          <DialogTitle className="text-xl font-bold text-center">
+            Profiel Aanmaken - Stap {currentStep} van {totalSteps}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <Progress value={progress} className="w-full" />
-          
-          {isLoadingProfile ? (
-            <div className="text-center py-8">
-              <p>Profiel wordt geladen...</p>
-            </div>
-          ) : (
-            renderStep()
-          )}
+        {/* Progress bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          />
+        </div>
 
+        <div className="space-y-6">
+          {renderStep()}
+          
           <div className="flex justify-between pt-6">
             <Button
+              type="button"
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
               Vorige
             </Button>
-
-            {currentStep === totalSteps ? (
+            
+            {currentStep < totalSteps ? (
               <Button
-                onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
+                type="button"
+                onClick={nextStep}
               >
-                {isSubmitting ? 'Opslaan...' : editMode ? 'Bijwerken' : 'Profiel Aanmaken'}
-                <CheckCircle className="w-4 h-4 ml-2" />
+                Volgende
               </Button>
             ) : (
               <Button
-                onClick={nextStep}
-                disabled={!isStepValid()}
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                Volgende
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {isSubmitting ? 'Bezig met opslaan...' : 'Profiel Aanmaken'}
               </Button>
             )}
           </div>
@@ -1444,6 +694,4 @@ const EnhancedProfileCreationModal = ({ open, onOpenChange, onComplete, editMode
       </DialogContent>
     </Dialog>
   );
-};
-
-export default EnhancedProfileCreationModal;
+}

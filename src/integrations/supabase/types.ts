@@ -9,242 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      audit_logs: {
-        Row: {
-          action: string
-          created_at: string
-          id: string
-          new_values: Json | null
-          old_values: Json | null
-          record_id: string | null
-          table_name: string
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          id?: string
-          new_values?: Json | null
-          old_values?: Json | null
-          record_id?: string | null
-          table_name: string
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          id?: string
-          new_values?: Json | null
-          old_values?: Json | null
-          record_id?: string | null
-          table_name?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      children_details: {
-        Row: {
-          child_age: number
-          child_gender: string | null
-          created_at: string | null
-          id: string
-          special_needs: boolean | null
-          special_needs_details: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          child_age: number
-          child_gender?: string | null
-          created_at?: string | null
-          id?: string
-          special_needs?: boolean | null
-          special_needs_details?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          child_age?: number
-          child_gender?: string | null
-          created_at?: string | null
-          id?: string
-          special_needs?: boolean | null
-          special_needs_details?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      document_access_requests: {
-        Row: {
-          access_expires_at: string | null
-          access_granted_at: string | null
-          created_at: string | null
-          id: string
-          landlord_id: string | null
-          message_id: string | null
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          access_expires_at?: string | null
-          access_granted_at?: string | null
-          created_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          message_id?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          access_expires_at?: string | null
-          access_granted_at?: string | null
-          created_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          message_id?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "document_access_requests_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dutch_cities_neighborhoods: {
-        Row: {
-          city_name: string
-          created_at: string | null
-          id: string
-          is_major_city: boolean | null
-          neighborhood_name: string
-          population: number | null
-          postal_code_prefix: string | null
-          province: string
-        }
-        Insert: {
-          city_name: string
-          created_at?: string | null
-          id?: string
-          is_major_city?: boolean | null
-          neighborhood_name: string
-          population?: number | null
-          postal_code_prefix?: string | null
-          province: string
-        }
-        Update: {
-          city_name?: string
-          created_at?: string | null
-          id?: string
-          is_major_city?: boolean | null
-          neighborhood_name?: string
-          population?: number | null
-          postal_code_prefix?: string | null
-          province?: string
-        }
-        Relationships: []
-      }
-      household_info: {
-        Row: {
-          created_at: string | null
-          has_pets: boolean | null
-          has_smokers: boolean | null
-          id: string
-          pet_details: string | null
-          smoking_details: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          has_pets?: boolean | null
-          has_smokers?: boolean | null
-          id?: string
-          pet_details?: string | null
-          smoking_details?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          has_pets?: boolean | null
-          has_smokers?: boolean | null
-          id?: string
-          pet_details?: string | null
-          smoking_details?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      household_members: {
-        Row: {
-          age: number
-          created_at: string | null
-          id: string
-          relationship: string | null
-          user_id: string | null
-        }
-        Insert: {
-          age: number
-          created_at?: string | null
-          id?: string
-          relationship?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          age?: number
-          created_at?: string | null
-          id?: string
-          relationship?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          message_type: string
-          read_at: string | null
-          recipient_id: string | null
-          related_data: Json | null
-          sender_id: string | null
-          subject: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          message_type: string
-          read_at?: string | null
-          recipient_id?: string | null
-          related_data?: Json | null
-          sender_id?: string | null
-          subject: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          message_type?: string
-          read_at?: string | null
-          recipient_id?: string | null
-          related_data?: Json | null
-          sender_id?: string | null
-          subject?: string
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string | null
@@ -335,114 +99,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profile_analytics: {
-        Row: {
-          created_at: string | null
-          id: string
-          last_viewed_at: string | null
-          monthly_views: number | null
-          peak_viewing_day: string | null
-          peak_viewing_hour: number | null
-          profile_completion_score: number | null
-          total_views: number | null
-          unique_viewers: number | null
-          updated_at: string | null
-          user_id: string | null
-          weekly_views: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          last_viewed_at?: string | null
-          monthly_views?: number | null
-          peak_viewing_day?: string | null
-          peak_viewing_hour?: number | null
-          profile_completion_score?: number | null
-          total_views?: number | null
-          unique_viewers?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_views?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          last_viewed_at?: string | null
-          monthly_views?: number | null
-          peak_viewing_day?: string | null
-          peak_viewing_hour?: number | null
-          profile_completion_score?: number | null
-          total_views?: number | null
-          unique_viewers?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_views?: number | null
-        }
-        Relationships: []
-      }
-      profile_view_notifications: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          notification_type: string | null
-          read_at: string | null
-          user_id: string | null
-          viewer_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          notification_type?: string | null
-          read_at?: string | null
-          user_id?: string | null
-          viewer_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          notification_type?: string | null
-          read_at?: string | null
-          user_id?: string | null
-          viewer_id?: string | null
-        }
-        Relationships: []
-      }
-      profile_views: {
-        Row: {
-          id: string
-          ip_address: unknown | null
-          session_id: string | null
-          user_agent: string | null
-          viewed_at: string | null
-          viewed_profile_id: string | null
-          viewer_id: string | null
-          viewer_type: string
-        }
-        Insert: {
-          id?: string
-          ip_address?: unknown | null
-          session_id?: string | null
-          user_agent?: string | null
-          viewed_at?: string | null
-          viewed_profile_id?: string | null
-          viewer_id?: string | null
-          viewer_type: string
-        }
-        Update: {
-          id?: string
-          ip_address?: unknown | null
-          session_id?: string | null
-          user_agent?: string | null
-          viewed_at?: string | null
-          viewed_profile_id?: string | null
-          viewer_id?: string | null
-          viewer_type?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string | null
@@ -470,264 +126,33 @@ export type Database = {
         }
         Relationships: []
       }
-      properties: {
-        Row: {
-          address: string
-          application_count: number | null
-          available_from: string | null
-          available_until: string | null
-          bathrooms: number | null
-          bedrooms: number
-          city: string
-          created_at: string | null
-          description: string | null
-          furnished: boolean | null
-          id: string
-          landlord_id: string | null
-          max_offers: number | null
-          offers_sent: number | null
-          pets_allowed: boolean | null
-          postal_code: string | null
-          property_type: string | null
-          province: string | null
-          rent_amount: number
-          smoking_allowed: boolean | null
-          square_meters: number | null
-          status: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          address: string
-          application_count?: number | null
-          available_from?: string | null
-          available_until?: string | null
-          bathrooms?: number | null
-          bedrooms: number
-          city: string
-          created_at?: string | null
-          description?: string | null
-          furnished?: boolean | null
-          id?: string
-          landlord_id?: string | null
-          max_offers?: number | null
-          offers_sent?: number | null
-          pets_allowed?: boolean | null
-          postal_code?: string | null
-          property_type?: string | null
-          province?: string | null
-          rent_amount: number
-          smoking_allowed?: boolean | null
-          square_meters?: number | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string
-          application_count?: number | null
-          available_from?: string | null
-          available_until?: string | null
-          bathrooms?: number | null
-          bedrooms?: number
-          city?: string
-          created_at?: string | null
-          description?: string | null
-          furnished?: boolean | null
-          id?: string
-          landlord_id?: string | null
-          max_offers?: number | null
-          offers_sent?: number | null
-          pets_allowed?: boolean | null
-          postal_code?: string | null
-          property_type?: string | null
-          province?: string | null
-          rent_amount?: number
-          smoking_allowed?: boolean | null
-          square_meters?: number | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      property_applications: {
-        Row: {
-          application_message: string | null
-          applied_at: string | null
-          id: string
-          property_id: string | null
-          rejection_reason: string | null
-          reviewed_at: string | null
-          status: string | null
-          tenant_id: string | null
-        }
-        Insert: {
-          application_message?: string | null
-          applied_at?: string | null
-          id?: string
-          property_id?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-        }
-        Update: {
-          application_message?: string | null
-          applied_at?: string | null
-          id?: string
-          property_id?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_applications_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      property_images: {
-        Row: {
-          created_at: string | null
-          id: string
-          image_order: number | null
-          image_url: string
-          is_primary: boolean | null
-          property_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          image_order?: number | null
-          image_url: string
-          is_primary?: boolean | null
-          property_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          image_order?: number | null
-          image_url?: string
-          is_primary?: boolean | null
-          property_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_images_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      property_offers: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          landlord_id: string | null
-          offered_at: string | null
-          property_id: string | null
-          responded_at: string | null
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          offered_at?: string | null
-          property_id?: string | null
-          responded_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          offered_at?: string | null
-          property_id?: string | null
-          responded_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_offers_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscribers: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          stripe_customer_id: string | null
-          subscribed: boolean
-          subscription_end: string | null
-          subscription_tier: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          stripe_customer_id?: string | null
-          subscribed?: boolean
-          subscription_end?: string | null
-          subscription_tier?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          stripe_customer_id?: string | null
-          subscribed?: boolean
-          subscription_end?: string | null
-          subscription_tier?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       tenant_profiles: {
         Row: {
           age: number | null
+          availability_flexible: boolean | null
           available_from: string | null
           bio: string | null
           children_ages: Json | null
+          computed_age: number | null
           contract_type: string | null
           created_at: string | null
           current_housing_situation: string | null
           date_of_birth: string | null
           desired_amenities: string[] | null
           documents_verified: boolean | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           employer: string | null
           employment_status: string | null
           family_composition: string | null
           first_name: string | null
           furnished_preference: string | null
           guarantor_available: boolean | null
+          guarantor_income: number | null
+          guarantor_name: string | null
+          guarantor_phone: string | null
+          guarantor_relationship: string | null
           has_children: boolean | null
           has_partner: boolean | null
           has_pets: boolean | null
@@ -735,8 +160,10 @@ export type Database = {
           household_size: number | null
           housing_allowance_eligible: boolean | null
           id: string
+          income_proof_available: boolean | null
           landlord_interest: number | null
           last_name: string | null
+          lease_duration_preference: string | null
           marital_status: string | null
           max_budget: number | null
           max_commute_time: number | null
@@ -744,9 +171,12 @@ export type Database = {
           min_budget: number | null
           monthly_income: number | null
           motivation: string | null
+          move_in_date_earliest: string | null
+          move_in_date_preferred: string | null
           move_in_flexibility: string | null
           nationality: string | null
           number_of_children: number | null
+          parking_required: boolean | null
           partner_employment_status: string | null
           partner_monthly_income: number | null
           partner_name: string | null
@@ -765,34 +195,49 @@ export type Database = {
           profile_completion_percentage: number | null
           profile_picture_url: string | null
           profile_views: number | null
+          reason_for_moving: string | null
+          references_available: boolean | null
           rental_history: string | null
+          rental_history_years: number | null
           sex: string | null
           smokes: boolean | null
           smoking_details: string | null
           smoking_policy_preference: string | null
+          storage_needs: string | null
+          total_guaranteed_income: number | null
           total_household_income: number | null
           transportation_preference: string | null
           updated_at: string | null
           user_id: string | null
           work_contract_type: string | null
+          work_from_home: boolean | null
         }
         Insert: {
           age?: number | null
+          availability_flexible?: boolean | null
           available_from?: string | null
           bio?: string | null
           children_ages?: Json | null
+          computed_age?: number | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
           desired_amenities?: string[] | null
           documents_verified?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employer?: string | null
           employment_status?: string | null
           family_composition?: string | null
           first_name?: string | null
           furnished_preference?: string | null
           guarantor_available?: boolean | null
+          guarantor_income?: number | null
+          guarantor_name?: string | null
+          guarantor_phone?: string | null
+          guarantor_relationship?: string | null
           has_children?: boolean | null
           has_partner?: boolean | null
           has_pets?: boolean | null
@@ -800,8 +245,10 @@ export type Database = {
           household_size?: number | null
           housing_allowance_eligible?: boolean | null
           id?: string
+          income_proof_available?: boolean | null
           landlord_interest?: number | null
           last_name?: string | null
+          lease_duration_preference?: string | null
           marital_status?: string | null
           max_budget?: number | null
           max_commute_time?: number | null
@@ -809,9 +256,12 @@ export type Database = {
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
+          move_in_date_earliest?: string | null
+          move_in_date_preferred?: string | null
           move_in_flexibility?: string | null
           nationality?: string | null
           number_of_children?: number | null
+          parking_required?: boolean | null
           partner_employment_status?: string | null
           partner_monthly_income?: number | null
           partner_name?: string | null
@@ -830,34 +280,49 @@ export type Database = {
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
+          reason_for_moving?: string | null
+          references_available?: boolean | null
           rental_history?: string | null
+          rental_history_years?: number | null
           sex?: string | null
           smokes?: boolean | null
           smoking_details?: string | null
           smoking_policy_preference?: string | null
+          storage_needs?: string | null
+          total_guaranteed_income?: number | null
           total_household_income?: number | null
           transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
+          work_from_home?: boolean | null
         }
         Update: {
           age?: number | null
+          availability_flexible?: boolean | null
           available_from?: string | null
           bio?: string | null
           children_ages?: Json | null
+          computed_age?: number | null
           contract_type?: string | null
           created_at?: string | null
           current_housing_situation?: string | null
           date_of_birth?: string | null
           desired_amenities?: string[] | null
           documents_verified?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employer?: string | null
           employment_status?: string | null
           family_composition?: string | null
           first_name?: string | null
           furnished_preference?: string | null
           guarantor_available?: boolean | null
+          guarantor_income?: number | null
+          guarantor_name?: string | null
+          guarantor_phone?: string | null
+          guarantor_relationship?: string | null
           has_children?: boolean | null
           has_partner?: boolean | null
           has_pets?: boolean | null
@@ -865,8 +330,10 @@ export type Database = {
           household_size?: number | null
           housing_allowance_eligible?: boolean | null
           id?: string
+          income_proof_available?: boolean | null
           landlord_interest?: number | null
           last_name?: string | null
+          lease_duration_preference?: string | null
           marital_status?: string | null
           max_budget?: number | null
           max_commute_time?: number | null
@@ -874,9 +341,12 @@ export type Database = {
           min_budget?: number | null
           monthly_income?: number | null
           motivation?: string | null
+          move_in_date_earliest?: string | null
+          move_in_date_preferred?: string | null
           move_in_flexibility?: string | null
           nationality?: string | null
           number_of_children?: number | null
+          parking_required?: boolean | null
           partner_employment_status?: string | null
           partner_monthly_income?: number | null
           partner_name?: string | null
@@ -895,16 +365,22 @@ export type Database = {
           profile_completion_percentage?: number | null
           profile_picture_url?: string | null
           profile_views?: number | null
+          reason_for_moving?: string | null
+          references_available?: boolean | null
           rental_history?: string | null
+          rental_history_years?: number | null
           sex?: string | null
           smokes?: boolean | null
           smoking_details?: string | null
           smoking_policy_preference?: string | null
+          storage_needs?: string | null
+          total_guaranteed_income?: number | null
           total_household_income?: number | null
           transportation_preference?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_contract_type?: string | null
+          work_from_home?: boolean | null
         }
         Relationships: [
           {
@@ -997,99 +473,19 @@ export type Database = {
         }
         Relationships: []
       }
-      viewing_invitations: {
-        Row: {
-          created_at: string | null
-          id: string
-          landlord_id: string | null
-          message_id: string | null
-          property_address: string
-          proposed_date: string
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          message_id?: string | null
-          property_address: string
-          proposed_date: string
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          landlord_id?: string | null
-          message_id?: string | null
-          property_address?: string
-          proposed_date?: string
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "viewing_invitations_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      viewing_slots: {
-        Row: {
-          created_at: string | null
-          id: string
-          property_id: string | null
-          reserved_at: string | null
-          slot_number: number
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-          viewing_date: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          property_id?: string | null
-          reserved_at?: string | null
-          slot_number: number
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          viewing_date?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          property_id?: string | null
-          reserved_at?: string | null
-          slot_number?: number
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          viewing_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "viewing_slots_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_age_from_dob: {
+        Args: { date_of_birth: string }
+        Returns: number
+      }
+      get_profile_picture_url: {
+        Args: { user_id: string; filename: string }
+        Returns: string
+      }
       user_has_active_subscription: {
         Args: { user_uuid: string }
         Returns: boolean

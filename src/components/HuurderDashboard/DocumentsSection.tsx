@@ -1,0 +1,101 @@
+
+import { FileText, Upload, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface DocumentsSectionProps {
+  userDocuments: any[];
+  onShowDocumentModal: () => void;
+}
+
+export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: DocumentsSectionProps) => {
+  const getDocumentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'identity':
+        return 'Identiteitsbewijs';
+      case 'payslip':
+        return 'Loonstrook';
+      case 'employment_contract':
+        return 'Arbeidscontract';
+      case 'reference':
+        return 'Referentie';
+      default:
+        return 'Document';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      case 'rejected':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <FileText className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'Goedgekeurd';
+      case 'pending':
+        return 'In behandeling';
+      case 'rejected':
+        return 'Afgewezen';
+      default:
+        return 'Onbekend';
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Documenten</h3>
+            <p className="text-sm text-gray-600">Beheer je geüploade documenten</p>
+          </div>
+        </div>
+        <Button onClick={onShowDocumentModal} className="flex items-center space-x-2">
+          <Upload className="w-4 h-4" />
+          <span>Upload Document</span>
+        </Button>
+      </div>
+
+      {userDocuments.length === 0 ? (
+        <div className="text-center py-8">
+          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Nog geen documenten geüpload</p>
+          <p className="text-sm text-gray-500 mt-1">Upload je documenten om je profiel te versterken</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {userDocuments.map((document, index) => (
+            <div key={document.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                {getStatusIcon(document.status)}
+                <div>
+                  <p className="font-medium text-gray-900">{getDocumentTypeLabel(document.document_type)}</p>
+                  <p className="text-sm text-gray-600">{document.file_name}</p>
+                </div>
+              </div>
+              <span className={`px-2 py-1 text-xs rounded-full ${
+                document.status === 'approved' ? 'bg-green-100 text-green-800' :
+                document.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                document.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {getStatusLabel(document.status)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
