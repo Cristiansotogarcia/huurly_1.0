@@ -49,6 +49,55 @@ export interface TenantProfile {
   smoking?: boolean;
   created_at: string;
   updated_at: string;
+  
+  // Structured Profile Sections
+  personalInfo?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    age?: number;
+    sex?: string;
+    nationality?: string;
+    maritalStatus?: string;
+  };
+  
+  workAndIncome?: {
+    profession: string;
+    employer?: string;
+    employmentStatus?: string;
+    contractType?: string;
+    monthlyIncome: number;
+    workFromHome?: boolean;
+    incomeProofAvailable?: boolean;
+  };
+  
+  housingPreferences?: {
+    minBudget: number;
+    maxBudget: number;
+    city: string;
+    bedrooms: number;
+    propertyType: string;
+    furnishedPreference?: string;
+    parkingRequired?: boolean;
+    storageNeeds?: string;
+    leaseDurationPreference?: string;
+    moveInDatePreferred?: string;
+    moveInDateEarliest?: string;
+    reasonForMoving?: string;
+  };
+  
+  lifestyleAndMotivation?: {
+    bio: string;
+    motivation: string;
+    hasPets?: boolean;
+    petDetails?: string;
+    smokes?: boolean;
+    smokingDetails?: string;
+    hobbies?: string[];
+    interests?: string[];
+    personalValues?: string[];
+  };
 }
 
 export interface Property {

@@ -1,6 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logger';
-import { formatCurrency, formatNumber, formatPercentage } from '@/utils/formatting';
+import { supabase } from '../integrations/supabase/client';
+import { logger } from '../lib/logger';
+import { formatCurrency, formatNumber, formatPercentage } from '../utils/formatting';
+import { ServiceResponse } from './BaseService';
 
 export interface StatisticsResponse<T> {
   success: boolean;
@@ -8,46 +9,46 @@ export interface StatisticsResponse<T> {
   error?: any;
 }
 
+export interface PropertyStatistics {
+  totalProperties: string;
+  activeProperties: string;
+  activePercentage: string;
+  averageRent: string;
+  occupancyRate: string;
+  rawData: {
+    totalProperties: number;
+    activeProperties: number;
+    averageRent: number;
+    occupancyRate: number;
+  };
+}
+
 /**
  * Service for handling statistics-related data operations
  */
 export class StatisticsService {
-  /**
-   * Get property statistics for landlords
-   * @param userId - The ID of the landlord user (optional, if not provided returns global stats)
-   * @returns Property statistics
-   */
-  static async getPropertyStatistics(userId?: string): Promise<StatisticsResponse<any>> {
+  async getPropertyStatistics(): Promise<ServiceResponse<PropertyStatistics>> {
     try {
-      logger.info('Fetching property statistics', userId ? `for user: ${userId}` : 'global');
-      
-      // Base query for properties
-      let query = supabase.from('properties');
-      
-      // If userId is provided, filter by landlord_id
-      if (userId) {
-        query = query.eq('landlord_id', userId);
-      }
-      
       // Get total properties count
-      const { count: totalProperties, error: countError } = await query.select('*', { count: 'exact', head: true });
-      
-      if (countError) {
-        logger.error('Error fetching property count:', countError);
-        return { success: false, error: countError };
-      }
-      
-      // Get active properties count
-      const { count: activeProperties, error: activeError } = await query
-        .eq('status', 'active')
+      const { count: totalProperties } = await supabase
+        .from('properties')
         .select('*', { count: 'exact', head: true });
-      
-      if (activeError) {
-        logger.error('Error fetching active property count:', activeError);
-      }
+
+      // Get active properties count
+      const { count: activeProperties } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      // Get inactive properties count
+      const { count: inactiveProperties } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .not('status', 'eq', 'active');
       
       // Get average rent price
-      const { data: rentData, error: rentError } = await query
+      const { data: rentData, error: rentError } = await supabase
+        .from('properties')
         .select('rent_amount')
         .not('rent_amount', 'is', null);
       
@@ -56,13 +57,15 @@ export class StatisticsService {
       }
       
       // Calculate average rent
-      const totalRent = rentData?.reduce((sum, property) => sum + (Number(property.rent_amount) || 0), 0) || 0;
+      // Using type assertion for property.rent_amount since it's not defined in the types
+      const totalRent = rentData?.reduce((sum, property) => sum + (Number((property as any).rent_amount) || 0), 0) || 0;
       const averageRent = rentData && rentData.length > 0 ? totalRent / rentData.length : 0;
       
       // Get occupancy rate
-      const { count: occupiedCount, error: occupiedError } = await query
-        .eq('is_occupied', true)
-        .select('*', { count: 'exact', head: true });
+      const { count: occupiedCount, error: occupiedError } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_occupied', true);
       
       if (occupiedError) {
         logger.error('Error fetching occupied property count:', occupiedError);
@@ -74,7 +77,7 @@ export class StatisticsService {
       const statistics = {
         totalProperties: formatNumber(totalProperties || 0),
         activeProperties: formatNumber(activeProperties || 0),
-        activePercentage: formatPercentage(totalProperties ? (activeProperties || 0) / totalProperties : 0),
+        activePercentage: formatPercentage(totalProperties ? (activeProperties || 0) / (totalProperties || 0) : 0),
         averageRent: formatCurrency(averageRent),
         occupancyRate: formatPercentage(occupancyRate),
         rawData: {
@@ -97,7 +100,7 @@ export class StatisticsService {
    * Get user statistics for admins
    * @returns User statistics
    */
-  static async getUserStatistics(): Promise<StatisticsResponse<any>> {
+  async getUserStatistics(): Promise<StatisticsResponse<any>> {
     try {
       logger.info('Fetching user statistics');
       
@@ -183,7 +186,7 @@ export class StatisticsService {
    * @param userId - The ID of the landlord user (optional, if not provided returns global stats)
    * @returns Revenue statistics
    */
-  static async getRevenueStatistics(userId?: string): Promise<StatisticsResponse<any>> {
+  async getRevenueStatistics(userId?: string): Promise<StatisticsResponse<any>> {
     try {
       logger.info('Fetching revenue statistics', userId ? `for user: ${userId}` : 'global');
       
@@ -279,7 +282,7 @@ export class StatisticsService {
    * @param userId - The ID of the reviewer user (optional, if not provided returns global stats)
    * @returns Document statistics
    */
-  static async getDocumentStatistics(userId?: string): Promise<StatisticsResponse<any>> {
+  async getDocumentStatistics(userId?: string): Promise<StatisticsResponse<any>> {
     try {
       logger.info('Fetching document statistics', userId ? `for user: ${userId}` : 'global');
       
@@ -351,15 +354,15 @@ export class StatisticsService {
       const statistics = {
         totalDocuments: formatNumber(totalDocuments || 0),
         pendingDocuments: formatNumber(pendingDocuments || 0),
-        pendingPercentage: formatPercentage(totalDocuments ? (pendingDocuments || 0) / totalDocuments : 0),
+        pendingPercentage: formatPercentage(totalDocuments ? (pendingDocuments || 0) / (totalDocuments || 0) : 0),
         approvedDocuments: formatNumber(approvedDocuments || 0),
-        approvedPercentage: formatPercentage(totalDocuments ? (approvedDocuments || 0) / totalDocuments : 0),
+        approvedPercentage: formatPercentage(totalDocuments ? (approvedDocuments || 0) / (totalDocuments || 0) : 0),
         rejectedDocuments: formatNumber(rejectedDocuments || 0),
-        rejectedPercentage: formatPercentage(totalDocuments ? (rejectedDocuments || 0) / totalDocuments : 0),
+        rejectedPercentage: formatPercentage(totalDocuments ? (rejectedDocuments || 0) / (totalDocuments || 0) : 0),
         typeDistribution: Object.entries(typeCount).map(([type, count]) => ({
           type,
           count: formatNumber(count),
-          percentage: formatPercentage(totalDocuments ? count / totalDocuments : 0)
+          percentage: formatPercentage(totalDocuments ? count / (totalDocuments as number) : 0)
         })),
         rawData: {
           totalDocuments: totalDocuments || 0,

@@ -14,4 +14,5 @@ export interface AuthState {
   refreshSession: () => Promise<boolean>;
   initializeAuth: () => Promise<void>;
   setSessionValid: (valid: boolean) => void;
+  refresh?: () => void; // Optional method to refresh auth state
 }

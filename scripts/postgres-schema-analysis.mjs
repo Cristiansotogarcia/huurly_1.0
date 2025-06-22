@@ -14,7 +14,7 @@ const { Client } = pg;
 // Extract connection details from Supabase URL
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const dbPassword = process.env.supabase_DB_Password;
+const dbPassword = process.env.SUPABASE_DB_PASSWORD;
 
 console.log('🔍 REAL TENANT_PROFILES SCHEMA ANALYSIS VIA POSTGRES');
 console.log('=' .repeat(70));

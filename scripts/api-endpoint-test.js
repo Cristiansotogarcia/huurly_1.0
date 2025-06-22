@@ -60,7 +60,7 @@ class APITester {
     await this.runTest('authentication', 'User Registration', async () => {
       const { data, error } = await supabase.auth.signUp({
         email: `test-${Date.now()}@huurly.test`,
-        password: 'TestPassword123!'
+        password: process.env.TEST_USER_PASSWORD || 'TestPassword123!'
       });
       
       if (error) throw new Error(`Registration failed: ${error.message}`);
@@ -76,7 +76,7 @@ class APITester {
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: this.testUser.email,
-        password: 'TestPassword123!'
+        password: process.env.TEST_USER_PASSWORD || 'TestPassword123!'
       });
       
       if (error) throw new Error(`Login failed: ${error.message}`);

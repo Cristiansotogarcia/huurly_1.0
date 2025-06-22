@@ -166,7 +166,7 @@ class DirectSQLRunner {
       }
 
       console.log('\n📋 Migration files processed. You may need to apply these manually in Supabase Dashboard.');
-      console.log('🌐 Go to: https://supabase.com/dashboard/project/lxtkotgfsnahwncgcfnl/sql');
+      console.log('🌐 Go to: https://supabase.com/dashboard/project/sqhultitvpivlnlgogen/sql');
       
     } catch (error) {
       console.error('❌ Failed to process migrations:', error.message);

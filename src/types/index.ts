@@ -10,6 +10,13 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   hasPayment?: boolean;
+  user_metadata?: {
+    full_name?: string;
+    role?: UserRole;
+    [key: string]: any;
+  };
+  subscriptionEndDate?: string;
+  profilePictureUrl?: string; // Add this property
 }
 
 export interface TenantProfile {
@@ -98,6 +105,56 @@ export interface TenantProfile {
   totalGuaranteedIncome?: number;
   
   documents: Document[];
+  
+  // Structured Profile Sections
+  personalInfo?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    age?: number;
+    sex?: string;
+    nationality?: string;
+    maritalStatus?: string;
+  };
+  
+  workAndIncome?: {
+    profession: string;
+    employer?: string;
+    employmentStatus?: string;
+    contractType?: string;
+    monthlyIncome: number;
+    workFromHome?: boolean;
+    incomeProofAvailable?: boolean;
+  };
+  
+  housingPreferences?: {
+    minBudget: number;
+    maxBudget: number;
+    city: string;
+    bedrooms: number;
+    propertyType: string;
+    furnishedPreference?: string;
+    parkingRequired?: boolean;
+    storageNeeds?: string;
+    leaseDurationPreference?: string;
+    moveInDatePreferred?: string;
+    moveInDateEarliest?: string;
+    reasonForMoving?: string;
+  };
+  
+  lifestyleAndMotivation?: {
+    bio: string;
+    motivation: string;
+    hasPets?: boolean;
+    petDetails?: string;
+    smokes?: boolean;
+    smokingDetails?: string;
+    hobbies?: string[];
+    interests?: string[];
+    personalValues?: string[];
+  };
+
   verificationStatus: 'pending' | 'approved' | 'rejected';
 }
 
@@ -141,17 +198,32 @@ export interface Property {
   availableUntil?: string;
 }
 
+export interface AdminStats {
+  totalUsers: number;
+  totalTenants: number;
+  totalLandlords: number;
+  pendingDocuments: number;
+}
+
 export interface Document {
   id: string;
-  tenantId: string;
-  type: 'id' | 'income' | 'employment' | 'reference';
-  fileName: string;
-  fileUrl: string;
+  user_id: string;
+  document_type: 'id_card' | 'proof_of_income' | 'other';
+  file_url: string;
   status: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  uploadedAt: string;
-  reviewedAt?: string;
-  reviewedBy?: string;
+  created_at: string;
+  rejection_reason?: string;
+  user: Pick<User, 'name' | 'email'>;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  status: 'active' | 'inactive' | 'cancelled';
+  start_date: string;
+  end_date: string;
+  stripe_subscription_id: string;
+  current_period_end?: number; // Unix timestamp in seconds
 }
 
 export interface ViewingInvitation {
@@ -258,4 +330,11 @@ export interface EnhancedMatch {
     timing: number;
     documentation: number;
   };
+}
+
+export interface TenantDashboardData {
+  profileViews: number;
+  invitations: number;
+  applications: number;
+  acceptedApplications: number;
 }
