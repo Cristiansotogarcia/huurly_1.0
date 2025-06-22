@@ -25,7 +25,7 @@ export interface UpdateUserProfileData {
   lastName?: string;
   email?: string;
   phone?: string;
-  is_looking_for_place?: boolean;
+  is_looking_for_place?: boolean; // Database field name for profile visibility
 }
 
 export interface CreateTenantProfileData {
@@ -42,6 +42,7 @@ export interface CreateTenantProfileData {
   bedrooms: number;
   propertyType: string;
   motivation: string;
+  isLookingForPlace?: boolean; // Whether the tenant is actively looking for a place
   
   // Enhanced fields from 7-step modal
   nationality?: string;
@@ -595,6 +596,24 @@ export class UserService extends DatabaseService {
 
       return { data, error };
     });
+  }
+  
+  /**
+   * Get profile picture URL for a user
+   */
+  async getProfilePictureUrl(userId: string): Promise<string | null> {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_picture_url')
+        .eq('id', userId)
+        .single();
+      
+      return profile?.profile_picture_url || null;
+    } catch (error) {
+      logger.error('Error fetching profile picture URL:', error);
+      return null;
+    }
   }
 
   /**

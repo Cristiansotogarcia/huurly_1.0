@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HuurderRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
 import CookieConsent from "@/components/CookieConsent";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -12,6 +12,10 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const HuurderDashboard = lazy(() => import("./pages/HuurderDashboard"));
+const VerhuurderDashboard = lazy(() => import("./pages/VerhuurderDashboard"));
+const BeoordelaarDashboard = lazy(() => import('./pages/BeoordelaarDashboard'));
+const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,12 +46,37 @@ const App = () => (
             <Route 
               path="/huurder-dashboard" 
               element={
-                <HuurderRoute>
+                <ProtectedRoute roles={['huurder']}>
                   <HuurderDashboard />
-                </HuurderRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/verhuurder-dashboard" 
+              element={
+                <ProtectedRoute roles={['verhuurder']}>
+                  <VerhuurderDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/beoordelaar-dashboard" 
+              element={
+                <ProtectedRoute roles={['beoordelaar']}>
+                  <BeoordelaarDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/beheerder-dashboard" 
+              element={
+                <ProtectedRoute roles={['beheerder']}>
+                  <BeheerderDashboard />
+                </ProtectedRoute>
               } 
             />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </Suspense>
         <CookieConsent />

@@ -70,7 +70,7 @@ async function applyMigration() {
     
     // Since we can't execute DDL directly, provide manual instructions
     console.log('\n📋 Manual Migration Required');
-    console.log('🌐 Please go to: https://supabase.com/dashboard/project/lxtkotgfsnahwncgcfnl/sql');
+    console.log('🌐 Please go to: https://supabase.com/dashboard/project/sqhultitvpivlnlgogen/sql');
     console.log('📝 Copy and paste the following SQL:');
     console.log('\n' + '='.repeat(80));
     console.log(sql);

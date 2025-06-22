@@ -3,6 +3,32 @@
  * Centralized location for all user-facing text in the Huurly application
  */
 
+export const DATE_FORMATS = {
+  SHORT_DATE: 'short_date',
+  LONG_DATE: 'long_date',
+  SHORT_DATETIME: 'short_datetime',
+  LONG_DATETIME: 'long_datetime',
+  TIME_ONLY: 'time_only',
+  MONTH_YEAR: 'month_year'
+};
+
+export const CURRENCY_FORMAT = {
+  LOCALE: 'nl-NL',
+  OPTIONS: {
+    style: 'currency',
+    currency: 'EUR'
+  }
+};
+
+export const NUMBER_FORMAT = {
+  LOCALE: 'nl-NL',
+  OPTIONS: {
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }
+};
+
 export const UI_TEXT = {
   // Button labels
   buttons: {

@@ -39,8 +39,9 @@ export class SearchService {
       } = options;
       
       // Start building the query
+      // Using type assertion since 'properties' table exists in the database but is missing from types
       let dbQuery = supabase
-        .from('properties')
+        .from('properties' as any)
         .select('*, landlord:landlord_id(*)', { count: 'exact' });
       
       // Apply text search if query is provided
@@ -77,13 +78,13 @@ export class SearchService {
       });
       
       // Apply sorting
-      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' });
+      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' }) as any;
       
       // Apply pagination
-      dbQuery = dbQuery.range(offset, offset + limit - 1);
+      dbQuery = dbQuery.range(offset, offset + limit - 1) as any;
       
       // Execute the query
-      const { data, error, count } = await dbQuery;
+      const { data, error, count } = await dbQuery as any;
       
       if (error) {
         logger.error('Error searching properties:', error);
@@ -119,7 +120,7 @@ export class SearchService {
       // Start building the query
       let dbQuery = supabase
         .from('tenant_profiles')
-        .select('*, user:user_id(*)', { count: 'exact' });
+        .select('*, user:user_id(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
       if (query && query.trim() !== '') {
@@ -155,13 +156,13 @@ export class SearchService {
       });
       
       // Apply sorting
-      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' });
+      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' }) as any;
       
       // Apply pagination
-      dbQuery = dbQuery.range(offset, offset + limit - 1);
+      dbQuery = dbQuery.range(offset, offset + limit - 1) as any;
       
       // Execute the query
-      const { data, error, count } = await dbQuery;
+      const { data, error, count } = await dbQuery as any;
       
       if (error) {
         logger.error('Error searching tenant profiles:', error);
@@ -197,7 +198,7 @@ export class SearchService {
       // Start building the query
       let dbQuery = supabase
         .from('user_documents')
-        .select('*, user:user_id(*), approved_by_user:approved_by(*)', { count: 'exact' });
+        .select('*, user:user_id(*), approved_by_user:approved_by(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
       if (query && query.trim() !== '') {
@@ -226,13 +227,13 @@ export class SearchService {
       });
       
       // Apply sorting
-      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' });
+      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' }) as any;
       
       // Apply pagination
-      dbQuery = dbQuery.range(offset, offset + limit - 1);
+      dbQuery = dbQuery.range(offset, offset + limit - 1) as any;
       
       // Execute the query
-      const { data, error, count } = await dbQuery;
+      const { data, error, count } = await dbQuery as any;
       
       if (error) {
         logger.error('Error searching documents:', error);
@@ -268,7 +269,7 @@ export class SearchService {
       // Start building the query
       let dbQuery = supabase
         .from('user_roles')
-        .select('*, user:user_id(*)', { count: 'exact' });
+        .select('*, user:user_id(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
       if (query && query.trim() !== '') {
@@ -283,12 +284,12 @@ export class SearchService {
         
         // Filter users by query
         const filteredUsers = allUsers?.filter(userRole => {
-          const user = userRole.user;
+          const user = userRole.user as any; // Type assertion to avoid TypeScript errors
           if (!user) return false;
           
           const searchableFields = [
-            user.email,
-            user.phone,
+            user?.email, // Optional chaining to safely access potentially undefined properties
+            user?.phone,
             userRole.role
           ];
           
@@ -338,13 +339,13 @@ export class SearchService {
       });
       
       // Apply sorting
-      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' });
+      dbQuery = dbQuery.order(sortBy, { ascending: sortOrder === 'asc' }) as any;
       
       // Apply pagination
-      dbQuery = dbQuery.range(offset, offset + limit - 1);
+      dbQuery = dbQuery.range(offset, offset + limit - 1) as any;
       
       // Execute the query
-      const { data, error, count } = await dbQuery;
+      const { data, error, count } = await dbQuery as any;
       
       if (error) {
         logger.error('Error searching users:', error);

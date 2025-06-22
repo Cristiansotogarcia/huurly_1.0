@@ -14,7 +14,7 @@ const { Client } = pg;
 
 // Extract connection details from environment
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const dbPassword = process.env.supabase_DB_Password;
+const dbPassword = process.env.SUPABASE_DB_PASSWORD;
 
 let output = '';
 function log(message) {

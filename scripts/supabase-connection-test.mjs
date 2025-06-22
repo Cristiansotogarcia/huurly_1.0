@@ -17,7 +17,7 @@ console.log('-' .repeat(40));
 console.log(`VITE_SUPABASE_URL: ${process.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing'}`);
 console.log(`VITE_SUPABASE_ANON_KEY: ${process.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}`);
 console.log(`SUPABASE_SERVICE_KEY: ${process.env.SUPABASE_SERVICE_KEY ? '✅ Set' : '❌ Missing'}`);
-console.log(`supabase_postgres: ${process.env.supabase_postgres ? '✅ Set' : '❌ Missing'}`);
+console.log(`SUPABASE_POSTGRES: ${process.env.SUPABASE_POSTGRES ? '✅ Set' : '❌ Missing'}`);
 
 if (process.env.VITE_SUPABASE_URL) {
   console.log(`URL: ${process.env.VITE_SUPABASE_URL}`);
@@ -63,7 +63,7 @@ async function testServiceConnection() {
   
   try {
     const supabase = createClient(
-      process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+      process.env.VITE_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY
     );
     

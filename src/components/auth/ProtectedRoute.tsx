@@ -3,12 +3,15 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
+type UserRole = 'huurder' | 'verhuurder' | 'beoordelaar' | 'beheerder';
+
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: 'huurder' | 'verhuurder' | 'beoordelaar' | 'beheerder';
+  roles?: UserRole[];
+  requiredRole?: UserRole; // Keeping for backward compatibility
 }
 
-const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, roles, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -23,6 +26,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />;
   }
 
+  // Support both the new roles array and the old requiredRole prop
+  if (roles && roles.length > 0 && !roles.includes(user.role as UserRole)) {
+    return <Navigate to="/" replace />;
+  }
+  
   if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }
@@ -32,7 +40,19 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
 // Specific route components for type safety
 export const HuurderRoute = ({ children }: { children: ReactNode }) => (
-  <ProtectedRoute requiredRole="huurder">{children}</ProtectedRoute>
+  <ProtectedRoute roles={['huurder']}>{children}</ProtectedRoute>
+);
+
+export const VerhuurderRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute roles={['verhuurder']}>{children}</ProtectedRoute>
+);
+
+export const BeoordelaarRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute roles={['beoordelaar']}>{children}</ProtectedRoute>
+);
+
+export const BeheerderRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute roles={['beheerder']}>{children}</ProtectedRoute>
 );
 
 export default ProtectedRoute;

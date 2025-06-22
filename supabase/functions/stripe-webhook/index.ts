@@ -1,7 +1,10 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "http/server";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
+
+// Add Deno types reference
+/// <reference lib="deno.ns" />
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +18,7 @@ serve(async (req) => {
 
   try {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-05-28.basil",
     });
 
     const supabase = createClient(
@@ -64,116 +67,64 @@ serve(async (req) => {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const { userId, paymentRecordId } = session.metadata || {};
+      const userId = session.metadata?.user_id;
 
-      const paymentRecordUUID = paymentRecordId ? String(paymentRecordId) : null;
-      const userUUID = userId ? String(userId) : null;
-      const stripeCustomerId = session.customer ? String(session.customer) : null;
-
-      console.log('Webhook session metadata', {
-        paymentRecordUUID,
-        userUUID,
-        stripeCustomerId,
-        sessionId: session.id,
-        mode: session.mode,
-      });
-
-      // Update payment record status
-      if (paymentRecordUUID) {
-        const { error: paymentUpdateError } = await supabase
-          .from('payment_records')
-          .update({
-            status: 'completed',
-            stripe_customer_id: stripeCustomerId,
-            stripe_session_id: session.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', paymentRecordUUID);
-
-        if (paymentUpdateError) {
-          console.error('Failed to update payment record', {
-            paymentRecordUUID,
-            stripeCustomerId,
-            error: paymentUpdateError,
-          });
-        } else {
-          console.log('Payment record updated successfully:', paymentRecordUUID);
-        }
+      if (!userId) {
+        throw new Error('User ID not found in session metadata');
       }
 
-      // Update user subscription status
-      if (userUUID) {
-        const { error: userRoleError } = await supabase
-          .from('user_roles')
-          .update({ 
-            subscription_status: 'active'
-          })
-          .eq('user_id', userUUID);
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
-        if (userRoleError) {
-          console.error('Failed to update user role', { userUUID, error: userRoleError });
-        } else {
-          console.log('User role updated successfully:', userUUID);
-        }
+      const { error } = await supabase.from('subscriptions').insert({
+        user_id: userId,
+        status: subscription.status,
+        stripe_subscription_id: subscription.id,
+        start_date: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+        end_date: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+      });
 
-        // Create notification for successful payment
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: userUUID,
-            type: 'payment_success',
-            title: 'Betaling succesvol',
-            message: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
-            read: false,
-          });
+      if (error) {
+        throw error;
+      }
 
-        if (notificationError) {
-          console.error('Failed to create notification', { userUUID, error: notificationError });
-        }
+      // Create notification for successful payment
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          type: 'payment_success',
+          title: 'Betaling succesvol',
+          message: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
+          read: false,
+        });
+
+      if (notificationError) {
+        console.error('Failed to create notification', { userId, error: notificationError });
       }
     }
 
-    // Handle subscription events for ongoing management
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
 
-      console.log('Subscription event:', {
-        type: event.type,
-        subscriptionId: subscription.id,
-        customerId: customerId,
-        status: subscription.status,
-      });
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          status: subscription.status,
+          start_date: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+          end_date: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+        })
+        .eq('stripe_subscription_id', subscription.id);
 
-      // Find user by stripe customer ID
-      const { data: paymentRecord } = await supabase
-        .from('payment_records')
-        .select('user_id')
-        .eq('stripe_customer_id', customerId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (paymentRecord?.user_id) {
-        const subscriptionStatus = subscription.status === 'active' ? 'active' : 
-                                 subscription.status === 'canceled' ? 'cancelled' : 'inactive';
-
-        const { error: userRoleError } = await supabase
-          .from('user_roles')
-          .update({ subscription_status: subscriptionStatus })
-          .eq('user_id', paymentRecord.user_id);
-
-        if (userRoleError) {
-          console.error('Failed to update subscription status', { 
-            userId: paymentRecord.user_id, 
-            error: userRoleError 
-          });
-        } else {
-          console.log('Subscription status updated:', { 
-            userId: paymentRecord.user_id, 
-            status: subscriptionStatus 
-          });
-        }
+      if (error) {
+        console.error('Failed to update subscription status', { 
+          subscriptionId: subscription.id, 
+          error 
+        });
+      } else {
+        console.log('Subscription status updated:', { 
+          subscriptionId: subscription.id, 
+          status: subscription.status 
+        });
       }
     }
 

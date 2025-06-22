@@ -14,6 +14,7 @@ interface DashboardModalsProps {
   setShowPaymentModal: (show: boolean) => void;
   onProfileComplete: (profileData: any) => Promise<void>;
   onDocumentUploadComplete: (documents: any[]) => Promise<void>;
+  user?: any;
 }
 
 export const DashboardModals: React.FC<DashboardModalsProps> = ({
@@ -33,7 +34,10 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       <EnhancedProfileCreationModal
         open={showProfileModal}
         onOpenChange={setShowProfileModal}
-        onComplete={onProfileComplete}
+        onComplete={async (profileData) => {
+          await onProfileComplete(profileData);
+          setShowProfileModal(false);
+        }}
         editMode={false}
       />
 
