@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
 import { UserRole } from '@/types';
 import { Loader2 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
   
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,11 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     }
 
     if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Wachtwoorden komen niet overeen",
+        description: "Controleer of de ingevoerde wachtwoorden hetzelfde zijn.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -54,8 +61,12 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       });
 
       if (success && user) {
+        toast({
+          title: "Registratie succesvol!",
+          description: "Je wordt doorgestuurd naar je dashboard.",
+        });
         onClose();
-        
+
         // Route based on user role
         switch (user.role) {
           case 'huurder':
@@ -73,9 +84,19 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
           default:
             navigate('/');
         }
+      } else {
+        // The signUp function in useAuth throws an error on failure, which is caught by the catch block.
+        // So if success is false, we can assume an error was thrown and will be handled there.
+        // We can add a generic error here in case the promise resolves with success: false but doesn't throw.
+        throw new Error("Er is een onbekende fout opgetreden bij het registreren.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
+      toast({
+        title: "Registratie mislukt",
+        description: error.message || "Er is iets misgegaan. Probeer het opnieuw.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

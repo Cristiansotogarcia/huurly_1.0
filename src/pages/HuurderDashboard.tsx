@@ -8,7 +8,7 @@ import { DocumentsSection } from '@/components/standard/DocumentsSection';
 import ProfileOverview, { ProfileSection } from '@/components/standard/ProfileOverview';
 import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart } from 'lucide-react';
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
-import { SubscriptionModal } from "@/components/modals/SubscriptionModal";
+import { PaymentModal } from "@/components/PaymentModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from '@/hocs/withAuth';
@@ -42,7 +42,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { toast } = useToast();
   
   // Define profile sections for the ProfileOverview component
@@ -120,53 +120,49 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     },
   ];
 
-  // Handle payment redirect
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment_success')) {
-      toast({
-        title: 'Betaling Gelukt!',
-        description: 'Je abonnement is geactiveerd. Welkom bij Premium!',
-        variant: 'success',
-      });
-      if (refresh) refresh();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      handleLogout();
+    };
 
-    if (urlParams.get('payment_canceled')) {
-      toast({
-        title: 'Betaling Geannuleerd',
-        description: 'Je betaling is niet voltooid. Je kunt het opnieuw proberen.',
-        variant: 'destructive',
-      });
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [refresh, toast]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
-  // Handle payment redirect
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment_success')) {
-      toast({
-        title: 'Betaling Gelukt!',
-        description: 'Je abonnement is geactiveerd. Welkom bij Premium!',
-        variant: 'success',
-      });
-      if (refresh) refresh();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [handleLogout]);
 
-    if (urlParams.get('payment_canceled')) {
-      toast({
-        title: 'Betaling Geannuleerd',
-        description: 'Je betaling is niet voltooid. Je kunt het opnieuw proberen.',
-        variant: 'destructive',
-      });
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [refresh, toast]);
 
   const isSubscribed = subscription && subscription.status === 'active';
+
+  useEffect(() => {
+    if (user && !isSubscribed) {
+      setShowPaymentModal(true);
+    }
+  }, [user, isSubscribed]);
+
+  // Handle payment redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment_success')) {
+      toast({
+        title: 'Betaling Gelukt!',
+        description: 'Je abonnement is geactiveerd. Welkom bij Premium!',
+        variant: 'success',
+      });
+      if (refresh) refresh();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (urlParams.get('payment_canceled')) {
+      toast({
+        title: 'Betaling Geannuleerd',
+        description: 'Je betaling is niet voltooid. Je kunt het opnieuw proberen.',
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refresh, toast]);
 
   const onProfileComplete = async (profileData: any) => {
     await handleProfileComplete(profileData, () => {
@@ -189,8 +185,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
           <DashboardHeader
             user={{
               id: user.id,
-              name: user.user_metadata.full_name || user.email,
-              role: user.user_metadata.role || 'huurder',
+              name: user.user_metadata?.full_name || user.email,
+              role: user.user_metadata?.role || 'huurder',
               email: user.email,
               isActive: true,
               createdAt: user.createdAt,
@@ -204,15 +200,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         )}
 
         <div className="p-4 sm:p-6 lg:p-8">
-          {!isSubscribed && user && (
-            <div className="p-4 mb-6 text-center text-white bg-blue-500 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-bold">Word Premium!</h2>
-              <p className="mt-2 mb-4">Krijg volledige toegang tot alle functies en vergroot je kansen om een woning te vinden.</p>
-              <Button onClick={() => setSubscriptionModalOpen(true)} className="bg-white text-blue-500 hover:bg-gray-100">
-                Abonneer nu voor €65/jaar
-              </Button>
-            </div>
-          )}
 
           <DashboardContent>
             <StatsGrid stats={huurderStats} />
@@ -249,23 +236,19 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       <DashboardModals
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
-        showPaymentModal={false} 
+        showPaymentModal={showPaymentModal} 
         hasProfile={!!tenantProfile}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
-        setShowPaymentModal={() => {}}
+        setShowPaymentModal={setShowPaymentModal}
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
       />
-      <SubscriptionModal
-        isOpen={isSubscriptionModalOpen}
-        onClose={() => setSubscriptionModalOpen(false)}
-        onSuccess={() => {
-          if (refresh) refresh();
-          setSubscriptionModalOpen(false);
-        }}
-        userId={user?.id}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={setShowPaymentModal}
+        persistent={true}
       />
     </>
   );
