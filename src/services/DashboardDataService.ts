@@ -74,12 +74,17 @@ export class DashboardDataService {
       logger.info('Fetching tenant profile for user:', userId);
 
       const { data, error } = await supabase
-        .from('tenant_profiles')
+        .from('tenant_profile')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       if (error) {
+        if (error.code === 'PGRST116') {
+          // No profile found, which is not an error in this context. Return success with null data.
+          logger.info('No tenant profile found for user:', userId);
+          return { success: true, data: null };
+        }
         logger.error('Database error fetching tenant profile:', error);
         return { success: false, error: new Error(error.message) };
       }
