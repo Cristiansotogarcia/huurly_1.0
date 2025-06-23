@@ -1,0 +1,77 @@
+{
+  "header": {
+    "login": "Inloggen",
+    "register": "Registreren"
+  },
+  "hero": {
+    "title": "Verlies geen tijd met zoeken, laat de woning jou vinden!",
+    "description": "Huurly is de beste en snelste oplossing voor huurders en verhuurders. Maak je profiel aan en laat verhuurders jou vinden als de perfecte kandidaat.",
+    "createProfile": "Profiel aanmaken"
+  },
+  "cta": {
+    "title": "Klaar om je perfecte woning te vinden?",
+    "description": "Sluit je aan bij duizenden tevreden gebruikers die hun droomwoning hebben gevonden via Huurly.",
+    "createProfile": "Profiel aanmaken"
+  },
+  "features": {
+    "why": "Waarom kiezen voor Huurly?",
+    "tagline": "Wij maken huren en verhuren makkelijker, sneller en veiliger voor iedereen.",
+    "verified": "Geverifieerde Profielen",
+    "matches": "Snelle Matches",
+    "secure": "Veilige Transacties"
+  },
+  "cookie": {
+    "message": "Huurly gebruikt cookies om de gebruikerservaring te verbeteren.",
+    "privacy": "privacybeleid",
+    "decline": "Weigeren",
+    "accept": "Accepteren"
+  },
+  "login": {
+    "title": "Inloggen",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "forgot": "Wachtwoord vergeten?",
+    "submit": "Inloggen",
+    "loading": "Inloggen...",
+    "back": "Terug naar inloggen"
+  },
+  "reset": {
+    "title": "Wachtwoord vergeten",
+    "instruction": "Voer je e-mailadres in en we sturen je een resetlink.",
+    "send": "Verstuur reset link",
+    "sending": "Versturen...",
+    "checkEmail": "Controleer je e-mail",
+    "emailSent": "We hebben een link gestuurd naar {{email}} om je wachtwoord te resetten.",
+    "invalidLink": "Ongeldige of verlopen link",
+    "invalidLinkDesc": "De wachtwoord reset link is ongeldig of verlopen. Vraag een nieuwe link aan.",
+    "newPassword": "Nieuw wachtwoord",
+    "confirmPassword": "Bevestig wachtwoord",
+    "passwordChanged": "Wachtwoord gewijzigd",
+    "passwordChangedDesc": "Je wachtwoord is succesvol gewijzigd. Je kunt nu inloggen met je nieuwe wachtwoord.",
+    "change": "Wachtwoord wijzigen",
+    "changing": "Wachtwoord wijzigen..."
+  },
+  "signup": {
+    "title": "Registreren - Stap {{step}} van 2",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "role": "Ik ben een",
+    "selectRole": "Selecteer een rol",
+    "tenant": "Huurder",
+    "landlord": "Verhuurder",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "confirm": "Bevestig wachtwoord",
+    "prev": "Vorige",
+    "next": "Volgende",
+    "register": "Registreren",
+    "registering": "Registreren...",
+    "passwordsNoMatch": "Wachtwoorden komen niet overeen",
+    "checkPasswords": "Controleer of de ingevoerde wachtwoorden hetzelfde zijn.",
+    "success": "Registratie succesvol!",
+    "redirect": "Je wordt doorgestuurd naar je dashboard.",
+    "failure": "Registratie mislukt",
+    "unknownError": "Er is een onbekende fout opgetreden bij het registreren.",
+    "tryAgain": "Er is iets misgegaan. Probeer het opnieuw."
+  }
+}
