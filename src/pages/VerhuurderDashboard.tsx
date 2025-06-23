@@ -1,3 +1,4 @@
+
 import { DashboardHeader, DashboardContent } from '@/components/dashboard';
 import { useVerhuurderDashboard } from '@/hooks/useVerhuurderDashboard';
 import { useVerhuurderActions } from '@/hooks/useVerhuurderActions';
@@ -13,7 +14,7 @@ interface VerhuurderDashboardProps {
 
 const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
   const { properties, stats, loading: dashboardLoading } = useVerhuurderDashboard(user?.id);
-  const { handleViewProperty, handleAddNewProperty, handleDeleteProperty } = useVerhuurderActions();
+  const { handleViewProperty, handleAddNewProperty, handleDeleteProperty, handleLogout } = useVerhuurderActions();
 
   const verhuurderStats = [
     {

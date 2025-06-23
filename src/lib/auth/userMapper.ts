@@ -7,46 +7,15 @@ import { roleMapper } from './roleMapper';
 import { paymentChecker } from './paymentChecker';
 
 class UserMapper {
-  private async getRole(userId: string) {
-    return supabase
-      .from('gebruiker_rollen')
-      .select('role, subscription_status')
-      .eq('user_id', userId)
-      .single();
-  }
-
   /**
    * Map Supabase user to our User type
    */
   async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
-      // Get user role with better error handling
-      logger.info('Fetching role for user:', supabaseUser.email);
-      let roleResult = await this.getRole(supabaseUser.id);
-
-      if (roleResult.error) {
-        logger.warn('User role not found or error fetching. Creating default role.', {
-          error: roleResult.error,
-          userId: supabaseUser.id,
-        });
-        await this.createDefaultRole(supabaseUser.id, supabaseUser.email);
-        // Re-fetch after creating the default role
-        roleResult = await this.getRole(supabaseUser.id);
-
-        if (roleResult.error) {
-          logger.error('FATAL: Could not retrieve user role after creation.', {
-            error: roleResult.error,
-            userId: supabaseUser.id,
-          });
-        }
-      }
-
-      const roleData = roleResult.data;
-
       // Get profile data
       const { data: profileData } = await supabase
         .from('gebruikers')
-        .select('naam')
+        .select('naam, rol')
         .eq('id', supabaseUser.id)
         .single();
 
@@ -55,8 +24,8 @@ class UserMapper {
 
       const name = profileData?.naam || `${supabaseUser.user_metadata?.first_name || ''} ${supabaseUser.user_metadata?.last_name || ''}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
 
-      // Map the role with fallback
-      const dbRole = roleData?.role || roleMapper.determineRoleFromEmail(supabaseUser.email);
+      // Map the role with fallback - use rol from profile or determine from email
+      const dbRole = profileData?.rol || roleMapper.determineRoleFromEmail(supabaseUser.email);
       const mappedRole = roleMapper.mapRoleFromDatabase(dbRole, supabaseUser.email);
 
       logger.info('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
@@ -84,35 +53,6 @@ class UserMapper {
         createdAt: supabaseUser.created_at,
         hasPayment: false,
       };
-    }
-  }
-
-  /**
-   * Create default role for user if none exists using UPSERT
-   */
-  private async createDefaultRole(userId: string, email?: string): Promise<void> {
-    try {
-      const role = roleMapper.determineRoleFromEmail(email);
-      const dbRole = roleMapper.mapRoleToDatabase(role);
-      
-      logger.info('Creating default role for user:', email, 'Role:', dbRole);
-      
-      // Use UPSERT to prevent duplicate key violations
-      const { error } = await supabase
-        .from('gebruiker_rollen')
-        .upsert({
-          user_id: userId,
-          role: dbRole,
-          subscription_status: 'inactive',
-        }, {
-          onConflict: 'user_id, role'
-        });
-
-      if (error) {
-        logger.error('Error creating default role:', error);
-      }
-    } catch (error) {
-      logger.error('Error in createDefaultRole:', error);
     }
   }
 }

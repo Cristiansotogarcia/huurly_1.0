@@ -41,7 +41,7 @@ const DocumentQueue: React.FC<DocumentQueueProps> = ({ documents, onReview }) =>
               <div className="text-sm text-muted-foreground">{doc.user?.email}</div>
             </TableCell>
             <TableCell>{(doc as any).document_type || (doc as any).type || 'Unknown'}</TableCell>
-            <TableCell>{new Date((doc as any).upload_datum || (doc as any).uploadedAt || (doc as any).created_at || doc.createdAt).toLocaleDateString()}</TableCell>
+            <TableCell>{new Date((doc as any).upload_datum || (doc as any).uploadedAt || (doc as any).created_at || doc.created_at).toLocaleDateString()}</TableCell>
             <TableCell>
               <Button variant="outline" size="sm" onClick={() => onReview(doc)}>Review</Button>
             </TableCell>

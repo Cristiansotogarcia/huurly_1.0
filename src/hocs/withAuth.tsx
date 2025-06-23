@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingState, AccessDeniedState } from '@/components/states';
@@ -9,9 +10,9 @@ interface WrappedComponentProps {
 
 export function withAuth<P extends WrappedComponentProps>(WrappedComponent: React.ComponentType<P>, requiredRole: UserRole) {
   const WithAuthComponent: React.FC<Omit<P, keyof WrappedComponentProps>> = (props) => {
-    const { user, loading, isAuthenticated } = useAuth();
+    const { user, isLoading, isAuthenticated } = useAuth();
 
-    if (loading) {
+    if (isLoading) {
       return <LoadingState message="Authenticatie controleren..." />;
     }
 
