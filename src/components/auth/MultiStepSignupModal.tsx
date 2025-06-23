@@ -134,6 +134,18 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   required
                 />
               </div>
+              <div>
+                <Label htmlFor="role">Ik ben een</Label>
+                <Select onValueChange={(value) => updateFormData('role', value)} defaultValue={formData.role}>
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecteer een rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="huurder">Huurder</SelectItem>
+                    <SelectItem value="verhuurder">Verhuurder</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           )}
 

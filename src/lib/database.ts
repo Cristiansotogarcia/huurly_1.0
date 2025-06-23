@@ -109,7 +109,7 @@ export class DatabaseService {
     // Check role-based permissions if specified
     if (allowedRoles && allowedRoles.length > 0) {
       const { data: roleData } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('role')
         .eq('user_id', currentUserId)
         .single();

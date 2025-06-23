@@ -4,6 +4,7 @@ import { User, UserRole } from '@/types';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/lib/logger';
+import { roleMapper } from '@/lib/auth/roleMapper';
 
 // Authentication error class
 export class AuthenticationError extends Error {
@@ -14,84 +15,76 @@ export class AuthenticationError extends Error {
 }
 
 export interface CreateUserProfileData {
-  firstName: string;
-  lastName: string;
+  voornaam: string;
+  achternaam: string;
   email?: string;
-  phone?: string;
+  telefoon?: string;
 }
 
 export interface UpdateUserProfileData {
-  firstName?: string;
-  lastName?: string;
+  voornaam?: string;
+  achternaam?: string;
   email?: string;
-  phone?: string;
-  is_looking_for_place?: boolean; // Database field name for profile visibility
+  telefoon?: string;
+  is_op_zoek?: boolean;
 }
 
 export interface CreateTenantProfileData {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  dateOfBirth: string;
-  profession: string;
-  monthlyIncome: number;
+  voornaam: string;
+  achternaam: string;
+  telefoon: string;
+  geboortedatum: string;
+  beroep: string;
+  maandinkomen: number;
   bio: string;
-  city: string;
+  stad: string;
   minBudget: number;
   maxBudget: number;
-  bedrooms: number;
-  propertyType: string;
-  motivation: string;
-  isLookingForPlace?: boolean; // Whether the tenant is actively looking for a place
-  
-  // Enhanced fields from 7-step modal
-  nationality?: string;
-  sex?: 'man' | 'vrouw' | 'anders' | 'zeg_ik_liever_niet';
-  maritalStatus?: 'single' | 'married' | 'partnership' | 'divorced' | 'widowed';
-  hasChildren?: boolean;
-  numberOfChildren?: number;
-  childrenAges?: number[];
-  hasPartner?: boolean;
-  partnerName?: string;
-  partnerProfession?: string;
-  partnerMonthlyIncome?: number;
-  partnerEmploymentStatus?: string;
-  preferredDistricts?: string[];
-  maxCommuteTime?: number;
-  transportationPreference?: string;
-  furnishedPreference?: 'gemeubileerd' | 'ongemeubileerd' | 'geen_voorkeur';
-  desiredAmenities?: string[];
-  
-  // Priority 1: Guarantor Information
-  guarantorAvailable?: boolean;
-  guarantorName?: string;
-  guarantorPhone?: string;
-  guarantorIncome?: number;
-  guarantorRelationship?: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders';
-  incomeProofAvailable?: boolean;
-  
-  // Priority 2: Timing Information
-  moveInDatePreferred?: string;
-  moveInDateEarliest?: string;
-  availabilityFlexible?: boolean;
-  
-  // Additional fields that may be passed
-  employer?: string;
-  employmentStatus?: string;
-  workContractType?: string;
-  housingAllowanceEligible?: boolean;
-  hasPets?: boolean;
-  petDetails?: string;
-  smokes?: boolean;
-  smokingDetails?: string;
-  profilePictureUrl?: string;
+  slaapkamers: number;
+  woningtype: string;
+  motivatie: string;
+  isOpZoek?: boolean;
+  nationaliteit?: string;
+  geslacht?: 'man' | 'vrouw' | 'anders' | 'zeg_ik_liever_niet';
+  burgerlijkeStaat?: 'alleenstaand' | 'getrouwd' | 'partnerschap' | 'gescheiden' | 'weduwe';
+  heeftKinderen?: boolean;
+  aantalKinderen?: number;
+  leeftijdenKinderen?: number[];
+  heeftPartner?: boolean;
+  naamPartner?: string;
+  beroepPartner?: string;
+  maandinkomenPartner?: number;
+  werkstatusPartner?: string;
+  voorkeurswijken?: string[];
+  maxReistijd?: number;
+  vervoersvoorkeur?: string;
+  voorkeurMeubilering?: 'gemeubileerd' | 'ongemeubileerd' | 'geen_voorkeur';
+  gewensteVoorzieningen?: string[];
+  garantstellerBeschikbaar?: boolean;
+  naamGarantsteller?: string;
+  telefoonGarantsteller?: string;
+  inkomenGarantsteller?: number;
+  relatieGarantsteller?: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders';
+  inkomensbewijsBeschikbaar?: boolean;
+  voorkeurVerhuisdatum?: string;
+  vroegsteVerhuisdatum?: string;
+  flexibeleBeschikbaarheid?: boolean;
+  werkgever?: string;
+  werkstatus?: string;
+  typeArbeidscontract?: string;
+  inAanmerkingVoorHuurtoeslag?: boolean;
+  heeftHuisdieren?: boolean;
+  detailsHuisdieren?: string;
+  rookt?: boolean;
+  detailsRoken?: string;
+  profielfotoUrl?: string;
 }
 
 export interface UserFilters {
-  role?: UserRole;
-  isActive?: boolean;
-  hasPayment?: boolean;
-  searchTerm?: string;
+  rol?: UserRole;
+  isActief?: boolean;
+  heeftBetaling?: boolean;
+  zoekterm?: string;
 }
 
 export interface TenantSearchFilters {
@@ -167,10 +160,10 @@ export class UserService extends DatabaseService {
   async createProfile(
     userId: string,
     data: CreateUserProfileData
-  ): Promise<DatabaseResponse<Tables<'profiles'>>> {
+  ): Promise<DatabaseResponse<Tables<'gebruikers'>>> {
     const sanitizedData = this.sanitizeInput(data);
     
-    const validation = this.validateRequiredFields(sanitizedData, ['firstName', 'lastName']);
+    const validation = this.validateRequiredFields(sanitizedData, ['voornaam', 'achternaam']);
     if (!validation.isValid) {
       return {
         data: null,
@@ -196,12 +189,25 @@ export class UserService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
+      // Get user email from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      const email = user?.email;
+      
+      if (!email) {
+        throw new Error('Gebruiker e-mail niet gevonden');
+      }
+      
+      // Determine role from email or use default
+      const role = roleMapper.determineRoleFromEmail(email);
+      const dbRole = roleMapper.mapRoleToDatabase(role);
+      
       const { data, error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .insert({
           id: userId,
-          first_name: sanitizedData.firstName,
-          last_name: sanitizedData.lastName,
+          email: email,
+          naam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
+          rol: dbRole,
         })
         .select()
         .single();
@@ -219,10 +225,10 @@ export class UserService extends DatabaseService {
   /**
    * Get user profile by ID
    */
-  async getProfile(userId: string): Promise<DatabaseResponse<Tables<'profiles'>>> {
+  async getProfile(userId: string): Promise<DatabaseResponse<Tables<'Profile'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('*')
         .eq('id', userId)
         .single();
@@ -234,7 +240,7 @@ export class UserService extends DatabaseService {
   /**
    * Create or update tenant profile - unified method
    */
-  async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
+  async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
     return this.withAuthGuard(async () => {
       const currentUserId = await this.getCurrentUserId();
       if (!currentUserId) {
@@ -274,7 +280,7 @@ export class UserService extends DatabaseService {
       return this.executeQuery(async () => {
         // 1. Update basic profile
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from('gebruikers')
           .update({
             first_name: sanitizedData.firstName,
             last_name: sanitizedData.lastName,
@@ -288,7 +294,7 @@ export class UserService extends DatabaseService {
 
         // 2. Check if tenant profile already exists
         const { data: existingProfile } = await supabase
-          .from('tenant_profiles')
+          .from('huurders')
           .select('id')
           .eq('user_id', currentUserId)
           .maybeSingle();
@@ -365,7 +371,7 @@ export class UserService extends DatabaseService {
           isUpdate = true;
           
           const { data, error: tenantError } = await supabase
-            .from('tenant_profiles')
+            .from('huurders')
             .update(tenantProfileData)
             .eq('user_id', currentUserId)
             .select()
@@ -380,7 +386,7 @@ export class UserService extends DatabaseService {
           logger.info("Creating new tenant profile for user:", currentUserId);
           
           const { data, error: tenantError } = await supabase
-            .from('tenant_profiles')
+            .from('huurders')
             .insert(tenantProfileData)
             .select()
             .single();
@@ -407,10 +413,10 @@ export class UserService extends DatabaseService {
   /**
    * Get tenant profile by user ID
    */
-  async getTenantProfile(userId: string): Promise<DatabaseResponse<Tables<'tenant_profiles'>>> {
+  async getTenantProfile(userId: string): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
@@ -422,7 +428,7 @@ export class UserService extends DatabaseService {
   /**
    * Update existing tenant profile - now delegates to createTenantProfile
    */
-  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<any>> {
+  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
     // Just call createTenantProfile since it now handles both create and update
     return this.createTenantProfile(data);
   }
@@ -438,7 +444,7 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // First get tenant profiles with filters
       let tenantQuery = supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .select('*')
         .eq('profile_completed', true);
 
@@ -506,7 +512,7 @@ export class UserService extends DatabaseService {
 
       // Get corresponding profiles
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('id, first_name, last_name, is_looking_for_place')
         .in('id', userIds)
         .eq('is_looking_for_place', true);
@@ -534,7 +540,7 @@ export class UserService extends DatabaseService {
   async updateProfile(
     userId: string,
     updates: UpdateUserProfileData
-  ): Promise<DatabaseResponse<Tables<'profiles'>>> {
+  ): Promise<DatabaseResponse<Tables<'Profile'>>> {
     const sanitizedData = this.sanitizeInput(updates);
 
     if (sanitizedData.email && !this.isValidEmail(sanitizedData.email)) {
@@ -556,18 +562,28 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Get current data for audit log
       const { data: currentData } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('*')
         .eq('id', userId)
         .single();
 
       const updateData: any = {};
-      if (sanitizedData.firstName) updateData.first_name = sanitizedData.firstName;
-      if (sanitizedData.lastName) updateData.last_name = sanitizedData.lastName;
+      if (sanitizedData.firstName || sanitizedData.lastName) {
+        // If either first or last name is updated, update the full name
+        // Get current name parts from naam field if available
+        const currentNaam = currentData?.naam || '';
+        const [currentFirstName, ...currentLastNameParts] = currentNaam.split(' ');
+        const currentLastName = currentLastNameParts.join(' ');
+        
+        const firstName = sanitizedData.firstName || currentFirstName;
+        const lastName = sanitizedData.lastName || currentLastName;
+        updateData.naam = `${firstName} ${lastName}`;
+      }
+      if (sanitizedData.email) updateData.email = sanitizedData.email;
       if (sanitizedData.is_looking_for_place !== undefined) updateData.is_looking_for_place = sanitizedData.is_looking_for_place;
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .update(updateData)
         .eq('id', userId)
         .select()
@@ -589,7 +605,7 @@ export class UserService extends DatabaseService {
   async getUserRole(userId: string): Promise<DatabaseResponse<Tables<'user_roles'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -604,7 +620,7 @@ export class UserService extends DatabaseService {
   async getProfilePictureUrl(userId: string): Promise<string | null> {
     try {
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('profile_picture_url')
         .eq('id', userId)
         .single();
@@ -635,13 +651,13 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Get current data for audit log
       const { data: currentData } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .update({ role })
         .eq('user_id', userId)
         .select()
@@ -685,11 +701,11 @@ export class UserService extends DatabaseService {
 
     return this.executeQuery(async () => {
       let query = supabase
-        .from('profiles')
+        .from('gebruikers')
         .select(`
           *,
-          user_roles!inner(role, subscription_status),
-          payment_records(status, created_at)
+          gebruiker_rollen!inner(role, subscription_status),
+          betalingen(status, aangemaakt_op)
         `);
 
       // Apply filters
@@ -712,7 +728,26 @@ export class UserService extends DatabaseService {
           default:
             dbRole = 'Huurder';
         }
-        query = query.eq('user_roles.role', dbRole);
+        query = query.eq('gebruiker_rollen.role', dbRole);
+      }
+
+      if (filters?.hasPayment) {
+        const { data: paymentUserIds, error: paymentError } = await supabase
+          .from('betalingen')
+          .select('user_id') // This should be the foreign key to the users table
+          .eq('status', 'completed');
+
+        if (paymentError) {
+          throw this.handleDatabaseError(paymentError);
+        }
+
+        const userIdsWithPayment = paymentUserIds.map((p: any) => p.user_id);
+        if (userIdsWithPayment.length > 0) {
+          query = query.in('id', userIdsWithPayment);
+        } else {
+          // If hasPayment is true but no one has paid, return no users.
+          query = query.in('id', ['00000000-0000-0000-0000-000000000000']);
+        }
       }
 
       if (filters?.searchTerm) {
@@ -760,7 +795,7 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Update user role subscription status to suspended
       const { error } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .update({ subscription_status: 'suspended' })
         .eq('user_id', userId);
 
@@ -799,7 +834,7 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Update user role subscription status to active
       const { error } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .update({ subscription_status: 'active' })
         .eq('user_id', userId);
 
@@ -838,14 +873,14 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Get user data for audit log
       const { data: userData } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('*')
         .eq('id', userId)
         .single();
 
       // Delete profile (this should cascade to related records)
       const { error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .delete()
         .eq('id', userId);
 
@@ -884,7 +919,7 @@ export class UserService extends DatabaseService {
     return this.executeQuery(async () => {
       // Get total users by role
       const { data: roleStats, error: roleError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('role')
         .order('role');
 
@@ -897,7 +932,7 @@ export class UserService extends DatabaseService {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { data: activeUsers, error: activeError } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('id')
         .gte('updated_at', thirtyDaysAgo.toISOString());
 
@@ -907,7 +942,7 @@ export class UserService extends DatabaseService {
 
       // Get users with payments
       const { data: paidUsers, error: paymentError } = await supabase
-        .from('payment_records')
+        .from('betalingen')
         .select('user_id')
         .eq('status', 'completed');
 

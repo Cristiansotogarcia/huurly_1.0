@@ -2,26 +2,26 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 
-export interface DashboardStats {
-  profileViews: number;
-  invitations: number;
-  applications: number;
-  acceptedApplications: number;
+export interface HuurderStats {
+  profielWeergaven: number;
+  uitnodigingen: number;
+  sollicitaties: number;
+  geaccepteerdeSollicitaties: number;
 }
 
 export interface VerhuurderStats {
-  totalProperties: number;
-  activeProperties: number;
-  totalTenants: number;
-  pendingApplications: number;
-  monthlyRevenue: number;
+  totaalAantalPanden: number;
+  actievePanden: number;
+  totaalAantalHuurders: number;
+  openstaandeSollicitaties: number;
+  maandelijkseInkomsten: number;
 }
 
 export interface BeoordelaarStats {
-  pendingDocuments: number;
-  reviewedToday: number;
-  totalReviewed: number;
-  averageReviewTime: number;
+  openstaandeDocumenten: number;
+  vandaagBeoordeeld: number;
+  totaalBeoordeeld: number;
+  gemiddeldeBeoordelingstijd: number;
 }
 
 export interface BeheerderStats {
@@ -42,14 +42,14 @@ export class DashboardService {
   /**
    * Get dashboard statistics for huurder (tenant)
    */
-  static async getHuurderStats(userId: string): Promise<DashboardResponse<DashboardStats>> {
+  static async getHuurderStats(userId: string): Promise<DashboardResponse<HuurderStats>> {
     try {
       logger.info('Fetching huurder stats for user:', userId);
 
       // Get profile views from tenant_profiles table
       const { data: tenantProfile, error: profileError } = await supabase
-        .from('tenant_profiles')
-        .select('profile_views')
+        .from('huurders')
+        .select('profiel_weergaven')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -58,11 +58,11 @@ export class DashboardService {
       }
 
       // Since property_applications table doesn't exist, return mock data
-      const stats: DashboardStats = {
-        profileViews: tenantProfile?.profile_views || 0,
-        invitations: 0,
-        applications: 0,
-        acceptedApplications: 0
+      const stats: HuurderStats = {
+        profielWeergaven: tenantProfile?.profile_views || 0,
+        uitnodigingen: 0,
+        sollicitaties: 0,
+        geaccepteerdeSollicitaties: 0
       };
 
       logger.info('Huurder stats fetched successfully:', stats);
@@ -83,11 +83,11 @@ export class DashboardService {
 
       // Since properties table doesn't exist, return mock data
       const stats: VerhuurderStats = {
-        totalProperties: 0,
-        activeProperties: 0,
-        totalTenants: 0,
-        pendingApplications: 0,
-        monthlyRevenue: 0
+        totaalAantalPanden: 0,
+        actievePanden: 0,
+        totaalAantalHuurders: 0,
+        openstaandeSollicitaties: 0,
+        maandelijkseInkomsten: 0
       };
 
       logger.info('Verhuurder stats fetched successfully:', stats);
@@ -108,7 +108,7 @@ export class DashboardService {
 
       // Get pending documents count
       const { count: pendingCount, error: pendingError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
 
@@ -119,7 +119,7 @@ export class DashboardService {
       // Get documents reviewed today count
       const today = new Date().toISOString().split('T')[0];
       const { count: reviewedTodayCount, error: todayError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('approved_by', userId)
         .gte('approved_at', `${today}T00:00:00.000Z`)
@@ -131,7 +131,7 @@ export class DashboardService {
 
       // Get total reviewed documents count
       const { count: totalReviewedCount, error: totalError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('approved_by', userId)
         .neq('status', 'pending');
@@ -144,10 +144,10 @@ export class DashboardService {
       const averageReviewTime = 2.5; // hours - would calculate from actual data in production
 
       const stats: BeoordelaarStats = {
-        pendingDocuments: pendingCount || 0,
-        reviewedToday: reviewedTodayCount || 0,
-        totalReviewed: totalReviewedCount || 0,
-        averageReviewTime
+        openstaandeDocumenten: pendingCount || 0,
+        vandaagBeoordeeld: reviewedTodayCount || 0,
+        totaalBeoordeeld: totalReviewedCount || 0,
+        gemiddeldeBeoordelingstijd: averageReviewTime
       };
 
       logger.info('Beoordelaar stats fetched successfully:', stats);
@@ -168,7 +168,7 @@ export class DashboardService {
 
       // Get total users count
       const { count: totalUsersCount, error: usersError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*', { count: 'exact', head: true });
 
       if (usersError) {
@@ -177,7 +177,7 @@ export class DashboardService {
 
       // Get active users count (with active subscriptions)
       const { count: activeUsersCount, error: activeError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*', { count: 'exact', head: true })
         .eq('subscription_status', 'active');
 
@@ -187,8 +187,8 @@ export class DashboardService {
 
       // Calculate total revenue from payments
       const { data: payments, error: paymentsError } = await supabase
-        .from('payment_records')
-        .select('amount')
+        .from('betalingen')
+        .select('bedrag')
         .eq('status', 'completed');
 
       if (paymentsError) {
@@ -196,7 +196,7 @@ export class DashboardService {
       }
 
       const totalRevenue = payments?.reduce((total, payment) => {
-        return total + (Number(payment.amount) || 0);
+        return total + (Number(payment.bedrag) || 0);
       }, 0) || 0;
 
       // System health check (simplified)
@@ -241,7 +241,7 @@ export class DashboardService {
 
         case 'beoordelaar':
           const { data: beoordelaarData, error: beoordelaarError } = await supabase
-            .from('user_documents')
+            .from('documenten')
             .select('id, document_type, status, approved_at')
             .eq('approved_by', userId)
             .order('approved_at', { ascending: false })

@@ -13,8 +13,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 async function queryUserRoles() {
   try {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('*');
+    .from('gebruiker_rollen')
+    .select('*');
     
     if (error) {
        logger.error('Error fetching user roles:', error);

@@ -58,7 +58,7 @@ const DatabaseCleanupAnalysis: React.FC = () => {
     // Focus on tenant_profiles table which we know exists
     try {
       const { count: totalRows } = await supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .select('*', { count: 'exact', head: true });
 
       if (totalRows !== null) {

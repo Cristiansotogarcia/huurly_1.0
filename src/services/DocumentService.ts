@@ -5,24 +5,24 @@ import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/type
 import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
 
 export interface CreateDocumentData {
-  documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference';
-  fileName: string;
-  filePath: string;
-  fileSize: number;
+  documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  bestandsnaam: string;
+  bestandspad: string;
+  bestandsgrootte: number;
   mimeType: string;
 }
 
 export interface UpdateDocumentData {
-  status?: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  approvedBy?: string;
+  status?: 'in_behandeling' | 'goedgekeurd' | 'afgekeurd';
+  afkeuringsreden?: string;
+  goedgekeurdDoor?: string;
 }
 
 export interface DocumentFilters {
-  userId?: string;
-  documentType?: 'identity' | 'payslip' | 'employment_contract' | 'reference';
-  status?: 'pending' | 'approved' | 'rejected';
-  searchTerm?: string;
+  gebruikerId?: string;
+  documentSoort?: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  status?: 'in_behandeling' | 'goedgekeurd' | 'afgekeurd';
+  zoekterm?: string;
 }
 
 export class DocumentService extends BaseService {
@@ -34,8 +34,8 @@ export class DocumentService extends BaseService {
    */
   async uploadDocument(
     file: File,
-    documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'
-  ): Promise<ServiceResponse<Tables<'user_documents'>>> {
+    documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'
+  ): Promise<ServiceResponse<Tables<'documenten'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -47,7 +47,7 @@ export class DocumentService extends BaseService {
 
     try {
       // Map the document types to the storage folder structure
-      const storageDocumentType = this.mapDocumentTypeForStorage(documentType);
+      const storageDocumentType = this.mapDocumentTypeForStorage(documentSoort);
       
       // Generate unique file path
       const timestamp = Date.now();
@@ -75,15 +75,15 @@ export class DocumentService extends BaseService {
 
       // Create document record in database
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .insert({
-          user_id: currentUserId,
-          document_type: this.mapDocumentTypeForDatabase(documentType) as any,
-          file_name: file.name,
-          file_path: filePath,
-          file_size: file.size,
+          gebruiker_id: currentUserId,
+          document_soort: this.mapDocumentTypeForDatabase(documentSoort),
+          bestandsnaam: file.name,
+          bestandspad: filePath,
+          bestandsgrootte: file.size,
           mime_type: file.type,
-          status: 'pending',
+          status: 'in_behandeling',
         } as any)
         .select()
         .single();
@@ -99,7 +99,7 @@ export class DocumentService extends BaseService {
         };
       }
 
-      await this.createAuditLog('CREATE', 'user_documents', data?.id, null, data);
+      await this.createAuditLog('CREATE', 'documenten', data?.id, null, data);
       
       return {
         data,
@@ -119,23 +119,24 @@ export class DocumentService extends BaseService {
   /**
    * Map frontend document types to database document types
    */
-  private mapDocumentTypeForDatabase(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): 'identity' | 'payslip' | 'employment_contract' | 'reference' {
+  private mapDocumentTypeForDatabase(documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'): 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie' {
     // Return the exact type for database storage
-    return documentType;
+    return documentSoort;
   }
+
 
   /**
    * Map frontend document types to storage folder structure
    */
-  private mapDocumentTypeForStorage(documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference'): string {
-    switch (documentType) {
-      case 'identity':
+  private mapDocumentTypeForStorage(documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'): string {
+    switch (documentSoort) {
+      case 'identiteit':
         return 'identity';
-      case 'payslip':
+      case 'loonstrook':
         return 'payslip';
-      case 'employment_contract':
+      case 'arbeidscontract':
         return 'employment_contract';
-      case 'reference':
+      case 'referentie':
         return 'reference';
       default:
         return 'general';
@@ -145,7 +146,7 @@ export class DocumentService extends BaseService {
   /**
    * Get document by ID
    */
-  async getDocument(documentId: string): Promise<ServiceResponse<Tables<'user_documents'>>> {
+  async getDocument(documentId: string): Promise<ServiceResponse<Tables<'documenten'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -157,7 +158,7 @@ export class DocumentService extends BaseService {
 
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
@@ -167,7 +168,7 @@ export class DocumentService extends BaseService {
       }
 
       // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(data.user_id, ['Beoordelaar', 'Beheerder']);
+      const hasPermission = await this.checkUserPermission(data.gebruiker_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
@@ -182,7 +183,7 @@ export class DocumentService extends BaseService {
   async getDocumentsByUser(
     userId: string,
     filters?: DocumentFilters
-  ): Promise<ServiceResponse<Tables<'user_documents'>[]>> {
+  ): Promise<ServiceResponse<Tables<'documenten'>[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -204,14 +205,14 @@ export class DocumentService extends BaseService {
 
     return this.executeQuery(async () => {
       let query = supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
-        .eq('user_id', userId);
+        .eq('gebruiker_id', userId);
 
       // Apply filters
-      if (filters?.documentType) {
-        const storageType = this.mapDocumentTypeForStorage(filters.documentType);
-        query = query.eq('document_type', storageType as any);
+      if (filters?.documentSoort) {
+        const dbType = this.mapDocumentTypeForDatabase(filters.documentSoort);
+        query = query.eq('document_soort', dbType);
       }
 
       if (filters?.status) {
@@ -219,7 +220,7 @@ export class DocumentService extends BaseService {
       }
 
       // Order by creation date (newest first)
-      query = query.order('created_at', { ascending: false });
+      query = query.order('aangemaakt_op', { ascending: false });
 
       const { data, error } = await query;
 
@@ -256,12 +257,12 @@ export class DocumentService extends BaseService {
     return this.executeQuery(async () => {
       // Get the pending documents without profile lookup
       let query = supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
-        .eq('status', 'pending');
+        .eq('status', 'in_behandeling');
 
       // Apply sorting
-      query = this.applySorting(query, sort || { column: 'created_at', ascending: true });
+      query = this.applySorting(query, sort || { column: 'aangemaakt_op', ascending: true });
 
       // Apply pagination
       query = this.applyPagination(query, pagination);
@@ -275,7 +276,7 @@ export class DocumentService extends BaseService {
       // Add default profile info without database lookup
       const documentsWithProfiles = (documents || []).map((doc) => ({
         ...doc,
-        profiles: { first_name: 'Huurder', last_name: `(${doc.user_id.substring(0, 8)})` }
+        profiles: { first_name: 'Huurder', last_name: `(${doc.gebruiker_id.substring(0, 8)})` }
       }));
 
       return { data: documentsWithProfiles, error: null };
@@ -285,7 +286,7 @@ export class DocumentService extends BaseService {
   /**
    * Approve document (reviewers only)
    */
-  async approveDocument(documentId: string): Promise<ServiceResponse<Tables<'user_documents'>>> {
+  async approveDocument(documentId: string): Promise<ServiceResponse<Tables<'documenten'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -308,18 +309,18 @@ export class DocumentService extends BaseService {
     return this.executeQuery(async () => {
       // Get current document data for audit log
       const { data: currentData } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
 
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .update({
-          status: 'approved',
-          approved_by: currentUserId,
-          approved_at: new Date().toISOString(),
-          rejection_reason: null,
+          status: 'goedgekeurd',
+          goedgekeurd_door: currentUserId,
+          goedgekeurd_op: new Date().toISOString(),
+          afkeuringsreden: null,
         })
         .eq('id', documentId)
         .select()
@@ -329,7 +330,7 @@ export class DocumentService extends BaseService {
         throw this.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('APPROVE', 'user_documents', documentId, currentData, data);
+      await this.createAuditLog('APPROVE', 'documenten', documentId, currentData, data);
 
       return { data, error: null };
     });
@@ -341,7 +342,7 @@ export class DocumentService extends BaseService {
   async rejectDocument(
     documentId: string,
     rejectionReason: string
-  ): Promise<ServiceResponse<Tables<'user_documents'>>> {
+  ): Promise<ServiceResponse<Tables<'documenten'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -372,28 +373,28 @@ export class DocumentService extends BaseService {
     return this.executeQuery(async () => {
       // Get current document data for audit log
       const { data: currentData } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
 
       const { data, error } = await supabase
-        .from('user_documents')
-        .update({
-          status: 'rejected',
-          approved_by: currentUserId,
-          approved_at: new Date().toISOString(),
-          rejection_reason: rejectionReason.trim(),
-        })
-        .eq('id', documentId)
-        .select()
-        .single();
+          .from('documenten')
+          .update({
+            status: 'afgekeurd',
+            goedgekeurd_door: currentUserId,
+            goedgekeurd_op: new Date().toISOString(),
+            afkeuringsreden: rejectionReason
+          })
+          .eq('id', documentId)
+          .select()
+          .single();
 
       if (error) {
         throw this.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('REJECT', 'user_documents', documentId, currentData, data);
+      await this.createAuditLog('REJECT', 'documenten', documentId, currentData, data);
 
       return { data, error: null };
     });
@@ -415,7 +416,7 @@ export class DocumentService extends BaseService {
     return this.executeQuery(async () => {
       // Get document data first
       const { data: document } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
@@ -425,14 +426,14 @@ export class DocumentService extends BaseService {
       }
 
       // Check if user can delete this document
-      const hasPermission = await this.checkUserPermission(document.user_id, ['Beoordelaar', 'Beheerder']);
+      const hasPermission = await this.checkUserPermission(document.gebruiker_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
 
       // Delete from database first
       const { error: dbError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .delete()
         .eq('id', documentId);
 
@@ -441,9 +442,9 @@ export class DocumentService extends BaseService {
       }
 
       // Delete file from storage
-      await storageService.deleteFile(document.file_path);
+      await storageService.deleteFile(document.bestandspad);
 
-      await this.createAuditLog('DELETE', 'user_documents', documentId, document);
+      await this.createAuditLog('DELETE', 'documenten', documentId, document);
 
       return { data: true, error: null };
     });
@@ -464,7 +465,7 @@ export class DocumentService extends BaseService {
     try {
       // Get document data
       const { data: document } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
@@ -477,7 +478,7 @@ export class DocumentService extends BaseService {
       }
 
       // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(document.user_id, ['Beoordelaar', 'Beheerder']);
+      const hasPermission = await this.checkUserPermission(document.gebruiker_id, ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         return {
           url: null,
@@ -486,7 +487,7 @@ export class DocumentService extends BaseService {
       }
 
       // Get signed URL for secure access
-      const { url, error } = await storageService.getSignedUrl(document.file_path, 3600); // 1 hour
+      const { url, error } = await storageService.getSignedUrl(document.bestandspad, 3600); // 1 hour
 
       return { url, error };
     } catch (error) {
@@ -523,8 +524,8 @@ export class DocumentService extends BaseService {
     return this.executeQuery(async () => {
       // Get all documents
       const { data: documents, error } = await supabase
-        .from('user_documents')
-        .select('status, document_type, created_at, approved_at');
+        .from('documenten')
+        .select('status, document_soort, aangemaakt_op, goedgekeurd_op');
 
       if (error) {
         throw this.handleDatabaseError(error);
@@ -532,26 +533,26 @@ export class DocumentService extends BaseService {
 
       // Calculate statistics
       const totalDocuments = documents?.length || 0;
-      const pendingDocuments = documents?.filter(d => d.status === 'pending').length || 0;
-      const approvedDocuments = documents?.filter(d => d.status === 'approved').length || 0;
-      const rejectedDocuments = documents?.filter(d => d.status === 'rejected').length || 0;
+      const pendingDocuments = documents?.filter(d => d.status === 'in_behandeling').length || 0;
+      const approvedDocuments = documents?.filter(d => d.status === 'goedgekeurd').length || 0;
+      const rejectedDocuments = documents?.filter(d => d.status === 'afgekeurd').length || 0;
 
       // Calculate average review time for approved documents
       const approvedWithTimes = documents?.filter(d => 
-        d.status === 'approved' && d.approved_at && d.created_at
+        d.status === 'goedgekeurd' && d.goedgekeurd_op && d.aangemaakt_op
       ) || [];
 
       const averageReviewTime = approvedWithTimes.length > 0
         ? approvedWithTimes.reduce((sum, doc) => {
-            const created = new Date(doc.created_at).getTime();
-            const approved = new Date(doc.approved_at!).getTime();
+            const created = new Date(doc.aangemaakt_op).getTime();
+            const approved = new Date(doc.goedgekeurd_op!).getTime();
             return sum + (approved - created);
           }, 0) / approvedWithTimes.length / (1000 * 60 * 60) // Convert to hours
         : 0;
 
       // Documents by type
       const documentsByType = documents?.reduce((acc: any, doc: any) => {
-        acc[doc.document_type] = (acc[doc.document_type] || 0) + 1;
+        acc[doc.document_soort] = (acc[doc.document_soort] || 0) + 1;
         return acc;
       }, {}) || {};
 
@@ -594,15 +595,15 @@ export class DocumentService extends BaseService {
 
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .update({
-          status: 'approved',
-          approved_by: currentUserId,
-          approved_at: new Date().toISOString(),
-          rejection_reason: null,
+          status: 'goedgekeurd',
+          goedgekeurd_door: currentUserId,
+          goedgekeurd_op: new Date().toISOString(),
+          afkeuringsreden: null,
         })
         .in('id', documentIds)
-        .eq('status', 'pending') // Only approve pending documents
+        .eq('status', 'in_behandeling') // Only approve pending documents
         .select('id');
 
       if (error) {
@@ -611,7 +612,7 @@ export class DocumentService extends BaseService {
 
       const approvedCount = data?.length || 0;
 
-      await this.createAuditLog('BULK_APPROVE', 'user_documents', null, null, { 
+      await this.createAuditLog('BULK_APPROVE', 'documenten', null, null, { 
         documentIds, 
         approvedCount 
       });

@@ -7,6 +7,14 @@ import { roleMapper } from './roleMapper';
 import { paymentChecker } from './paymentChecker';
 
 class UserMapper {
+  private async getRole(userId: string) {
+    return supabase
+      .from('gebruiker_rollen')
+      .select('role, subscription_status')
+      .eq('user_id', userId)
+      .single();
+  }
+
   /**
    * Map Supabase user to our User type
    */
@@ -14,31 +22,38 @@ class UserMapper {
     try {
       // Get user role with better error handling
       logger.info('Fetching role for user:', supabaseUser.email);
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role, subscription_status')
-        .eq('user_id', supabaseUser.id)
-        .single();
+      let roleResult = await this.getRole(supabaseUser.id);
 
-      if (roleError) {
-        logger.error('Error fetching user role:', roleError);
-        // If we can't get the role, create a default one
+      if (roleResult.error) {
+        logger.warn('User role not found or error fetching. Creating default role.', {
+          error: roleResult.error,
+          userId: supabaseUser.id,
+        });
         await this.createDefaultRole(supabaseUser.id, supabaseUser.email);
+        // Re-fetch after creating the default role
+        roleResult = await this.getRole(supabaseUser.id);
+
+        if (roleResult.error) {
+          logger.error('FATAL: Could not retrieve user role after creation.', {
+            error: roleResult.error,
+            userId: supabaseUser.id,
+          });
+        }
       }
+
+      const roleData = roleResult.data;
 
       // Get profile data
       const { data: profileData } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
+        .from('gebruikers')
+        .select('naam')
         .eq('id', supabaseUser.id)
         .single();
 
       // Check payment status
       const hasPayment = await paymentChecker.checkPaymentStatus(supabaseUser.id);
 
-      const firstName = profileData?.first_name || supabaseUser.user_metadata?.first_name || '';
-      const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
-      const name = `${firstName} ${lastName}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
+      const name = profileData?.naam || `${supabaseUser.user_metadata?.first_name || ''} ${supabaseUser.user_metadata?.last_name || ''}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
 
       // Map the role with fallback
       const dbRole = roleData?.role || roleMapper.determineRoleFromEmail(supabaseUser.email);
@@ -84,13 +99,13 @@ class UserMapper {
       
       // Use UPSERT to prevent duplicate key violations
       const { error } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .upsert({
           user_id: userId,
           role: dbRole,
           subscription_status: 'inactive',
         }, {
-          onConflict: 'user_id'
+          onConflict: 'user_id, role'
         });
 
       if (error) {

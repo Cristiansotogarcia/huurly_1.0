@@ -41,15 +41,10 @@ export class SearchService {
       // Start building the query
       // Using type assertion since 'properties' table exists in the database but is missing from types
       let dbQuery = supabase
-        .from('properties' as any)
+        .from('verhuurders' as any)
         .select('*, landlord:landlord_id(*)', { count: 'exact' });
       
-      // Apply text search if query is provided
-      if (query && query.trim() !== '') {
-        dbQuery = dbQuery.or(
-          `title.ilike.%${query}%,description.ilike.%${query}%,address.ilike.%${query}%,city.ilike.%${query}%`
-        );
-      }
+      // Text search is not supported for 'verhuurders' table as it lacks searchable text fields.
       
       // Apply filters
       Object.entries(filters).forEach(([key, value]) => {
@@ -119,7 +114,7 @@ export class SearchService {
       
       // Start building the query
       let dbQuery = supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .select('*, user:user_id(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
@@ -197,7 +192,7 @@ export class SearchService {
       
       // Start building the query
       let dbQuery = supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*, user:user_id(*), approved_by_user:approved_by(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
@@ -268,7 +263,7 @@ export class SearchService {
       
       // Start building the query
       let dbQuery = supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*, user:user_id(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
