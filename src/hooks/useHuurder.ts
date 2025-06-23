@@ -114,10 +114,12 @@ export const useHuurder = () => {
         maandinkomen: tenantProfile.income,
         bio: tenantProfile.bio,
         motivatie: tenantProfile.motivation,
-        stad: tenantProfile.city || '',
-        minBudget: tenantProfile.minBudget || 0,
-        maxBudget: tenantProfile.maxBudget || 0,
-        gewensteWoonplaats: tenantProfile.preferredLocation || '',
+        stad: tenantProfile.preferences?.city || '',
+        minBudget: tenantProfile.preferences?.minBudget || 0,
+        maxBudget: tenantProfile.preferences?.maxBudget || 0,
+        slaapkamers: tenantProfile.preferences?.bedrooms || 1,
+        woningtype: tenantProfile.preferences?.propertyType || 'appartement',
+        gewensteWoonplaats: tenantProfile.preferences?.city || '',
       };
       await userService.updateTenantProfile(updateData);
       setIsLookingForPlace(newStatus);
@@ -139,18 +141,20 @@ export const useHuurder = () => {
     try {
       // Map English properties to Dutch database columns with all required fields
       const dutchProfileData = {
-        voornaam: profileData.firstName,
-        achternaam: profileData.lastName,
+        voornaam: profileData.firstName || profileData.first_name,
+        achternaam: profileData.lastName || profileData.last_name,
         telefoon: profileData.phone,
-        geboortedatum: profileData.dateOfBirth,
+        geboortedatum: profileData.dateOfBirth || profileData.date_of_birth,
         beroep: profileData.profession,
-        maandinkomen: profileData.income,
+        maandinkomen: profileData.income || profileData.monthly_income,
         bio: profileData.bio,
         motivatie: profileData.motivation,
-        stad: profileData.city || '',
+        stad: profileData.city || profileData.preferred_city || '',
         minBudget: profileData.minBudget || 0,
         maxBudget: profileData.maxBudget || 0,
-        gewensteWoonplaats: profileData.preferredLocation || '',
+        slaapkamers: profileData.bedrooms || profileData.preferred_bedrooms || 1,
+        woningtype: profileData.propertyType || profileData.preferred_property_type || 'appartement',
+        gewensteWoonplaats: profileData.preferredLocation || profileData.preferred_city || '',
       };
       await userService.updateTenantProfile(dutchProfileData);
       toast({ title: 'Profiel bijgewerkt!', description: 'Je profiel is succesvol bijgewerkt.' });
