@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Table,
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 import { cn } from '@/lib/utils';
+import { LucideIcon } from 'lucide-react';
 
 export interface Column<T> {
   header: string;
@@ -26,7 +28,7 @@ interface StandardTableProps<T> {
   columns: Column<T>[];
   loading?: boolean;
   emptyState?: {
-    icon: React.ElementType;
+    icon: LucideIcon;
     title: string;
     description: string;
     action?: {

@@ -1,3 +1,4 @@
+
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,7 +29,7 @@ export const useBeheerderActions = () => {
 
   // Placeholder for future admin actions
   const handleManageUsers = () => {
-    logger.info('Navigate to user management page');
+    logger.log('Navigate to user management page');
     // navigate('/admin/users');
   };
 

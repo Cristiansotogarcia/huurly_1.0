@@ -1,3 +1,4 @@
+
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,23 +29,23 @@ export const useVerhuurderActions = () => {
 
   // Placeholder for search functionality
   const handleSearch = (filters: any) => {
-    logger.info('Searching with filters:', filters);
+    logger.log('Searching with filters:', filters);
     // Implement search logic here
   };
 
   // Property management functions
   const handleViewProperty = (propertyId: string | number) => {
-    logger.info('Viewing property:', propertyId);
+    logger.log('Viewing property:', propertyId);
     navigate(`/verhuurder/property/${propertyId}`);
   };
 
   const handleAddNewProperty = () => {
-    logger.info('Adding new property');
+    logger.log('Adding new property');
     navigate('/verhuurder/property/new');
   };
 
   const handleDeleteProperty = (propertyId: string | number) => {
-    logger.info('Deleting property:', propertyId);
+    logger.log('Deleting property:', propertyId);
     toast({
       title: 'Pand verwijderd',
       description: 'Het pand is succesvol verwijderd.',
