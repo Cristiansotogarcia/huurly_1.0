@@ -86,7 +86,7 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 
 ## Stripe Setup
 
-This project includes a small Node server for Stripe payment processing.
+Stripe payment processing is handled via Supabase Edge Functions.
 Create a `.env` file in the project root with your keys:
 
 ```env
@@ -97,14 +97,7 @@ SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_KEY=<your-supabase-service-key>
 ```
 
-Start the Stripe server alongside the Vite dev server. The `server` script uses `cross-env`,
-so it works on all platforms:
-
-```sh
-npm run server
-```
-
-Then in a separate terminal run:
+Run the Vite dev server with:
 
 ```sh
 npm run dev
