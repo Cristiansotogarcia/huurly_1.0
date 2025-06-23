@@ -8,20 +8,21 @@ class PaymentChecker {
    */
   async checkPaymentStatus(userId: string): Promise<boolean> {
     try {
-      // Check subscription status from user_roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from('gebruiker_rollen')
-        .select('subscription_status')
-        .eq('user_id', userId)
+      // Check subscription status from abonnementen table instead
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('abonnementen')
+        .select('status')
+        .eq('huurder_id', userId)
+        .eq('status', 'active')
         .single();
 
-      if (roleError) {
-        logger.error('Error checking subscription status:', roleError);
+      if (subscriptionError) {
+        logger.error('Error checking subscription status:', subscriptionError);
         return false;
       }
 
       // Check if subscription is active
-      return roleData?.subscription_status === 'active';
+      return subscriptionData?.status === 'active';
     } catch (error) {
       logger.error('Error checking payment status:', error);
       return false;
