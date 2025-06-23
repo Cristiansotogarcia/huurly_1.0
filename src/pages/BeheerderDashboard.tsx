@@ -32,7 +32,7 @@ const BeheerderDashboard: React.FC<BeheerderDashboardProps> = ({ user }) => {
     },
     {
       title: 'Actieve Panden',
-      value: stats.totalProperties || 0,
+      value: 0, // Temporary placeholder since totalProperties doesn't exist in AdminStats
       icon: Home,
       color: 'green-600',
       loading: dataLoading,
