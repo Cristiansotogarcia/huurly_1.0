@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { PaginationOptions, SortOptions } from '@/lib/database';
 import { storageService } from '@/lib/storage';
@@ -5,7 +6,7 @@ import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/type
 import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
 
 export interface CreateDocumentData {
-  documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
   bestandsnaam: string;
   bestandspad: string;
   bestandsgrootte: number;
@@ -13,15 +14,15 @@ export interface CreateDocumentData {
 }
 
 export interface UpdateDocumentData {
-  status?: 'in_behandeling' | 'goedgekeurd' | 'afgekeurd';
+  status?: 'wachtend' | 'goedgekeurd' | 'afgewezen' | 'in_behandeling';
   afkeuringsreden?: string;
   goedgekeurdDoor?: string;
 }
 
 export interface DocumentFilters {
   gebruikerId?: string;
-  documentSoort?: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
-  status?: 'in_behandeling' | 'goedgekeurd' | 'afgekeurd';
+  documentSoort?: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  status?: 'wachtend' | 'goedgekeurd' | 'afgewezen' | 'in_behandeling';
   zoekterm?: string;
 }
 
@@ -34,7 +35,7 @@ export class DocumentService extends BaseService {
    */
   async uploadDocument(
     file: File,
-    documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'
+    documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie'
   ): Promise<ServiceResponse<Tables<'documenten'>>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
@@ -73,17 +74,15 @@ export class DocumentService extends BaseService {
         };
       }
 
-      // Create document record in database
+      // Create document record in database using correct Dutch column names
       const { data, error } = await supabase
         .from('documenten')
         .insert({
-          gebruiker_id: currentUserId,
-          document_soort: this.mapDocumentTypeForDatabase(documentSoort),
+          huurder_id: currentUserId,
+          type: documentSoort,
           bestandsnaam: file.name,
-          bestandspad: filePath,
-          bestandsgrootte: file.size,
-          mime_type: file.type,
-          status: 'in_behandeling',
+          bestand_url: filePath,
+          status: 'wachtend',
         } as any)
         .select()
         .single();
@@ -117,20 +116,11 @@ export class DocumentService extends BaseService {
   }
 
   /**
-   * Map frontend document types to database document types
-   */
-  private mapDocumentTypeForDatabase(documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'): 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie' {
-    // Return the exact type for database storage
-    return documentSoort;
-  }
-
-
-  /**
    * Map frontend document types to storage folder structure
    */
-  private mapDocumentTypeForStorage(documentSoort: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie'): string {
+  private mapDocumentTypeForStorage(documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie'): string {
     switch (documentSoort) {
-      case 'identiteit':
+      case 'identiteitsbewijs':
         return 'identity';
       case 'loonstrook':
         return 'payslip';
@@ -167,8 +157,8 @@ export class DocumentService extends BaseService {
         return { data: null, error };
       }
 
-      // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(data.gebruiker_id, ['Beoordelaar', 'Beheerder']);
+      // Check if user can access this document using huurder_id instead of gebruiker_id
+      const hasPermission = await this.checkUserPermission(data.huurder_id || '', ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
@@ -207,12 +197,11 @@ export class DocumentService extends BaseService {
       let query = supabase
         .from('documenten')
         .select('*')
-        .eq('gebruiker_id', userId);
+        .eq('huurder_id', userId);
 
-      // Apply filters
+      // Apply filters using correct Dutch column names
       if (filters?.documentSoort) {
-        const dbType = this.mapDocumentTypeForDatabase(filters.documentSoort);
-        query = query.eq('document_soort', dbType);
+        query = query.eq('type', filters.documentSoort);
       }
 
       if (filters?.status) {
@@ -255,11 +244,11 @@ export class DocumentService extends BaseService {
     }
 
     return this.executeQuery(async () => {
-      // Get the pending documents without profile lookup
+      // Get the pending documents using correct Dutch status
       let query = supabase
         .from('documenten')
         .select('*')
-        .eq('status', 'in_behandeling');
+        .eq('status', 'wachtend');
 
       // Apply sorting
       query = this.applySorting(query, sort || { column: 'aangemaakt_op', ascending: true });
@@ -276,7 +265,7 @@ export class DocumentService extends BaseService {
       // Add default profile info without database lookup
       const documentsWithProfiles = (documents || []).map((doc) => ({
         ...doc,
-        profiles: { first_name: 'Huurder', last_name: `(${doc.gebruiker_id.substring(0, 8)})` }
+        profiles: { first_name: 'Huurder', last_name: `(${doc.huurder_id?.substring(0, 8) || 'unknown'})` }
       }));
 
       return { data: documentsWithProfiles, error: null };
@@ -318,9 +307,8 @@ export class DocumentService extends BaseService {
         .from('documenten')
         .update({
           status: 'goedgekeurd',
-          goedgekeurd_door: currentUserId,
-          goedgekeurd_op: new Date().toISOString(),
-          afkeuringsreden: null,
+          beoordelaar_id: currentUserId,
+          beoordeling_notitie: null,
         })
         .eq('id', documentId)
         .select()
@@ -381,10 +369,9 @@ export class DocumentService extends BaseService {
       const { data, error } = await supabase
           .from('documenten')
           .update({
-            status: 'afgekeurd',
-            goedgekeurd_door: currentUserId,
-            goedgekeurd_op: new Date().toISOString(),
-            afkeuringsreden: rejectionReason
+            status: 'afgewezen',
+            beoordelaar_id: currentUserId,
+            beoordeling_notitie: rejectionReason
           })
           .eq('id', documentId)
           .select()
@@ -425,8 +412,8 @@ export class DocumentService extends BaseService {
         throw new Error('Document niet gevonden');
       }
 
-      // Check if user can delete this document
-      const hasPermission = await this.checkUserPermission(document.gebruiker_id, ['Beoordelaar', 'Beheerder']);
+      // Check if user can delete this document using huurder_id
+      const hasPermission = await this.checkUserPermission(document.huurder_id || '', ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         throw new Error('Geen toegang tot dit document');
       }
@@ -441,8 +428,8 @@ export class DocumentService extends BaseService {
         throw this.handleDatabaseError(dbError);
       }
 
-      // Delete file from storage
-      await storageService.deleteFile(document.bestandspad);
+      // Delete file from storage using bestand_url instead of bestandspad
+      await storageService.deleteFile(document.bestand_url);
 
       await this.createAuditLog('DELETE', 'documenten', documentId, document);
 
@@ -477,8 +464,8 @@ export class DocumentService extends BaseService {
         };
       }
 
-      // Check if user can access this document
-      const hasPermission = await this.checkUserPermission(document.gebruiker_id, ['Beoordelaar', 'Beheerder']);
+      // Check if user can access this document using huurder_id
+      const hasPermission = await this.checkUserPermission(document.huurder_id || '', ['Beoordelaar', 'Beheerder']);
       if (!hasPermission) {
         return {
           url: null,
@@ -486,8 +473,8 @@ export class DocumentService extends BaseService {
         };
       }
 
-      // Get signed URL for secure access
-      const { url, error } = await storageService.getSignedUrl(document.bestandspad, 3600); // 1 hour
+      // Get signed URL for secure access using bestand_url
+      const { url, error } = await storageService.getSignedUrl(document.bestand_url, 3600); // 1 hour
 
       return { url, error };
     } catch (error) {
@@ -522,10 +509,10 @@ export class DocumentService extends BaseService {
     }
 
     return this.executeQuery(async () => {
-      // Get all documents
+      // Get all documents using correct Dutch column names
       const { data: documents, error } = await supabase
         .from('documenten')
-        .select('status, document_soort, aangemaakt_op, goedgekeurd_op');
+        .select('status, type, aangemaakt_op');
 
       if (error) {
         throw this.handleDatabaseError(error);
@@ -533,26 +520,26 @@ export class DocumentService extends BaseService {
 
       // Calculate statistics
       const totalDocuments = documents?.length || 0;
-      const pendingDocuments = documents?.filter(d => d.status === 'in_behandeling').length || 0;
+      const pendingDocuments = documents?.filter(d => d.status === 'wachtend').length || 0;
       const approvedDocuments = documents?.filter(d => d.status === 'goedgekeurd').length || 0;
-      const rejectedDocuments = documents?.filter(d => d.status === 'afgekeurd').length || 0;
+      const rejectedDocuments = documents?.filter(d => d.status === 'afgewezen').length || 0;
 
       // Calculate average review time for approved documents
       const approvedWithTimes = documents?.filter(d => 
-        d.status === 'goedgekeurd' && d.goedgekeurd_op && d.aangemaakt_op
+        d.status === 'goedgekeurd' && d.aangemaakt_op
       ) || [];
 
       const averageReviewTime = approvedWithTimes.length > 0
         ? approvedWithTimes.reduce((sum, doc) => {
             const created = new Date(doc.aangemaakt_op).getTime();
-            const approved = new Date(doc.goedgekeurd_op!).getTime();
-            return sum + (approved - created);
+            const now = new Date().getTime();
+            return sum + (now - created);
           }, 0) / approvedWithTimes.length / (1000 * 60 * 60) // Convert to hours
         : 0;
 
       // Documents by type
       const documentsByType = documents?.reduce((acc: any, doc: any) => {
-        acc[doc.document_soort] = (acc[doc.document_soort] || 0) + 1;
+        acc[doc.type] = (acc[doc.type] || 0) + 1;
         return acc;
       }, {}) || {};
 
@@ -598,12 +585,11 @@ export class DocumentService extends BaseService {
         .from('documenten')
         .update({
           status: 'goedgekeurd',
-          goedgekeurd_door: currentUserId,
-          goedgekeurd_op: new Date().toISOString(),
-          afkeuringsreden: null,
+          beoordelaar_id: currentUserId,
+          beoordeling_notitie: null,
         })
         .in('id', documentIds)
-        .eq('status', 'in_behandeling') // Only approve pending documents
+        .eq('status', 'wachtend') // Only approve pending documents
         .select('id');
 
       if (error) {

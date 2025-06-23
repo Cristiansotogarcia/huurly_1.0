@@ -1,56 +1,68 @@
-import { useAuthStore } from '@/store/authStore';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
-import { logger } from '@/utils/logger';
-import { DashboardDataService } from '@/services/DashboardDataService';
+
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { documentService } from '@/services/DocumentService';
+import { dashboardDataService } from '@/services/DashboardDataService';
 
 export const useBeoordelaarActions = () => {
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
+  const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
 
-  const handleLogout = async () => {
+  const approveDocument = async (documentId: string) => {
+    setIsReviewing(true);
     try {
-      await logout();
-      navigate('/login');
-      toast({
-        title: 'Uitgelogd',
-        description: 'U bent succesvol uitgelogd.',
-      });
+      const result = await documentService.approveDocument(documentId);
+      if (result.success) {
+        toast({
+          title: 'Document goedgekeurd',
+          description: 'Het document is succesvol goedgekeurd.',
+        });
+        return true;
+      } else {
+        throw new Error(result.error?.message || 'Onbekende fout');
+      }
     } catch (error) {
-      logger.error('Logout failed:', error);
       toast({
-        title: 'Fout bij uitloggen',
-        description: 'Er is een fout opgetreden. Probeer het opnieuw.',
+        title: 'Fout bij goedkeuren',
+        description: 'Er is een fout opgetreden bij het goedkeuren van het document.',
         variant: 'destructive',
       });
+      return false;
+    } finally {
+      setIsReviewing(false);
     }
   };
 
-  const handleReviewDocument = async (documentId: string, status: 'approved' | 'rejected', remarks?: string) => {
+  const rejectDocument = async (documentId: string, reason: string) => {
+    setIsReviewing(true);
     try {
-      // This service method needs to be created
-      const response = await DashboardDataService.reviewDocument(documentId, status, remarks);
-      if (response.success) {
+      // Map English status to Dutch status for the service call
+      const dutchStatus = 'afgewezen' as const;
+      const result = await dashboardDataService.reviewDocument(documentId, dutchStatus, reason);
+      if (result.success) {
         toast({
-          title: 'Document beoordeeld',
-          description: `Het document is ${status === 'approved' ? 'goedgekeurd' : 'afgekeurd'}.`,
+          title: 'Document afgewezen',
+          description: 'Het document is afgewezen.',
         });
+        return true;
       } else {
-        throw response.error;
+        throw new Error('Fout bij afwijzen document');
       }
     } catch (error) {
-      logger.error('Failed to review document:', error);
       toast({
-        title: 'Fout bij beoordelen',
-        description: 'Er is een fout opgetreden bij het beoordelen van het document.',
+        title: 'Fout bij afwijzen',
+        description: 'Er is een fout opgetreden bij het afwijzen van het document.',
         variant: 'destructive',
       });
+      return false;
+    } finally {
+      setIsReviewing(false);
     }
   };
 
   return {
-    handleLogout,
-    handleReviewDocument,
+    approveDocument,
+    rejectDocument,
+    isReviewing,
   };
 };

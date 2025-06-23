@@ -37,6 +37,7 @@ export const DocumentsSection = ({
       case 'goedgekeurd':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'wachtend':
+      case 'in_behandeling':
         return <Clock className="w-4 h-4 text-yellow-600" />;
       case 'afgewezen':
         return <AlertCircle className="w-4 h-4 text-red-600" />;
@@ -50,6 +51,7 @@ export const DocumentsSection = ({
       case 'goedgekeurd':
         return 'Goedgekeurd';
       case 'wachtend':
+      case 'in_behandeling':
         return 'In behandeling';
       case 'afgewezen':
         return 'Afgewezen';
@@ -98,7 +100,7 @@ export const DocumentsSection = ({
               </div>
               <span className={`px-2 py-1 text-xs rounded-full ${
                 document.status === 'goedgekeurd' ? 'bg-green-100 text-green-800' :
-                document.status === 'wachtend' ? 'bg-yellow-100 text-yellow-800' :
+                document.status === 'wachtend' || document.status === 'in_behandeling' ? 'bg-yellow-100 text-yellow-800' :
                 document.status === 'afgewezen' ? 'bg-red-100 text-red-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
