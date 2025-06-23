@@ -10,7 +10,7 @@ class PaymentChecker {
     try {
       // Check subscription status from user_roles table
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('subscription_status')
         .eq('user_id', userId)
         .single();

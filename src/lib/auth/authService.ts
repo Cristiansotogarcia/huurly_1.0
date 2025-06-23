@@ -33,18 +33,19 @@ export class AuthService {
       if (authData.user) {
         // Use UPSERT to create user profile (prevents duplicates)
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from('gebruikers')
           .upsert({
             id: authData.user.id,
-            first_name: data.firstName,
-            last_name: data.lastName,
+            email: data.email,
+            naam: `${data.firstName} ${data.lastName}`,
+            rol: roleMapper.mapRoleToDatabase(data.role),
           }, {
             onConflict: 'id'
           });
 
         // Use UPSERT to create user role with mapped database role (prevents duplicates)
         const { error: roleError } = await supabase
-          .from('user_roles')
+          .from('gebruiker_rollen')
           .upsert({
             user_id: authData.user.id,
             role: roleMapper.mapRoleToDatabase(data.role),
@@ -53,10 +54,16 @@ export class AuthService {
             onConflict: 'user_id'
           });
 
-        if (profileError || roleError) {
-          logger.error('Profile/Role creation error:', profileError || roleError);
-          const errorMessage = (profileError || roleError)?.message || 'Profile creation failed';
-          const error = new Error(errorMessage) as AuthError;
+        if (profileError) {
+          logger.error('Profile creation error:', profileError);
+          const error = new Error(profileError.message) as AuthError;
+          error.status = 400;
+          return { user: null, error };
+        }
+
+        if (roleError) {
+          logger.error('Role creation error:', roleError);
+          const error = new Error(roleError.message) as AuthError;
           error.status = 400;
           return { user: null, error };
         }
@@ -200,14 +207,12 @@ export class AuthService {
       // Update profile table using UPSERT
       const profileUpdates: any = {};
       if (updates.name) {
-        const [firstName, ...lastNameParts] = updates.name.split(' ');
-        profileUpdates.first_name = firstName;
-        profileUpdates.last_name = lastNameParts.join(' ');
+        profileUpdates.naam = updates.name;
       }
 
       if (Object.keys(profileUpdates).length > 0) {
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from('gebruikers')
           .upsert({
             id: user.id,
             ...profileUpdates

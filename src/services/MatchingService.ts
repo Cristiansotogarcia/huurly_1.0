@@ -6,9 +6,9 @@ export class MatchingService {
     try {
       // Get tenant profile first
       const { data: tenant, error: tenantError } = await supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .select('*')
-        .eq('user_id', tenantId)
+        .eq('gebruiker_id', tenantId)
         .single();
 
       if (tenantError) throw tenantError;
@@ -21,12 +21,12 @@ export class MatchingService {
       // This would be the proper implementation when properties table exists:
       /*
       const { data: properties, error: propertiesError } = await supabase
-        .from('properties')
+        .from('panden')
         .select('*')
-        .gte('rent', tenant.min_budget || 0)
-        .lte('rent', tenant.max_budget || 999999)
-        .eq('city', tenant.preferred_city || '')
-        .gte('bedrooms', tenant.preferred_bedrooms || 1);
+        .gte('huurprijs', tenant.min_budget || 0)
+        .lte('huurprijs', tenant.max_budget || 999999)
+        .eq('stad', tenant.voorkeur_stad || '')
+        .gte('aantal_slaapkamers', tenant.voorkeur_aantal_slaapkamers || 1);
 
       if (propertiesError) throw propertiesError;
 
@@ -47,7 +47,7 @@ export class MatchingService {
       // This would be the proper implementation:
       /*
       const { data: properties, error } = await supabase
-        .from('properties')
+        .from('verhuurders')
         .select('*')
         .limit(10);
 
@@ -64,27 +64,27 @@ export class MatchingService {
     let score = 0;
 
     // Budget match (30% weight)
-    if (property.rent <= tenantProfile.max_budget && property.rent >= tenantProfile.min_budget) {
+    if (property.huurprijs <= tenantProfile.max_budget && property.huurprijs >= tenantProfile.min_budget) {
       score += 30;
     }
 
     // Location match (25% weight)
-    if (property.city === tenantProfile.preferred_city) {
+    if (property.stad === tenantProfile.voorkeur_stad) {
       score += 25;
     }
 
     // Property type match (20% weight)
-    if (property.type === tenantProfile.preferred_property_type) {
+    if (property.type === tenantProfile.voorkeur_woningtype) {
       score += 20;
     }
 
     // Bedroom count match (15% weight)
-    if (property.bedrooms >= tenantProfile.preferred_bedrooms) {
+    if (property.aantal_slaapkamers >= tenantProfile.voorkeur_aantal_slaapkamers) {
       score += 15;
     }
 
     // Furnished preference match (10% weight)
-    if (property.furnished === tenantProfile.furnished_preference) {
+    if (property.gemeubileerd === tenantProfile.voorkeur_gemeubileerd) {
       score += 10;
     }
 
@@ -102,10 +102,10 @@ export class MatchingService {
       const { error } = await supabase
         .from('matches')
         .insert({
-          tenant_id: tenantId,
-          property_id: propertyId,
+          huurder_id: tenantId,
+          pand_id: propertyId,
           match_score: score,
-          created_at: new Date().toISOString()
+          aangemaakt_op: new Date().toISOString()
         });
 
       if (error) throw error;
@@ -128,10 +128,10 @@ export class MatchingService {
         .from('matches')
         .select(`
           *,
-          properties (*)
+          panden (*)
         `)
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false });
+        .eq('huurder_id', tenantId)
+        .order('aangemaakt_op', { ascending: false });
 
       if (error) throw error;
       return data || [];
@@ -145,17 +145,17 @@ export class MatchingService {
   static async updateMatchPreferences(tenantId: string, preferences: any) {
     try {
       const { error } = await supabase
-        .from('tenant_profiles')
+        .from('huurders')
         .update({
-          preferred_city: preferences.city,
-          preferred_property_type: preferences.propertyType,
-          preferred_bedrooms: preferences.bedrooms,
+          voorkeur_stad: preferences.city,
+          voorkeur_woningtype: preferences.propertyType,
+          voorkeur_aantal_slaapkamers: preferences.bedrooms,
           max_budget: preferences.maxBudget,
           min_budget: preferences.minBudget,
-          furnished_preference: preferences.furnished,
-          updated_at: new Date().toISOString()
+          voorkeur_gemeubileerd: preferences.furnished,
+          bijgewerkt_op: new Date().toISOString()
         })
-        .eq('user_id', tenantId);
+        .eq('gebruiker_id', tenantId);
 
       if (error) throw error;
     } catch (error) {
@@ -171,18 +171,18 @@ export class MatchingService {
       console.log('MatchingService: Properties table not available, returning mock property details');
       return {
         id: propertyId,
-        title: 'Mock Property',
-        rent: 1500,
-        city: 'Amsterdam',
-        bedrooms: 2,
-        type: 'apartment',
-        furnished: 'ongemeubileerd'
+        titel: 'Mock Pand',
+        huurprijs: 1500,
+        stad: 'Amsterdam',
+        aantal_slaapkamers: 2,
+        type: 'appartement',
+        gemeubileerd: 'ongemeubileerd'
       };
 
       // This would be the proper implementation:
       /*
       const { data, error } = await supabase
-        .from('properties')
+        .from('verhuurders')
         .select('*')
         .eq('id', propertyId)
         .single();

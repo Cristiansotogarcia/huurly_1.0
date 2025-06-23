@@ -212,7 +212,7 @@ export class StorageService {
     file: File,
     userId: string
   ): Promise<UploadResult> {
-    return this.uploadFile(file, userId, 'profiles');
+    return this.uploadFile(file, userId, 'Profile');
   }
 
   /**

@@ -49,7 +49,7 @@ export class DashboardDataService {
       logger.info('Updating profile visibility for user:', userId, 'to:', isVisible);
 
       const { error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .update({ 
           is_looking_for_place: isVisible,
           updated_at: new Date().toISOString()
@@ -74,7 +74,7 @@ export class DashboardDataService {
       logger.info('Fetching tenant profile for user:', userId);
 
       const { data, error } = await supabase
-        .from('tenant_profile')
+        .from('huurders')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -130,10 +130,10 @@ export class DashboardDataService {
       logger.info('Fetching user documents for user:', userId);
 
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('aangemaakt_op', { ascending: false });
 
       if (error) {
         logger.error('Database error fetching user documents:', error);
@@ -153,7 +153,7 @@ export class DashboardDataService {
       logger.info('Fetching profile for user:', userId);
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('*')
         .eq('id', userId)
         .single();
@@ -176,7 +176,7 @@ export class DashboardDataService {
       logger.info('Fetching properties for landlord:', userId);
 
       const { data, error } = await supabase
-        .from('properties')
+        .from('verhuurders')
         .select('*')
         .eq('landlord_id', userId)
         .order('created_at', { ascending: false });
@@ -219,8 +219,8 @@ export class DashboardDataService {
       logger.info('Fetching document review queue');
 
       const { data, error } = await supabase
-        .from('user_documents')
-        .select('*, profiles(full_name, email)')
+        .from('documenten')
+        .select('*, gebruikers(full_name, email)')
         .eq('status', 'pending')
         .order('created_at', { ascending: true });
 
@@ -242,7 +242,7 @@ export class DashboardDataService {
       logger.info(`Reviewing document ${documentId} with status ${status}`);
 
       const { error } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .update({
           status,
           remarks,
@@ -288,7 +288,7 @@ export class DashboardDataService {
       logger.info('Fetching all users');
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('gebruikers')
         .select('*')
         .order('created_at', { ascending: false });
 

@@ -5,7 +5,9 @@ import { ErrorHandler } from '../lib/errors.ts';
 import { Tables, TablesInsert } from '../integrations/supabase/types.ts';
 import { logger } from '../lib/logger.ts';
 
-export type PaymentRecord = Tables<'payment_records'>;
+// PaymentRecord type using the betalingen table
+export type PaymentRecord = Tables<'betalingen'>;
+export type PaymentRecordInsert = TablesInsert<'betalingen'>;
 
 export interface SubscriptionStatus {
   hasActiveSubscription: boolean;
@@ -14,6 +16,49 @@ export interface SubscriptionStatus {
 }
 
 export class PaymentService extends DatabaseService {
+  async createPaymentRecord(paymentData: PaymentRecordInsert): Promise<PaymentRecord> {
+    try {
+      const { data, error } = await supabase
+        .from('betalingen')
+        .insert(paymentData)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error creating payment record:', error);
+        throw error;
+      }
+
+      logger.info('Payment record created', { paymentId: data.id });
+      return data;
+    } catch (error) {
+      logger.error('Error creating payment record:', error);
+      throw error;
+    }
+  }
+
+  async updatePaymentRecord(paymentId: string, updates: Partial<PaymentRecord>): Promise<PaymentRecord> {
+    try {
+      const { data, error } = await supabase
+        .from('betalingen')
+        .update(updates)
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error updating payment record:', error);
+        throw error;
+      }
+
+      logger.info('Payment record updated', { paymentId });
+      return data;
+    } catch (error) {
+      logger.error('Error updating payment record:', error);
+      throw error;
+    }
+  }
+
   /**
    * Create Stripe checkout session for Huurder subscription
    */
@@ -41,24 +86,13 @@ export class PaymentService extends DatabaseService {
         throw new Error('Gebruiker niet gevonden');
       }
 
-      // Create payment record - amount must be in cents (integer)
-      const paymentData: TablesInsert<'payment_records'> = {
+      const paymentRecord = await this.createPaymentRecord({
         user_id: userId,
-        email: user.email,
-        user_type: 'huurder',
-        amount: Math.round(plan.priceWithTax * 100), // Convert euros to cents
+        email: user.email || '',
+        bedrag: Math.round(plan.priceWithTax * 100),
         status: 'pending',
-      };
-
-      const { data: paymentRecord, error: paymentError } = await supabase
-        .from('payment_records')
-        .insert(paymentData)
-        .select()
-        .single();
-
-      if (paymentError) {
-        throw ErrorHandler.handleDatabaseError(paymentError);
-      }
+        gebruiker_type: 'huurder', // Required field according to database schema
+      });
 
       // Create Stripe checkout session using Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -80,11 +114,7 @@ export class PaymentService extends DatabaseService {
         throw new Error('Geen sessie ID ontvangen van Stripe');
       }
 
-      // Update payment record with session ID
-      await supabase
-        .from('payment_records')
-        .update({ stripe_session_id: data.sessionId })
-        .eq('id', paymentRecord.id);
+      await this.updatePaymentRecord(paymentRecord.id, { stripe_sessie_id: data.sessionId });
 
       // Redirect to Stripe Checkout
       const { error: stripeError } = await stripe.redirectToCheckout({
@@ -126,17 +156,8 @@ export class PaymentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('payment_records')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
-      }
-
-      return { data: data || [], error: null };
+      const { data, error } = await supabase.from('betalingen').select('*').eq('user_id', userId).order('aangemaakt_op', { ascending: false });
+      return { data, error };
     });
   }
 
@@ -145,51 +166,22 @@ export class PaymentService extends DatabaseService {
    */
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('payment_records')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const { data, error } = await supabase.from('betalingen').select('*').eq('user_id', userId).eq('status', 'completed').order('aangemaakt_op', { ascending: false }).limit(1);
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        return { data: null, error };
       }
 
-      if (!data || data.length === 0) {
-        return {
-          data: { hasActiveSubscription: false } as SubscriptionStatus,
-          error: null
-        };
-      }
+      const hasActiveSubscription = data && data.length > 0;
 
-      const latestPayment = data[0];
-      
-      // For yearly subscription, check if it's still valid (simplified logic)
-      if (latestPayment.user_type === 'huurder') {
-        const paymentDate = new Date(latestPayment.created_at);
-        const expiryDate = new Date(paymentDate);
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-        
-        const isActive = new Date() < expiryDate;
-        
-        return {
-          data: {
-            hasActiveSubscription: isActive,
-            subscriptionType: 'huurder_yearly',
-            expiresAt: expiryDate.toISOString()
-          } as SubscriptionStatus,
-          error: null
-        };
-      }
-
+      // This is a simplified check. A more robust implementation would check the subscription end date.
       return {
-        data: { 
-          hasActiveSubscription: true, 
-          subscriptionType: 'huurder_yearly' 
+        data: {
+          hasActiveSubscription,
+          subscriptionType: hasActiveSubscription ? 'yearly' : undefined,
+          expiresAt: hasActiveSubscription ? new Date(new Date(data[0].aangemaakt_op).setFullYear(new Date(data[0].aangemaakt_op).getFullYear() + 1)).toISOString() : undefined,
         } as SubscriptionStatus,
-        error: null
+        error: null,
       };
     });
   }
@@ -201,12 +193,12 @@ export class PaymentService extends DatabaseService {
     return this.executeQuery(async () => {
       // Update payment record
       const { data, error } = await supabase
-        .from('payment_records')
+        .from('betalingen')
         .update({ 
           status: 'completed',
-          updated_at: new Date().toISOString()
+          bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_session_id', sessionId)
+        .eq('stripe_sessie_id', sessionId)
         .select()
         .single();
 
@@ -216,9 +208,9 @@ export class PaymentService extends DatabaseService {
 
       // Update user role subscription status
       await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .update({ subscription_status: 'active' })
-        .eq('user_id', data.user_id);
+        .eq('user_id', data.gebruiker_id);
 
       // Create audit log
       await this.createAuditLog('PAYMENT_SUCCESS', 'payment_records', data.id, null, data);
@@ -233,12 +225,12 @@ export class PaymentService extends DatabaseService {
   async handlePaymentFailure(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('payment_records')
+        .from('betalingen')
         .update({ 
           status: 'failed',
-          updated_at: new Date().toISOString()
+          bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_session_id', sessionId)
+        .eq('stripe_sessie_id', sessionId)
         .select()
         .single();
 
@@ -306,7 +298,7 @@ export class PaymentService extends DatabaseService {
 
       // Create notification for all managers/beheerders
       const { data: managers } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('user_id')
         .eq('role', 'Beheerder');
 

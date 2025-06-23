@@ -31,60 +31,21 @@ export class StatisticsService {
     try {
       // Get total properties count
       const { count: totalProperties } = await supabase
-        .from('properties')
+        .from('verhuurders')
         .select('*', { count: 'exact', head: true });
 
-      // Get active properties count
-      const { count: activeProperties } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Get inactive properties count
-      const { count: inactiveProperties } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .not('status', 'eq', 'active');
-      
-      // Get average rent price
-      const { data: rentData, error: rentError } = await supabase
-        .from('properties')
-        .select('rent_amount')
-        .not('rent_amount', 'is', null);
-      
-      if (rentError) {
-        logger.error('Error fetching rent data:', rentError);
-      }
-      
-      // Calculate average rent
-      // Using type assertion for property.rent_amount since it's not defined in the types
-      const totalRent = rentData?.reduce((sum, property) => sum + (Number((property as any).rent_amount) || 0), 0) || 0;
-      const averageRent = rentData && rentData.length > 0 ? totalRent / rentData.length : 0;
-      
-      // Get occupancy rate
-      const { count: occupiedCount, error: occupiedError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_occupied', true);
-      
-      if (occupiedError) {
-        logger.error('Error fetching occupied property count:', occupiedError);
-      }
-      
-      const occupancyRate = totalProperties ? (occupiedCount || 0) / totalProperties : 0;
-      
-      // Format the statistics
+      // Since there are no columns for active status, rent, or occupancy, we will just return the total count.
       const statistics = {
         totalProperties: formatNumber(totalProperties || 0),
-        activeProperties: formatNumber(activeProperties || 0),
-        activePercentage: formatPercentage(totalProperties ? (activeProperties || 0) / (totalProperties || 0) : 0),
-        averageRent: formatCurrency(averageRent),
-        occupancyRate: formatPercentage(occupancyRate),
+        activeProperties: 'N/A',
+        activePercentage: 'N/A',
+        averageRent: 'N/A',
+        occupancyRate: 'N/A',
         rawData: {
           totalProperties: totalProperties || 0,
-          activeProperties: activeProperties || 0,
-          averageRent,
-          occupancyRate
+          activeProperties: 0,
+          averageRent: 0,
+          occupancyRate: 0
         }
       };
       
@@ -106,7 +67,7 @@ export class StatisticsService {
       
       // Get total users count
       const { count: totalUsers, error: usersError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*', { count: 'exact', head: true });
       
       if (usersError) {
@@ -116,7 +77,7 @@ export class StatisticsService {
       
       // Get users by role
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('role');
       
       if (roleError) {
@@ -132,7 +93,7 @@ export class StatisticsService {
       
       // Get active users (with active subscription)
       const { count: activeUsers, error: activeError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*', { count: 'exact', head: true })
         .eq('subscription_status', 'active');
       
@@ -145,7 +106,7 @@ export class StatisticsService {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const { count: newUsers, error: newError } = await supabase
-        .from('user_roles')
+        .from('gebruiker_rollen')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', thirtyDaysAgo.toISOString());
       
@@ -191,7 +152,7 @@ export class StatisticsService {
       logger.info('Fetching revenue statistics', userId ? `for user: ${userId}` : 'global');
       
       // Base query for payments
-      let query = supabase.from('payment_records');
+      let query = supabase.from('betalingen');
       
       // If userId is provided, filter by user_id
       if (userId) {
@@ -200,7 +161,7 @@ export class StatisticsService {
       
       // Get total revenue
       const { data: payments, error: paymentsError } = await query
-        .select('amount, created_at')
+        .select('bedrag, aangemaakt_op')
         .eq('status', 'completed');
       
       if (paymentsError) {
@@ -209,7 +170,7 @@ export class StatisticsService {
       }
       
       // Calculate total revenue
-      const totalRevenue = payments?.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0) || 0;
+      const totalRevenue = payments?.reduce((sum, payment) => sum + (Number(payment.bedrag) || 0), 0) || 0;
       
       // Group payments by month for the last 12 months
       const now = new Date();
@@ -224,12 +185,12 @@ export class StatisticsService {
       
       // Fill in actual revenue data
       payments?.forEach(payment => {
-        if (payment.created_at) {
-          const date = new Date(payment.created_at);
+        if (payment.aangemaakt_op) {
+          const date = new Date(payment.aangemaakt_op);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           
           if (monthlyRevenue[monthKey] !== undefined) {
-            monthlyRevenue[monthKey] += Number(payment.amount) || 0;
+            monthlyRevenue[monthKey] += Number(payment.bedrag) || 0;
           }
         }
       });
@@ -287,7 +248,7 @@ export class StatisticsService {
       logger.info('Fetching document statistics', userId ? `for user: ${userId}` : 'global');
       
       // Base query for documents
-      let query = supabase.from('user_documents');
+      let query = supabase.from('documenten');
       
       // If userId is provided, filter by approved_by
       if (userId) {
@@ -296,7 +257,7 @@ export class StatisticsService {
       
       // Get total documents count
       const { count: totalDocuments, error: countError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true });
       
       if (countError) {
@@ -306,7 +267,7 @@ export class StatisticsService {
       
       // Get pending documents count
       const { count: pendingDocuments, error: pendingError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
       
@@ -316,7 +277,7 @@ export class StatisticsService {
       
       // Get approved documents count
       const { count: approvedDocuments, error: approvedError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'approved');
       
@@ -326,7 +287,7 @@ export class StatisticsService {
       
       // Get rejected documents count
       const { count: rejectedDocuments, error: rejectedError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'rejected');
       
@@ -336,7 +297,7 @@ export class StatisticsService {
       
       // Get documents by type
       const { data: typeData, error: typeError } = await supabase
-        .from('user_documents')
+        .from('documenten')
         .select('document_type');
       
       if (typeError) {
