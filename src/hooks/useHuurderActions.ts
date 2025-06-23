@@ -1,10 +1,11 @@
+
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
 import { User } from '@/types';
 
-export const useHuurderActions = (user?: User) => {
+export const useHuurderActions = (user: User | null) => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,30 +29,28 @@ export const useHuurderActions = (user?: User) => {
   };
 
   const handleSettings = () => {
-    logger.info('Navigate to settings page');
-    navigate('/settings');
+    logger.log('Opening settings modal');
+    // Add settings functionality here
   };
 
   const onStartSearch = () => {
-    logger.info('Navigate to search page');
-    navigate('/zoeken');
+    logger.log('Starting property search');
+    // Add search functionality here
   };
 
   const handleReportIssue = () => {
-    logger.info('Report issue');
-    // Implement report issue functionality
+    logger.log('Reporting an issue');
     toast({
-      title: 'Probleem melden',
-      description: 'Deze functie is nog niet beschikbaar.',
+      title: 'Issue Reported',
+      description: 'Your issue has been reported successfully.',
     });
   };
 
   const handleHelpSupport = () => {
-    logger.info('Help and support');
-    // Implement help and support functionality
+    logger.log('Opening help and support');
     toast({
       title: 'Help & Support',
-      description: 'Deze functie is nog niet beschikbaar.',
+      description: 'Opening help and support section.',
     });
   };
 

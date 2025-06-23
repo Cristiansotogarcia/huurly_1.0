@@ -11,7 +11,7 @@ interface DocumentsSectionProps {
 }
 
 export const DocumentsSection = ({ 
-  userDocuments, 
+  userDocuments = [], // Default to empty array
   onShowDocumentModal,
   title,
   emptyStateTitle,
@@ -58,6 +58,9 @@ export const DocumentsSection = ({
     }
   };
 
+  // Ensure userDocuments is an array
+  const documents = Array.isArray(userDocuments) ? userDocuments : [];
+
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-6">
@@ -76,7 +79,7 @@ export const DocumentsSection = ({
         </Button>
       </div>
 
-      {userDocuments.length === 0 ? (
+      {documents.length === 0 ? (
         <div className="text-center py-8">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">{emptyStateTitle}</p>
@@ -84,7 +87,7 @@ export const DocumentsSection = ({
         </div>
       ) : (
         <div className="space-y-3">
-          {userDocuments.map((document, index) => (
+          {documents.map((document, index) => (
             <div key={document.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 {getStatusIcon(document.status)}

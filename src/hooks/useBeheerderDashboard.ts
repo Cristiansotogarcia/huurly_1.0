@@ -4,7 +4,12 @@ import { DashboardDataService } from '@/services/DashboardDataService';
 import { AdminStats, User } from '@/types';
 
 export const useBeheerderDashboard = () => {
-  const [stats, setStats] = useState<AdminStats>({ totalUsers: 0, pendingDocuments: 0 });
+  const [stats, setStats] = useState<AdminStats>({ 
+    totalUsers: 0, 
+    pendingDocuments: 0,
+    totalTenants: 0,
+    totalLandlords: 0
+  });
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
