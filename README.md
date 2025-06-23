@@ -59,7 +59,7 @@ The application relies on all environment variables defined in `.env.example`. I
 
 ## Environment Variables
 
-Create a `.env` file in the project root and provide the following keys:
+Copy `.env.example` to `.env` in the project root and provide your own values for the following keys:
 
 ```env
 VITE_SUPABASE_URL=<your-supabase-url>
@@ -70,6 +70,7 @@ STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_KEY=<your-service-key>
 ```
+Do **not** commit your `.env` file to version control.
 
 
 ## How can I deploy this project?
