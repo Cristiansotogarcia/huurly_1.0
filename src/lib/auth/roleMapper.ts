@@ -6,18 +6,18 @@ class RoleMapper {
   /**
    * Map frontend role to database role
    */
-  mapRoleToDatabase(role: UserRole): 'Huurder' | 'Verhuurder' | 'Beheerder' | 'Beoordelaar' {
+  mapRoleToDatabase(role: UserRole): 'huurder' | 'verhuurder' | 'admin' | 'beoordelaar' {
     switch (role) {
       case 'huurder':
-        return 'Huurder';
+        return 'huurder';
       case 'verhuurder':
-        return 'Verhuurder';
+        return 'verhuurder';
       case 'beoordelaar':
-        return 'Beoordelaar';
+        return 'beoordelaar';
       case 'beheerder':
-        return 'Beheerder';
+        return 'admin';
       default:
-        return 'Huurder';
+        return 'huurder';
     }
   }
 
@@ -28,13 +28,13 @@ class RoleMapper {
     logger.info('Mapping database role:', dbRole, 'for email:', email);
     
     switch (dbRole) {
-      case 'Huurder':
+      case 'huurder':
         return 'huurder';
-      case 'Verhuurder':
+      case 'verhuurder':
         return 'verhuurder';
-      case 'Beoordelaar':
+      case 'beoordelaar':
         return 'beoordelaar';
-      case 'Beheerder':
+      case 'admin':
         return 'beheerder';
       default:
         // Fallback logic based on email if role is unclear

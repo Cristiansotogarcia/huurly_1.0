@@ -1,11 +1,21 @@
+
 import pino from 'pino';
 
-const isBrowser = typeof window !== 'undefined';
+const logger = pino({
+  level: 'info',
+  browser: {
+    asObject: true
+  }
+});
 
-/** Shared logger instance that works in both the browser and Node.js. */
-export const logger = isBrowser
-  ? pino({ browser: { asObject: true } })
-  : pino();
+// Enhanced logger with additional methods
+export const enhancedLogger = {
+  log: (...args: any[]) => console.log(...args),
+  error: (...args: any[]) => console.error(...args),
+  warn: (...args: any[]) => console.warn(...args),
+  info: (...args: any[]) => console.info(...args),
+  debug: (...args: any[]) => console.debug(...args),
+};
 
-// Convenience re-exports of common logging methods
-export const { info, error, warn, debug, fatal } = logger;
+export { logger };
+export default enhancedLogger;
