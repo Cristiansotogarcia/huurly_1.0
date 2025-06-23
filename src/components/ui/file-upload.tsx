@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 export interface FileUploadProps {
   onUploadComplete?: (result: any) => void;
   onUploadError?: (error: Error) => void;
-  documentType?: 'identity' | 'payslip';
+  documentType?: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
   maxFiles?: number;
   maxSize?: number;
   acceptedFileTypes?: string[];
@@ -30,7 +30,7 @@ interface UploadingFile {
 export const FileUpload: React.FC<FileUploadProps> = ({
   onUploadComplete,
   onUploadError,
-  documentType = 'identity',
+  documentType = 'identiteit',
   maxFiles = 1,
   maxSize = 10 * 1024 * 1024, // 10MB
   acceptedFileTypes = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],

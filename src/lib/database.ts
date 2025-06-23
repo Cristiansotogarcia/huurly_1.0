@@ -1,3 +1,4 @@
+
 import { supabase } from '../integrations/supabase/client.ts';
 import { PostgrestError } from '@supabase/supabase-js';
 import { logger } from '../lib/logger.ts';
@@ -106,15 +107,15 @@ export class DatabaseService {
       return true;
     }
 
-    // Check role-based permissions if specified
+    // Check role-based permissions using gebruikers table instead
     if (allowedRoles && allowedRoles.length > 0) {
       const { data: roleData } = await supabase
-        .from('gebruiker_rollen')
-        .select('role')
-        .eq('user_id', currentUserId)
+        .from('gebruikers')
+        .select('rol')
+        .eq('id', currentUserId)
         .single();
 
-      if (roleData && allowedRoles.includes(roleData.role)) {
+      if (roleData && allowedRoles.includes(roleData.rol)) {
         return true;
       }
     }

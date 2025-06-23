@@ -5,11 +5,14 @@ import { LoadingState, AccessDeniedState } from '@/components/states';
 import { UserRole } from '@/types';
 
 interface WrappedComponentProps {
-  // Define any props that the wrapped component might need
+  user: any;
 }
 
-export function withAuth<P extends WrappedComponentProps>(WrappedComponent: React.ComponentType<P>, requiredRole: UserRole) {
-  const WithAuthComponent: React.FC<Omit<P, keyof WrappedComponentProps>> = (props) => {
+export function withAuth<P extends WrappedComponentProps>(
+  WrappedComponent: React.ComponentType<P>, 
+  requiredRole: UserRole
+) {
+  const WithAuthComponent: React.FC<Omit<P, 'user'>> = (props) => {
     const { user, isLoading, isAuthenticated } = useAuth();
 
     if (isLoading) {
