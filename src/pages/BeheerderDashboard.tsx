@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DashboardHeader, DashboardContent } from '@/components/dashboard';
 import { LoadingState } from '@/components/states';
@@ -31,7 +32,7 @@ const BeheerderDashboard: React.FC<BeheerderDashboardProps> = ({ user }) => {
     },
     {
       title: 'Actieve Panden',
-      value: stats.activeProperties,
+      value: stats.totalProperties || 0,
       icon: Home,
       color: 'green-600',
       loading: dataLoading,

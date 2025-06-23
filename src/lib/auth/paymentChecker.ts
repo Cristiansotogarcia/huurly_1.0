@@ -8,12 +8,12 @@ class PaymentChecker {
    */
   async checkPaymentStatus(userId: string): Promise<boolean> {
     try {
-      // Check subscription status from abonnementen table instead
+      // Check subscription status from abonnementen table using Dutch field names
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from('abonnementen')
         .select('status')
         .eq('huurder_id', userId)
-        .eq('status', 'active')
+        .eq('status', 'actief')
         .single();
 
       if (subscriptionError) {
@@ -21,8 +21,8 @@ class PaymentChecker {
         return false;
       }
 
-      // Check if subscription is active
-      return subscriptionData?.status === 'active';
+      // Check if subscription is active using Dutch status value
+      return subscriptionData?.status === 'actief';
     } catch (error) {
       logger.error('Error checking payment status:', error);
       return false;
