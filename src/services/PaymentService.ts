@@ -1,3 +1,4 @@
+
 import { supabase } from '../integrations/supabase/client.ts';
 import { getStripe, SUBSCRIPTION_PLANS, formatPrice } from '../lib/stripe.ts';
 import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
@@ -87,12 +88,11 @@ export class PaymentService extends DatabaseService {
       }
 
       const paymentRecord = await this.createPaymentRecord({
-        huurder_id: userId,
+        gebruiker_id: userId,
+        gebruiker_type: 'huurder',
         email: user.email || '',
         bedrag: Math.round(plan.priceWithTax * 100),
         status: 'pending',
-        aangemaakt_op: new Date().toISOString(),
-        bijgewerkt_op: new Date().toISOString(),
       });
 
       // Create Stripe checkout session using Supabase Edge Function
@@ -115,7 +115,7 @@ export class PaymentService extends DatabaseService {
         throw new Error('Geen sessie ID ontvangen van Stripe');
       }
 
-      await this.updatePaymentRecord(paymentRecord.id, { stripe_session_id: data.sessionId });
+      await this.updatePaymentRecord(paymentRecord.id, { stripe_sessie_id: data.sessionId });
 
       // Redirect to Stripe Checkout
       const { error: stripeError } = await stripe.redirectToCheckout({
@@ -157,7 +157,7 @@ export class PaymentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const { data, error } = await supabase.from('betalingen').select('*').eq('huurder_id', userId).order('aangemaakt_op', { ascending: false });
+      const { data, error } = await supabase.from('betalingen').select('*').eq('gebruiker_id', userId).order('bijgewerkt_op', { ascending: false });
       return { data, error };
     });
   }
@@ -167,7 +167,7 @@ export class PaymentService extends DatabaseService {
    */
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
-      const { data, error } = await supabase.from('betalingen').select('*').eq('huurder_id', userId).eq('status', 'completed').order('aangemaakt_op', { ascending: false }).limit(1);
+      const { data, error } = await supabase.from('betalingen').select('*').eq('gebruiker_id', userId).eq('status', 'completed').order('bijgewerkt_op', { ascending: false }).limit(1);
 
       if (error) {
         return { data: null, error };
@@ -180,7 +180,7 @@ export class PaymentService extends DatabaseService {
         data: {
           hasActiveSubscription,
           subscriptionType: hasActiveSubscription ? 'yearly' : undefined,
-          expiresAt: hasActiveSubscription ? new Date(new Date(data[0].aangemaakt_op).setFullYear(new Date(data[0].aangemaakt_op).getFullYear() + 1)).toISOString() : undefined,
+          expiresAt: hasActiveSubscription ? new Date(new Date(data[0].bijgewerkt_op).setFullYear(new Date(data[0].bijgewerkt_op).getFullYear() + 1)).toISOString() : undefined,
         } as SubscriptionStatus,
         error: null,
       };
@@ -199,7 +199,7 @@ export class PaymentService extends DatabaseService {
           status: 'completed',
           bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_session_id', sessionId)
+        .eq('stripe_sessie_id', sessionId)
         .select()
         .single();
 
@@ -225,7 +225,7 @@ export class PaymentService extends DatabaseService {
           status: 'failed',
           bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_session_id', sessionId)
+        .eq('stripe_sessie_id', sessionId)
         .select()
         .single();
 
