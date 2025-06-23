@@ -91,8 +91,8 @@ export const useHuurder = () => {
   }, [loadDashboardData, refreshAuth]);
 
   const getSubscriptionEndDate = useCallback(() => {
-    if (subscription?.eind_datum) {
-      return new Date(subscription.eind_datum).toLocaleDateString('nl-NL');
+    if (subscription?.end_date) {
+      return new Date(subscription.end_date).toLocaleDateString('nl-NL');
     }
     return 'N/A';
   }, [subscription]);
@@ -104,8 +104,17 @@ export const useHuurder = () => {
     setIsUpdatingStatus(true);
 
     try {
-      // Create update data without isLookingForPlace as it doesn't exist in the type
-      const updateData = { ...tenantProfile };
+      // Create update data mapping English properties to Dutch database columns
+      const updateData = {
+        voornaam: tenantProfile.firstName,
+        achternaam: tenantProfile.lastName,
+        telefoon: tenantProfile.phone,
+        geboortedatum: tenantProfile.dateOfBirth,
+        beroep: tenantProfile.profession,
+        inkomen: tenantProfile.income,
+        beschrijving: tenantProfile.bio,
+        motivatie: tenantProfile.motivation,
+      };
       await userService.updateTenantProfile(updateData);
       setIsLookingForPlace(newStatus);
       setTenantProfile({ ...tenantProfile });
@@ -124,7 +133,18 @@ export const useHuurder = () => {
   const handleProfileComplete = async (profileData: any, callback?: () => void) => {
     if (!user?.id) return;
     try {
-      await userService.updateTenantProfile(profileData);
+      // Map English properties to Dutch database columns
+      const dutchProfileData = {
+        voornaam: profileData.firstName,
+        achternaam: profileData.lastName,
+        telefoon: profileData.phone,
+        geboortedatum: profileData.dateOfBirth,
+        beroep: profileData.profession,
+        inkomen: profileData.income,
+        beschrijving: profileData.bio,
+        motivatie: profileData.motivation,
+      };
+      await userService.updateTenantProfile(dutchProfileData);
       toast({ title: 'Profiel bijgewerkt!', description: 'Je profiel is succesvol bijgewerkt.' });
       await refresh();
       if (callback) callback();

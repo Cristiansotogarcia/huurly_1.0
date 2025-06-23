@@ -10,13 +10,13 @@ interface DocumentsSectionProps {
 export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: DocumentsSectionProps) => {
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
-      case 'identity':
+      case 'identiteitsbewijs':
         return 'Identiteitsbewijs';
-      case 'payslip':
+      case 'loonstrook':
         return 'Loonstrook';
-      case 'employment_contract':
+      case 'arbeidscontract':
         return 'Arbeidscontract';
-      case 'reference':
+      case 'referentie':
         return 'Referentie';
       default:
         return 'Document';
@@ -25,11 +25,12 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'goedgekeurd':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'pending':
+      case 'wachtend':
+      case 'in_behandeling':
         return <Clock className="w-4 h-4 text-yellow-600" />;
-      case 'rejected':
+      case 'afgewezen':
         return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
         return <FileText className="w-4 h-4 text-gray-600" />;
@@ -38,11 +39,12 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'goedgekeurd':
         return 'Goedgekeurd';
-      case 'pending':
+      case 'wachtend':
+      case 'in_behandeling':
         return 'In behandeling';
-      case 'rejected':
+      case 'afgewezen':
         return 'Afgewezen';
       default:
         return 'Onbekend';
@@ -80,14 +82,14 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
               <div className="flex items-center space-x-3">
                 {getStatusIcon(document.status)}
                 <div>
-                  <p className="font-medium text-gray-900">{getDocumentTypeLabel(document.document_type)}</p>
-                  <p className="text-sm text-gray-600">{document.file_name}</p>
+                  <p className="font-medium text-gray-900">{getDocumentTypeLabel(document.type)}</p>
+                  <p className="text-sm text-gray-600">{document.bestandsnaam}</p>
                 </div>
               </div>
               <span className={`px-2 py-1 text-xs rounded-full ${
-                document.status === 'approved' ? 'bg-green-100 text-green-800' :
-                document.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                document.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                document.status === 'goedgekeurd' ? 'bg-green-100 text-green-800' :
+                document.status === 'wachtend' || document.status === 'in_behandeling' ? 'bg-yellow-100 text-yellow-800' :
+                document.status === 'afgewezen' ? 'bg-red-100 text-red-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {getStatusLabel(document.status)}
