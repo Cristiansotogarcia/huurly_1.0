@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,7 @@ interface UploadedDocument {
   file: File;
   fileName: string;
   fileSize: number;
-  type: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  type: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
   status: 'ready' | 'uploading' | 'success' | 'error';
   uploadProgress: number;
   uploadedAt: string;
@@ -64,7 +65,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const documentTypes = [
     {
-      type: 'identiteit' as const,
+      type: 'identiteitsbewijs' as const,
       label: 'Identiteitsbewijs',
       description: 'Paspoort, ID-kaart of rijbewijs',
       icon: FileText,
@@ -114,7 +115,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     return { isValid: true };
   };
 
-  const handleFileSelect = async (file: File, documentType: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie') => {
+  const handleFileSelect = async (file: File, documentType: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie') => {
     // Validate file
     const validation = validateFile(file);
     if (!validation.isValid) {
@@ -350,13 +351,13 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                 doc.type === docType.type && doc.status !== 'error'
               );
               const hasExistingDocument = existingDocuments.some(doc => 
-                doc.document_type === docType.type
+                doc.type === docType.type
               );
               const hasUploaded = hasUploadedInSession || hasExistingDocument;
               
               // Get existing document for display
               const existingDoc = existingDocuments.find(doc => 
-                doc.document_type === docType.type
+                doc.type === docType.type
               );
               
               return (
@@ -375,13 +376,13 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                           )}
                           {existingDoc && (
                             <Badge 
-                              variant={existingDoc.status === 'approved' ? 'default' : 
-                                     existingDoc.status === 'rejected' ? 'destructive' : 'secondary'}
+                              variant={existingDoc.status === 'goedgekeurd' ? 'default' : 
+                                     existingDoc.status === 'afgewezen' ? 'destructive' : 'secondary'}
                               className="text-xs"
                             >
-                              {existingDoc.status === 'pending' ? 'In behandeling' :
-                               existingDoc.status === 'approved' ? 'Goedgekeurd' :
-                               existingDoc.status === 'rejected' ? 'Afgewezen' : existingDoc.status}
+                              {existingDoc.status === 'wachtend' ? 'In behandeling' :
+                               existingDoc.status === 'goedgekeurd' ? 'Goedgekeurd' :
+                               existingDoc.status === 'afgewezen' ? 'Afgewezen' : existingDoc.status}
                             </Badge>
                           )}
                         </div>
@@ -390,9 +391,9 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                         {/* Show existing document info */}
                         {existingDoc && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                            <p className="font-medium text-blue-900">{existingDoc.file_name}</p>
+                            <p className="font-medium text-blue-900">{existingDoc.bestandsnaam}</p>
                             <p className="text-blue-700">
-                              Geüpload op {new Date(existingDoc.created_at).toLocaleDateString('nl-NL')}
+                              Geüpload op {new Date(existingDoc.aangemaakt_op).toLocaleDateString('nl-NL')}
                             </p>
                           </div>
                         )}

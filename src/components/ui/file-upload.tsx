@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 export interface FileUploadProps {
   onUploadComplete?: (result: any) => void;
   onUploadError?: (error: Error) => void;
-  documentType?: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  documentType?: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
   maxFiles?: number;
   maxSize?: number;
   acceptedFileTypes?: string[];
@@ -30,7 +31,7 @@ interface UploadingFile {
 export const FileUpload: React.FC<FileUploadProps> = ({
   onUploadComplete,
   onUploadError,
-  documentType = 'identiteit',
+  documentType = 'identiteitsbewijs',
   maxFiles = 1,
   maxSize = 10 * 1024 * 1024, // 10MB
   acceptedFileTypes = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],

@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { documentService } from '@/services/DocumentService';
 import { dashboardDataService } from '@/services/DashboardDataService';
+import { useAuthStore } from '@/store/authStore';
 
 export const useBeoordelaarActions = () => {
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
+  const { logout } = useAuthStore();
 
   const approveDocument = async (documentId: string) => {
     setIsReviewing(true);
@@ -60,9 +62,24 @@ export const useBeoordelaarActions = () => {
     }
   };
 
+  const handleReviewDocument = async (documentId: string, status: 'approved' | 'rejected', notes?: string) => {
+    if (status === 'approved') {
+      return await approveDocument(documentId);
+    } else if (status === 'rejected' && notes) {
+      return await rejectDocument(documentId, notes);
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return {
     approveDocument,
     rejectDocument,
+    handleReviewDocument,
+    handleLogout,
     isReviewing,
   };
 };
