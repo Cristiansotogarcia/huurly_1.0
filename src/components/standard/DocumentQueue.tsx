@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document } from '@/types';
 import {
@@ -39,8 +40,8 @@ const DocumentQueue: React.FC<DocumentQueueProps> = ({ documents, onReview }) =>
               <div className="font-medium">{doc.user?.name}</div>
               <div className="text-sm text-muted-foreground">{doc.user?.email}</div>
             </TableCell>
-            <TableCell>{doc.type}</TableCell>
-            <TableCell>{new Date(doc.uploadedAt).toLocaleDateString()}</TableCell>
+            <TableCell>{doc.document_type || doc.type}</TableCell>
+            <TableCell>{new Date(doc.upload_datum || doc.uploadedAt || doc.created_at).toLocaleDateString()}</TableCell>
             <TableCell>
               <Button variant="outline" size="sm" onClick={() => onReview(doc)}>Review</Button>
             </TableCell>
