@@ -1,6 +1,6 @@
 
-import { supabase } from '../integrations/supabase/client';
-import { DatabaseService } from '../lib/database';
+import { supabase } from '@/integrations/supabase/client';
+import { DatabaseService } from '@/lib/database';
 
 interface ServiceResponse<T> {
   success: boolean;
