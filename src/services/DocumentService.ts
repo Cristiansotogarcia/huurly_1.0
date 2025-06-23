@@ -9,7 +9,7 @@ import { logger } from '../lib/logger.ts';
 export type Document = Tables<'documenten'>;
 export type DocumentInsert = TablesInsert<'documenten'>;
 
-export type DocumentType = 'identiteitsbewijs' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
+export type DocumentType = 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
 
 export interface DocumentUpload {
   file: File;
@@ -54,7 +54,6 @@ export class DocumentService extends DatabaseService {
         type: documentType,
         bestand_url: fileUploadResult.url,
         status: 'wachtend',
-        omschrijving: description,
       };
 
       const { data, error } = await supabase
@@ -120,6 +119,10 @@ export class DocumentService extends DatabaseService {
     });
   }
 
+  async getDocumentsByUser(userId: string): Promise<DatabaseResponse<Document[]>> {
+    return this.getUserDocuments(userId);
+  }
+
   async getPendingDocuments(): Promise<DatabaseResponse<Document[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
@@ -148,6 +151,14 @@ export class DocumentService extends DatabaseService {
 
       return { data, error };
     });
+  }
+
+  async approveDocument(documentId: string): Promise<DatabaseResponse<Document>> {
+    return this.reviewDocument(documentId, 'goedgekeurd');
+  }
+
+  async rejectDocument(documentId: string, reason: string): Promise<DatabaseResponse<Document>> {
+    return this.reviewDocument(documentId, 'afgewezen', reason);
   }
 
   async reviewDocument(

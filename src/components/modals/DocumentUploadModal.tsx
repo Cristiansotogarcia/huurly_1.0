@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
-import { documentService } from "@/services/DocumentService";
+import { documentService, DocumentType } from "@/services/DocumentService";
 import { 
   Upload, 
   FileText, 
@@ -29,7 +28,7 @@ interface UploadedDocument {
   file: File;
   fileName: string;
   fileSize: number;
-  type: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  type: DocumentType;
   status: 'ready' | 'uploading' | 'success' | 'error';
   uploadProgress: number;
   uploadedAt: string;
@@ -54,7 +53,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     if (!user?.id) return;
     
     try {
-      const result = await documentService.getDocumentsByUser(user.id);
+      const result = await documentService.getUserDocuments(user.id);
       if (result.success && result.data) {
         setExistingDocuments(result.data);
       }
@@ -65,28 +64,28 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const documentTypes = [
     {
-      type: 'identiteitsbewijs' as const,
+      type: 'identiteitsbewijs' as DocumentType,
       label: 'Identiteitsbewijs',
       description: 'Paspoort, ID-kaart of rijbewijs',
       icon: FileText,
       required: true,
     },
     {
-      type: 'loonstrook' as const,
+      type: 'loonstrook' as DocumentType,
       label: 'Loonstrook',
       description: 'Laatste 3 maanden loonstroken',
       icon: FileText,
       required: true,
     },
     {
-      type: 'arbeidscontract' as const,
+      type: 'arbeidscontract' as DocumentType,
       label: 'Arbeidscontract',
       description: 'Huidig arbeidscontract',
       icon: FileText,
       required: false,
     },
     {
-      type: 'referentie' as const,
+      type: 'referentie' as DocumentType,
       label: 'Referentie',
       description: 'Referentie van vorige verhuurder',
       icon: FileText,
@@ -115,7 +114,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     return { isValid: true };
   };
 
-  const handleFileSelect = async (file: File, documentType: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie') => {
+  const handleFileSelect = async (file: File, documentType: DocumentType) => {
     // Validate file
     const validation = validateFile(file);
     if (!validation.isValid) {
@@ -244,7 +243,6 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     ));
 
     try {
-      // Use the actual document type - our service now supports all 4 types
       const result = await documentService.uploadDocument(document.file, document.type);
       
       if (result.success && result.data) {
