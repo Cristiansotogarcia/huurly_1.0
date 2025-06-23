@@ -104,16 +104,20 @@ export const useHuurder = () => {
     setIsUpdatingStatus(true);
 
     try {
-      // Create update data mapping English properties to Dutch database columns
+      // Create update data with all required properties for CreateTenantProfileData
       const updateData = {
         voornaam: tenantProfile.firstName,
         achternaam: tenantProfile.lastName,
         telefoon: tenantProfile.phone,
         geboortedatum: tenantProfile.dateOfBirth,
         beroep: tenantProfile.profession,
-        inkomen: tenantProfile.income,
-        beschrijving: tenantProfile.bio,
+        maandinkomen: tenantProfile.income,
+        bio: tenantProfile.bio,
         motivatie: tenantProfile.motivation,
+        stad: tenantProfile.city || '',
+        minBudget: tenantProfile.minBudget || 0,
+        maxBudget: tenantProfile.maxBudget || 0,
+        gewensteWoonplaats: tenantProfile.preferredLocation || '',
       };
       await userService.updateTenantProfile(updateData);
       setIsLookingForPlace(newStatus);
@@ -133,16 +137,20 @@ export const useHuurder = () => {
   const handleProfileComplete = async (profileData: any, callback?: () => void) => {
     if (!user?.id) return;
     try {
-      // Map English properties to Dutch database columns
+      // Map English properties to Dutch database columns with all required fields
       const dutchProfileData = {
         voornaam: profileData.firstName,
         achternaam: profileData.lastName,
         telefoon: profileData.phone,
         geboortedatum: profileData.dateOfBirth,
         beroep: profileData.profession,
-        inkomen: profileData.income,
-        beschrijving: profileData.bio,
+        maandinkomen: profileData.income,
+        bio: profileData.bio,
         motivatie: profileData.motivation,
+        stad: profileData.city || '',
+        minBudget: profileData.minBudget || 0,
+        maxBudget: profileData.maxBudget || 0,
+        gewensteWoonplaats: profileData.preferredLocation || '',
       };
       await userService.updateTenantProfile(dutchProfileData);
       toast({ title: 'Profiel bijgewerkt!', description: 'Je profiel is succesvol bijgewerkt.' });
