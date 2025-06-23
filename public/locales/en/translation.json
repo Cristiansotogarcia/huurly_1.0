@@ -1,0 +1,77 @@
+{
+  "header": {
+    "login": "Login",
+    "register": "Register"
+  },
+  "hero": {
+    "title": "Don't waste time searching, let the home find you!",
+    "description": "Huurly is the fastest solution for renters and landlords. Create your profile and let landlords find you as the perfect candidate.",
+    "createProfile": "Create Profile"
+  },
+  "cta": {
+    "title": "Ready to find your perfect home?",
+    "description": "Join thousands of happy users who found their dream home via Huurly.",
+    "createProfile": "Create Profile"
+  },
+  "features": {
+    "why": "Why choose Huurly?",
+    "tagline": "We make renting easier, faster and safer for everyone.",
+    "verified": "Verified Profiles",
+    "matches": "Fast Matches",
+    "secure": "Secure Transactions"
+  },
+  "cookie": {
+    "message": "Huurly uses cookies to enhance the user experience.",
+    "privacy": "privacy policy",
+    "decline": "Decline",
+    "accept": "Accept"
+  },
+  "login": {
+    "title": "Login",
+    "email": "Email address",
+    "password": "Password",
+    "forgot": "Forgot password?",
+    "submit": "Login",
+    "loading": "Logging in...",
+    "back": "Back to login"
+  },
+  "reset": {
+    "title": "Forgot password",
+    "instruction": "Enter your email and we'll send a reset link.",
+    "send": "Send reset link",
+    "sending": "Sending...",
+    "checkEmail": "Check your email",
+    "emailSent": "We've sent a link to {{email}} to reset your password.",
+    "invalidLink": "Invalid or expired link",
+    "invalidLinkDesc": "The password reset link is invalid or expired. Request a new one.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordChanged": "Password changed",
+    "passwordChangedDesc": "Your password has been updated. You can now log in with the new password.",
+    "change": "Change password",
+    "changing": "Changing password..."
+  },
+  "signup": {
+    "title": "Register - Step {{step}} of 2",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "role": "I am a",
+    "selectRole": "Select a role",
+    "tenant": "Tenant",
+    "landlord": "Landlord",
+    "email": "Email address",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "prev": "Previous",
+    "next": "Next",
+    "register": "Register",
+    "registering": "Registering...",
+    "passwordsNoMatch": "Passwords do not match",
+    "checkPasswords": "Make sure the passwords you entered are the same.",
+    "success": "Registration successful!",
+    "redirect": "You will be redirected to your dashboard.",
+    "failure": "Registration failed",
+    "unknownError": "An unknown error occurred during registration.",
+    "tryAgain": "Something went wrong. Please try again."
+  }
+}
