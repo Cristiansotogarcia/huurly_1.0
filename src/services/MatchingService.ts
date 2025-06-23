@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 
 export class MatchingService {
   static async getMatches(tenantId: string) {
@@ -13,25 +13,19 @@ export class MatchingService {
 
       if (tenantError) throw tenantError;
 
-      // For now, return empty array since properties table doesn't exist
-      // TODO: Implement proper matching when properties table is available
-      console.log('MatchingService: Properties table not available, returning empty matches');
-      return [];
-
-      // This would be the proper implementation when properties table exists:
-      /*
       const { data: properties, error: propertiesError } = await supabase
         .from('panden')
         .select('*')
-        .gte('huurprijs', tenant.min_budget || 0)
-        .lte('huurprijs', tenant.max_budget || 999999)
-        .eq('stad', tenant.voorkeur_stad || '')
-        .gte('aantal_slaapkamers', tenant.voorkeur_aantal_slaapkamers || 1);
+        .gte('huurprijs', tenant.min_budget ?? 0)
+        .lte('huurprijs', tenant.max_budget ?? Number.MAX_SAFE_INTEGER)
+        .eq('stad', tenant.voorkeur_stad ?? '')
+        .eq('type', tenant.voorkeur_woningtype ?? '')
+        .eq('gemeubileerd', tenant.voorkeur_gemeubileerd ?? '')
+        .gte('aantal_slaapkamers', tenant.voorkeur_aantal_slaapkamers ?? 1);
 
       if (propertiesError) throw propertiesError;
 
       return properties || [];
-      */
     } catch (error) {
       console.error('Error getting matches:', error);
       return [];
