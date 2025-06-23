@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 export interface FileUploadProps {
   onUploadComplete?: (result: any) => void;
   onUploadError?: (error: Error) => void;
-  documentType?: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
+  documentType?: 'identiteitsbewijs' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
   maxFiles?: number;
   maxSize?: number;
   acceptedFileTypes?: string[];
