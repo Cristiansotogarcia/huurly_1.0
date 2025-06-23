@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,23 +41,24 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      // Initialize with default values
-      firstName: '',
-      lastName: '',
-      dateOfBirth: undefined,
+      // Initialize with default values using correct field names
+      first_name: '',
+      last_name: '',
+      date_of_birth: undefined,
       phone: '',
       sex: 'zeg_ik_liever_niet',
       nationality: 'Nederlandse',
-      maritalStatus: 'single',
+      marital_status: 'single',
       profession: '',
       employer: '',
-      employmentStatus: 'employed',
-      monthlyIncome: 0,
-      city: '',
-      propertyType: 'apartment',
-      bedrooms: 1,
+      employment_status: 'employed',
+      monthly_income: 0,
+      preferred_city: '',
+      preferred_property_type: 'appartement',
+      preferred_bedrooms: 1,
       maxBudget: 1000,
-      has_pets: false,
+      minBudget: 500,
+      hasPets: false,
       smokes: false,
       bio: '',
       motivation: '',

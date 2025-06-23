@@ -32,13 +32,12 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
     <>
       {/* Profile Creation Modal */}
       <EnhancedProfileCreationModal
-        open={showProfileModal}
-        onOpenChange={setShowProfileModal}
-        onComplete={async (profileData) => {
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onProfileComplete={async (profileData) => {
           await onProfileComplete(profileData);
           setShowProfileModal(false);
         }}
-        editMode={false}
       />
 
       {/* Document Upload Modal */}
