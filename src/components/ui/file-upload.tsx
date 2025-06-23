@@ -1,18 +1,17 @@
-
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { storageService } from '@/lib/storage';
-import { documentService } from '@/services/DocumentService';
+import { documentService, DocumentType } from '@/services/DocumentService';
 import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface FileUploadProps {
   onUploadComplete?: (result: any) => void;
   onUploadError?: (error: Error) => void;
-  documentType?: 'identiteitsbewijs' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
+  documentType?: DocumentType;
   maxFiles?: number;
   maxSize?: number;
   acceptedFileTypes?: string[];

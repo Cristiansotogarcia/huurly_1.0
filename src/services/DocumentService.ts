@@ -1,609 +1,371 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { PaginationOptions, SortOptions } from '@/lib/database';
-import { storageService } from '@/lib/storage';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
+import { supabase } from '../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
+import { ErrorHandler } from '../lib/errors.ts';
+import { storageService } from '../lib/storage.ts';
+import { Tables, TablesInsert } from '../integrations/supabase/types.ts';
+import { logger } from '../lib/logger.ts';
 
-export interface CreateDocumentData {
-  documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
-  bestandsnaam: string;
-  bestandspad: string;
-  bestandsgrootte: number;
-  mimeType: string;
+export type Document = Tables<'documenten'>;
+export type DocumentInsert = TablesInsert<'documenten'>;
+
+// Define document types that match the database enum
+export type DocumentType = 'identiteitsbewijs' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
+
+export interface DocumentUpload {
+  file: File;
+  type: DocumentType;
+  description?: string;
 }
 
-export interface UpdateDocumentData {
-  status?: 'wachtend' | 'goedgekeurd' | 'afgewezen' | 'in_behandeling';
-  afkeuringsreden?: string;
-  goedgekeurdDoor?: string;
+export interface DocumentValidation {
+  isValid: boolean;
+  error?: string;
+  suggestions?: string[];
 }
 
-export interface DocumentFilters {
-  gebruikerId?: string;
-  documentSoort?: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie';
-  status?: 'wachtend' | 'goedgekeurd' | 'afgewezen' | 'in_behandeling';
-  zoekterm?: string;
-}
+export class DocumentService extends DatabaseService {
+  private readonly ALLOWED_FILE_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-export class DocumentService extends BaseService {
-  constructor() {
-    super('DocumentService');
-  }
   /**
-   * Upload and create document record
+   * Upload a document for a user
    */
-  async uploadDocument(
-    file: File,
-    documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie'
-  ): Promise<ServiceResponse<Tables<'documenten'>>> {
+  async uploadDocument(file: File, documentType: DocumentType, description?: string): Promise<DatabaseResponse<Document>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    try {
-      // Map the document types to the storage folder structure
-      const storageDocumentType = this.mapDocumentTypeForStorage(documentSoort);
-      
-      // Generate unique file path
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = file.name.split('.').pop();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `documents/${storageDocumentType}/${currentUserId}/${timestamp}_${randomString}_${sanitizedName}`;
-
-      // Upload file to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        return {
-          data: null,
-          error: new Error('Fout bij uploaden van bestand naar storage'),
-          success: false,
-        };
-      }
-
-      // Create document record in database using correct Dutch column names
-      const { data, error } = await supabase
-        .from('documenten')
-        .insert({
-          huurder_id: currentUserId,
-          type: documentSoort,
-          bestandsnaam: file.name,
-          bestand_url: filePath,
-          status: 'wachtend',
-        } as any)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Database insert error:', error);
-        // If database insert fails, clean up uploaded file
-        await supabase.storage.from('documents').remove([filePath]);
-        return {
-          data: null,
-          error: new Error('Fout bij opslaan van document gegevens'),
-          success: false,
-        };
-      }
-
-      await this.createAuditLog('CREATE', 'documenten', data?.id, null, data);
-      
-      return {
-        data,
-        error: null,
-        success: true
-      };
-    } catch (error) {
-      console.error('Upload error:', error);
-      return {
-        data: null,
-        error: error instanceof Error ? error : new Error('Upload mislukt'),
-        success: false,
-      };
-    }
-  }
-
-  /**
-   * Map frontend document types to storage folder structure
-   */
-  private mapDocumentTypeForStorage(documentSoort: 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie'): string {
-    switch (documentSoort) {
-      case 'identiteitsbewijs':
-        return 'identity';
-      case 'loonstrook':
-        return 'payslip';
-      case 'arbeidscontract':
-        return 'employment_contract';
-      case 'referentie':
-        return 'reference';
-      default:
-        return 'general';
-    }
-  }
-
-  /**
-   * Get document by ID
-   */
-  async getDocument(documentId: string): Promise<ServiceResponse<Tables<'documenten'>>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
         success: false,
       };
     }
 
     return this.executeQuery(async () => {
+      // Validate file
+      const validation = this.validateFile(file);
+      if (!validation.isValid) {
+        throw new Error(validation.error || 'Bestand validatie mislukt');
+      }
+
+      // Upload file to storage
+      const fileUploadResult = await storageService.uploadFile(file, 'documents', currentUserId);
+      if (!fileUploadResult.success || !fileUploadResult.data) {
+        throw new Error('Bestand upload mislukt');
+      }
+
+      // Create document record
+      const documentData: DocumentInsert = {
+        user_id: currentUserId,
+        naam: file.name,
+        type: documentType,
+        bestandsgrootte: file.size,
+        bestandspad: fileUploadResult.data.path,
+        bestandsurl: fileUploadResult.data.url,
+        status: 'wachtend',
+        omschrijving: description,
+      };
+
       const { data, error } = await supabase
         .from('documenten')
-        .select('*')
-        .eq('id', documentId)
+        .insert(documentData)
+        .select()
         .single();
 
       if (error) {
-        return { data: null, error };
+        // Clean up uploaded file if database insert fails
+        await storageService.deleteFile(fileUploadResult.data.path);
+        throw ErrorHandler.handleDatabaseError(error);
       }
 
-      // Check if user can access this document using huurder_id instead of gebruiker_id
-      const hasPermission = await this.checkUserPermission(data.huurder_id || '', ['Beoordelaar', 'Beheerder']);
-      if (!hasPermission) {
-        throw new Error('Geen toegang tot dit document');
-      }
+      // Create audit log
+      await this.createAuditLog('DOCUMENT_UPLOADED', 'documenten', data.id, null, {
+        documentType,
+        fileName: file.name,
+        fileSize: file.size,
+      });
+
+      logger.info('Document uploaded successfully', {
+        documentId: data.id,
+        userId: currentUserId,
+        fileName: file.name,
+        type: documentType,
+      });
 
       return { data, error: null };
     });
   }
 
   /**
-   * Get documents by user
+   * Get documents for a user
    */
-  async getDocumentsByUser(
-    userId: string,
-    filters?: DocumentFilters
-  ): Promise<ServiceResponse<Tables<'documenten'>[]>> {
+  async getUserDocuments(userId?: string): Promise<DatabaseResponse<Document[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
         success: false,
       };
     }
 
-    // Check if user can access these documents
-    const hasPermission = await this.checkUserPermission(userId, ['Beoordelaar', 'Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot deze documenten'),
-        success: false,
-      };
+    // If userId is provided, check if current user has permission to view other user's documents
+    const targetUserId = userId || currentUserId;
+    if (targetUserId !== currentUserId) {
+      const hasPermission = await this.checkUserPermission(targetUserId, ['Beheerder', 'Beoordelaar']);
+      if (!hasPermission) {
+        return {
+          data: null,
+          error: ErrorHandler.normalize('Geen toegang tot documenten van andere gebruikers'),
+          success: false,
+        };
+      }
     }
 
     return this.executeQuery(async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('documenten')
         .select('*')
-        .eq('huurder_id', userId);
-
-      // Apply filters using correct Dutch column names
-      if (filters?.documentSoort) {
-        query = query.eq('type', filters.documentSoort);
-      }
-
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
-
-      // Order by creation date (newest first)
-      query = query.order('aangemaakt_op', { ascending: false });
-
-      const { data, error } = await query;
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false });
 
       return { data, error };
     });
   }
 
   /**
-   * Get pending documents for review (reviewers only)
+   * Get documents pending review
    */
-  async getPendingDocuments(
-    pagination?: PaginationOptions,
-    sort?: SortOptions
-  ): Promise<ServiceResponse<any[]>> {
+  async getPendingDocuments(): Promise<DatabaseResponse<Document[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
         success: false,
       };
     }
 
-    // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
+    // Check if user has reviewer permissions
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder', 'Beoordelaar']);
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot documentbeoordeling'),
+        error: ErrorHandler.normalize('Geen toegang tot documenten voor beoordeling'),
         success: false,
       };
     }
 
     return this.executeQuery(async () => {
-      // Get the pending documents using correct Dutch status
-      let query = supabase
+      const { data, error } = await supabase
         .from('documenten')
         .select('*')
-        .eq('status', 'wachtend');
+        .eq('status', 'wachtend')
+        .order('created_at', { ascending: true });
 
-      // Apply sorting
-      query = this.applySorting(query, sort || { column: 'aangemaakt_op', ascending: true });
-
-      // Apply pagination
-      query = this.applyPagination(query, pagination);
-
-      const { data: documents, error } = await query;
-
-      if (error) {
-        return { data: null, error };
-      }
-
-      // Add default profile info without database lookup
-      const documentsWithProfiles = (documents || []).map((doc) => ({
-        ...doc,
-        profiles: { first_name: 'Huurder', last_name: `(${doc.huurder_id?.substring(0, 8) || 'unknown'})` }
-      }));
-
-      return { data: documentsWithProfiles, error: null };
+      return { data, error };
     });
   }
 
   /**
-   * Approve document (reviewers only)
+   * Review a document (approve/reject)
    */
-  async approveDocument(documentId: string): Promise<ServiceResponse<Tables<'documenten'>>> {
+  async reviewDocument(
+    documentId: string,
+    status: 'goedgekeurd' | 'afgewezen',
+    reviewNotes?: string
+  ): Promise<DatabaseResponse<Document>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
         success: false,
       };
     }
 
-    // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
+    // Check if user has reviewer permissions
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder', 'Beoordelaar']);
     if (!hasPermission) {
       return {
         data: null,
-        error: new Error('Geen toegang tot documentbeoordeling'),
+        error: ErrorHandler.normalize('Geen toegang tot document beoordeling'),
         success: false,
       };
     }
 
     return this.executeQuery(async () => {
-      // Get current document data for audit log
-      const { data: currentData } = await supabase
-        .from('documenten')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
       const { data, error } = await supabase
         .from('documenten')
         .update({
-          status: 'goedgekeurd',
-          beoordelaar_id: currentUserId,
-          beoordeling_notitie: null,
+          status,
+          reviewed_by: currentUserId,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', documentId)
         .select()
         .single();
 
       if (error) {
-        throw this.handleDatabaseError(error);
+        throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('APPROVE', 'documenten', documentId, currentData, data);
+      // Create audit log
+      await this.createAuditLog('DOCUMENT_REVIEWED', 'documenten', documentId, null, {
+        status,
+        reviewerId: currentUserId,
+        reviewNotes,
+      });
+
+      logger.info('Document reviewed', {
+        documentId,
+        status,
+        reviewerId: currentUserId,
+      });
 
       return { data, error: null };
     });
   }
 
   /**
-   * Reject document (reviewers only)
+   * Delete a document
    */
-  async rejectDocument(
-    documentId: string,
-    rejectionReason: string
-  ): Promise<ServiceResponse<Tables<'documenten'>>> {
+  async deleteDocument(documentId: string): Promise<DatabaseResponse<void>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
         data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot documentbeoordeling'),
-        success: false,
-      };
-    }
-
-    if (!rejectionReason.trim()) {
-      return {
-        data: null,
-        error: new Error('Reden voor afwijzing is verplicht'),
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
         success: false,
       };
     }
 
     return this.executeQuery(async () => {
-      // Get current document data for audit log
-      const { data: currentData } = await supabase
+      // Get document details first
+      const { data: document, error: fetchError } = await supabase
         .from('documenten')
         .select('*')
         .eq('id', documentId)
         .single();
 
-      const { data, error } = await supabase
-          .from('documenten')
-          .update({
-            status: 'afgewezen',
-            beoordelaar_id: currentUserId,
-            beoordeling_notitie: rejectionReason
-          })
-          .eq('id', documentId)
-          .select()
-          .single();
-
-      if (error) {
-        throw this.handleDatabaseError(error);
+      if (fetchError) {
+        throw ErrorHandler.handleDatabaseError(fetchError);
       }
 
-      await this.createAuditLog('REJECT', 'documenten', documentId, currentData, data);
-
-      return { data, error: null };
-    });
-  }
-
-  /**
-   * Delete document
-   */
-  async deleteDocument(documentId: string): Promise<ServiceResponse<boolean>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      // Get document data first
-      const { data: document } = await supabase
-        .from('documenten')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
-      if (!document) {
-        throw new Error('Document niet gevonden');
+      // Check if user owns the document or has admin permissions
+      if (document.user_id !== currentUserId) {
+        const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+        if (!hasPermission) {
+          throw new Error('Geen toegang tot dit document');
+        }
       }
 
-      // Check if user can delete this document using huurder_id
-      const hasPermission = await this.checkUserPermission(document.huurder_id || '', ['Beoordelaar', 'Beheerder']);
-      if (!hasPermission) {
-        throw new Error('Geen toegang tot dit document');
+      // Delete from storage
+      if (document.bestandspad) {
+        await storageService.deleteFile(document.bestandspad);
       }
 
-      // Delete from database first
-      const { error: dbError } = await supabase
+      // Delete from database
+      const { error: deleteError } = await supabase
         .from('documenten')
         .delete()
         .eq('id', documentId);
 
-      if (dbError) {
-        throw this.handleDatabaseError(dbError);
+      if (deleteError) {
+        throw ErrorHandler.handleDatabaseError(deleteError);
       }
 
-      // Delete file from storage using bestand_url instead of bestandspad
-      await storageService.deleteFile(document.bestand_url);
+      // Create audit log
+      await this.createAuditLog('DOCUMENT_DELETED', 'documenten', documentId, document, null);
 
-      await this.createAuditLog('DELETE', 'documenten', documentId, document);
-
-      return { data: true, error: null };
-    });
-  }
-
-  /**
-   * Get document download URL
-   */
-  async getDocumentUrl(documentId: string): Promise<{ url: string | null; error: Error | null }> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        url: null,
-        error: new Error('Niet geautoriseerd')
-      };
-    }
-
-    try {
-      // Get document data
-      const { data: document } = await supabase
-        .from('documenten')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
-      if (!document) {
-        return {
-          url: null,
-          error: new Error('Document niet gevonden')
-        };
-      }
-
-      // Check if user can access this document using huurder_id
-      const hasPermission = await this.checkUserPermission(document.huurder_id || '', ['Beoordelaar', 'Beheerder']);
-      if (!hasPermission) {
-        return {
-          url: null,
-          error: new Error('Geen toegang tot dit document')
-        };
-      }
-
-      // Get signed URL for secure access using bestand_url
-      const { url, error } = await storageService.getSignedUrl(document.bestand_url, 3600); // 1 hour
-
-      return { url, error };
-    } catch (error) {
-      return {
-        url: null,
-        error: error as Error
-      };
-    }
-  }
-
-  /**
-   * Get document statistics (reviewers only)
-   */
-  async getDocumentStatistics(): Promise<ServiceResponse<any>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot statistieken'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      // Get all documents using correct Dutch column names
-      const { data: documents, error } = await supabase
-        .from('documenten')
-        .select('status, type, aangemaakt_op');
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      // Calculate statistics
-      const totalDocuments = documents?.length || 0;
-      const pendingDocuments = documents?.filter(d => d.status === 'wachtend').length || 0;
-      const approvedDocuments = documents?.filter(d => d.status === 'goedgekeurd').length || 0;
-      const rejectedDocuments = documents?.filter(d => d.status === 'afgewezen').length || 0;
-
-      // Calculate average review time for approved documents
-      const approvedWithTimes = documents?.filter(d => 
-        d.status === 'goedgekeurd' && d.aangemaakt_op
-      ) || [];
-
-      const averageReviewTime = approvedWithTimes.length > 0
-        ? approvedWithTimes.reduce((sum, doc) => {
-            const created = new Date(doc.aangemaakt_op).getTime();
-            const now = new Date().getTime();
-            return sum + (now - created);
-          }, 0) / approvedWithTimes.length / (1000 * 60 * 60) // Convert to hours
-        : 0;
-
-      // Documents by type
-      const documentsByType = documents?.reduce((acc: any, doc: any) => {
-        acc[doc.type] = (acc[doc.type] || 0) + 1;
-        return acc;
-      }, {}) || {};
-
-      const statistics = {
-        totalDocuments,
-        pendingDocuments,
-        approvedDocuments,
-        rejectedDocuments,
-        averageReviewTimeHours: Math.round(averageReviewTime * 100) / 100,
-        documentsByType,
-        approvalRate: totalDocuments > 0 ? (approvedDocuments / totalDocuments) * 100 : 0,
-      };
-
-      return { data: statistics, error: null };
-    });
-  }
-
-  /**
-   * Bulk approve documents (reviewers only)
-   */
-  async bulkApproveDocuments(documentIds: string[]): Promise<ServiceResponse<number>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: new Error('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    // Check if user is a reviewer
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beoordelaar', 'Beheerder']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: new Error('Geen toegang tot documentbeoordeling'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('documenten')
-        .update({
-          status: 'goedgekeurd',
-          beoordelaar_id: currentUserId,
-          beoordeling_notitie: null,
-        })
-        .in('id', documentIds)
-        .eq('status', 'wachtend') // Only approve pending documents
-        .select('id');
-
-      if (error) {
-        throw this.handleDatabaseError(error);
-      }
-
-      const approvedCount = data?.length || 0;
-
-      await this.createAuditLog('BULK_APPROVE', 'documenten', null, null, { 
-        documentIds, 
-        approvedCount 
+      logger.info('Document deleted', {
+        documentId,
+        userId: currentUserId,
+        fileName: document.naam,
       });
 
-      return { data: approvedCount, error: null };
+      return { data: undefined, error: null };
+    });
+  }
+
+  /**
+   * Validate file before upload
+   */
+  validateFile(file: File): DocumentValidation {
+    const errors: string[] = [];
+    const suggestions: string[] = [];
+
+    // Check file size
+    if (file.size > this.MAX_FILE_SIZE) {
+      errors.push(`Bestand is te groot (${this.formatFileSize(file.size)}). Maximum toegestaan: ${this.formatFileSize(this.MAX_FILE_SIZE)}`);
+      suggestions.push('Compress het bestand of gebruik een kleiner bestand');
+    }
+
+    // Check file type
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !this.ALLOWED_FILE_TYPES.includes(fileExtension)) {
+      errors.push(`Bestandstype .${fileExtension} is niet toegestaan`);
+      suggestions.push(`Toegestane bestandstypes: ${this.ALLOWED_FILE_TYPES.join(', ')}`);
+    }
+
+    // Check file name
+    if (file.name.length > 255) {
+      errors.push('Bestandsnaam is te lang (maximum 255 karakters)');
+      suggestions.push('Hernoem het bestand met een kortere naam');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      error: errors.length > 0 ? errors.join('; ') : undefined,
+      suggestions: suggestions.length > 0 ? suggestions : undefined,
+    };
+  }
+
+  /**
+   * Format file size for display
+   */
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * Get document statistics
+   */
+  async getDocumentStats(): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      // Get counts by status
+      const { data: statusCounts, error: statusError } = await supabase
+        .from('documenten')
+        .select('status')
+        .eq('user_id', currentUserId);
+
+      if (statusError) {
+        throw ErrorHandler.handleDatabaseError(statusError);
+      }
+
+      const stats = {
+        total: statusCounts.length,
+        pending: statusCounts.filter(d => d.status === 'wachtend').length,
+        approved: statusCounts.filter(d => d.status === 'goedgekeurd').length,
+        rejected: statusCounts.filter(d => d.status === 'afgewezen').length,
+      };
+
+      return { data: stats, error: null };
     });
   }
 }
