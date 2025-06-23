@@ -4,7 +4,6 @@ import { User } from '@/types';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 import { roleMapper } from './roleMapper';
-import { paymentChecker } from './paymentChecker';
 
 class UserMapper {
   /**
@@ -15,12 +14,12 @@ class UserMapper {
       // Get profile data
       const { data: profileData } = await supabase
         .from('gebruikers')
-        .select('naam, rol')
+        .select('naam, rol, abonnementen(status)')
         .eq('id', supabaseUser.id)
         .single();
 
-      // Check payment status
-      const hasPayment = await paymentChecker.checkPaymentStatus(supabaseUser.id);
+      // Determine payment status from abonnementen join
+      const hasPayment = profileData?.abonnementen?.status === 'actief';
 
       const name = profileData?.naam || `${supabaseUser.user_metadata?.first_name || ''} ${supabaseUser.user_metadata?.last_name || ''}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
 
