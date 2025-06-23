@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register.js';
 import { strict as assert } from 'node:assert';
 import { paymentService } from '../src/services/PaymentService.ts';
 
@@ -14,3 +15,6 @@ try {
   console.error(err);
   process.exit(1);
 }
+
+// Run matching service tests after payment service tests
+await import('./matchingService.test.ts');
