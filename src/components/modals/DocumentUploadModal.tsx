@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +28,7 @@ interface UploadedDocument {
   file: File;
   fileName: string;
   fileSize: number;
-  type: 'identity' | 'payslip' | 'employment_contract' | 'reference';
+  type: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie';
   status: 'ready' | 'uploading' | 'success' | 'error';
   uploadProgress: number;
   uploadedAt: string;
@@ -65,28 +64,28 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const documentTypes = [
     {
-      type: 'identity' as const,
+      type: 'identiteit' as const,
       label: 'Identiteitsbewijs',
       description: 'Paspoort, ID-kaart of rijbewijs',
       icon: FileText,
       required: true,
     },
     {
-      type: 'payslip' as const,
+      type: 'loonstrook' as const,
       label: 'Loonstrook',
       description: 'Laatste 3 maanden loonstroken',
       icon: FileText,
       required: true,
     },
     {
-      type: 'employment_contract' as const,
+      type: 'arbeidscontract' as const,
       label: 'Arbeidscontract',
       description: 'Huidig arbeidscontract',
       icon: FileText,
       required: false,
     },
     {
-      type: 'reference' as const,
+      type: 'referentie' as const,
       label: 'Referentie',
       description: 'Referentie van vorige verhuurder',
       icon: FileText,
@@ -115,7 +114,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     return { isValid: true };
   };
 
-  const handleFileSelect = async (file: File, documentType: 'identity' | 'payslip' | 'employment_contract' | 'reference') => {
+  const handleFileSelect = async (file: File, documentType: 'identiteit' | 'loonstrook' | 'arbeidscontract' | 'referentie') => {
     // Validate file
     const validation = validateFile(file);
     if (!validation.isValid) {

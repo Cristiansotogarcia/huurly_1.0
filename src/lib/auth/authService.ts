@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
@@ -43,27 +44,9 @@ export class AuthService {
             onConflict: 'id'
           });
 
-        // Use UPSERT to create user role with mapped database role (prevents duplicates)
-        const { error: roleError } = await supabase
-          .from('gebruiker_rollen')
-          .upsert({
-            user_id: authData.user.id,
-            role: roleMapper.mapRoleToDatabase(data.role),
-            subscription_status: 'inactive',
-          }, {
-            onConflict: 'user_id'
-          });
-
         if (profileError) {
           logger.error('Profile creation error:', profileError);
           const error = new Error(profileError.message) as AuthError;
-          error.status = 400;
-          return { user: null, error };
-        }
-
-        if (roleError) {
-          logger.error('Role creation error:', roleError);
-          const error = new Error(roleError.message) as AuthError;
           error.status = 400;
           return { user: null, error };
         }

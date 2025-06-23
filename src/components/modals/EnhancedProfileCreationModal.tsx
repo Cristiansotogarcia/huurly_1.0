@@ -51,7 +51,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       marital_status: 'single',
       profession: '',
       employer: '',
-      employment_status: 'employed',
+      employment_status: 'full-time',
       monthly_income: 0,
       preferred_city: '',
       preferred_property_type: 'appartement',
