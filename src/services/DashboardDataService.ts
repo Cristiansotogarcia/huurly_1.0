@@ -51,8 +51,7 @@ export class DashboardDataService {
       const { error } = await supabase
         .from('gebruikers')
         .update({ 
-          is_looking_for_place: isVisible,
-          updated_at: new Date().toISOString()
+          bijgewerkt_op: new Date().toISOString()
         })
         .eq('id', userId);
 
@@ -76,7 +75,7 @@ export class DashboardDataService {
       const { data, error } = await supabase
         .from('huurders')
         .select('*')
-        .eq('user_id', userId)
+        .eq('huurder_id', userId)
         .single();
 
       if (error) {
@@ -102,9 +101,9 @@ export class DashboardDataService {
       logger.info('Fetching subscription for user:', userId);
 
       const { data, error } = await supabase
-        .from('subscriptions')
+        .from('abonnementen')
         .select('*')
-        .eq('user_id', userId)
+        .eq('huurder_id', userId)
         .single();
 
       if (error) {
@@ -132,7 +131,7 @@ export class DashboardDataService {
       const { data, error } = await supabase
         .from('documenten')
         .select('*')
-        .eq('user_id', userId)
+        .eq('huurder_id', userId)
         .order('aangemaakt_op', { ascending: false });
 
       if (error) {
@@ -178,8 +177,8 @@ export class DashboardDataService {
       const { data, error } = await supabase
         .from('verhuurders')
         .select('*')
-        .eq('landlord_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('verhuurder_id', userId)
+        .order('aangemaakt_op', { ascending: false });
 
       if (error) {
         logger.error('Database error fetching landlord properties:', error);
@@ -220,9 +219,9 @@ export class DashboardDataService {
 
       const { data, error } = await supabase
         .from('documenten')
-        .select('*, gebruikers(full_name, email)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true });
+        .select('*, gebruikers(naam, email)')
+        .eq('status', 'wachtend')
+        .order('aangemaakt_op', { ascending: true });
 
       if (error) {
         logger.error('Database error fetching review queue:', error);
@@ -237,7 +236,7 @@ export class DashboardDataService {
     }
   }
 
-  static async reviewDocument(documentId: string, status: 'approved' | 'rejected', remarks?: string): Promise<{ success: boolean; error?: Error }> {
+  static async reviewDocument(documentId: string, status: 'goedgekeurd' | 'afgewezen', remarks?: string): Promise<{ success: boolean; error?: Error }> {
     try {
       logger.info(`Reviewing document ${documentId} with status ${status}`);
 
@@ -245,8 +244,8 @@ export class DashboardDataService {
         .from('documenten')
         .update({
           status,
-          remarks,
-          reviewed_at: new Date().toISOString(),
+          beoordeling_notitie: remarks,
+          bijgewerkt_op: new Date().toISOString(),
         })
         .eq('id', documentId);
 
@@ -290,7 +289,7 @@ export class DashboardDataService {
       const { data, error } = await supabase
         .from('gebruikers')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('aangemaakt_op', { ascending: false });
 
       if (error) {
         logger.error('Database error fetching all users:', error);

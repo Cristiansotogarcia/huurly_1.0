@@ -37,34 +37,34 @@ export const useHuurder = () => {
         userService.getProfilePictureUrl(user.id),
       ]);
 
-      // Handle stats response
-      if (statsResponse && typeof statsResponse === 'object' && 'data' in statsResponse) {
-        setStats(statsResponse.data || { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+      // Handle stats response - extract data properly
+      if (statsResponse && statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
       } else {
-        setStats(statsResponse || { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+        setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
       }
 
       // Handle documents response - ensure it's always an array
-      if (docsResponse && typeof docsResponse === 'object' && 'data' in docsResponse) {
+      if (docsResponse && docsResponse.success && docsResponse.data) {
         setUserDocuments(Array.isArray(docsResponse.data) ? docsResponse.data : []);
       } else {
-        setUserDocuments(Array.isArray(docsResponse) ? docsResponse : []);
+        setUserDocuments([]);
       }
 
-      // Handle profile response
-      if (profileResponse && typeof profileResponse === 'object' && 'data' in profileResponse) {
-        setTenantProfile(profileResponse.data || null);
+      // Handle profile response - extract data properly
+      if (profileResponse && profileResponse.success && profileResponse.data) {
+        setTenantProfile(profileResponse.data);
         setHasProfile(!!profileResponse.data);
       } else {
-        setTenantProfile(profileResponse || null);
-        setHasProfile(!!profileResponse);
+        setTenantProfile(null);
+        setHasProfile(false);
       }
 
-      // Handle subscription response
-      if (subResponse && typeof subResponse === 'object' && 'data' in subResponse) {
-        setSubscription(subResponse.data || null);
+      // Handle subscription response - extract data properly
+      if (subResponse && subResponse.success && subResponse.data) {
+        setSubscription(subResponse.data);
       } else {
-        setSubscription(subResponse || null);
+        setSubscription(null);
       }
 
       // Handle profile picture URL
@@ -91,8 +91,8 @@ export const useHuurder = () => {
   }, [loadDashboardData, refreshAuth]);
 
   const getSubscriptionEndDate = useCallback(() => {
-    if (subscription?.current_period_end) {
-      return new Date(subscription.current_period_end * 1000).toLocaleDateString('nl-NL');
+    if (subscription?.eind_datum) {
+      return new Date(subscription.eind_datum).toLocaleDateString('nl-NL');
     }
     return 'N/A';
   }, [subscription]);

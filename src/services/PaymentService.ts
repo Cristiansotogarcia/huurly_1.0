@@ -87,11 +87,12 @@ export class PaymentService extends DatabaseService {
       }
 
       const paymentRecord = await this.createPaymentRecord({
-        user_id: userId,
+        huurder_id: userId,
         email: user.email || '',
         bedrag: Math.round(plan.priceWithTax * 100),
         status: 'pending',
-        gebruiker_type: 'huurder', // Required field according to database schema
+        aangemaakt_op: new Date().toISOString(),
+        bijgewerkt_op: new Date().toISOString(),
       });
 
       // Create Stripe checkout session using Supabase Edge Function
@@ -114,7 +115,7 @@ export class PaymentService extends DatabaseService {
         throw new Error('Geen sessie ID ontvangen van Stripe');
       }
 
-      await this.updatePaymentRecord(paymentRecord.id, { stripe_sessie_id: data.sessionId });
+      await this.updatePaymentRecord(paymentRecord.id, { stripe_session_id: data.sessionId });
 
       // Redirect to Stripe Checkout
       const { error: stripeError } = await stripe.redirectToCheckout({
@@ -156,7 +157,7 @@ export class PaymentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const { data, error } = await supabase.from('betalingen').select('*').eq('user_id', userId).order('aangemaakt_op', { ascending: false });
+      const { data, error } = await supabase.from('betalingen').select('*').eq('huurder_id', userId).order('aangemaakt_op', { ascending: false });
       return { data, error };
     });
   }
@@ -166,7 +167,7 @@ export class PaymentService extends DatabaseService {
    */
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
-      const { data, error } = await supabase.from('betalingen').select('*').eq('user_id', userId).eq('status', 'completed').order('aangemaakt_op', { ascending: false }).limit(1);
+      const { data, error } = await supabase.from('betalingen').select('*').eq('huurder_id', userId).eq('status', 'completed').order('aangemaakt_op', { ascending: false }).limit(1);
 
       if (error) {
         return { data: null, error };
@@ -198,7 +199,7 @@ export class PaymentService extends DatabaseService {
           status: 'completed',
           bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_sessie_id', sessionId)
+        .eq('stripe_session_id', sessionId)
         .select()
         .single();
 
@@ -206,14 +207,8 @@ export class PaymentService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      // Update user role subscription status
-      await supabase
-        .from('gebruiker_rollen')
-        .update({ subscription_status: 'active' })
-        .eq('user_id', data.gebruiker_id);
-
       // Create audit log
-      await this.createAuditLog('PAYMENT_SUCCESS', 'payment_records', data.id, null, data);
+      await this.createAuditLog('PAYMENT_SUCCESS', 'betalingen', data.id, null, data);
 
       return { data, error: null };
     });
@@ -230,7 +225,7 @@ export class PaymentService extends DatabaseService {
           status: 'failed',
           bijgewerkt_op: new Date().toISOString()
         })
-        .eq('stripe_sessie_id', sessionId)
+        .eq('stripe_session_id', sessionId)
         .select()
         .single();
 
@@ -239,7 +234,7 @@ export class PaymentService extends DatabaseService {
       }
 
       // Create audit log
-      await this.createAuditLog('PAYMENT_FAILED', 'payment_records', data.id, null, data);
+      await this.createAuditLog('PAYMENT_FAILED', 'betalingen', data.id, null, data);
 
       return { data, error: null };
     });
@@ -290,30 +285,11 @@ export class PaymentService extends DatabaseService {
 
     return this.executeQuery(async () => {
       // Log the approval request for now since approval_requests table doesn't exist
-       logger.info('Verhuurder approval request:', {
+      logger.info('Verhuurder approval request:', {
         user_id: userId,
         motivation: motivation,
         timestamp: new Date().toISOString()
       });
-
-      // Create notification for all managers/beheerders
-      const { data: managers } = await supabase
-        .from('gebruiker_rollen')
-        .select('user_id')
-        .eq('role', 'Beheerder');
-
-      if (managers) {
-        const notifications = managers.map(manager => ({
-          user_id: manager.user_id,
-          type: 'system_announcement',
-          title: 'Nieuwe verhuurder goedkeuring',
-          message: 'Een nieuwe verhuurder vraagt om account activatie.',
-          read: false,
-          created_at: new Date().toISOString()
-        }));
-
-        await supabase.from('notifications').insert(notifications);
-      }
 
       const requestData = {
         user_id: userId,
