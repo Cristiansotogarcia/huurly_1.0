@@ -124,3 +124,14 @@ SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
 Place these variables in a `.env` file or export them in your shell so that
 `update-db.ts` (uses `SUPABASE_SERVICE_KEY`) and `query-roles.ts` (uses
 `SUPABASE_PUBLISHABLE_KEY`) can authenticate properly.
+
+## Internationalization
+
+Translations are loaded from `public/locales/<language>/translation.json`. Dutch
+(`nl`) is the default language and English (`en`) is provided as an example.
+
+To add a new language:
+
+1. Create a folder `public/locales/<lang>` where `<lang>` is the language code.
+2. Copy `translation.json` from another locale and translate the values.
+3. Restart the development server so i18next can load the new files.
