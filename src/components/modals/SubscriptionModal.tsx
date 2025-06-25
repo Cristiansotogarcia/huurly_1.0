@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe } from '@stripe/react-stripe-js';
@@ -6,7 +7,8 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Use the actual Stripe publishable key
+const stripePromise = loadStripe('pk_test_51QhoLsGadpjzVmLhhpGJU6deBhJSSjz8CQBKO5QYKPhzSdK5TnPsNrYFfOVLGGz1z4PaUSGnVPvBEUZMnM4QGVPR00BSDm83Gc');
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -32,7 +34,7 @@ const CheckoutForm = ({ onClose }: { onSuccess: () => void; onClose: () => void;
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
-          priceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
+          priceId: 'price_1RXr0rGadpjzVmLhApRe12j2',
           successUrl: `${window.location.origin}/dashboard?payment_success=true`,
           cancelUrl: `${window.location.origin}/dashboard?payment_canceled=true`,
         },

@@ -100,40 +100,40 @@ export type Database = {
       }
       betalingen: {
         Row: {
-          bedrag: number
           aangemaakt_op: string | null
+          bedrag: number
+          bijgewerkt_op: string | null
           email: string
+          gebruiker_id: string
+          gebruiker_type: string
           id: string
           status: string
           stripe_betalingsintentie_id: string | null
           stripe_sessie_id: string | null
-          bijgewerkt_op: string | null
-          gebruiker_id: string
-          gebruiker_type: string
         }
         Insert: {
-          bedrag: number
           aangemaakt_op?: string | null
-          email: string
-          id?: string
-          status?: string
-          stripe_betalingsintentie_id?: string | null
-          stripe_sessie_id?: string | null
+          bedrag: number
           bijgewerkt_op?: string | null
+          email: string
           gebruiker_id: string
           gebruiker_type: string
-        }
-        Update: {
-          bedrag?: number
-          aangemaakt_op?: string | null
-          email?: string
           id?: string
           status?: string
           stripe_betalingsintentie_id?: string | null
           stripe_sessie_id?: string | null
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          bedrag?: number
           bijgewerkt_op?: string | null
+          email?: string
           gebruiker_id?: string
           gebruiker_type?: string
+          id?: string
+          status?: string
+          stripe_betalingsintentie_id?: string | null
+          stripe_sessie_id?: string | null
         }
         Relationships: []
       }
@@ -241,6 +241,24 @@ export type Database = {
           },
         ]
       }
+      gebruiker_rollen: {
+        Row: {
+          role: string
+          subscription_status: string | null
+          user_id: string
+        }
+        Insert: {
+          role: string
+          subscription_status?: string | null
+          user_id: string
+        }
+        Update: {
+          role?: string
+          subscription_status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gebruikers: {
         Row: {
           aangemaakt_op: string
@@ -281,11 +299,18 @@ export type Database = {
           abonnement_start: string | null
           abonnement_verloopt: string | null
           beroep: string | null
+          beschikbaarheid_flexibel: boolean | null
           beschrijving: string | null
           bijgewerkt_op: string
+          borgsteller_beschikbaar: boolean | null
+          borgsteller_inkomen: number | null
+          borgsteller_naam: string | null
+          borgsteller_relatie: string | null
+          borgsteller_telefoon: string | null
           huisdieren: boolean | null
           id: string
           inkomen: number | null
+          inkomensbewijs_beschikbaar: boolean | null
           kinderen: number | null
           leeftijd: number | null
           locatie_voorkeur: string[] | null
@@ -293,8 +318,11 @@ export type Database = {
           max_kamers: number | null
           min_kamers: number | null
           partner: boolean | null
+          profiel_foto_url: string | null
           profielfoto_url: string | null
           roken: boolean | null
+          voorkeur_verhuisdatum: string | null
+          vroegste_verhuisdatum: string | null
           woningvoorkeur: Json | null
         }
         Insert: {
@@ -303,11 +331,18 @@ export type Database = {
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
           beroep?: string | null
+          beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
           bijgewerkt_op?: string
+          borgsteller_beschikbaar?: boolean | null
+          borgsteller_inkomen?: number | null
+          borgsteller_naam?: string | null
+          borgsteller_relatie?: string | null
+          borgsteller_telefoon?: string | null
           huisdieren?: boolean | null
           id: string
           inkomen?: number | null
+          inkomensbewijs_beschikbaar?: boolean | null
           kinderen?: number | null
           leeftijd?: number | null
           locatie_voorkeur?: string[] | null
@@ -315,8 +350,11 @@ export type Database = {
           max_kamers?: number | null
           min_kamers?: number | null
           partner?: boolean | null
+          profiel_foto_url?: string | null
           profielfoto_url?: string | null
           roken?: boolean | null
+          voorkeur_verhuisdatum?: string | null
+          vroegste_verhuisdatum?: string | null
           woningvoorkeur?: Json | null
         }
         Update: {
@@ -325,11 +363,18 @@ export type Database = {
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
           beroep?: string | null
+          beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
           bijgewerkt_op?: string
+          borgsteller_beschikbaar?: boolean | null
+          borgsteller_inkomen?: number | null
+          borgsteller_naam?: string | null
+          borgsteller_relatie?: string | null
+          borgsteller_telefoon?: string | null
           huisdieren?: boolean | null
           id?: string
           inkomen?: number | null
+          inkomensbewijs_beschikbaar?: boolean | null
           kinderen?: number | null
           leeftijd?: number | null
           locatie_voorkeur?: string[] | null
@@ -337,8 +382,11 @@ export type Database = {
           max_kamers?: number | null
           min_kamers?: number | null
           partner?: boolean | null
+          profiel_foto_url?: string | null
           profielfoto_url?: string | null
           roken?: boolean | null
+          voorkeur_verhuisdatum?: string | null
+          vroegste_verhuisdatum?: string | null
           woningvoorkeur?: Json | null
         }
         Relationships: [
@@ -597,116 +645,109 @@ export type Database = {
           partner: boolean | null
           profielfoto_url: string | null
           roken: boolean | null
-          telefoon: string | null
-          woningvoorkeur: Json | null
         }
-        Insert: {
-          abonnement_actief?: boolean | null
-          abonnement_start?: string | null
-          abonnement_verloopt?: string | null
-          beroep?: string | null
-          beschrijving?: string | null
-          email?: string | null
-          huisdieren?: boolean | null
-          id?: string | null
-          inkomen?: number | null
-          kinderen?: number | null
-          leeftijd?: number | null
-          locatie_voorkeur?: string[] | null
-          max_huur?: number | null
-          max_kamers?: number | null
-          min_kamers?: number | null
-          naam?: string | null
-          partner?: boolean | null
-          profielfoto_url?: string | null
-          roken?: boolean | null
-          telefoon?: string | null
-          woningvoorkeur?: Json | null
-        }
-        Update: {
-          abonnement_actief?: boolean | null
-          abonnement_start?: string | null
-          abonnement_verloopt?: string | null
-          beroep?: string | null
-          beschrijving?: string | null
-          email?: string | null
-          huisdieren?: boolean | null
-          id?: string | null
-          inkomen?: number | null
-          kinderen?: number | null
-          leeftijd?: number | null
-          locatie_voorkeur?: string[] | null
-          max_huur?: number | null
-          max_kamers?: number | null
-          min_kamers?: number | null
-          naam?: string | null
-          partner?: boolean | null
-          profielfoto_url?: string | null
-          roken?: boolean | null
-          telefoon?: string | null
-          woningvoorkeur?: Json | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "huurders_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "gebruikers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documenten_wachtend: {
         Row: {
           aangemaakt_op: string | null
+          beoordelaar_id: string | null
+          beoordeling_notitie: string | null
           bestand_url: string | null
           bestandsnaam: string | null
-          huurder_email: string | null
+          bijgewerkt_op: string | null
           huurder_id: string | null
-          huurder_naam: string | null
           id: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           type: Database["public"]["Enums"]["document_type"] | null
         }
         Insert: {
           aangemaakt_op?: string | null
+          beoordelaar_id?: string | null
+          beoordeling_notitie?: string | null
           bestand_url?: string | null
           bestandsnaam?: string | null
-          huurder_email?: string | null
+          bijgewerkt_op?: string | null
           huurder_id?: string | null
-          huurder_naam?: string | null
           id?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           type?: Database["public"]["Enums"]["document_type"] | null
         }
         Update: {
           aangemaakt_op?: string | null
+          beoordelaar_id?: string | null
+          beoordeling_notitie?: string | null
           bestand_url?: string | null
           bestandsnaam?: string | null
-          huurder_email?: string | null
+          bijgewerkt_op?: string | null
           huurder_id?: string | null
-          huurder_naam?: string | null
           id?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           type?: Database["public"]["Enums"]["document_type"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documenten_beoordelaar_id_fkey"
+            columns: ["beoordelaar_id"]
+            isOneToOne: false
+            referencedRelation: "beoordelaars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documenten_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "actieve_huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documenten_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
-      [_ in never]: never
+      check_profiel_volledigheid: {
+        Args: { huurder_uuid: string }
+        Returns: boolean
+      }
+      create_huurder_profile: {
+        Args: {
+          user_id: string
+          user_email: string
+          user_naam: string
+          user_telefoon?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      abonnement_status: "actief" | "geannuleerd" | "verlopen" | "opgeschort"
-      document_status: "wachtend" | "goedgekeurd" | "afgewezen" | "in_behandeling"
+      abonnement_status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+      document_status: "wachtend" | "goedgekeurd" | "afgekeurd"
       document_type:
-        | "identiteitsbewijs"
-        | "inkomensverklaring"
-        | "werkgeversverklaring"
-        | "bankafschrift"
+        | "identiteit"
+        | "inkomen"
+        | "referentie"
         | "uittreksel_bkr"
-        | "huurgarantie"
-        | "overig"
+        | "arbeidscontract"
       gebruiker_rol: "huurder" | "verhuurder" | "beoordelaar" | "admin"
       notificatie_type:
         | "document_goedgekeurd"
-        | "document_afgewezen"
-        | "nieuwe_match"
+        | "document_afgekeurd"
         | "profiel_bekeken"
-        | "bericht_ontvangen"
-        | "abonnement_verloopt"
+        | "nieuwe_match"
         | "systeem"
     }
     CompositeTypes: {
@@ -715,27 +756,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[keyof Database]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -743,20 +786,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -764,42 +809,46 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
-    ? U
-    : never
+      ? U
+      : never
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -808,6 +857,30 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      abonnement_status: ["actief", "gepauzeerd", "geannuleerd", "verlopen"],
+      document_status: ["wachtend", "goedgekeurd", "afgekeurd"],
+      document_type: [
+        "identiteit",
+        "inkomen",
+        "referentie",
+        "uittreksel_bkr",
+        "arbeidscontract",
+      ],
+      gebruiker_rol: ["huurder", "verhuurder", "beoordelaar", "admin"],
+      notificatie_type: [
+        "document_goedgekeurd",
+        "document_afgekeurd",
+        "profiel_bekeken",
+        "nieuwe_match",
+        "systeem",
+      ],
+    },
+  },
+} as const

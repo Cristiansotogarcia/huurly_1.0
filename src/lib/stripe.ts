@@ -1,15 +1,13 @@
+
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { logger } from '../lib/logger.ts';
 
-// Stripe configuration derived from environment variables
-const publishableKey = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY) || process.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
-export const STRIPE_CONFIG = {
-  publishableKey,
-};
+// Use the actual Stripe publishable key directly
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51QhoLsGadpjzVmLhhpGJU6deBhJSSjz8CQBKO5QYKPhzSdK5TnPsNrYFfOVLGGz1z4PaUSGnVPvBEUZMnM4QGVPR00BSDm83Gc';
 
-// Server-side secrets (not exposed in the client bundle)
-export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+export const STRIPE_CONFIG = {
+  publishableKey: STRIPE_PUBLISHABLE_KEY,
+};
 
 // Get publishable key for frontend
 export const getStripePublishableKey = (): string => STRIPE_CONFIG.publishableKey;
@@ -34,9 +32,7 @@ export const getStripe = (): Promise<Stripe | null> => {
 
 // Get environment-configurable price IDs
 const getStripeConfig = () => {
-  const huurderPriceId = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRIPE_HUURDER_PRICE_ID) || 
-                         process.env.VITE_STRIPE_HUURDER_PRICE_ID || 
-                         'price_1RXr0rGadpjzVmLhApRe12j2'; // Default test price ID
+  const huurderPriceId = 'price_1RXr0rGadpjzVmLhApRe12j2'; // Your actual price ID
 
   return {
     huurderPriceId
