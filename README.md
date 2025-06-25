@@ -68,7 +68,8 @@ VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_URL=<your-supabase-url>
-SUPABASE_SERVICE_KEY=<your-service-key>
+SUPABASE_ANON_KEY=<your-supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
 Do **not** commit your `.env` file to version control.
 
@@ -95,7 +96,8 @@ VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_URL=<your-supabase-url>
-SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+SUPABASE_ANON_KEY=<your-supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
 ```
 
 Run the Vite dev server with:
@@ -111,12 +113,12 @@ The scripts in `src/scripts` interact directly with your Supabase project. The f
 
 ```env
 SUPABASE_URL=<your-supabase-url>
-SUPABASE_SERVICE_KEY=<your-supabase-service-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
 SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
 ```
 
 Place these variables in a `.env` file or export them in your shell so that
-`update-db.ts` (uses `SUPABASE_SERVICE_KEY`) and `query-roles.ts` (uses
+`update-db.ts` (uses `SUPABASE_SERVICE_ROLE_KEY`) and `query-roles.ts` (uses
 `SUPABASE_PUBLISHABLE_KEY`) can authenticate properly.
 
 ## Internationalization

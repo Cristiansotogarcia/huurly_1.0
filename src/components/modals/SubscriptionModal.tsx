@@ -6,9 +6,10 @@ import { Elements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getEnvVar } from '@/lib/env';
 
-// Use the actual Stripe publishable key
-const stripePromise = loadStripe('pk_test_51QhoLsGadpjzVmLhhpGJU6deBhJSSjz8CQBKO5QYKPhzSdK5TnPsNrYFfOVLGGz1z4PaUSGnVPvBEUZMnM4QGVPR00BSDm83Gc');
+// Load Stripe using the publishable key from the environment
+const stripePromise = loadStripe(getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '');
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ const CheckoutForm = ({ onClose }: { onSuccess: () => void; onClose: () => void;
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
-          priceId: 'price_1RXr0rGadpjzVmLhApRe12j2',
+          priceId: getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || '',
           successUrl: `${window.location.origin}/dashboard?payment_success=true`,
           cancelUrl: `${window.location.origin}/dashboard?payment_canceled=true`,
         },
