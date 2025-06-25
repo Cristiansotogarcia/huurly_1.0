@@ -46,7 +46,7 @@ const DatabaseCleanupRecommendations: React.FC<CleanupRecommendationsProps> = ({
 
     // Specific recommendations based on known modal usage
     const modalUsedFields = [
-      'first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profile_picture_url',
+      'first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profielfoto_url',
       'marital_status', 'has_children', 'number_of_children', 'children_ages',
       'profession', 'employer', 'employment_status', 'work_contract_type', 'monthly_income', 'housing_allowance_eligible',
       'has_partner', 'partner_name', 'partner_profession', 'partner_monthly_income', 'partner_employment_status',
