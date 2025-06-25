@@ -98,7 +98,7 @@ function getEnvironmentConfig(): Partial<AppConfig> {
     },
     stripe: {
       publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
-      webhookSecret: getEnvVar('VITE_STRIPE_WEBHOOK_SECRET')
+      webhookSecret: getEnvVar('STRIPE_WEBHOOK_SECRET')
     },
     features: {
       enableDemo: getEnvVar('VITE_ENABLE_DEMO') === 'true',
