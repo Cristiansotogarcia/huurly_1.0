@@ -71,7 +71,7 @@ export interface Database {
           max_huur: number | null
           gewenste_startdatum: string | null
           motivatie: string | null
-          profiel_foto_url: string | null
+          profielfoto_url: string | null
           verificatie_status: string
           created_at: string
           updated_at: string
@@ -91,7 +91,7 @@ export interface Database {
           max_huur?: number | null
           gewenste_startdatum?: string | null
           motivatie?: string | null
-          profiel_foto_url?: string | null
+          profielfoto_url?: string | null
           verificatie_status?: string
           created_at?: string
           updated_at?: string
@@ -110,7 +110,7 @@ export interface Database {
           max_huur?: number | null
           gewenste_startdatum?: string | null
           motivatie?: string | null
-          profiel_foto_url?: string | null
+          profielfoto_url?: string | null
           verificatie_status?: string
           updated_at?: string
         }

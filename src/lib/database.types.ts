@@ -318,7 +318,6 @@ export type Database = {
           max_kamers: number | null
           min_kamers: number | null
           partner: boolean | null
-          profiel_foto_url: string | null
           profielfoto_url: string | null
           roken: boolean | null
           voorkeur_verhuisdatum: string | null
@@ -350,7 +349,6 @@ export type Database = {
           max_kamers?: number | null
           min_kamers?: number | null
           partner?: boolean | null
-          profiel_foto_url?: string | null
           profielfoto_url?: string | null
           roken?: boolean | null
           voorkeur_verhuisdatum?: string | null
@@ -382,7 +380,6 @@ export type Database = {
           max_kamers?: number | null
           min_kamers?: number | null
           partner?: boolean | null
-          profiel_foto_url?: string | null
           profielfoto_url?: string | null
           roken?: boolean | null
           voorkeur_verhuisdatum?: string | null

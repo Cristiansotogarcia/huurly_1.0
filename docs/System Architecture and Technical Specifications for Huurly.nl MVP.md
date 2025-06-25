@@ -36,7 +36,7 @@ This table will store specific profile information for tenants (Huurders).
 | `roken`                 | `BOOLEAN`            | Geeft aan of de huurder rookt                            |                                                          |
 | `inkomen_verificatie_url` | `TEXT`               | URL naar geüploade inkomensverificatie document          | Opslag in Supabase Storage                               |
 | `referenties`           | `JSONB`              | Referenties van vorige verhuurders                       | Array of objects: {naam, contact, relatie}               |
-| `profiel_foto_url`      | `TEXT`               | URL naar de profielfoto                                  | Opslag in Supabase Storage                               |
+| `profielfoto_url`      | `TEXT`               | URL naar de profielfoto                                  | Opslag in Supabase Storage                               |
 | `profiel_zichtbaar`     | `BOOLEAN`            | Geeft aan of het profiel zichtbaar is voor verhuurders   |                                                          |
 | `profiel_compleet`      | `BOOLEAN`            | Geeft aan of het profiel volledig is ingevuld           | Vereist voor platformtoegang                             |
 | `aangemaakt_op`         | `TIMESTAMP WITH TIME ZONE` | Tijdstempel van aanmaak                                  |                                                          |
