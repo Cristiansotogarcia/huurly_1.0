@@ -1,12 +1,11 @@
 
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { logger } from '../lib/logger.ts';
+import { getEnvVar } from './env.ts';
 
-// Use the actual Stripe publishable key directly
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51QhoLsGadpjzVmLhhpGJU6deBhJSSjz8CQBKO5QYKPhzSdK5TnPsNrYFfOVLGGz1z4PaUSGnVPvBEUZMnM4QGVPR00BSDm83Gc';
-
+// Read Stripe configuration from environment variables
 export const STRIPE_CONFIG = {
-  publishableKey: STRIPE_PUBLISHABLE_KEY,
+  publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
 };
 
 // Get publishable key for frontend
@@ -32,7 +31,7 @@ export const getStripe = (): Promise<Stripe | null> => {
 
 // Get environment-configurable price IDs
 const getStripeConfig = () => {
-  const huurderPriceId = 'price_1RXr0rGadpjzVmLhApRe12j2'; // Your actual price ID
+  const huurderPriceId = getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || '';
 
   return {
     huurderPriceId

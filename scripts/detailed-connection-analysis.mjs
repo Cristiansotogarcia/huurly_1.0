@@ -46,7 +46,7 @@ console.log('\n2. Testing with service key...');
 try {
   const serviceSupabase = createClient(
     process.env.VITE_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   );
   
   const { data, error } = await serviceSupabase
