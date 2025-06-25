@@ -1,4 +1,3 @@
-
 project_id = "sqhultitvpivlnlgogen"
 
 [api]
@@ -15,6 +14,38 @@ port = 54323
 
 [auth]
 enabled = true
+site_url = "http://huurly.nl"
+additional_redirect_urls = ["http://huurly.nl"]
+jwt_secret = "y7RMYhHqbycswbhuIb3Q3Qt/ol/Iol3MwsoFU3oq/o19llr2m72nYHIc/OpkjmwF9T4YS4F/J0yax4Rsj2i/xQ=="
+anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxaHVsdGl0dnBpdmxubGdvZ2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMDgxNTIsImV4cCI6MjA2NTY4NDE1Mn0.ZPfzoKgcMrzcKA5klMaef9jZSb258IlwKUBz244oJ3E"
+service_role_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxaHVsdGl0dnBpdmxubGdvZ2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDEwODE1MiwiZXhwIjoyMDY1Njg0MTUyfQ.AEBPh39O3sxJZ0pycqGCfhsc8Lqhg39eYNaKHT88MzQ"
+
+# Extra security & UX options (aanbevolen)
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 6
+password_requirements = "lower_upper_letters_digits_symbols"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1s"
+otp_length = 6
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
 
 [functions.create-checkout-session]
 verify_jwt = true

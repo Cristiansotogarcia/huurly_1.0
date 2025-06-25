@@ -14,10 +14,10 @@ export class SubscriptionService extends DatabaseService {
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .select('*')
-        .eq('gebruiker_id', userId)
-        .eq('status', 'completed')
+        .eq('huurder_id', userId)
+        .eq('status', 'actief')
         .order('bijgewerkt_op', { ascending: false })
         .limit(1);
 
@@ -31,9 +31,7 @@ export class SubscriptionService extends DatabaseService {
         data: {
           hasActiveSubscription,
           subscriptionType: hasActiveSubscription ? 'yearly' : undefined,
-          expiresAt: hasActiveSubscription ? 
-            new Date(new Date(data[0].bijgewerkt_op).setFullYear(new Date(data[0].bijgewerkt_op).getFullYear() + 1)).toISOString() : 
-            undefined,
+          expiresAt: hasActiveSubscription ? data[0].eind_datum : undefined,
         } as SubscriptionStatus,
         error: null,
       };

@@ -11,18 +11,49 @@ export type PaymentRecordInsert = TablesInsert<'betalingen'>;
 export class PaymentRecordService extends DatabaseService {
   async createPaymentRecord(paymentData: PaymentRecordInsert): Promise<PaymentRecord> {
     try {
+      // Ensure required fields are present
+      if (!paymentData.gebruiker_id || !paymentData.email || !paymentData.bedrag) {
+        const missingFields = [];
+        if (!paymentData.gebruiker_id) missingFields.push('gebruiker_id');
+        if (!paymentData.email) missingFields.push('email');
+        if (!paymentData.bedrag) missingFields.push('bedrag');
+        
+        const error = new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        logger.error('Error creating payment record: missing fields', { missingFields });
+        throw error;
+      }
+
+      // Set default values if not provided
+      const recordToInsert: PaymentRecordInsert = {
+        ...paymentData,
+        status: paymentData.status || 'pending',
+        aangemaakt_op: paymentData.aangemaakt_op || new Date().toISOString(),
+        bijgewerkt_op: paymentData.bijgewerkt_op || new Date().toISOString()
+      };
+
+      // Log the record we're trying to insert for debugging
+      logger.info('Attempting to create payment record', { 
+        record: { ...recordToInsert, email: recordToInsert.email ? '***@***.com' : undefined } 
+      });
+
       const { data, error } = await supabase
         .from('betalingen')
-        .insert(paymentData)
+        .insert(recordToInsert)
         .select()
         .single();
 
       if (error) {
-        logger.error('Error creating payment record:', error);
+        logger.error('Error creating payment record:', error); 
         throw error;
       }
 
-      logger.info('Payment record created', { paymentId: data.id });
+      if (!data) {
+        const noDataError = new Error('No data returned after creating payment record');
+        logger.error('Error creating payment record: no data returned');
+        throw noDataError;
+      }
+
+      logger.info('Payment record created successfully', { paymentId: data.id });
       return data;
     } catch (error) {
       logger.error('Error creating payment record:', error);

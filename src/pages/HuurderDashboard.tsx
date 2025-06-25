@@ -8,7 +8,7 @@ import { DocumentsSection } from '@/components/standard/DocumentsSection';
 import ProfileOverview, { ProfileSection } from '@/components/standard/ProfileOverview';
 import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart } from 'lucide-react';
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
-import { PaymentModal } from "@/components/PaymentModal";
+// import { PaymentModal } from "@/components/PaymentModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from '@/hocs/withAuth';
@@ -245,11 +245,25 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
       />
-      <PaymentModal
+      {/* <PaymentModal
         isOpen={showPaymentModal}
-        onClose={setShowPaymentModal}
-        persistent={true}
-      />
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={() => {
+          toast({
+            title: "Betaling succesvol!",
+            description: "Je account is nu volledig actief.",
+            variant: "success",
+          });
+          refresh(); // Refresh user data to get new subscription status
+        }}
+        onPaymentError={(error) => {
+          toast({
+            title: "Betaling mislukt",
+            description: error,
+            variant: "destructive",
+          });
+        }}
+      /> */}
     </>
   );
 };

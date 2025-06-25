@@ -75,12 +75,14 @@ serve(async (req) => {
 
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
-      const { error } = await supabase.from('subscriptions').insert({
-        user_id: userId,
+      const { error } = await supabase.from('abonnementen').insert({
+        huurder_id: userId,
         status: subscription.status,
         stripe_subscription_id: subscription.id,
-        start_date: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-        end_date: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+        start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+        eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+        bedrag: 65, // Add the subscription amount
+        currency: 'eur'
       });
 
       if (error) {
@@ -89,13 +91,13 @@ serve(async (req) => {
 
       // Create notification for successful payment
       const { error: notificationError } = await supabase
-        .from('notifications')
+        .from('notificaties')
         .insert({
-          user_id: userId,
+          gebruiker_id: userId,
           type: 'payment_success',
-          title: 'Betaling succesvol',
-          message: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
-          read: false,
+          titel: 'Betaling succesvol',
+          inhoud: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
+          gelezen: false,
         });
 
       if (notificationError) {
@@ -107,11 +109,11 @@ serve(async (req) => {
       const subscription = event.data.object as Stripe.Subscription;
 
       const { error } = await supabase
-        .from('subscriptions')
+        .from('abonnementen')
         .update({
           status: subscription.status,
-          start_date: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-          end_date: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+          start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+          eind_datum: new Date(subscription.current_period_end * 1000).toISOString(),
         })
         .eq('stripe_subscription_id', subscription.id);
 

@@ -78,7 +78,7 @@ export const PaymentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={persistent ? undefined : (open) => onClose(open)}>
-      <Content className="sm:max-w-md">
+      <Content className="sm:max-w-md" aria-describedby="payment-modal-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-center text-dutch-blue flex-1">
@@ -106,7 +106,7 @@ export const PaymentModal = ({
             <h3 className="text-xl font-semibold mb-2">
               {persistent ? "Betaling Vereist" : "Premium Toegang Vereist"}
             </h3>
-            <p className="text-gray-600">
+            <p id="payment-modal-description" className="text-gray-600">
               {persistent 
                 ? "Je account moet geactiveerd worden met een geldige betaling om toegang te krijgen tot alle functies."
                 : "Om gebruik te maken van alle functies van Huurly, heb je een actief abonnement nodig."
