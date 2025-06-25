@@ -93,7 +93,7 @@ function analyzeColumnUsage(columnNames) {
   // Define columns used in the 7-step modal
   const modalColumns = [
     // Step 1: Personal Information
-    'first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profile_picture_url',
+    'first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profielfoto_url',
     
     // Step 2: Family & Relationship
     'marital_status', 'has_children', 'number_of_children', 'children_ages',
