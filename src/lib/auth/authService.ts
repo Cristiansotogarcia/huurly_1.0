@@ -32,17 +32,16 @@ export class AuthService {
       }
 
       if (authData.user) {
-        // Use UPSERT to create user profile (prevents duplicates)
-        const { error: profileError } = await supabase
-          .from('gebruikers')
-          .upsert({
+        // Use backend function to create user profile
+        const { error: profileError } = await supabase.functions.invoke('register-user', {
+          body: {
             id: authData.user.id,
             email: data.email,
-            naam: `${data.firstName} ${data.lastName}`,
-            rol: roleMapper.mapRoleToDatabase(data.role),
-          }, {
-            onConflict: 'id'
-          });
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: roleMapper.mapRoleToDatabase(data.role),
+          },
+        });
 
         if (profileError) {
           logger.error('Profile creation error:', profileError);
