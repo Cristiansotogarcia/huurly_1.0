@@ -346,7 +346,7 @@ export class UserService extends DatabaseService {
           furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
           desired_amenities: sanitizedData.desiredAmenities || [],
           smoking_details: sanitizedData.smokingDetails || null,
-          profile_picture_url: sanitizedData.profilePictureUrl || null,
+          profielfoto_url: sanitizedData.profilePictureUrl || null,
           
           // Priority 1: Guarantor Information
           guarantor_available: sanitizedData.guarantorAvailable || false,
@@ -619,13 +619,13 @@ export class UserService extends DatabaseService {
    */
   async getProfilePictureUrl(userId: string): Promise<string | null> {
     try {
-      const { data: profile } = await supabase
-        .from('gebruikers')
-        .select('profile_picture_url')
-        .eq('id', userId)
+      const { data: tenant } = await supabase
+        .from('huurders')
+        .select('profielfoto_url')
+        .eq('user_id', userId)
         .single();
-      
-      return profile?.profile_picture_url || null;
+
+      return tenant?.profielfoto_url || null;
     } catch (error) {
       logger.error('Error fetching profile picture URL:', error);
       return null;

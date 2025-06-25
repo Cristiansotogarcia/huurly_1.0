@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types';
 
 interface SignupFormProps {
   onClose: () => void;
@@ -17,8 +16,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     email: '',
     password: '',
     firstName: '',
-    lastName: '',
-    role: 'huurder' as UserRole
+    lastName: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
@@ -29,7 +27,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     setIsLoading(true);
     
     try {
-      const { success, user } = await signUp(formData);
+      const { success, user } = await signUp({ ...formData, role: 'huurder' });
       if (success && user) {
         onClose();
 
@@ -115,18 +113,6 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="role">Ik ben een</Label>
-          <Select value={formData.role} onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecteer je rol" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="huurder">Huurder</SelectItem>
-              <SelectItem value="verhuurder">Verhuurder</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         <Button 
           type="submit" 
