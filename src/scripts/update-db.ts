@@ -3,11 +3,11 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { logger } from '../lib/logger';
 import dotenv from 'dotenv';
 
-// This script requires SUPABASE_URL and SUPABASE_SERVICE_KEY in the environment.
+// This script requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the environment.
 dotenv.config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const supabase = createClient<PostgrestError>(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
