@@ -225,7 +225,7 @@ export class UserService extends DatabaseService {
   /**
    * Get user profile by ID
    */
-  async getProfile(userId: string): Promise<DatabaseResponse<Tables<'Profile'>>> {
+  async getProfile(userId: string): Promise<DatabaseResponse<Tables<'gebruikers'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('gebruikers')
@@ -240,7 +240,7 @@ export class UserService extends DatabaseService {
   /**
    * Create or update tenant profile - unified method
    */
-  async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
+  async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
     return this.withAuthGuard(async () => {
       const currentUserId = await this.getCurrentUserId();
       if (!currentUserId) {
@@ -428,7 +428,7 @@ export class UserService extends DatabaseService {
   /**
    * Update existing tenant profile - now delegates to createTenantProfile
    */
-  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
+  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
     // Just call createTenantProfile since it now handles both create and update
     return this.createTenantProfile(data);
   }
@@ -540,7 +540,7 @@ export class UserService extends DatabaseService {
   async updateProfile(
     userId: string,
     updates: UpdateUserProfileData
-  ): Promise<DatabaseResponse<Tables<'Profile'>>> {
+  ): Promise<DatabaseResponse<Tables<'gebruikers'>>> {
     const sanitizedData = this.sanitizeInput(updates);
 
     if (sanitizedData.email && !this.isValidEmail(sanitizedData.email)) {
@@ -602,7 +602,7 @@ export class UserService extends DatabaseService {
   /**
    * Get user role
    */
-  async getUserRole(userId: string): Promise<DatabaseResponse<Tables<'user_roles'>>> {
+  async getUserRole(userId: string): Promise<DatabaseResponse<Tables<'gebruiker_rollen'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('gebruiker_rollen')
@@ -638,7 +638,7 @@ export class UserService extends DatabaseService {
   async updateUserRole(
     userId: string,
     role: 'Huurder' | 'Verhuurder' | 'Beoordelaar' | 'Beheerder'
-  ): Promise<DatabaseResponse<Tables<'user_roles'>>> {
+  ): Promise<DatabaseResponse<Tables<'gebruiker_rollen'>>> {
     const hasPermission = await this.checkUserPermission(userId, ['Beheerder']);
     if (!hasPermission) {
       return {

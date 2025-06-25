@@ -13,9 +13,15 @@ const corsHeaders = {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+ if (req.method === "OPTIONS") {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...corsHeaders,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    },
+  });
+}
 
   try {
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
