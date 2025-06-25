@@ -120,7 +120,7 @@ function analyzeUsageVsActual(actualColumns) {
   // Define what the modal currently uses
   const modalFields = {
     // Step 1: Personal Information
-    step1: ['first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profile_picture_url'],
+    step1: ['first_name', 'last_name', 'phone', 'date_of_birth', 'nationality', 'sex', 'profielfoto_url'],
     
     // Step 2: Family & Relationship
     step2: ['marital_status', 'has_children', 'number_of_children', 'children_ages'],
