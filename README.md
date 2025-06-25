@@ -71,6 +71,9 @@ SUPABASE_URL=<your-supabase-url>
 SUPABASE_ANON_KEY=<your-supabase-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
+The `SUPABASE_SERVICE_ROLE_KEY` is required for server-side scripts and edge
+functions, including the new `register-user` function that provisions user
+profiles after sign up.
 Do **not** commit your `.env` file to version control.
 
 
