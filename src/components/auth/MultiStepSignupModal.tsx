@@ -5,10 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { UserRole } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 interface MultiStepSignupModalProps {
@@ -24,8 +22,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     password: '',
     confirmPassword: '',
     firstName: '',
-    lastName: '',
-    role: 'huurder' as UserRole,
+    lastName: ''
   });
   
   const { signUp } = useAuth();
@@ -57,7 +54,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        role: formData.role,
+        role: 'huurder'
       });
 
       if (success && user) {
@@ -133,18 +130,6 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   onChange={(e) => updateFormData('lastName', e.target.value)}
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="role">Ik ben een</Label>
-                <Select onValueChange={(value) => updateFormData('role', value)} defaultValue={formData.role}>
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Selecteer een rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="huurder">Huurder</SelectItem>
-                    <SelectItem value="verhuurder">Verhuurder</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </>
           )}
