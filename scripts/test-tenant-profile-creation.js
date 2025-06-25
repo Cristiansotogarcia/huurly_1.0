@@ -135,7 +135,7 @@ async function testTenantProfileCreation() {
       pet_details: null,
       smokes: false,
       smoking_details: null,
-      profile_picture_url: null,
+      profielfoto_url: null,
     };
     
     // Try upsert operation
