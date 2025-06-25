@@ -156,6 +156,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   type="password"
                   value={formData.password}
                   onChange={(e) => updateFormData('password', e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
               </div>
@@ -166,6 +167,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
               </div>
