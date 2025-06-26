@@ -122,13 +122,17 @@ export const getDocumentsForReview = async () => {
 // Update document status
 export const updateDocumentStatus = async (documentId: string, status: 'goedgekeurd' | 'afgekeurd', notes?: string) => {
   try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from('documenten')
       .update({
         status,
-        beoordeeld_op: new Date().toISOString(),
-        opmerkingen: notes || null,
-        bijgewerkt_op: new Date().toISOString()
+        beoordelaar_id: user?.id || null,
+        beoordeling_notitie: notes || null,
+        bijgewerkt_op: new Date().toISOString(),
       })
       .eq('id', documentId)
       .select()
