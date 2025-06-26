@@ -619,6 +619,47 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          action: string | null
+          table_name: string | null
+          record_id: string | null
+          old_values: Json | null
+          new_values: Json | null
+          aangemaakt_op: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          action?: string | null
+          table_name?: string | null
+          record_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          aangemaakt_op?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          action?: string | null
+          table_name?: string | null
+          record_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          aangemaakt_op?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gebruikers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       actieve_huurders: {
