@@ -5,13 +5,12 @@
 
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { logger } from './logger';
+import { getEnvVar } from './env';
 
-// Stripe configuration - using your provided sandbox keys
+// Stripe configuration loaded from environment variables
 export const STRIPE_CONFIG = {
-  // Your provided publishable key
-  publishableKey: 'pk_test_51ReDL9FWpC3XRbUY3IgFVMmMUMVGZ07rt5KRf3Gk4DDluKP6jxwxrKULJo4UzzWHVgtbR4IikwBjWZyZdMLK67CK00m3bS21gl',
-  // Your actual price ID for €65/year
-  huurderPriceId: 'price_1ReDObFWpC3XRbUYyUbOr5Na',
+  publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
+  huurderPriceId: getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || '',
 };
 
 // Validate configuration
