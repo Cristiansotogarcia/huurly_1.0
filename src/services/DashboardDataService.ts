@@ -75,7 +75,7 @@ export class DashboardDataService {
       const { data, error } = await supabase
         .from('huurders')
         .select('*')
-        .eq('huurder_id', userId)
+        .eq('id', userId)
         .single();
 
       if (error) {
