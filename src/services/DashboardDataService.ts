@@ -157,9 +157,8 @@ export class DashboardDataService extends DatabaseService {
         .from('documenten')
         .update({
           status,
-          beoordeeld_door: currentUserId,
-          beoordeeld_op: new Date().toISOString(),
-          opmerkingen: notes || null,
+          beoordelaar_id: currentUserId,
+          beoordeling_notitie: notes || null,
           bijgewerkt_op: new Date().toISOString(),
         })
         .eq('id', documentId)
