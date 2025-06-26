@@ -268,48 +268,9 @@ export class SearchService {
       
       // Apply text search if query is provided
       if (query && query.trim() !== '') {
-        // We need to search in the auth.users table which we can't directly query
-        // Instead, we'll get all users and filter in memory (not ideal for large datasets)
-        const { data: allUsers, error: usersError } = await dbQuery;
-        
-        if (usersError) {
-          logger.error('Error fetching users for search:', usersError);
-          return { success: false, error: usersError };
-        }
-        
-        // Filter users by query
-        const filteredUsers = allUsers?.filter(userRole => {
-          const user = userRole.user as any; // Type assertion to avoid TypeScript errors
-          if (!user) return false;
-          
-          const searchableFields = [
-            user?.email, // Optional chaining to safely access potentially undefined properties
-            user?.phone,
-            userRole.role
-          ];
-          
-          return searchableFields.some(field => 
-            field && field.toLowerCase().includes(query.toLowerCase())
-          );
-        }) || [];
-        
-        // Apply sorting
-        filteredUsers.sort((a, b) => {
-          const aValue = a[sortBy];
-          const bValue = b[sortBy];
-          
-          if (sortOrder === 'asc') {
-            return aValue > bValue ? 1 : -1;
-          } else {
-            return aValue < bValue ? 1 : -1;
-          }
-        });
-        
-        // Apply pagination
-        const paginatedUsers = filteredUsers.slice(offset, offset + limit);
-        
-        logger.info(`Found ${filteredUsers.length} users matching the criteria`);
-        return { success: true, data: paginatedUsers, count: filteredUsers.length };
+        dbQuery = dbQuery.or(
+          `user.email.ilike.%${query}%,user.phone.ilike.%${query}%,role.ilike.%${query}%`
+        );
       }
       
       // If no query is provided, we can use the database filtering
