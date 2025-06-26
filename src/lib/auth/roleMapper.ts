@@ -1,6 +1,6 @@
 
-import { UserRole } from '@/types';
-import { logger } from '@/lib/logger';
+import { UserRole } from '../types/index.ts';
+import { logger } from '../logger.ts';
 
 class RoleMapper {
   /**

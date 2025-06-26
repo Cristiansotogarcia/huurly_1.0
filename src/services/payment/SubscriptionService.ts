@@ -1,7 +1,7 @@
 
-import { supabase } from '../../integrations/supabase/client';
-import { DatabaseService, DatabaseResponse } from '../../lib/database';
-import { ErrorHandler } from '../../lib/errors';
+import { supabase } from '../../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
+import { ErrorHandler } from '../../lib/errors.ts';
 import { PaymentRecord } from './PaymentRecordService';
 
 export interface SubscriptionStatus {

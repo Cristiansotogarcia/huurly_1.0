@@ -18,7 +18,7 @@ interface SubscriptionModalProps {
   userId?: string;
 }
 
-const CheckoutForm = ({ onClose }: { onSuccess: () => void; onClose: () => void; }) => {
+const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: () => void; }) => {
   const stripe = useStripe();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,6 +54,8 @@ const CheckoutForm = ({ onClose }: { onSuccess: () => void; onClose: () => void;
 
       if (stripeError) {
         toast({ title: 'Fout bij omleiden', description: stripeError.message, variant: 'destructive' });
+      } else {
+        onSuccess();
       }
 
     } catch (error: any) {
