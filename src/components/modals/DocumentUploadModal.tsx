@@ -53,7 +53,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     if (!user?.id) return;
     
     try {
-      const result = await documentService.getUserDocuments(user.id);
+      const result = await documentService.getDocuments(user.id);
       if (result.success && result.data) {
         setExistingDocuments(result.data);
       }
@@ -243,7 +243,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
     ));
 
     try {
-      const result = await documentService.uploadDocument(document.file, document.type);
+      const result = await documentService.uploadDocument(document.file, document.type, user.id);
       
       if (result.success && result.data) {
         setDocuments(prev => prev.map(d => 

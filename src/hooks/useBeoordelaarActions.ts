@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { documentService } from '@/services/DocumentService';
-import { dashboardDataService } from '@/services/DashboardDataService';
 import { useAuthStore } from '@/store/authStore';
 
 export const useBeoordelaarActions = () => {
@@ -13,7 +12,7 @@ export const useBeoordelaarActions = () => {
   const approveDocument = async (documentId: string) => {
     setIsReviewing(true);
     try {
-      const result = await documentService.approveDocument(documentId);
+      const result = await documentService.reviewDocument(documentId, 'goedgekeurd');
       if (result.success) {
         toast({
           title: 'Document goedgekeurd',
@@ -38,9 +37,7 @@ export const useBeoordelaarActions = () => {
   const rejectDocument = async (documentId: string, reason: string) => {
     setIsReviewing(true);
     try {
-      // Map English status to Dutch status for the service call
-      const dutchStatus = 'afgewezen' as const;
-      const result = await dashboardDataService.reviewDocument(documentId, dutchStatus, reason);
+      const result = await documentService.reviewDocument(documentId, 'afgekeurd', reason);
       if (result.success) {
         toast({
           title: 'Document afgewezen',
