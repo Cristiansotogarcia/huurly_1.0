@@ -296,14 +296,14 @@ export class UserService extends DatabaseService {
         const { data: existingProfile } = await supabase
           .from('huurders')
           .select('id')
-          .eq('user_id', currentUserId)
+          .eq('id', currentUserId)
           .maybeSingle();
 
         logger.info("Existing tenant profile check:", existingProfile);
 
         // 3. Prepare tenant profile data
         const tenantProfileData: any = {
-          user_id: currentUserId,
+          id: currentUserId,
           first_name: sanitizedData.firstName,
           last_name: sanitizedData.lastName,
           phone: sanitizedData.phone,
@@ -373,7 +373,7 @@ export class UserService extends DatabaseService {
           const { data, error: tenantError } = await supabase
             .from('huurders')
             .update(tenantProfileData)
-            .eq('user_id', currentUserId)
+            .eq('id', currentUserId)
             .select()
             .single();
 
@@ -418,7 +418,7 @@ export class UserService extends DatabaseService {
       const { data, error } = await supabase
         .from('huurders')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       return { data, error };
@@ -508,7 +508,7 @@ export class UserService extends DatabaseService {
       }
 
       // Get user IDs from tenant profiles
-      const userIds = tenantData.map(tenant => tenant.user_id);
+      const userIds = tenantData.map(tenant => tenant.id);
 
       // Get corresponding profiles
       const { data: profilesData, error: profilesError } = await supabase
@@ -523,7 +523,7 @@ export class UserService extends DatabaseService {
 
       // Manual join - combine tenant profiles with their corresponding profiles
       const joinedData = tenantData.map(tenant => {
-        const profile = profilesData?.find(p => p.id === tenant.user_id);
+        const profile = profilesData?.find(p => p.id === tenant.id);
         return {
           ...tenant,
           profiles: profile
@@ -607,7 +607,7 @@ export class UserService extends DatabaseService {
       const { data, error } = await supabase
         .from('gebruiker_rollen')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single();
 
       return { data, error };

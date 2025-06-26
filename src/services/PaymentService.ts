@@ -4,7 +4,9 @@ import { stripeCheckoutService } from './payment/StripeCheckoutService.ts';
 import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService.ts';
 import { paymentWebhookService } from './payment/PaymentWebhookService.ts';
 import { pricingService } from './payment/PricingService.ts';
-import { DatabaseResponse } from '../lib/database';
+
+import { DatabaseResponse } from '../lib/database.ts';
+
 
 export class PaymentService {
   // Payment Record Operations
