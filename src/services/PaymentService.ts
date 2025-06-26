@@ -1,9 +1,9 @@
 
-import { paymentRecordService, PaymentRecord, PaymentRecordInsert } from './payment/PaymentRecordService';
-import { stripeCheckoutService } from './payment/StripeCheckoutService';
-import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService';
-import { paymentWebhookService } from './payment/PaymentWebhookService';
-import { pricingService } from './payment/PricingService';
+import { paymentRecordService, PaymentRecord, PaymentRecordInsert } from './payment/PaymentRecordService.ts';
+import { stripeCheckoutService } from './payment/StripeCheckoutService.ts';
+import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService.ts';
+import { paymentWebhookService } from './payment/PaymentWebhookService.ts';
+import { pricingService } from './payment/PricingService.ts';
 import { DatabaseResponse } from '../lib/database';
 
 export class PaymentService {

@@ -1,10 +1,10 @@
-import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
-import { User, UserRole } from '@/types';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-import { useAuthStore } from '@/store/authStore';
-import { logger } from '@/lib/logger';
-import { roleMapper } from '@/lib/auth/roleMapper';
+import { supabase } from '../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
+import { User, UserRole } from '../types/index.ts';
+import { Tables, TablesInsert, TablesUpdate } from '../integrations/supabase/types.ts';
+import { useAuthStore } from '../store/authStore.ts';
+import { logger } from '../lib/logger.ts';
+import { roleMapper } from '../lib/auth/roleMapper.ts';
 
 // Authentication error class
 export class AuthenticationError extends Error {

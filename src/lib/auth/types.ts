@@ -1,5 +1,5 @@
 
-import { User, UserRole } from '@/types';
+import { User, UserRole } from '../../types/index.ts';
 import { AuthError } from '@supabase/supabase-js';
 
 export interface SignUpData {
