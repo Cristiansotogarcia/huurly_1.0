@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { storageService } from '@/lib/storage';
 import { documentService, DocumentType } from '@/services/DocumentService';
+import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import { FileUploadDropZone } from './file-upload/FileUploadDropZone';
 import { FileUploadProgress, UploadingFile } from './file-upload/FileUploadProgress';
@@ -31,6 +32,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 }) => {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const { toast } = useToast();
+  const { user } = useAuthStore();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
@@ -65,7 +67,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           index === i ? { ...uf, progress: 10 } : uf
         ));
 
-        const result = await documentService.uploadDocument(file, documentType);
+        if (!user?.id) {
+          throw new Error('Geen gebruiker ingelogd');
+        }
+        const result = await documentService.uploadDocument(file, documentType, user.id);
 
         if (!result.success) {
           throw result.error || new Error('Upload mislukt');
