@@ -136,3 +136,7 @@ To add a new language:
 1. Create a folder `public/locales/<lang>` where `<lang>` is the language code.
 2. Copy `translation.json` from another locale and translate the values.
 3. Restart the development server so i18next can load the new files.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
