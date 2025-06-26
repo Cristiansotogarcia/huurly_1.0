@@ -729,6 +729,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      filename_prefix: {
+        Args: { name: string }
+        Returns: string
+      }
     }
     Enums: {
       abonnement_status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"

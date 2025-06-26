@@ -1,12 +1,11 @@
 
-import { paymentRecordService, PaymentRecord, PaymentRecordInsert } from './payment/PaymentRecordService.ts';
-import { stripeCheckoutService } from './payment/StripeCheckoutService.ts';
-import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService.ts';
-import { paymentWebhookService } from './payment/PaymentWebhookService.ts';
-import { pricingService } from './payment/PricingService.ts';
-
-import { DatabaseResponse } from '../lib/database.ts';
-
+import { paymentRecordService, PaymentRecord, PaymentRecordInsert } from './payment/PaymentRecordService';
+import { stripeCheckoutService } from './payment/StripeCheckoutService';
+import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService';
+import { paymentWebhookService } from './payment/PaymentWebhookService';
+import { pricingService } from './payment/PricingService';
+import { SUBSCRIPTION_PLANS, formatPrice } from '../lib/stripe-config';
+import { DatabaseResponse } from '../lib/database';
 
 export class PaymentService {
   // Payment Record Operations
@@ -43,6 +42,19 @@ export class PaymentService {
 
   // Pricing Operations
   getPricingInfo(role: 'huurder' | 'verhuurder') {
+    if (role === 'huurder') {
+      const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+      return {
+        displayPrice: formatPrice(plan.price),
+        actualPrice: formatPrice(plan.priceWithTax),
+        taxAmount: formatPrice(plan.priceWithTax - plan.price),
+        taxRate: `${(plan.taxRate * 100).toFixed(0)}%`,
+        interval: plan.interval,
+        features: plan.features,
+        priceId: plan.priceId,
+      };
+    }
+    
     return pricingService.getPricingInfo(role);
   }
 
