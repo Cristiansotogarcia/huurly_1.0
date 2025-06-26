@@ -65,6 +65,7 @@ Copy `.env.example` to `.env` in the project root and provide your own values fo
 VITE_SUPABASE_URL=<your-supabase-url>
 VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
+VITE_STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_URL=<your-supabase-url>
@@ -96,6 +97,7 @@ Create a `.env` file in the project root with your keys:
 
 ```env
 VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
+VITE_STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_URL=<your-supabase-url>
