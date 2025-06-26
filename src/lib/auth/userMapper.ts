@@ -1,9 +1,9 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/types';
+import { supabase } from '../../integrations/supabase/client.ts';
+import { User } from '../../types/index.ts';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
-import { roleMapper } from './roleMapper';
+import { logger } from '../logger.ts';
+import { roleMapper } from './roleMapper.ts';
 
 class UserMapper {
   /**
