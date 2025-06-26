@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register.js';
 import { strict as assert } from 'node:assert';
 import { userMapper } from '../src/lib/auth/userMapper.ts';
 import { supabase } from '../src/integrations/supabase/client.ts';
