@@ -1,5 +1,6 @@
 
 import { supabase } from '../integrations/supabase/client.ts';
+import { logger } from '../lib/logger.ts';
 
 export class MatchingService {
   static async getMatches(tenantId: string) {
@@ -11,23 +12,31 @@ export class MatchingService {
         .eq('id', tenantId)
         .single();
 
-      if (tenantError) throw tenantError;
+      if (tenantError) {
+        logger.error('Error fetching tenant profile:', tenantError);
+        return [];
+      }
 
+      // Since the 'panden' table doesn't exist, return empty array
+      // This would be the proper implementation when the properties table exists:
+      logger.info('MatchingService: Properties table not available, returning empty matches');
+      return [];
+
+      // Future implementation:
+      /*
       const { data: properties, error: propertiesError } = await supabase
-        .from('panden')
+        .from('properties')
         .select('*')
-        .gte('huurprijs', tenant.min_budget ?? 0)
-        .lte('huurprijs', tenant.max_budget ?? Number.MAX_SAFE_INTEGER)
-        .eq('stad', tenant.voorkeur_stad ?? '')
-        .eq('type', tenant.voorkeur_woningtype ?? '')
-        .eq('gemeubileerd', tenant.voorkeur_gemeubileerd ?? '')
-        .gte('aantal_slaapkamers', tenant.voorkeur_aantal_slaapkamers ?? 1);
+        .gte('rent_price', tenant.max_huur ?? 0)
+        .lte('rent_price', tenant.max_huur ?? Number.MAX_SAFE_INTEGER)
+        .overlaps('location', tenant.locatie_voorkeur ?? [])
+        .gte('bedrooms', tenant.min_kamers ?? 1);
 
       if (propertiesError) throw propertiesError;
-
       return properties || [];
+      */
     } catch (error) {
-      console.error('Error getting matches:', error);
+      logger.error('Error getting matches:', error);
       return [];
     }
   }
@@ -35,21 +44,10 @@ export class MatchingService {
   static async getRecommendations(tenantId: string) {
     try {
       // For now, return empty array since properties table doesn't exist
-      console.log('MatchingService: Properties table not available, returning empty recommendations');
+      logger.info('MatchingService: Properties table not available, returning empty recommendations');
       return [];
-
-      // This would be the proper implementation:
-      /*
-      const { data: properties, error } = await supabase
-        .from('verhuurders')
-        .select('*')
-        .limit(10);
-
-      if (error) throw error;
-      return properties || [];
-      */
     } catch (error) {
-      console.error('Error getting recommendations:', error);
+      logger.error('Error getting recommendations:', error);
       return [];
     }
   }
@@ -57,29 +55,33 @@ export class MatchingService {
   static async calculateMatchScore(tenantProfile: any, property: any): Promise<number> {
     let score = 0;
 
-    // Budget match (30% weight)
-    if (property.huurprijs <= tenantProfile.max_budget && property.huurprijs >= tenantProfile.min_budget) {
+    // Budget match (30% weight) - using correct column names
+    const maxBudget = tenantProfile.max_huur || 0;
+    if (property.rent_price <= maxBudget) {
       score += 30;
     }
 
-    // Location match (25% weight)
-    if (property.stad === tenantProfile.voorkeur_stad) {
+    // Location match (25% weight) - using correct column names
+    const locationPreferences = tenantProfile.locatie_voorkeur || [];
+    if (locationPreferences.includes(property.city)) {
       score += 25;
     }
 
-    // Property type match (20% weight)
-    if (property.type === tenantProfile.voorkeur_woningtype) {
-      score += 20;
-    }
-
-    // Bedroom count match (15% weight)
-    if (property.aantal_slaapkamers >= tenantProfile.voorkeur_aantal_slaapkamers) {
+    // Bedroom count match (15% weight) - using correct column names
+    const minRooms = tenantProfile.min_kamers || 1;
+    if (property.bedrooms >= minRooms) {
       score += 15;
     }
 
-    // Furnished preference match (10% weight)
-    if (property.gemeubileerd === tenantProfile.voorkeur_gemeubileerd) {
+    // Furnished preference match (10% weight) - using woningvoorkeur JSON
+    const housingPrefs = tenantProfile.woningvoorkeur || {};
+    if (housingPrefs.meubilering === property.furnished_status) {
       score += 10;
+    }
+
+    // Property type match (20% weight) - using woningvoorkeur JSON
+    if (housingPrefs.type === property.property_type) {
+      score += 20;
     }
 
     return Math.min(score, 100); // Cap at 100%
@@ -88,24 +90,10 @@ export class MatchingService {
   static async saveMatch(tenantId: string, propertyId: string, score: number) {
     try {
       // For now, just log since matches table might not exist
-      console.log('MatchingService: Would save match', { tenantId, propertyId, score });
+      logger.info('MatchingService: Would save match', { tenantId, propertyId, score });
       return;
-
-      // This would be the proper implementation:
-      /*
-      const { error } = await supabase
-        .from('matches')
-        .insert({
-          huurder_id: tenantId,
-          pand_id: propertyId,
-          match_score: score,
-          aangemaakt_op: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      */
     } catch (error) {
-      console.error('Error saving match:', error);
+      logger.error('Error saving match:', error);
       throw error;
     }
   }
@@ -113,25 +101,10 @@ export class MatchingService {
   static async getMatchHistory(tenantId: string) {
     try {
       // For now, return empty array
-      console.log('MatchingService: Matches table not available, returning empty history');
+      logger.info('MatchingService: Matches table not available, returning empty history');
       return [];
-
-      // This would be the proper implementation:
-      /*
-      const { data, error } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          panden (*)
-        `)
-        .eq('huurder_id', tenantId)
-        .order('aangemaakt_op', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-      */
     } catch (error) {
-      console.error('Error getting match history:', error);
+      logger.error('Error getting match history:', error);
       return [];
     }
   }
@@ -141,19 +114,22 @@ export class MatchingService {
       const { error } = await supabase
         .from('huurders')
         .update({
-          voorkeur_stad: preferences.city,
-          voorkeur_woningtype: preferences.propertyType,
-          voorkeur_aantal_slaapkamers: preferences.bedrooms,
-          max_budget: preferences.maxBudget,
-          min_budget: preferences.minBudget,
-          voorkeur_gemeubileerd: preferences.furnished,
+          locatie_voorkeur: preferences.city ? [preferences.city] : [],
+          max_huur: preferences.maxBudget,
+          min_kamers: preferences.minBedrooms,
+          max_kamers: preferences.maxBedrooms,
+          woningvoorkeur: {
+            type: preferences.propertyType,
+            meubilering: preferences.furnished,
+            ...preferences
+          },
           bijgewerkt_op: new Date().toISOString()
         })
         .eq('id', tenantId);
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating match preferences:', error);
+      logger.error('Error updating match preferences:', error);
       throw error;
     }
   }
@@ -162,30 +138,18 @@ export class MatchingService {
   static async getPropertyDetails(propertyId: string) {
     try {
       // For now, return mock data
-      console.log('MatchingService: Properties table not available, returning mock property details');
+      logger.info('MatchingService: Properties table not available, returning mock property details');
       return {
         id: propertyId,
-        titel: 'Mock Pand',
-        huurprijs: 1500,
-        stad: 'Amsterdam',
-        aantal_slaapkamers: 2,
-        type: 'appartement',
-        gemeubileerd: 'ongemeubileerd'
+        title: 'Mock Property',
+        rent_price: 1500,
+        city: 'Amsterdam',
+        bedrooms: 2,
+        property_type: 'appartement',
+        furnished_status: 'ongemeubileerd'
       };
-
-      // This would be the proper implementation:
-      /*
-      const { data, error } = await supabase
-        .from('verhuurders')
-        .select('*')
-        .eq('id', propertyId)
-        .single();
-
-      if (error) throw error;
-      return data;
-      */
     } catch (error) {
-      console.error('Error getting property details:', error);
+      logger.error('Error getting property details:', error);
       return null;
     }
   }
