@@ -1,7 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
-import { logger } from '@/lib/logger';
-import { useAuthStore } from '@/store/authStore';
+import { supabase } from '../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
+import { logger } from '../lib/logger.ts';
+import { useAuthStore } from '../store/authStore.ts';
 
 /**
  * Standard service response format

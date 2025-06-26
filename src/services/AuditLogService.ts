@@ -1,5 +1,5 @@
 
-import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '@/lib/database';
+import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
 
 export interface AuditLogFilters {
   userId?: string;
