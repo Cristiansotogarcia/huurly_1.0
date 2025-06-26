@@ -1,10 +1,10 @@
 
-import { supabase } from '../../integrations/supabase/client';
-import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe';
-import { DatabaseService, DatabaseResponse } from '../../lib/database';
-import { ErrorHandler } from '../../lib/errors';
-import { paymentRecordService } from './PaymentRecordService';
-import { logger } from '../../lib/logger';
+import { supabase } from '../../integrations/supabase/client.ts';
+import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe.ts';
+import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
+import { ErrorHandler } from '../../lib/errors.ts';
+import { paymentRecordService } from './PaymentRecordService.ts';
+import { logger } from '../../lib/logger.ts';
 
 export class StripeCheckoutService extends DatabaseService {
   async createCheckoutSession(userId: string): Promise<DatabaseResponse<{ url: string }>> {
