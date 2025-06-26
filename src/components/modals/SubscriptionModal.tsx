@@ -1,15 +1,14 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { loadStripe } from '@stripe/stripe-js';
+import { getStripe, SUBSCRIPTION_PLANS } from '@/lib/stripe-config';
 import { Elements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { getEnvVar } from '@/lib/env';
 
-// Load Stripe using the publishable key from the environment
-const stripePromise = loadStripe(getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '');
+// Load Stripe using the centralized configuration
+const stripePromise = getStripe();
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -27,15 +26,22 @@ const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: 
     event.preventDefault();
 
     if (!stripe) {
+      toast({
+        title: 'Fout',
+        description: 'Stripe is niet beschikbaar. Controleer de configuratie.',
+        variant: 'destructive'
+      });
       return;
     }
 
     setIsProcessing(true);
 
     try {
+      const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+      
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
-          priceId: getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || '',
+          priceId: plan.priceId,
           successUrl: `${window.location.origin}/dashboard?payment_success=true`,
           cancelUrl: `${window.location.origin}/dashboard?payment_canceled=true`,
         },
@@ -67,7 +73,7 @@ const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: 
 
   return (
     <form onSubmit={handleSubmit}>
-        <p className="mb-4">Klik op de knop hieronder om door te gaan naar de beveiligde betaalpagina van Stripe om je abonnement voor €65/jaar te starten.</p>
+      <p className="mb-4">Klik op de knop hieronder om door te gaan naar de beveiligde betaalpagina van Stripe om je abonnement voor €65/jaar te starten.</p>
       <div className="flex justify-end space-x-2 mt-4">
         <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing}>Annuleren</Button>
         <Button type="submit" disabled={!stripe || isProcessing}>

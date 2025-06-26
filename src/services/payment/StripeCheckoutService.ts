@@ -1,10 +1,10 @@
 
-import { supabase } from '../../integrations/supabase/client.ts';
-import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe.ts';
-import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
-import { ErrorHandler } from '../../lib/errors.ts';
-import { paymentRecordService } from './PaymentRecordService.ts';
-import { logger } from '../../lib/logger.ts';
+import { supabase } from '../../integrations/supabase/client';
+import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe-config';
+import { DatabaseService, DatabaseResponse } from '../../lib/database';
+import { ErrorHandler } from '../../lib/errors';
+import { paymentRecordService } from './PaymentRecordService';
+import { logger } from '../../lib/logger';
 
 export class StripeCheckoutService extends DatabaseService {
   async createCheckoutSession(userId: string): Promise<DatabaseResponse<{ url: string }>> {
@@ -23,24 +23,15 @@ export class StripeCheckoutService extends DatabaseService {
         const stripe = await getStripe();
         
         if (!stripe) {
-          throw new Error('Stripe niet beschikbaar');
-        }
-
-        // Check if we're in a development environment (client-side only)
-        if (typeof window !== 'undefined') {
-          const isDevelopment = window.location.hostname === 'localhost' || 
-                               window.location.hostname === '127.0.0.1' ||
-                               window.location.protocol === 'http:';
-          
-          if (isDevelopment) {
-            logger.warn('Stripe is running in development mode over HTTP. Production should use HTTPS.');
-          }
+          throw new Error('Stripe niet beschikbaar - controleer de configuratie');
         }
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           throw new Error('Gebruiker niet gevonden');
         }
+
+        logger.info('Creating checkout session for user:', { userId, email: user.email });
 
         // Create payment record with proper validation
         const paymentRecord = await paymentRecordService.createPaymentRecord({
@@ -53,7 +44,9 @@ export class StripeCheckoutService extends DatabaseService {
           bijgewerkt_op: new Date().toISOString()
         });
 
-        // Determine protocol for success/cancel URLs (client-side only)
+        logger.info('Payment record created:', { paymentRecordId: paymentRecord.id });
+
+        // Determine base URL for success/cancel URLs
         let baseUrl = '';
         if (typeof window !== 'undefined') {
           const protocol = window.location.protocol;
@@ -73,26 +66,33 @@ export class StripeCheckoutService extends DatabaseService {
         });
         
         if (error) {
+          logger.error('Error from create-checkout-session function:', error);
           throw new Error('Fout bij het aanmaken van betaling: ' + error.message);
         }
 
         if (!data?.sessionId) {
+          logger.error('No session ID returned from create-checkout-session');
           throw new Error('Geen sessie ID ontvangen van Stripe');
         }
 
+        logger.info('Checkout session created:', { sessionId: data.sessionId });
+
+        // Update payment record with session ID
         await paymentRecordService.updatePaymentRecord(paymentRecord.id, { 
           stripe_sessie_id: data.sessionId 
         });
 
+        // Redirect to Stripe Checkout
         const { error: stripeError } = await stripe.redirectToCheckout({
           sessionId: data.sessionId,
         });
 
         if (stripeError) {
+          logger.error('Stripe redirect error:', stripeError);
           throw new Error(stripeError.message);
         }
 
-        return { data: { url: data.url }, error: null };
+        return { data: { url: data.url || '' }, error: null };
       } catch (error) {
         logger.error('Error creating checkout session:', error);
         throw error;
