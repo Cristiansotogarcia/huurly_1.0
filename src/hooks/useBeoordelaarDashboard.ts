@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { DashboardDataService } from '@/services/DashboardDataService';
+import { documentService } from '@/services/DocumentService';
 import { Document } from '@/types'; // Assuming a Document type exists
 import { logger } from '@/utils/logger';
 
@@ -13,8 +13,7 @@ export const useBeoordelaarDashboard = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // This service method needs to be created
-      const response = await DashboardDataService.getReviewQueue();
+      const response = await documentService.getDocumentsForReview();
       if (response.success) {
         setDocuments(response.data || []);
       } else {
