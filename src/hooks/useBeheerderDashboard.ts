@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { DashboardDataService } from '@/services/DashboardDataService';
+import { dashboardService } from '@/services/DashboardService';
+import { userService } from '@/services/UserService';
 import { AdminStats, User } from '@/types';
 
 export const useBeheerderDashboard = () => {
@@ -17,8 +18,8 @@ export const useBeheerderDashboard = () => {
     setLoading(true);
     try {
       const [statsResponse, usersResponse] = await Promise.all([
-        DashboardDataService.getAdminStats(),
-        DashboardDataService.getAllUsers(),
+        dashboardService.getAdminStats(),
+        userService.getUsers(),
       ]);
       
       if (statsResponse.success && statsResponse.data) {
