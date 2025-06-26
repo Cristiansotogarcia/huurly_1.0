@@ -43,7 +43,7 @@ export class DocumentService extends DatabaseService {
         .upload(fileName, file);
 
       if (uploadError) {
-        throw ErrorHandler.handleStorageError(uploadError);
+        throw ErrorHandler.createFileUploadError(uploadError.message);
       }
 
       const { data: document, error: dbError } = await supabase
