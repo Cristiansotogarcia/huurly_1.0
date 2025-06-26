@@ -1,23 +1,42 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/hooks/use-toast";
+import { paymentService } from "@/services/PaymentService";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, updateUser } = useAuthStore();
 
   useEffect(() => {
+    // Parse the session_id parameter from the URL
+    const params = new URLSearchParams(location.search);
+    const sessionId = params.get("session_id");
+
+    if (sessionId) {
+      paymentService.handlePaymentSuccess(sessionId).then((result) => {
+        if (!result.success || result.error) {
+          toast({
+            title: "Fout",
+            description: result.error?.message ||
+              "Er is een fout opgetreden bij het verwerken van de betaling.",
+            variant: "destructive",
+          });
+        }
+      });
+    }
+
     // On visit, show toast and mark as paid in store
     toast({
       title: "Betaling ontvangen!",
-      description: "Je account is nu geactiveerd en je hebt toegang tot alle functies.",
+      description:
+        "Je account is nu geactiveerd en je hebt toegang tot alle functies.",
       variant: "default",
     });
 
     // Mark user as paid
-    // If user is not yet updated, still set so modal closes immediately
     if (user && user.hasPayment !== true) {
       updateUser({ hasPayment: true });
     }
