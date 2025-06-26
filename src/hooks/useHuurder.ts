@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { dashboardDataService } from '@/services/DashboardDataService';
 import { userService } from '@/services/UserService';
+import { documentService } from '@/services/DocumentService';
 import { Document, TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
 
 export const useHuurder = () => {
@@ -31,7 +32,7 @@ export const useHuurder = () => {
     try {
       const [statsResponse, docsResponse, profileResponse, subResponse, pictureUrl] = await Promise.all([
         dashboardDataService.getTenantDashboardStats(user.id),
-        dashboardDataService.getUserDocuments(user.id),
+        documentService.getDocuments(user.id),
         userService.getTenantProfile(user.id),
         dashboardDataService.getSubscription(user.id),
         userService.getProfilePictureUrl(user.id),

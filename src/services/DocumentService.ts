@@ -12,7 +12,7 @@ export interface Document {
   huurder_id: string;
   type: DocumentType;
   bestand_url: string;
-  bestand_naam: string;
+  bestandsnaam: string;
   status: DocumentStatus;
   beoordeeld_door?: string;
   beoordeeld_op?: string;
@@ -44,7 +44,7 @@ export class DocumentService extends DatabaseService {
         .upload(fileName, file);
 
       if (uploadError) {
-        throw ErrorHandler.handleStorageError(uploadError);
+        throw ErrorHandler.createFileUploadError(uploadError.message);
       }
 
       const { data: document, error: dbError } = await supabase
@@ -53,7 +53,7 @@ export class DocumentService extends DatabaseService {
           huurder_id: userId,
           type: documentType,
           bestand_url: uploadData.path,
-          bestand_naam: file.name,
+          bestandsnaam: file.name,
           status: 'wachtend',
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
