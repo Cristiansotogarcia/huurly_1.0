@@ -1,12 +1,12 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { User, UserRole } from '@/types';
+import { supabase } from '../../integrations/supabase/client.ts';
+import { User, UserRole } from '../../types/index.ts';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
-import { AuthResponse, SignUpData, SignInData } from './types';
-import { roleMapper } from './roleMapper';
-import { userMapper } from './userMapper';
-import { paymentChecker } from './paymentChecker';
+import { logger } from '../logger.ts';
+import { AuthResponse, SignUpData, SignInData } from './types.ts';
+import { roleMapper } from './roleMapper.ts';
+import { userMapper } from './userMapper.ts';
+import { paymentChecker } from './paymentChecker.ts';
 
 export class AuthService {
   /**

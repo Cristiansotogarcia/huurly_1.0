@@ -1,5 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse } from '@/lib/database';
+import { supabase } from '../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
 
 export class ConfigurationService extends DatabaseService {
   /**

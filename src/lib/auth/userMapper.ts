@@ -2,7 +2,11 @@
 import { supabase } from '../../integrations/supabase/client.ts';
 import { User } from '../../types/index.ts';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+<<<<<<< codex/troubleshoot-npm-test-and-network-access-issues
+import { logger } from '../../lib/logger.ts';
+=======
 import { logger } from '../logger.ts';
+>>>>>>> main
 import { roleMapper } from './roleMapper.ts';
 
 class UserMapper {
