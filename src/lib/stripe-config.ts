@@ -7,12 +7,12 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { logger } from './logger';
 
-// Stripe configuration - using actual keys from Supabase secrets
+// Stripe configuration - using your provided sandbox keys
 export const STRIPE_CONFIG = {
-  // Using the actual publishable key from your Supabase project
-  publishableKey: 'pk_test_51QfGKJGwJZ6qNjYnQXCXjrBPXHsyKXGRVNJUNZmMvXhgdGCQoKpz9LfWILYU9FGUQQcT9uZ3F4v2JLZ1CZxL8RLT00w8CpNJvP',
-  // Using the actual price ID from your Supabase project
-  huurderPriceId: 'price_1QfGNBGwJZ6qNjYnXvkJsQXJ',
+  // Your provided publishable key
+  publishableKey: 'pk_test_51ReDL9FWpC3XRbUY3IgFVMmMUMVGZ07rt5KRf3Gk4DDluKP6jxwxrKULJo4UzzWHVgtbR4IikwBjWZyZdMLK67CK00m3bS21gl',
+  // You'll need to create this price in your Stripe dashboard for €65/year
+  huurderPriceId: 'price_1QfGNBGwJZ6qNjYnXvkJsQXJ', // This needs to be updated with your actual price ID
 };
 
 // Validate configuration
