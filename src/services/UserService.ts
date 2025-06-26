@@ -1,3 +1,4 @@
+
 import { supabase } from '../integrations/supabase/client.ts';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
 import { User, UserRole } from '../types/index.ts';
@@ -180,7 +181,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    if (sanitizedData.phone && !this.isValidPhoneNumber(sanitizedData.phone)) {
+    if (sanitizedData.telefoon && !this.isValidPhoneNumber(sanitizedData.telefoon)) {
       return {
         data: null,
         error: new Error('Ongeldig telefoonnummer'),
@@ -253,13 +254,9 @@ export class UserService extends DatabaseService {
 
       const sanitizedData = this.sanitizeInput(data);
 
-      // Ensure furnished_preference uses correct Dutch values
-      sanitizedData.furnishedPreference = sanitizeFurnishedPreference(sanitizedData.furnishedPreference);
-      logger.info("createTenantProfile: sanitizedData.furnishedPreference =", sanitizedData.furnishedPreference);
-
       const validation = this.validateRequiredFields(sanitizedData, [
-        'firstName', 'lastName', 'phone', 'dateOfBirth', 'profession', 
-        'monthlyIncome', 'bio', 'city', 'minBudget', 'maxBudget', 'motivation'
+        'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 
+        'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'
       ]);
       if (!validation.isValid) {
         return {
@@ -269,7 +266,7 @@ export class UserService extends DatabaseService {
         };
       }
 
-      if (!this.isValidPhoneNumber(sanitizedData.phone)) {
+      if (!this.isValidPhoneNumber(sanitizedData.telefoon)) {
         return {
           data: null,
           error: new Error('Ongeldig telefoonnummer'),
@@ -278,13 +275,13 @@ export class UserService extends DatabaseService {
       }
 
       return this.executeQuery(async () => {
-        // 1. Update basic profile
+        // 1. Update basic profile in gebruikers table
         const { error: profileError } = await supabase
           .from('gebruikers')
           .update({
-            first_name: sanitizedData.firstName,
-            last_name: sanitizedData.lastName,
-            is_looking_for_place: true,
+            naam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
+            telefoon: sanitizedData.telefoon,
+            profiel_compleet: true,
           })
           .eq('id', currentUserId);
 
@@ -301,66 +298,60 @@ export class UserService extends DatabaseService {
 
         logger.info("Existing tenant profile check:", existingProfile);
 
-        // 3. Prepare tenant profile data
+        // 3. Prepare tenant profile data using actual database column names
         const tenantProfileData: any = {
           id: currentUserId,
-          first_name: sanitizedData.firstName,
-          last_name: sanitizedData.lastName,
-          phone: sanitizedData.phone,
-          date_of_birth: sanitizedData.dateOfBirth,
-          profession: sanitizedData.profession,
-          monthly_income: sanitizedData.monthlyIncome,
-          bio: sanitizedData.bio,
-          preferred_city: sanitizedData.city,
-          min_budget: sanitizedData.minBudget,
-          max_budget: sanitizedData.maxBudget,
-          preferred_bedrooms: sanitizedData.bedrooms,
-          preferred_property_type: sanitizedData.propertyType,
-          motivation: sanitizedData.motivation,
-          profile_completed: true,
+          beroep: sanitizedData.beroep,
+          inkomen: sanitizedData.maandinkomen,
+          beschrijving: sanitizedData.bio,
+          locatie_voorkeur: [sanitizedData.stad],
+          max_huur: sanitizedData.maxBudget,
+          min_kamers: sanitizedData.slaapkamers || 1,
+          max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : 3,
           
-          // Existing fields
-          employer: sanitizedData.employer || null,
-          employment_status: sanitizedData.employmentStatus || 'employed',
-          work_contract_type: sanitizedData.workContractType || 'permanent',
-          housing_allowance_eligible: sanitizedData.housingAllowanceEligible || false,
-          has_pets: sanitizedData.hasPets || false,
-          pet_details: sanitizedData.petDetails || null,
-          smokes: sanitizedData.smokes || false,
+          // Family information
+          partner: sanitizedData.heeftPartner || false,
+          kinderen: sanitizedData.aantalKinderen || 0,
+          roken: sanitizedData.rookt || false,
+          huisdieren: sanitizedData.heeftHuisdieren || false,
           
-          // Enhanced fields from 7-step modal
-          nationality: sanitizedData.nationality || 'Nederlandse',
-          sex: sanitizedData.sex || null,
-          marital_status: sanitizedData.maritalStatus || 'single',
-          has_children: sanitizedData.hasChildren || false,
-          number_of_children: sanitizedData.numberOfChildren || 0,
-          children_ages: sanitizedData.childrenAges || [],
-          has_partner: sanitizedData.hasPartner || false,
-          partner_name: sanitizedData.partnerName || null,
-          partner_profession: sanitizedData.partnerProfession || null,
-          partner_monthly_income: sanitizedData.partnerMonthlyIncome || 0,
-          partner_employment_status: sanitizedData.partnerEmploymentStatus || null,
-          preferred_districts: sanitizedData.preferredDistricts || null,
-          max_commute_time: sanitizedData.maxCommuteTime || 30,
-          transportation_preference: sanitizedData.transportationPreference || 'public_transport',
-          furnished_preference: sanitizeFurnishedPreference(sanitizedData.furnishedPreference),
-          desired_amenities: sanitizedData.desiredAmenities || [],
-          smoking_details: sanitizedData.smokingDetails || null,
-          profielfoto_url: sanitizedData.profilePictureUrl || null,
+          // Guarantor information
+          borgsteller_beschikbaar: sanitizedData.garantstellerBeschikbaar || false,
+          borgsteller_naam: sanitizedData.naamGarantsteller || null,
+          borgsteller_telefoon: sanitizedData.telefoonGarantsteller || null,
+          borgsteller_inkomen: sanitizedData.inkomenGarantsteller || null,
+          borgsteller_relatie: sanitizedData.relatieGarantsteller || null,
+          inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijsBeschikbaar || false,
           
-          // Priority 1: Guarantor Information
-          guarantor_available: sanitizedData.guarantorAvailable || false,
-          guarantor_name: sanitizedData.guarantorName || null,
-          guarantor_phone: sanitizedData.guarantorPhone || null,
-          guarantor_income: sanitizedData.guarantorIncome || 0,
-          guarantor_relationship: sanitizedData.guarantorRelationship || null,
-          income_proof_available: sanitizedData.incomeProofAvailable || false,
+          // Timing information
+          voorkeur_verhuisdatum: sanitizedData.voorkeurVerhuisdatum ? new Date(sanitizedData.voorkeurVerhuisdatum) : null,
+          vroegste_verhuisdatum: sanitizedData.vroegsteVerhuisdatum ? new Date(sanitizedData.vroegsteVerhuisdatum) : null,
+          beschikbaarheid_flexibel: sanitizedData.flexibeleBeschikbaarheid || false,
           
-          // Priority 2: Timing Information
-          move_in_date_preferred: sanitizedData.moveInDatePreferred || null,
-          move_in_date_earliest: sanitizedData.moveInDateEarliest || null,
-          availability_flexible: sanitizedData.availabilityFlexible || false,
+          // Preferences stored in JSON
+          woningvoorkeur: {
+            type: sanitizedData.woningtype || 'appartement',
+            meubilering: sanitizeFurnishedPreference(sanitizedData.voorkeurMeubilering),
+            voorzieningen: sanitizedData.gewensteVoorzieningen || [],
+            wijken: sanitizedData.voorkeurswijken || [],
+            maxReistijd: sanitizedData.maxReistijd || 30,
+            vervoer: sanitizedData.vervoersvoorkeur || 'openbaar_vervoer'
+          },
+          
+          profielfoto_url: sanitizedData.profielfotoUrl || null,
         };
+
+        // Calculate age from birth date
+        if (sanitizedData.geboortedatum) {
+          const birthDate = new Date(sanitizedData.geboortedatum);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          tenantProfileData.leeftijd = age;
+        }
 
         let tenantProfile;
         let isUpdate = false;
@@ -413,7 +404,7 @@ export class UserService extends DatabaseService {
   /**
    * Get tenant profile by user ID
    */
-  async getTenantProfile(userId: string): Promise<DatabaseResponse<Tables<'TenantProfile'>>> {
+  async getTenantProfile(userId: string): Promise<DatabaseResponse<Tables<'huurders'>>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('huurders')
@@ -442,57 +433,39 @@ export class UserService extends DatabaseService {
     sort?: SortOptions
   ): Promise<DatabaseResponse<any[]>> {
     return this.executeQuery(async () => {
-      // First get tenant profiles with filters
+      // Get tenant profiles with filters
       let tenantQuery = supabase
         .from('huurders')
         .select('*')
-        .eq('profile_completed', true);
+        .not('beschrijving', 'is', null); // Only get profiles with descriptions (completed profiles)
 
-      // Apply filters
+      // Apply filters using correct column names
       if (filters?.city) {
-        tenantQuery = tenantQuery.ilike('preferred_city', `%${filters.city}%`);
+        tenantQuery = tenantQuery.overlaps('locatie_voorkeur', [filters.city]);
       }
 
       if (filters?.maxBudget) {
-        tenantQuery = tenantQuery.lte('max_budget', filters.maxBudget);
+        tenantQuery = tenantQuery.lte('max_huur', filters.maxBudget);
       }
 
       if (filters?.minIncome) {
-        // Use total_household_income for more accurate filtering
-        tenantQuery = tenantQuery.gte('total_household_income', filters.minIncome);
-      }
-
-      if (filters?.propertyType) {
-        tenantQuery = tenantQuery.eq('preferred_property_type', filters.propertyType);
+        tenantQuery = tenantQuery.gte('inkomen', filters.minIncome);
       }
 
       if (filters?.bedrooms) {
-        tenantQuery = tenantQuery.eq('preferred_bedrooms', filters.bedrooms);
-      }
-
-      // Enhanced filters - using any type to avoid TypeScript complexity
-      if (filters?.familyComposition) {
-        tenantQuery = (tenantQuery as any).eq('family_composition', filters.familyComposition);
+        tenantQuery = tenantQuery.gte('min_kamers', filters.bedrooms);
       }
 
       if (filters?.hasChildren !== undefined) {
-        tenantQuery = (tenantQuery as any).eq('has_children', filters.hasChildren);
-      }
-
-      if (filters?.maritalStatus) {
-        tenantQuery = (tenantQuery as any).eq('marital_status', filters.maritalStatus);
-      }
-
-      if (filters?.nationality) {
-        tenantQuery = (tenantQuery as any).eq('nationality', filters.nationality);
-      }
-
-      if (filters?.preferredDistricts && filters.preferredDistricts.length > 0) {
-        tenantQuery = (tenantQuery as any).overlaps('preferred_districts', filters.preferredDistricts);
+        if (filters.hasChildren) {
+          tenantQuery = tenantQuery.gt('kinderen', 0);
+        } else {
+          tenantQuery = tenantQuery.eq('kinderen', 0);
+        }
       }
 
       // Apply sorting
-      tenantQuery = this.applySorting(tenantQuery, sort || { column: 'created_at', ascending: false });
+      tenantQuery = this.applySorting(tenantQuery, sort || { column: 'aangemaakt_op', ascending: false });
 
       // Apply pagination
       tenantQuery = this.applyPagination(tenantQuery, pagination);
@@ -510,12 +483,12 @@ export class UserService extends DatabaseService {
       // Get user IDs from tenant profiles
       const userIds = tenantData.map(tenant => tenant.id);
 
-      // Get corresponding profiles
+      // Get corresponding profiles from gebruikers table
       const { data: profilesData, error: profilesError } = await supabase
         .from('gebruikers')
-        .select('id, first_name, last_name, is_looking_for_place')
+        .select('id, naam, email, profiel_compleet')
         .in('id', userIds)
-        .eq('is_looking_for_place', true);
+        .eq('profiel_compleet', true);
 
       if (profilesError) {
         return { data: null, error: profilesError };
@@ -551,7 +524,7 @@ export class UserService extends DatabaseService {
       };
     }
 
-    if (sanitizedData.phone && !this.isValidPhoneNumber(sanitizedData.phone)) {
+    if (sanitizedData.telefoon && !this.isValidPhoneNumber(sanitizedData.telefoon)) {
       return {
         data: null,
         error: new Error('Ongeldig telefoonnummer'),
@@ -568,19 +541,19 @@ export class UserService extends DatabaseService {
         .single();
 
       const updateData: any = {};
-      if (sanitizedData.firstName || sanitizedData.lastName) {
+      if (sanitizedData.voornaam || sanitizedData.achternaam) {
         // If either first or last name is updated, update the full name
         // Get current name parts from naam field if available
         const currentNaam = currentData?.naam || '';
         const [currentFirstName, ...currentLastNameParts] = currentNaam.split(' ');
         const currentLastName = currentLastNameParts.join(' ');
         
-        const firstName = sanitizedData.firstName || currentFirstName;
-        const lastName = sanitizedData.lastName || currentLastName;
+        const firstName = sanitizedData.voornaam || currentFirstName;
+        const lastName = sanitizedData.achternaam || currentLastName;
         updateData.naam = `${firstName} ${lastName}`;
       }
       if (sanitizedData.email) updateData.email = sanitizedData.email;
-      if (sanitizedData.is_looking_for_place !== undefined) updateData.is_looking_for_place = sanitizedData.is_looking_for_place;
+      if (sanitizedData.telefoon) updateData.telefoon = sanitizedData.telefoon;
 
       const { data, error } = await supabase
         .from('gebruikers')
@@ -607,7 +580,7 @@ export class UserService extends DatabaseService {
       const { data, error } = await supabase
         .from('gebruiker_rollen')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       return { data, error };
@@ -622,7 +595,7 @@ export class UserService extends DatabaseService {
       const { data: tenant } = await supabase
         .from('huurders')
         .select('profielfoto_url')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single();
 
       return tenant?.profielfoto_url || null;
@@ -704,15 +677,14 @@ export class UserService extends DatabaseService {
         .from('gebruikers')
         .select(`
           *,
-          gebruiker_rollen!inner(role, subscription_status),
-          betalingen(status, aangemaakt_op)
+          gebruiker_rollen!inner(role, subscription_status)
         `);
 
       // Apply filters
-      if (filters?.role) {
+      if (filters?.rol) {
         // Map frontend role to database role
         let dbRole: 'Huurder' | 'Verhuurder' | 'Beoordelaar' | 'Beheerder';
-        switch (filters.role) {
+        switch (filters.rol) {
           case 'huurder':
             dbRole = 'Huurder';
             break;
@@ -731,17 +703,17 @@ export class UserService extends DatabaseService {
         query = query.eq('gebruiker_rollen.role', dbRole);
       }
 
-      if (filters?.hasPayment) {
+      if (filters?.heeftBetaling) {
         const { data: paymentUserIds, error: paymentError } = await supabase
           .from('betalingen')
-          .select('user_id') // This should be the foreign key to the users table
+          .select('gebruiker_id')
           .eq('status', 'completed');
 
         if (paymentError) {
           throw this.handleDatabaseError(paymentError);
         }
 
-        const userIdsWithPayment = paymentUserIds.map((p: any) => p.user_id);
+        const userIdsWithPayment = paymentUserIds.map((p: any) => p.gebruiker_id);
         if (userIdsWithPayment.length > 0) {
           query = query.in('id', userIdsWithPayment);
         } else {
@@ -750,16 +722,16 @@ export class UserService extends DatabaseService {
         }
       }
 
-      if (filters?.searchTerm) {
+      if (filters?.zoekterm) {
         query = this.buildSearchQuery(
           query,
-          filters.searchTerm,
-          ['first_name', 'last_name']
+          filters.zoekterm,
+          ['naam', 'email']
         );
       }
 
       // Apply sorting
-      query = this.applySorting(query, sort || { column: 'created_at', ascending: false });
+      query = this.applySorting(query, sort || { column: 'aangemaakt_op', ascending: false });
 
       // Apply pagination
       query = this.applyPagination(query, pagination);
@@ -934,7 +906,7 @@ export class UserService extends DatabaseService {
       const { data: activeUsers, error: activeError } = await supabase
         .from('gebruikers')
         .select('id')
-        .gte('updated_at', thirtyDaysAgo.toISOString());
+        .gte('bijgewerkt_op', thirtyDaysAgo.toISOString());
 
       if (activeError) {
         throw this.handleDatabaseError(activeError);
@@ -943,7 +915,7 @@ export class UserService extends DatabaseService {
       // Get users with payments
       const { data: paidUsers, error: paymentError } = await supabase
         .from('betalingen')
-        .select('user_id')
+        .select('gebruiker_id')
         .eq('status', 'completed');
 
       if (paymentError) {
@@ -957,7 +929,7 @@ export class UserService extends DatabaseService {
           return acc;
         }, {}),
         activeUsers: activeUsers?.length || 0,
-        paidUsers: new Set(paidUsers?.map(p => p.user_id)).size || 0,
+        paidUsers: new Set(paidUsers?.map(p => p.gebruiker_id)).size || 0,
       };
 
       return { data: statistics, error: null };

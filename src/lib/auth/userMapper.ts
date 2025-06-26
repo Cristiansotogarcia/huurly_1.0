@@ -11,15 +11,28 @@ class UserMapper {
    */
   async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
-      // Get profile data
+      // Get profile data - check if the user exists in gebruikers table first
       const { data: profileData } = await supabase
         .from('gebruikers')
-        .select('naam, rol, abonnementen(status)')
+        .select('naam, rol')
         .eq('id', supabaseUser.id)
         .single();
 
-      // Determine payment status from abonnementen join
-      const hasPayment = profileData?.abonnementen?.status === 'actief';
+      // Check for active subscription - use separate query to avoid join errors
+      let hasPayment = false;
+      try {
+        const { data: subscriptionData } = await supabase
+          .from('abonnementen')
+          .select('status')
+          .eq('huurder_id', supabaseUser.id)
+          .eq('status', 'actief')
+          .limit(1);
+
+        hasPayment = subscriptionData && subscriptionData.length > 0;
+      } catch (error) {
+        logger.warn('Could not check subscription status:', error);
+        hasPayment = false;
+      }
 
       const name = profileData?.naam || `${supabaseUser.user_metadata?.first_name || ''} ${supabaseUser.user_metadata?.last_name || ''}`.trim() || supabaseUser.email?.split('@')[0] || 'User';
 
