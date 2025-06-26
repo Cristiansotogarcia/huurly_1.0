@@ -72,6 +72,7 @@ SUPABASE_URL=<your-supabase-url>
 SUPABASE_ANON_KEY=<your-supabase-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` initialize the frontend Supabase client in `src/integrations/supabase/client.ts`.
 The `SUPABASE_SERVICE_ROLE_KEY` is required for server-side scripts and edge
 functions, including the new `register-user` function that provisions user
 profiles after sign up.
