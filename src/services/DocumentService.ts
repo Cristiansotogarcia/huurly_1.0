@@ -12,11 +12,10 @@ export interface Document {
   huurder_id: string;
   type: DocumentType;
   bestand_url: string;
-  bestand_naam: string;
+  bestandsnaam: string;
   status: DocumentStatus;
-  beoordeeld_door?: string;
-  beoordeeld_op?: string;
-  opmerkingen?: string;
+  beoordelaar_id?: string;
+  beoordeling_notitie?: string | null;
   aangemaakt_op: string;
   bijgewerkt_op: string;
 }
@@ -53,7 +52,7 @@ export class DocumentService extends DatabaseService {
           huurder_id: userId,
           type: documentType,
           bestand_url: uploadData.path,
-          bestand_naam: file.name,
+          bestandsnaam: file.name,
           status: 'wachtend',
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
@@ -137,9 +136,8 @@ export class DocumentService extends DatabaseService {
         .from('documenten')
         .update({
           status,
-          beoordeeld_door: currentUserId,
-          beoordeeld_op: new Date().toISOString(),
-          opmerkingen: notes || null,
+          beoordelaar_id: currentUserId,
+          beoordeling_notitie: notes || null,
           bijgewerkt_op: new Date().toISOString(),
         })
         .eq('id', documentId)
