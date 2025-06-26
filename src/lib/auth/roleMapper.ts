@@ -1,5 +1,9 @@
 
+<<<<<<< codex/troubleshoot-npm-test-and-network-access-issues
 import { UserRole } from '../../types/index.ts';
+=======
+import { UserRole } from '../types/index.ts';
+>>>>>>> main
 import { logger } from '../logger.ts';
 
 class RoleMapper {

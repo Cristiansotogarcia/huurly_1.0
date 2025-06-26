@@ -69,6 +69,19 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.user_id;
 
+      // Update payment record status to completed in betalingen table
+      const { error: paymentError } = await supabase
+        .from('betalingen')
+        .update({
+          status: 'completed',
+          bijgewerkt_op: new Date().toISOString(),
+        })
+        .eq('stripe_sessie_id', session.id);
+
+      if (paymentError) {
+        console.error('Failed to update payment record', { sessionId: session.id, error: paymentError });
+      }
+
       if (!userId) {
         throw new Error('User ID not found in session metadata');
       }
@@ -102,6 +115,22 @@ serve(async (req) => {
 
       if (notificationError) {
         console.error('Failed to create notification', { userId, error: notificationError });
+      }
+    }
+
+    if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      const { error: paymentError } = await supabase
+        .from('betalingen')
+        .update({
+          status: 'failed',
+          bijgewerkt_op: new Date().toISOString(),
+        })
+        .eq('stripe_sessie_id', session.id);
+
+      if (paymentError) {
+        console.error('Failed to mark payment as failed', { sessionId: session.id, error: paymentError });
       }
     }
 

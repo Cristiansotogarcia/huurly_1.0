@@ -50,7 +50,7 @@ export class DashboardService {
       const { data: tenantProfile, error: profileError } = await supabase
         .from('huurders')
         .select('profiel_weergaven')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       if (profileError && profileError.code !== 'PGRST116') {
