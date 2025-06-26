@@ -8,7 +8,7 @@ export class MatchingService {
       const { data: tenant, error: tenantError } = await supabase
         .from('huurders')
         .select('*')
-        .eq('gebruiker_id', tenantId)
+        .eq('id', tenantId)
         .single();
 
       if (tenantError) throw tenantError;
@@ -149,7 +149,7 @@ export class MatchingService {
           voorkeur_gemeubileerd: preferences.furnished,
           bijgewerkt_op: new Date().toISOString()
         })
-        .eq('gebruiker_id', tenantId);
+        .eq('id', tenantId);
 
       if (error) throw error;
     } catch (error) {

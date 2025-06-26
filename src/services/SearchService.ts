@@ -115,7 +115,7 @@ export class SearchService {
       // Start building the query
       let dbQuery = supabase
         .from('huurders')
-        .select('*, user:user_id(*)', { count: 'exact' }) as any;
+        .select('*, user:gebruikers(*)', { count: 'exact' }) as any;
       
       // Apply text search if query is provided
       if (query && query.trim() !== '') {
