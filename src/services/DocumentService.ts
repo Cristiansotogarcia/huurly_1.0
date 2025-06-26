@@ -1,35 +1,34 @@
 
-import { supabase } from '../integrations/supabase/client.ts';
-import { DatabaseService, DatabaseResponse } from '../lib/database.ts';
-import { ErrorHandler } from '../lib/errors.ts';
-import { storageService } from '../lib/storage.ts';
-import { Tables, TablesInsert } from '../integrations/supabase/types.ts';
-import { logger } from '../lib/logger.ts';
+import { supabase } from '../integrations/supabase/client';
+import { DatabaseService, DatabaseResponse } from '../lib/database';
+import { ErrorHandler } from '../lib/errors';
+import { logger } from '../lib/logger';
 
-export type Document = Tables<'documenten'>;
-export type DocumentInsert = TablesInsert<'documenten'>;
+export type DocumentType = 'identiteit' | 'inkomen' | 'referentie' | 'uittreksel_bkr' | 'arbeidscontract';
+export type DocumentStatus = 'wachtend' | 'goedgekeurd' | 'afgekeurd';
 
-export type DocumentType = 'identiteitsbewijs' | 'loonstrook' | 'arbeidscontract' | 'referentie' | 'inkomensverklaring' | 'werkgeversverklaring' | 'bankafschrift' | 'uittreksel_bkr' | 'huurgarantie' | 'overig';
-
-export interface DocumentUpload {
-  file: File;
+export interface Document {
+  id: string;
+  huurder_id: string;
   type: DocumentType;
-  description?: string;
-}
-
-export interface DocumentValidation {
-  isValid: boolean;
-  error?: string;
-  suggestions?: string[];
+  bestand_url: string;
+  bestand_naam: string;
+  status: DocumentStatus;
+  beoordeeld_door?: string;
+  beoordeeld_op?: string;
+  opmerkingen?: string;
+  aangemaakt_op: string;
+  bijgewerkt_op: string;
 }
 
 export class DocumentService extends DatabaseService {
-  private readonly ALLOWED_FILE_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-  async uploadDocument(file: File, documentType: DocumentType, description?: string): Promise<DatabaseResponse<Document>> {
+  async uploadDocument(
+    file: File,
+    documentType: DocumentType,
+    userId: string
+  ): Promise<DatabaseResponse<Document>> {
     const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
+    if (!currentUserId || currentUserId !== userId) {
       return {
         data: null,
         error: ErrorHandler.normalize('Niet geautoriseerd'),
@@ -38,133 +37,91 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const validation = this.validateFile(file);
-      if (!validation.isValid) {
-        throw new Error(validation.error || 'Bestand validatie mislukt');
+      const fileName = `${userId}/${documentType}/${Date.now()}_${file.name}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        throw ErrorHandler.handleStorageError(uploadError);
       }
 
-      const fileUploadResult = await storageService.uploadFile(file, 'documents', currentUserId);
-      if (!fileUploadResult.success || !fileUploadResult.url) {
-        throw new Error('Bestand upload mislukt');
-      }
-
-      const documentData: DocumentInsert = {
-        huurder_id: currentUserId,
-        bestandsnaam: file.name,
-        type: documentType,
-        bestand_url: fileUploadResult.url,
-        status: 'wachtend',
-      };
-
-      const { data, error } = await supabase
+      const { data: document, error: dbError } = await supabase
         .from('documenten')
-        .insert(documentData)
+        .insert({
+          huurder_id: userId,
+          type: documentType,
+          bestand_url: uploadData.path,
+          bestand_naam: file.name,
+          status: 'wachtend',
+          aangemaakt_op: new Date().toISOString(),
+          bijgewerkt_op: new Date().toISOString(),
+        })
         .select()
         .single();
 
+      if (dbError) {
+        throw ErrorHandler.handleDatabaseError(dbError);
+      }
+
+      await this.createAuditLog('DOCUMENT_UPLOAD', 'documenten', document.id, userId, document);
+
+      return { data: document, error: null };
+    });
+  }
+
+  async getDocuments(userId: string): Promise<DatabaseResponse<Document[]>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId || currentUserId !== userId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('documenten')
+        .select('*')
+        .eq('huurder_id', userId)
+        .order('aangemaakt_op', { ascending: false });
+
       if (error) {
-        if (fileUploadResult.path) {
-          await storageService.deleteFile(fileUploadResult.path);
-        }
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('DOCUMENT_UPLOADED', 'documenten', data.id, null, {
-        documentType,
-        fileName: file.name,
-        fileSize: file.size,
-      });
-
-      logger.info('Document uploaded successfully', {
-        documentId: data.id,
-        userId: currentUserId,
-        fileName: file.name,
-        type: documentType,
-      });
-
-      return { data, error: null };
+      return { data: data || [], error: null };
     });
   }
 
-  async getUserDocuments(userId?: string): Promise<DatabaseResponse<Document[]>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const targetUserId = userId || currentUserId;
-    if (targetUserId !== currentUserId) {
-      const hasPermission = await this.checkUserPermission(targetUserId, ['Beheerder', 'Beoordelaar']);
-      if (!hasPermission) {
-        return {
-          data: null,
-          error: ErrorHandler.normalize('Geen toegang tot documenten van andere gebruikers'),
-          success: false,
-        };
-      }
-    }
-
+  async getDocumentsForReview(): Promise<DatabaseResponse<Document[]>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('documenten')
-        .select('*')
-        .eq('huurder_id', targetUserId)
-        .order('aangemaakt_op', { ascending: false });
-
-      return { data, error };
-    });
-  }
-
-  async getDocumentsByUser(userId: string): Promise<DatabaseResponse<Document[]>> {
-    return this.getUserDocuments(userId);
-  }
-
-  async getPendingDocuments(): Promise<DatabaseResponse<Document[]>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder', 'Beoordelaar']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Geen toegang tot documenten voor beoordeling'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('documenten')
-        .select('*')
+        .select(`
+          *,
+          huurders (
+            naam,
+            email
+          )
+        `)
         .eq('status', 'wachtend')
         .order('aangemaakt_op', { ascending: true });
 
-      return { data, error };
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
+      }
+
+      return { data: data || [], error: null };
     });
-  }
-
-  async approveDocument(documentId: string): Promise<DatabaseResponse<Document>> {
-    return this.reviewDocument(documentId, 'goedgekeurd');
-  }
-
-  async rejectDocument(documentId: string, reason: string): Promise<DatabaseResponse<Document>> {
-    return this.reviewDocument(documentId, 'afgewezen', reason);
   }
 
   async reviewDocument(
     documentId: string,
-    status: 'goedgekeurd' | 'afgewezen',
-    reviewNotes?: string
+    status: 'goedgekeurd' | 'afgekeurd',
+    notes?: string
   ): Promise<DatabaseResponse<Document>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
@@ -175,22 +132,14 @@ export class DocumentService extends DatabaseService {
       };
     }
 
-    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder', 'Beoordelaar']);
-    if (!hasPermission) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Geen toegang tot document beoordeling'),
-        success: false,
-      };
-    }
-
     return this.executeQuery(async () => {
       const { data, error } = await supabase
         .from('documenten')
         .update({
           status,
-          beoordelaar_id: currentUserId,
-          beoordeling_notitie: reviewNotes,
+          beoordeeld_door: currentUserId,
+          beoordeeld_op: new Date().toISOString(),
+          opmerkingen: notes || null,
           bijgewerkt_op: new Date().toISOString(),
         })
         .eq('id', documentId)
@@ -201,25 +150,18 @@ export class DocumentService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('DOCUMENT_REVIEWED', 'documenten', documentId, null, {
+      await this.createAuditLog('DOCUMENT_REVIEW', 'documenten', documentId, currentUserId, {
         status,
-        reviewerId: currentUserId,
-        reviewNotes,
-      });
-
-      logger.info('Document reviewed', {
-        documentId,
-        status,
-        reviewerId: currentUserId,
+        notes,
       });
 
       return { data, error: null };
     });
   }
 
-  async deleteDocument(documentId: string): Promise<DatabaseResponse<void>> {
+  async deleteDocument(documentId: string, userId: string): Promise<DatabaseResponse<boolean>> {
     const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
+    if (!currentUserId || currentUserId !== userId) {
       return {
         data: null,
         error: ErrorHandler.normalize('Niet geautoriseerd'),
@@ -228,87 +170,34 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const { data: document, error: fetchError } = await supabase
+      const { data: document } = await supabase
         .from('documenten')
-        .select('*')
+        .select('bestand_url')
         .eq('id', documentId)
+        .eq('huurder_id', userId)
         .single();
 
-      if (fetchError) {
-        throw ErrorHandler.handleDatabaseError(fetchError);
+      if (document?.bestand_url) {
+        await supabase.storage.from('documents').remove([document.bestand_url]);
       }
 
-      if (document.huurder_id !== currentUserId) {
-        const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
-        if (!hasPermission) {
-          throw new Error('Geen toegang tot dit document');
-        }
-      }
-
-      if (document.bestand_url) {
-        const path = document.bestand_url.split('/').pop();
-        if (path) {
-          await storageService.deleteFile(path);
-        }
-      }
-
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('documenten')
         .delete()
-        .eq('id', documentId);
+        .eq('id', documentId)
+        .eq('huurder_id', userId);
 
-      if (deleteError) {
-        throw ErrorHandler.handleDatabaseError(deleteError);
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('DOCUMENT_DELETED', 'documenten', documentId, document, null);
+      await this.createAuditLog('DOCUMENT_DELETE', 'documenten', documentId, userId, null);
 
-      logger.info('Document deleted', {
-        documentId,
-        userId: currentUserId,
-        fileName: document.bestandsnaam,
-      });
-
-      return { data: undefined, error: null };
+      return { data: true, error: null };
     });
   }
 
-  validateFile(file: File): DocumentValidation {
-    const errors: string[] = [];
-    const suggestions: string[] = [];
-
-    if (file.size > this.MAX_FILE_SIZE) {
-      errors.push(`Bestand is te groot (${this.formatFileSize(file.size)}). Maximum toegestaan: ${this.formatFileSize(this.MAX_FILE_SIZE)}`);
-      suggestions.push('Compress het bestand of gebruik een kleiner bestand');
-    }
-
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-    if (!fileExtension || !this.ALLOWED_FILE_TYPES.includes(fileExtension)) {
-      errors.push(`Bestandstype .${fileExtension} is niet toegestaan`);
-      suggestions.push(`Toegestane bestandstypes: ${this.ALLOWED_FILE_TYPES.join(', ')}`);
-    }
-
-    if (file.name.length > 255) {
-      errors.push('Bestandsnaam is te lang (maximum 255 karakters)');
-      suggestions.push('Hernoem het bestand met een kortere naam');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      error: errors.length > 0 ? errors.join('; ') : undefined,
-      suggestions: suggestions.length > 0 ? suggestions : undefined,
-    };
-  }
-
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  async getDocumentStats(): Promise<DatabaseResponse<any>> {
+  async getDocumentUrl(documentId: string, userId: string): Promise<DatabaseResponse<string>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -319,20 +208,48 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const { data: statusCounts, error: statusError } = await supabase
+      const { data: document, error } = await supabase
         .from('documenten')
-        .select('status')
-        .eq('huurder_id', currentUserId);
+        .select('bestand_url')
+        .eq('id', documentId)
+        .single();
 
-      if (statusError) {
-        throw ErrorHandler.handleDatabaseError(statusError);
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
+      }
+
+      const { data: signedUrl } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(document.bestand_url, 300);
+
+      if (!signedUrl) {
+        throw new Error('Kon geen toegang verkrijgen tot document');
+      }
+
+      return { data: signedUrl.signedUrl, error: null };
+    });
+  }
+
+  async getDocumentStats(): Promise<DatabaseResponse<{
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  }>> {
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('documenten')
+        .select('status');
+
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
       }
 
       const stats = {
-        total: statusCounts.length,
-        pending: statusCounts.filter(d => d.status === 'wachtend').length,
-        approved: statusCounts.filter(d => d.status === 'goedgekeurd').length,
-        rejected: statusCounts.filter(d => d.status === 'afgewezen').length,
+        total: data.length,
+        pending: data.filter(doc => doc.status === 'wachtend').length,
+        approved: data.filter(doc => doc.status === 'goedgekeurd').length,
+        rejected: data.filter(doc => doc.status === 'afgekeurd').length,
       };
 
       return { data: stats, error: null };

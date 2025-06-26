@@ -1,308 +1,183 @@
 
-import { supabase } from '../integrations/supabase/client.ts';
-import { logger } from '../lib/logger.ts';
+import { supabase } from '../integrations/supabase/client';
+import { DatabaseService, DatabaseResponse } from '../lib/database';
+import { ErrorHandler } from '../lib/errors';
+import { logger } from '../lib/logger';
 
-interface DashboardData {
-  profileViews: number;
-  invitations: number;
-  applications: number;
-  acceptedApplications: number;
+export interface DashboardData {
+  stats: {
+    totalUsers: number;
+    totalTenants: number;
+    totalLandlords: number;
+    pendingDocuments: number;
+    approvedDocuments: number;
+    activeSubscriptions: number;
+  };
+  recentActivity: any[];
+  documentQueue: any[];
 }
 
-interface LandlordDashboardData {
-  activeListings: number;
-  totalApplications: number;
-  unreadMessages: number;
-  profileViews: number;
-}
+export class DashboardDataService extends DatabaseService {
+  async getAdminDashboardData(): Promise<DatabaseResponse<DashboardData>> {
+    return this.executeQuery(async () => {
+      const [
+        usersResult,
+        tenantsResult,
+        landlordsResult,
+        documentsResult,
+        subscriptionsResult,
+        recentActivityResult,
+        documentQueueResult
+      ] = await Promise.all([
+        supabase.from('gebruikers').select('id', { count: 'exact', head: true }),
+        supabase.from('gebruikers').select('id', { count: 'exact', head: true }).eq('rol', 'huurder'),
+        supabase.from('gebruikers').select('id', { count: 'exact', head: true }).eq('rol', 'verhuurder'),
+        supabase.from('documenten').select('status'),
+        supabase.from('abonnementen').select('id').eq('status', 'actief'),
+        supabase.from('audit_logs').select('*').order('aangemaakt_op', { ascending: false }).limit(5),
+        supabase.from('documenten').select(`
+          *,
+          huurders (naam, email)
+        `).eq('status', 'wachtend').order('aangemaakt_op', { ascending: true }).limit(10)
+      ]);
 
-interface AdminDashboardData {
-  totalUsers: number;
-  totalTenants: number;
-  totalLandlords: number;
-  pendingDocuments: number;
-}
+      const documents = documentsResult.data || [];
+      const pendingDocuments = documents.filter(doc => doc.status === 'wachtend').length;
+      const approvedDocuments = documents.filter(doc => doc.status === 'goedgekeurd').length;
 
-export class DashboardDataService {
-  static async getTenantDashboardStats(userId: string): Promise<{ success: boolean; data?: DashboardData; error?: Error }> {
-    try {
-      logger.info('Fetching tenant dashboard stats for user:', userId);
-
-      // Return mock data since analytics tables don't exist
-      const stats: DashboardData = {
-        profileViews: 0,
-        invitations: 0,
-        applications: 0,
-        acceptedApplications: 0,
+      const dashboardData: DashboardData = {
+        stats: {
+          totalUsers: usersResult.count || 0,
+          totalTenants: tenantsResult.count || 0,
+          totalLandlords: landlordsResult.count || 0,
+          pendingDocuments,
+          approvedDocuments,
+          activeSubscriptions: subscriptionsResult.data?.length || 0,
+        },
+        recentActivity: recentActivityResult.data || [],
+        documentQueue: documentQueueResult.data || [],
       };
 
-      logger.info('Mock dashboard stats fetched successfully:', stats);
-      return { success: true, data: stats };
-    } catch (error) {
-      logger.error('Error fetching tenant dashboard stats:', error);
-      return { success: false, error: error as Error };
-    }
+      return { data: dashboardData, error: null };
+    });
   }
 
-  static async updateProfileVisibility(userId: string, isVisible: boolean): Promise<{ success: boolean; error?: Error }> {
-    try {
-      logger.info('Updating profile visibility for user:', userId, 'to:', isVisible);
-
-      const { error } = await supabase
-        .from('gebruikers')
-        .update({ 
-          bijgewerkt_op: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (error) {
-        logger.error('Database error updating profile visibility:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Profile visibility updated successfully');
-      return { success: true };
-    } catch (error) {
-      logger.error('Error updating profile visibility:', error);
-      return { success: false, error: error as Error };
+  async getTenantDashboardData(userId: string): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId || currentUserId !== userId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
     }
-  }
 
-  static async getTenantProfile(userId: string): Promise<{ success: boolean; data?: any; error?: Error }> {
-    try {
-      logger.info('Fetching tenant profile for user:', userId);
+    return this.executeQuery(async () => {
+      const [
+        profileResult,
+        documentsResult,
+        subscriptionResult
+      ] = await Promise.all([
+        supabase.from('huurders').select('*').eq('id', userId).single(),
+        supabase.from('documenten').select('*').eq('huurder_id', userId),
+        supabase.from('abonnementen').select('*').eq('huurder_id', userId).eq('status', 'actief').single()
+      ]);
 
-      const { data, error } = await supabase
-        .from('huurders')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const profile = profileResult.data;
+      const documents = documentsResult.data || [];
+      const subscription = subscriptionResult.data;
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No profile found, which is not an error in this context. Return success with null data.
-          logger.info('No tenant profile found for user:', userId);
-          return { success: true, data: null };
-        }
-        logger.error('Database error fetching tenant profile:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Tenant profile fetched successfully');
-      return { success: true, data };
-    } catch (error) {
-      logger.error('Error fetching tenant profile:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getSubscription(userId: string): Promise<{ success: boolean; data?: any; error?: Error }> {
-    try {
-      logger.info('Fetching subscription for user:', userId);
-
-      const { data, error } = await supabase
-        .from('abonnementen')
-        .select('*')
-        .eq('huurder_id', userId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No subscription found, which is not an error in this context. Return success with null data.
-          logger.info('No subscription found for user:', userId);
-          return { success: true, data: null };
-        }
-        logger.error('Database error fetching subscription:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Subscription fetched successfully');
-      return { success: true, data };
-    } catch (error) {
-      logger.error('Error fetching subscription:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getUserDocuments(userId: string): Promise<{ success: boolean; data?: any[]; error?: Error }> {
-    try {
-      logger.info('Fetching user documents for user:', userId);
-
-      const { data, error } = await supabase
-        .from('documenten')
-        .select('*')
-        .eq('huurder_id', userId)
-        .order('aangemaakt_op', { ascending: false });
-
-      if (error) {
-        logger.error('Database error fetching user documents:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('User documents fetched successfully, count:', data?.length || 0);
-      return { success: true, data: data || [] };
-    } catch (error) {
-      logger.error('Error fetching user documents:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getProfile(userId: string): Promise<{ success: boolean; data?: any; error?: Error }> {
-    try {
-      logger.info('Fetching profile for user:', userId);
-
-      const { data, error } = await supabase
-        .from('gebruikers')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        logger.error('Database error fetching profile:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Profile fetched successfully');
-      return { success: true, data };
-    } catch (error) {
-      logger.error('Error fetching profile:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getLandlordProperties(userId: string): Promise<{ success: boolean; data?: any[]; error?: Error }> {
-    try {
-      logger.info('Fetching properties for landlord:', userId);
-
-      const { data, error } = await supabase
-        .from('verhuurders')
-        .select('*')
-        .eq('verhuurder_id', userId)
-        .order('aangemaakt_op', { ascending: false });
-
-      if (error) {
-        logger.error('Database error fetching landlord properties:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Landlord properties fetched successfully, count:', data?.length || 0);
-      return { success: true, data: data || [] };
-    } catch (error) {
-      logger.error('Error fetching landlord properties:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getLandlordDashboardStats(userId: string): Promise<{ success: boolean; data?: LandlordDashboardData; error?: Error }> {
-    try {
-      logger.info('Fetching landlord dashboard stats for user:', userId);
-
-      // Return mock data
-      const stats: LandlordDashboardData = {
-        activeListings: 0,
-        totalApplications: 0,
-        unreadMessages: 0,
-        profileViews: 0,
+      const dashboardData = {
+        profile,
+        documents,
+        subscription,
+        stats: {
+          documentsUploaded: documents.length,
+          documentsApproved: documents.filter(doc => doc.status === 'goedgekeurd').length,
+          profileComplete: profile?.profiel_compleet || false,
+          subscriptionActive: !!subscription,
+        },
       };
 
-      logger.info('Mock landlord dashboard stats fetched successfully:', stats);
-      return { success: true, data: stats };
-    } catch (error) {
-      logger.error('Error fetching landlord dashboard stats:', error);
-      return { success: false, error: error as Error };
-    }
+      return { data: dashboardData, error: null };
+    });
   }
 
-  static async getReviewQueue(): Promise<{ success: boolean; data?: any[]; error?: Error }> {
-    try {
-      logger.info('Fetching document review queue');
+  async getVerhuurderDashboardData(userId: string): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId || currentUserId !== userId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
 
+    return this.executeQuery(async () => {
+      const [
+        profileResult,
+        tenantsResult
+      ] = await Promise.all([
+        supabase.from('verhuurders').select('*').eq('id', userId).single(),
+        supabase.from('huurders').select('*').eq('profiel_compleet', true).order('bijgewerkt_op', { ascending: false })
+      ]);
+
+      const profile = profileResult.data;
+      const tenants = tenantsResult.data || [];
+
+      const dashboardData = {
+        profile,
+        tenants,
+        stats: {
+          availableTenants: tenants.length,
+          profileComplete: profile?.profiel_compleet || false,
+        },
+      };
+
+      return { data: dashboardData, error: null };
+    });
+  }
+
+  async updateDocumentStatus(
+    documentId: string,
+    status: 'goedgekeurd' | 'afgekeurd',
+    notes?: string
+  ): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('documenten')
-        .select('*, gebruikers(naam, email)')
-        .eq('status', 'wachtend')
-        .order('aangemaakt_op', { ascending: true });
-
-      if (error) {
-        logger.error('Database error fetching review queue:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('Review queue fetched successfully, count:', data?.length || 0);
-      return { success: true, data: data || [] };
-    } catch (error) {
-      logger.error('Error fetching review queue:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async reviewDocument(documentId: string, status: 'goedgekeurd' | 'afgewezen', remarks?: string): Promise<{ success: boolean; error?: Error }> {
-    try {
-      logger.info(`Reviewing document ${documentId} with status ${status}`);
-
-      const { error } = await supabase
         .from('documenten')
         .update({
           status,
-          beoordeling_notitie: remarks,
+          beoordeeld_door: currentUserId,
+          beoordeeld_op: new Date().toISOString(),
+          opmerkingen: notes || null,
           bijgewerkt_op: new Date().toISOString(),
         })
-        .eq('id', documentId);
+        .eq('id', documentId)
+        .select()
+        .single();
 
       if (error) {
-        logger.error('Database error reviewing document:', error);
-        return { success: false, error: new Error(error.message) };
+        throw ErrorHandler.handleDatabaseError(error);
       }
 
-      logger.info('Document reviewed successfully');
-      return { success: true };
-    } catch (error) {
-      logger.error('Error reviewing document:', error);
-      return { success: false, error: error as Error };
-    }
-  }
+      await this.createAuditLog('DOCUMENT_REVIEW', 'documenten', documentId, currentUserId, {
+        status,
+        notes,
+      });
 
-  static async getAdminStats(): Promise<{ success: boolean; data?: AdminDashboardData; error?: Error }> {
-    try {
-      logger.info('Fetching admin dashboard stats');
-
-      // Mock data for now
-      const stats: AdminDashboardData = {
-        totalUsers: 0,
-        totalTenants: 0,
-        totalLandlords: 0,
-        pendingDocuments: 0,
-      };
-
-      logger.info('Mock admin dashboard stats fetched successfully:', stats);
-      return { success: true, data: stats };
-    } catch (error) {
-      logger.error('Error fetching admin dashboard stats:', error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  static async getAllUsers(): Promise<{ success: boolean; data?: any[]; error?: Error }> {
-    try {
-      logger.info('Fetching all users');
-
-      const { data, error } = await supabase
-        .from('gebruikers')
-        .select('*')
-        .order('aangemaakt_op', { ascending: false });
-
-      if (error) {
-        logger.error('Database error fetching all users:', error);
-        return { success: false, error: new Error(error.message) };
-      }
-
-      logger.info('All users fetched successfully, count:', data?.length || 0);
-      return { success: true, data: data || [] };
-    } catch (error) {
-      logger.error('Error fetching all users:', error);
-      return { success: false, error: error as Error };
-    }
+      return { data, error: null };
+    });
   }
 }
 
-export const dashboardDataService = DashboardDataService;
+export const dashboardDataService = new DashboardDataService();
