@@ -48,7 +48,7 @@ const DocumentReviewModal = ({
     setIsSubmitting(true);
 
     try {
-      const result = await documentService.approveDocument(document.id);
+      const result = await documentService.reviewDocument(document.id, 'goedgekeurd', reviewNotes);
       if (result.success) {
         onApprove(document.id, reviewNotes);
         onOpenChange(false);
@@ -90,7 +90,7 @@ const DocumentReviewModal = ({
     setIsSubmitting(true);
 
     try {
-      const result = await documentService.rejectDocument(document.id, rejectionReason);
+      const result = await documentService.reviewDocument(document.id, 'afgekeurd', rejectionReason);
       if (result.success) {
         onReject(document.id, rejectionReason);
         onOpenChange(false);
