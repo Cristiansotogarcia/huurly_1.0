@@ -1,9 +1,9 @@
 
-import { supabase } from '../../integrations/supabase/client';
-import { DatabaseService, DatabaseResponse } from '../../lib/database';
-import { ErrorHandler } from '../../lib/errors';
-import { Tables, TablesInsert } from '../../integrations/supabase/types';
-import { logger } from '../../lib/logger';
+import { supabase } from '../../integrations/supabase/client.ts';
+import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
+import { ErrorHandler } from '../../lib/errors.ts';
+import { Tables, TablesInsert } from '../../integrations/supabase/types.ts';
+import { logger } from '../../lib/logger.ts';
 
 export type PaymentRecord = Tables<'betalingen'>;
 export type PaymentRecordInsert = TablesInsert<'betalingen'>;

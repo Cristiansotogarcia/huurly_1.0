@@ -1,8 +1,8 @@
 
-import { SUBSCRIPTION_PLANS, formatPrice } from '../../lib/stripe';
-import { DatabaseService, DatabaseResponse } from '../../lib/database';
-import { ErrorHandler } from '../../lib/errors';
-import { logger } from '../../lib/logger';
+import { SUBSCRIPTION_PLANS, formatPrice } from '../../lib/stripe.ts';
+import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
+import { ErrorHandler } from '../../lib/errors.ts';
+import { logger } from '../../lib/logger.ts';
 
 export class PricingService extends DatabaseService {
   getPricingInfo(role: 'huurder' | 'verhuurder') {
