@@ -1,4 +1,3 @@
-
 /**
  * Centralized Stripe Configuration
  * Handles all Stripe-related configuration and initialization
@@ -11,8 +10,8 @@ import { logger } from './logger';
 export const STRIPE_CONFIG = {
   // Your provided publishable key
   publishableKey: 'pk_test_51ReDL9FWpC3XRbUY3IgFVMmMUMVGZ07rt5KRf3Gk4DDluKP6jxwxrKULJo4UzzWHVgtbR4IikwBjWZyZdMLK67CK00m3bS21gl',
-  // You'll need to create this price in your Stripe dashboard for €65/year
-  huurderPriceId: 'price_1QfGNBGwJZ6qNjYnXvkJsQXJ', // This needs to be updated with your actual price ID
+  // Your actual price ID for €65/year
+  huurderPriceId: 'price_1ReDObFWpC3XRbUYyUbOr5Na',
 };
 
 // Validate configuration
