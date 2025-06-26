@@ -1,6 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logger';
+import { supabase } from '../integrations/supabase/client.ts';
+import { logger } from '../lib/logger.ts';
 
 export interface HuurderStats {
   profielWeergaven: number;
