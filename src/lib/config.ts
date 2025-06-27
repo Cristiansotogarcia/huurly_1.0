@@ -93,11 +93,11 @@ function getEnvironmentConfig(): Partial<AppConfig> {
       baseUrl: getEnvVar('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
     },
     supabase: {
-      url: getEnvVar('VITE_SUPABASE_URL') || '',
-      anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY') || ''
+      url: getEnvVar('SUPABASE_URL') || '',
+      anonKey: getEnvVar('SUPABASE_ANON_KEY') || ''
     },
     stripe: {
-      publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
+      publishableKey: getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
       webhookSecret: getEnvVar('STRIPE_WEBHOOK_SECRET')
     },
     features: {
@@ -132,15 +132,15 @@ export function validateConfig(): { isValid: boolean; errors: string[] } {
 
   // Required environment variables
   if (!config.supabase.url) {
-    errors.push('VITE_SUPABASE_URL is required');
+    errors.push('SUPABASE_URL is required');
   }
 
   if (!config.supabase.anonKey) {
-    errors.push('VITE_SUPABASE_ANON_KEY is required');
+    errors.push('SUPABASE_ANON_KEY is required');
   }
 
   if (config.features.enablePayments && !config.stripe.publishableKey) {
-    errors.push('VITE_STRIPE_PUBLISHABLE_KEY is required when payments are enabled');
+    errors.push('STRIPE_PUBLISHABLE_KEY is required when payments are enabled');
   }
 
   // Validate URLs
@@ -148,7 +148,7 @@ export function validateConfig(): { isValid: boolean; errors: string[] } {
     new URL(config.supabase.url);
   } catch {
     if (config.supabase.url) {
-      errors.push('VITE_SUPABASE_URL must be a valid URL');
+      errors.push('SUPABASE_URL must be a valid URL');
     }
   }
 
