@@ -12,8 +12,8 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const { Client } = pg;
 
 // Extract connection details from Supabase URL
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const dbPassword = process.env.SUPABASE_DB_PASSWORD;
 
 console.log('🔍 REAL TENANT_PROFILES SCHEMA ANALYSIS VIA POSTGRES');
@@ -21,7 +21,7 @@ console.log('=' .repeat(70));
 
 if (!supabaseUrl || !dbPassword) {
   console.error('❌ Missing required environment variables');
-  console.log('Required: VITE_SUPABASE_URL, SUPABASE_DB_PASSWORD');
+  console.log('Required: SUPABASE_URL, SUPABASE_DB_PASSWORD');
   process.exit(1);
 }
 
