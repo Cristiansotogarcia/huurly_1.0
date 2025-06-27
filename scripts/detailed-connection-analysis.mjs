@@ -11,8 +11,8 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 console.log('=== DETAILED SUPABASE ANALYSIS ===');
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 );
 
 // Test 1: Check if table exists and get structure
@@ -45,7 +45,7 @@ try {
 console.log('\n2. Testing with service key...');
 try {
   const serviceSupabase = createClient(
-    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
   

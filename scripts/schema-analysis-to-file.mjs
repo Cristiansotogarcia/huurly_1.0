@@ -13,7 +13,7 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const { Client } = pg;
 
 // Extract connection details from environment
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseUrl = process.env.SUPABASE_URL;
 const dbPassword = process.env.SUPABASE_DB_PASSWORD;
 
 let output = '';
@@ -27,7 +27,7 @@ log('=' .repeat(70));
 
 if (!supabaseUrl || !dbPassword) {
   log('❌ Missing required environment variables');
-  log('Required: VITE_SUPABASE_URL, supabase_DB_Password');
+  log('Required: SUPABASE_URL, supabase_DB_Password');
   process.exit(1);
 }
 

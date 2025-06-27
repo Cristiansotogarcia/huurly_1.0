@@ -9,8 +9,8 @@ import { getEnvVar } from './env';
 
 // Stripe configuration loaded from environment variables
 export const STRIPE_CONFIG = {
-  publishableKey: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || '',
-  huurderPriceId: getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || '',
+  publishableKey: getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
+  huurderPriceId: getEnvVar('STRIPE_HUURDER_PRICE_ID') || '',
 };
 
 // Validate configuration

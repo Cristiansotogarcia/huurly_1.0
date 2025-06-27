@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Environment variables
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Create Supabase client with service role
