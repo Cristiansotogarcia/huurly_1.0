@@ -26,6 +26,10 @@
     "decline": "Weigeren",
     "accept": "Accepteren"
   },
+  "pages": {
+    "privacy": "Privacybeleid",
+    "terms": "Algemene Voorwaarden"
+  },
   "login": {
     "title": "Inloggen",
     "email": "E-mailadres",

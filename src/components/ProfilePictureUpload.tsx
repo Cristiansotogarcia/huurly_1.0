@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { r2Client, R2_BUCKET, R2_PUBLIC_BASE } from '@/integrations/cloudflare/client';
+import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -59,34 +61,35 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
 
       // Delete existing profile picture if it exists
       if (currentImageUrl) {
-        const existingPath = currentImageUrl.split('/profile-pictures/')[1];
+        const existingPath = currentImageUrl.replace(`${R2_PUBLIC_BASE}/`, '');
         if (existingPath) {
-          await supabase.storage
-            .from('profile-pictures')
-            .remove([existingPath]);
+          await r2Client.send(
+            new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: existingPath })
+          );
         }
       }
 
       // Upload new file
-      const { error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(filePath, file, {
-          upsert: true,
-          contentType: file.type
-        });
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: filePath,
+          Body: file,
+          ContentType: file.type,
+        })
+      );
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      const publicUrl = `${R2_PUBLIC_BASE}/${filePath}`;
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(filePath);
+      // Store URL in Supabase
+      await supabase
+        .from('huurders')
+        .update({ profielfoto_url: publicUrl })
+        .eq('id', userId);
 
       // Update preview immediately
       setPreviewUrl(publicUrl);
-      
+
       // Notify parent component
       onImageUploaded(publicUrl);
 
@@ -120,13 +123,19 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       // Remove from storage if exists
       if (currentImageUrl || previewUrl) {
         const imageUrl = currentImageUrl || previewUrl;
-        const existingPath = imageUrl!.split('/profile-pictures/')[1];
+        const existingPath = imageUrl!.replace(`${R2_PUBLIC_BASE}/`, '');
         if (existingPath) {
-          await supabase.storage
-            .from('profile-pictures')
-            .remove([existingPath]);
+          await r2Client.send(
+            new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: existingPath })
+          );
         }
       }
+
+      // Remove URL from Supabase
+      await supabase
+        .from('huurders')
+        .update({ profielfoto_url: null })
+        .eq('id', userId);
 
       // Clear preview and notify parent
       setPreviewUrl(null);
