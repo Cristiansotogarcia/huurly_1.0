@@ -17,8 +17,12 @@ const VerhuurderDashboard = lazy(() => import("./pages/VerhuurderDashboard"));
 const BeoordelaarDashboard = lazy(() => import('./pages/BeoordelaarDashboard'));
 const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+
+const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
+
 const Privacybeleid = lazy(() => import('./pages/Privacybeleid'));
 const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,16 +58,24 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/verhuurder-dashboard" 
+            <Route
+              path="/verhuurder-dashboard"
               element={
                 <ProtectedRoute roles={['verhuurder']}>
                   <VerhuurderDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/beoordelaar-dashboard" 
+            <Route
+              path="/huurders-zoeken"
+              element={
+                <ProtectedRoute roles={['verhuurder']}>
+                  <ZoekHuurders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/beoordelaar-dashboard"
               element={
                 <ProtectedRoute roles={['beoordelaar']}>
                   <BeoordelaarDashboard />
