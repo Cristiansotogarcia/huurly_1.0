@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { useHuurder } from '@/hooks/useHuurder';
 import { useHuurderActions } from '@/hooks/useHuurderActions';
 import { DashboardHeader, DashboardContent } from "@/components/dashboard";
@@ -37,6 +38,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     handleProfileComplete,
     handleDocumentUploadComplete,
   } = useHuurder();
+  const navigate = useNavigate();
 
   const { handleSettings, handleLogout, onStartSearch, handleReportIssue, handleHelpSupport } = useHuurderActions(user);
 
@@ -227,6 +229,9 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
               </Button>
               <Button onClick={handleHelpSupport} className="w-full bg-gray-500 hover:bg-gray-600 text-white">
                 Help & Support
+              </Button>
+              <Button onClick={() => navigate('/subscription')} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white">
+                Abonnement
               </Button>
             </div>
           </DashboardContent>
