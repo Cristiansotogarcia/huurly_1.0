@@ -1,4 +1,6 @@
-import { supabase } from '../integrations/supabase/client.ts';
+import { r2Client, R2_BUCKET, R2_PUBLIC_BASE } from '../integrations/cloudflare/client.ts';
+import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from './logger.ts';
 
 export interface UploadResult {
@@ -14,7 +16,7 @@ export interface FileValidation {
 }
 
 export class StorageService {
-  private readonly BUCKET_NAME = 'documents';
+  private readonly BUCKET_NAME = R2_BUCKET;
   private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   private readonly ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
 
@@ -85,34 +87,23 @@ export class StorageService {
       // Generate unique file path
       const filePath = this.generateFilePath(userId, file.name, folder);
 
-      // Upload file
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      // Upload file to Cloudflare R2
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: this.BUCKET_NAME,
+          Key: filePath,
+          Body: file,
+          ContentType: file.type,
+        })
+      );
 
-      if (error) {
-         logger.error('Storage upload error:', error);
-        return {
-          url: null,
-          path: null,
-          error: new Error('Fout bij uploaden van bestand'),
-          success: false
-        };
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(this.BUCKET_NAME)
-        .getPublicUrl(filePath);
+      const publicUrl = `${R2_PUBLIC_BASE}/${filePath}`;
 
       return {
-        url: urlData.publicUrl,
+        url: publicUrl,
         path: filePath,
         error: null,
-        success: true
+        success: true,
       };
 
     } catch (error) {
@@ -154,33 +145,22 @@ export class StorageService {
       const filePath = `documents/${documentType}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 
       // Upload file
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: this.BUCKET_NAME,
+          Key: filePath,
+          Body: file,
+          ContentType: file.type,
+        })
+      );
 
-      if (error) {
-        logger.error('Storage upload error:', error);
-        return {
-          url: null,
-          path: null,
-          error: new Error('Fout bij uploaden van bestand'),
-          success: false
-        };
-      }
-
-      // Get public URL (even though bucket is private, we still need this for internal reference)
-      const { data: urlData } = supabase.storage
-        .from(this.BUCKET_NAME)
-        .getPublicUrl(filePath);
+      const publicUrl = `${R2_PUBLIC_BASE}/${filePath}`;
 
       return {
-        url: urlData.publicUrl,
+        url: publicUrl,
         path: filePath,
         error: null,
-        success: true
+        success: true,
       };
 
     } catch (error) {
@@ -220,21 +200,12 @@ export class StorageService {
    */
   async deleteFile(filePath: string): Promise<{ success: boolean; error: Error | null }> {
     try {
-      const { error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .remove([filePath]);
-
-      if (error) {
-         logger.error('Storage delete error:', error);
-        return {
-          success: false,
-          error: new Error('Fout bij verwijderen van bestand')
-        };
-      }
-
+      await r2Client.send(
+        new DeleteObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
+      );
       return {
         success: true,
-        error: null
+        error: null,
       };
     } catch (error) {
        logger.error('Delete error:', error);
@@ -253,22 +224,12 @@ export class StorageService {
     expiresIn: number = 3600
   ): Promise<{ url: string | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .createSignedUrl(filePath, expiresIn);
-
-      if (error) {
-         logger.error('Signed URL error:', error);
-        return {
-          url: null,
-          error: new Error('Fout bij genereren van toegangslink')
-        };
-      }
-
-      return {
-        url: data.signedUrl,
-        error: null
-      };
+      const command = new GetObjectCommand({
+        Bucket: this.BUCKET_NAME,
+        Key: filePath,
+      });
+      const url = await getSignedUrl(r2Client, command, { expiresIn });
+      return { url, error: null };
     } catch (error) {
        logger.error('Signed URL error:', error);
       return {
@@ -282,11 +243,7 @@ export class StorageService {
    * Get public URL for file
    */
   getPublicUrl(filePath: string): string {
-    const { data } = supabase.storage
-      .from(this.BUCKET_NAME)
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    return `${R2_PUBLIC_BASE}/${filePath}`;
   }
 
   /**
@@ -307,18 +264,12 @@ export class StorageService {
    */
   async fileExists(filePath: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .list(filePath.split('/').slice(0, -1).join('/'));
-
-      if (error) {
-        return false;
-      }
-
-      const fileName = filePath.split('/').pop();
-      return data.some(file => file.name === fileName);
+      await r2Client.send(
+        new HeadObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
+      );
+      return true;
     } catch (error) {
-       logger.error('File exists check error:', error);
+      logger.error('File exists check error:', error);
       return false;
     }
   }
@@ -328,20 +279,12 @@ export class StorageService {
    */
   async getFileMetadata(filePath: string): Promise<any> {
     try {
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .list(filePath.split('/').slice(0, -1).join('/'));
-
-      if (error) {
-        throw error;
-      }
-
-      const fileName = filePath.split('/').pop();
-      const file = data.find(f => f.name === fileName);
-      
-      return file || null;
+      const { Metadata } = await r2Client.send(
+        new HeadObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
+      );
+      return Metadata || null;
     } catch (error) {
-       logger.error('Get file metadata error:', error);
+      logger.error('Get file metadata error:', error);
       return null;
     }
   }
@@ -354,30 +297,18 @@ export class StorageService {
     limit: number = 100
   ): Promise<{ files: any[]; error: Error | null }> {
     try {
-      const { data, error } = await supabase.storage
-        .from(this.BUCKET_NAME)
-        .list(folderPath, {
-          limit,
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
-
-      if (error) {
-         logger.error('List files error:', error);
-        return {
-          files: [],
-          error: new Error('Fout bij ophalen van bestanden')
-        };
-      }
-
+      const { Contents } = await r2Client.send(
+        new ListObjectsV2Command({ Bucket: this.BUCKET_NAME, Prefix: folderPath, MaxKeys: limit })
+      );
       return {
-        files: data || [],
-        error: null
+        files: Contents || [],
+        error: null,
       };
     } catch (error) {
-       logger.error('List files error:', error);
+      logger.error('List files error:', error);
       return {
         files: [],
-        error: error as Error
+        error: error as Error,
       };
     }
   }
