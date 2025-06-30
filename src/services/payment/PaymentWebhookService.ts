@@ -3,6 +3,8 @@ import { supabase } from '../../integrations/supabase/client.ts';
 import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
 import { ErrorHandler } from '../../lib/errors.ts';
 import { PaymentRecord } from './PaymentRecordService';
+import { emailService } from '../EmailService';
+import paymentConfirmationTemplate from '../../templates/emails/paymentConfirmation.html?raw';
 
 export class PaymentWebhookService extends DatabaseService {
   async handlePaymentSuccess(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
@@ -22,6 +24,15 @@ export class PaymentWebhookService extends DatabaseService {
       }
 
       await this.createAuditLog('PAYMENT_SUCCESS', 'betalingen', data.id, null, data);
+
+      if (data.gebruiker_id && data.email) {
+        await emailService.sendTemplateEmail(
+          data.gebruiker_id,
+          data.email,
+          'Betaling bevestigd',
+          'paymentConfirmation'
+        );
+      }
 
       return { data, error: null };
     });

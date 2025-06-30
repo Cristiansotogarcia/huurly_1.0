@@ -3,6 +3,10 @@ import { supabase } from '../integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '../lib/database';
 import { ErrorHandler } from '../lib/errors';
 import { logger } from '../lib/logger';
+import { emailService } from './EmailService';
+import documentSubmissionTemplate from '../templates/emails/documentSubmission.html?raw';
+import documentApprovedTemplate from '../templates/emails/documentApproved.html?raw';
+import documentRejectedTemplate from '../templates/emails/documentRejected.html?raw';
 
 export type DocumentType = 'identiteit' | 'inkomen' | 'referentie' | 'uittreksel_bkr' | 'arbeidscontract';
 export type DocumentStatus = 'wachtend' | 'goedgekeurd' | 'afgekeurd';
@@ -65,6 +69,11 @@ export class DocumentService extends DatabaseService {
       }
 
       await this.createAuditLog('DOCUMENT_UPLOAD', 'documenten', document.id, userId, document);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        await emailService.sendTemplateEmail(userId, user.email, 'Document ontvangen', 'documentSubmission');
+      }
 
       return { data: document, error: null };
     });
@@ -152,6 +161,19 @@ export class DocumentService extends DatabaseService {
         status,
         notes,
       });
+
+      if (data?.huurder_id) {
+        const { data: user } = await supabase
+          .from('gebruikers')
+          .select('email')
+          .eq('id', data.huurder_id)
+          .single();
+        if (user?.email) {
+          const template = status === 'goedgekeurd' ? 'documentApproved' : 'documentRejected';
+          const subject = status === 'goedgekeurd' ? 'Document goedgekeurd' : 'Document afgekeurd';
+          await emailService.sendTemplateEmail(data.huurder_id, user.email, subject, template as any);
+        }
+      }
 
       return { data, error: null };
     });

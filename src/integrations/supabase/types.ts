@@ -436,6 +436,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      notificatie_voorkeuren: {
+        Row: {
+          gebruiker_id: string
+          email_opt_out: boolean | null
+          aangemaakt_op: string | null
+          bijgewerkt_op: string | null
+        }
+        Insert: {
+          gebruiker_id: string
+          email_opt_out?: boolean | null
+          aangemaakt_op?: string | null
+          bijgewerkt_op?: string | null
+        }
+        Update: {
+          gebruiker_id?: string
+          email_opt_out?: boolean | null
+          aangemaakt_op?: string | null
+          bijgewerkt_op?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificatie_voorkeuren_gebruiker_id_fkey",
+            columns: ["gebruiker_id"],
+            isOneToOne: true,
+            referencedRelation: "gebruikers",
+            referencedColumns: ["id"]
+          },
+        ]
       }
       opgeslagen_zoekopdrachten: {
         Row: {
