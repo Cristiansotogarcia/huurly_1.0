@@ -5,6 +5,7 @@ import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
 import { Logo } from '@/components/Logo';
 import { MultiStepSignupModal } from '@/components/auth/MultiStepSignupModal';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -79,6 +80,16 @@ const Index = () => {
                 <li>Help centrum</li>
                 <li>Contact</li>
                 <li>Veelgestelde vragen</li>
+                <li>
+                  <Link to="/privacybeleid" className="hover:underline">
+                    Privacybeleid
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/algemene-voorwaarden" className="hover:underline">
+                    Algemene Voorwaarden
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
