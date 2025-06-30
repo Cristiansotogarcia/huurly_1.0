@@ -69,11 +69,16 @@ STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+CLOUDFLARE_R2_ENDPOINT=<your-r2-endpoint>
+CLOUDFLARE_R2_ACCESS_KEY=<your-r2-access-key>
+CLOUDFLARE_R2_SECRET_KEY=<your-r2-secret-key>
+CLOUDFLARE_R2_BUCKET=<your-r2-bucket>
 ```
 `SUPABASE_URL` and `SUPABASE_ANON_KEY` initialize the frontend Supabase client in `src/integrations/supabase/client.ts`.
 The `SUPABASE_SERVICE_ROLE_KEY` is required for server-side scripts and edge
 functions, including the new `register-user` function that provisions user
 profiles after sign up.
+`CLOUDFLARE_R2_*` settings configure the Cloudflare R2 client used for file uploads.
 Do **not** commit your `.env` file to version control.
 
 
