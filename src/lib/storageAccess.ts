@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { r2Client, R2_BUCKET, R2_PUBLIC_BASE } from '@/integrations/cloudflare/client';
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from '@/lib/logger';
 
 /**
@@ -51,14 +54,17 @@ export async function getDocumentUrl(
     return null;
   }
 
-  const { data, error } = await supabase.storage
-    .from('documents')
-    .createSignedUrl(filePath, 60 * 60);
-  if (error) {
+  try {
+    const url = await getSignedUrl(
+      r2Client,
+      new GetObjectCommand({ Bucket: R2_BUCKET, Key: filePath }),
+      { expiresIn: 60 * 60 }
+    );
+    return url;
+  } catch (error) {
     logger.error('Signed URL error:', error);
     return null;
   }
-  return data.signedUrl;
 }
 
 /**
@@ -73,14 +79,20 @@ export async function uploadDocument(file: File): Promise<string | null> {
     return null;
   }
   const filePath = `${user.id}/${file.name}`;
-  const { error } = await supabase.storage
-    .from('documents')
-    .upload(filePath, file);
-  if (error) {
+  try {
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: filePath,
+        Body: file,
+        ContentType: file.type,
+      })
+    );
+    return filePath;
+  } catch (error) {
     logger.error('Document upload error:', error);
     return null;
   }
-  return filePath;
 }
 
 /**
@@ -95,18 +107,18 @@ export async function uploadProfilePicture(file: File): Promise<string | null> {
     return null;
   }
   const filePath = `${user.id}/profile.jpg`;
-  const { error } = await supabase.storage
-    .from('profile-pictures')
-    .upload(filePath, file, {
-      upsert: true,
-      contentType: file.type,
-    });
-  if (error) {
+  try {
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: filePath,
+        Body: file,
+        ContentType: file.type,
+      })
+    );
+    return `${R2_PUBLIC_BASE}/${filePath}`;
+  } catch (error) {
     logger.error('Profile picture upload error:', error);
     return null;
   }
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
-  return publicUrl;
 }

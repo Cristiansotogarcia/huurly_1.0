@@ -17,7 +17,12 @@ const VerhuurderDashboard = lazy(() => import("./pages/VerhuurderDashboard"));
 const BeoordelaarDashboard = lazy(() => import('./pages/BeoordelaarDashboard'));
 const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+
 const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
+
+const Privacybeleid = lazy(() => import('./pages/Privacybeleid'));
+const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +92,8 @@ const App = () => (
             />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/privacybeleid" element={<Privacybeleid />} />
+            <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
           </Routes>
         </Suspense>
         <CookieConsent />
