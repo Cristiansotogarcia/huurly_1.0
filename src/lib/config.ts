@@ -93,11 +93,13 @@ function getEnvironmentConfig(): Partial<AppConfig> {
       baseUrl: getEnvVar('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
     },
     supabase: {
-      url: getEnvVar('SUPABASE_URL') || '',
-      anonKey: getEnvVar('SUPABASE_ANON_KEY') || ''
+      url: getEnvVar('VITE_SUPABASE_URL') || getEnvVar('SUPABASE_URL') || '',
+      anonKey:
+        getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('SUPABASE_ANON_KEY') || ''
     },
     stripe: {
-      publishableKey: getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
+      publishableKey:
+        getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
       webhookSecret: getEnvVar('STRIPE_WEBHOOK_SECRET')
     },
     features: {
