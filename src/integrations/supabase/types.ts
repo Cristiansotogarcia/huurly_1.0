@@ -1,3 +1,5 @@
+// Supabase types - regenerated 2025-07-16
+
 export type Json =
   | string
   | number
