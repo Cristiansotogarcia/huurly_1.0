@@ -38,7 +38,7 @@ export class DocumentService extends DatabaseService {
 
     return this.executeQuery(async () => {
       // Upload to Cloudflare R2 using storage service
-      const uploadResult = await storageService.uploadDocument(file, userId, documentType as any);
+      const uploadResult = await storageService.uploadDocument(file, userId, 'identity');
       
       if (!uploadResult.success || !uploadResult.path) {
         throw ErrorHandler.createFileUploadError(uploadResult.error?.message || 'Upload failed');
