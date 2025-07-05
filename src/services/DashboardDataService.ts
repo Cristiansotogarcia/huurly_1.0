@@ -3,6 +3,7 @@ import { supabase } from '../integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '../lib/database';
 import { ErrorHandler } from '../lib/errors';
 import { logger } from '../lib/logger';
+import { Property } from './PropertyService';
 
 export interface DashboardData {
   stats: {
