@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
 
-// Use the same variable names as our environment variables to avoid confusion
-const SUPABASE_URL = import.meta.env.SUPABASE_URL as string
-const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY as string
+import { getEnvVar } from './env'
+
+// Resolve Supabase credentials from environment with Vite fallback
+const SUPABASE_URL =
+  (getEnvVar('VITE_SUPABASE_URL') || getEnvVar('SUPABASE_URL')) as string
+const SUPABASE_ANON_KEY =
+  (getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('SUPABASE_ANON_KEY')) as string
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)

@@ -5,7 +5,8 @@ import { getEnvVar } from './env.ts';
 
 // Read Stripe configuration from environment variables
 export const STRIPE_CONFIG = {
-  publishableKey: getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
+  publishableKey:
+    getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
 };
 
 // Get publishable key for frontend
@@ -31,7 +32,8 @@ export const getStripe = (): Promise<Stripe | null> => {
 
 // Get environment-configurable price IDs
 const getStripeConfig = () => {
-  const huurderPriceId = getEnvVar('STRIPE_HUURDER_PRICE_ID') || '';
+  const huurderPriceId =
+    getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || getEnvVar('STRIPE_HUURDER_PRICE_ID') || '';
 
   return {
     huurderPriceId
