@@ -43,6 +43,7 @@ export interface CreatePropertyData {
   voorzieningen?: string[];
   beschikbaar_vanaf?: string;
   foto_urls?: string[];
+  is_actief?: boolean;
 }
 
 export interface PropertySearchFilters {

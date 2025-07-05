@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { DashboardDataService } from '@/services/DashboardDataService';
-import { Property } from '@/types';
+import { Property } from '@/services/PropertyService';
 import { logger } from '@/utils/logger';
 
 export const useVerhuurderDashboard = (userId?: string) => {

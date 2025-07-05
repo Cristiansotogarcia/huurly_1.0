@@ -6,15 +6,17 @@ import { StatsGrid } from '@/components/standard/StatsGrid';
 import { List, FileText, MessageSquare, Eye } from 'lucide-react';
 import DataTable, { Column, Action } from '@/components/standard/DataTable';
 import { withAuth } from '@/hocs/withAuth';
-import { User, Property } from '@/types';
+import { User } from '@/types';
+import { Property } from '@/services/PropertyService';
+import { PropertyModal } from '@/components/modals/PropertyModal';
 
 interface VerhuurderDashboardProps {
   user: User;
 }
 
 const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
-  const { properties, stats, loading: dashboardLoading } = useVerhuurderDashboard(user?.id);
-  const { handleViewProperty, handleAddNewProperty, handleDeleteProperty, handleLogout } = useVerhuurderActions();
+  const { properties, stats, loading: dashboardLoading, refresh } = useVerhuurderDashboard(user?.id);
+  const { handleViewProperty, handleAddNewProperty, handleEditProperty, handleDeleteProperty, handleLogout, selectedProperty, showPropertyModal, closePropertyModal } = useVerhuurderActions();
 
   const verhuurderStats = [
     {
@@ -48,22 +50,22 @@ const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
   ];
 
   const columns: Column<Property>[] = [
-    { header: 'Titel', accessor: 'title' },
-    { header: 'Adres', accessor: 'address' },
+    { header: 'Titel', accessor: 'titel' },
+    { header: 'Adres', accessor: 'adres' },
     { 
       header: 'Huurprijs',
-      accessor: 'rent',
-      render: (item) => `€${item.rent.toLocaleString('nl-NL')}`
+      accessor: 'huurprijs',
+      render: (item) => `€${item.huurprijs.toLocaleString('nl-NL')}`
     },
     {
         header: 'Status',
-        accessor: (item) => item.isActive ? 'published' : 'draft',
+        accessor: (item) => item.is_actief ? 'Actief' : 'Inactief',
         render: (item) => (
             <span
                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    item.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    item.is_actief ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                {item.isActive ? 'published' : 'draft'}
+                {item.is_actief ? 'Actief' : 'Inactief'}
             </span>
         ),
     },
@@ -72,7 +74,11 @@ const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
   const actions: Action<Property>[] = [
     {
       label: 'Bekijk',
-      onClick: (item) => handleViewProperty(item.id),
+      onClick: (item) => handleViewProperty(item),
+    },
+    {
+      label: 'Bewerk',
+      onClick: (item) => handleEditProperty(item),
     },
     {
       label: 'Verwijder',
@@ -108,6 +114,13 @@ const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
           />
         </div>
       </DashboardContent>
+      
+      <PropertyModal
+        isOpen={showPropertyModal}
+        onClose={closePropertyModal}
+        property={selectedProperty}
+        onSave={refresh}
+      />
     </div>
   );
 };

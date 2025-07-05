@@ -1,13 +1,19 @@
 
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
+import { propertyService } from '@/services/PropertyService';
+import { Property } from '@/services/PropertyService';
+import { useState } from 'react';
 
 export const useVerhuurderActions = () => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -27,30 +33,53 @@ export const useVerhuurderActions = () => {
     }
   };
 
-  // Placeholder for search functionality
   const handleSearch = (filters: any) => {
     logger.log('Searching with filters:', filters);
     // Implement search logic here
   };
 
-  // Property management functions
-  const handleViewProperty = (propertyId: string | number) => {
-    logger.log('Viewing property:', propertyId);
-    navigate(`/verhuurder/property/${propertyId}`);
+  const handleViewProperty = (property: Property) => {
+    logger.log('Viewing property:', property.id);
+    // Could navigate to detail view or open modal
   };
 
   const handleAddNewProperty = () => {
     logger.log('Adding new property');
-    navigate('/verhuurder/property/new');
+    setSelectedProperty(null);
+    setShowPropertyModal(true);
   };
 
-  const handleDeleteProperty = (propertyId: string | number) => {
-    logger.log('Deleting property:', propertyId);
-    toast({
-      title: 'Pand verwijderd',
-      description: 'Het pand is succesvol verwijderd.',
-    });
-    // Implement actual deletion logic here
+  const handleEditProperty = (property: Property) => {
+    logger.log('Editing property:', property.id);
+    setSelectedProperty(property);
+    setShowPropertyModal(true);
+  };
+
+  const handleDeleteProperty = async (propertyId: string): Promise<void> => {
+    try {
+      const result = await propertyService.deleteProperty(propertyId);
+      if (result.success) {
+        toast({
+          title: 'Woning verwijderd',
+          description: 'De woning is succesvol verwijderd.',
+        });
+      } else {
+        throw new Error(result.error?.message || 'Fout bij verwijderen');
+      }
+    } catch (error) {
+      logger.error('Delete property failed:', error);
+      toast({
+        title: 'Fout bij verwijderen',
+        description: 'Er is een fout opgetreden bij het verwijderen van de woning.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const closePropertyModal = () => {
+    setShowPropertyModal(false);
+    setSelectedProperty(null);
   };
 
   return {
@@ -58,6 +87,11 @@ export const useVerhuurderActions = () => {
     handleSearch,
     handleViewProperty,
     handleAddNewProperty,
-    handleDeleteProperty
+    handleEditProperty,
+    handleDeleteProperty,
+    // Modal state
+    selectedProperty,
+    showPropertyModal,
+    closePropertyModal,
   };
 };
