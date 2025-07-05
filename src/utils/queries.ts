@@ -47,9 +47,9 @@ export const getAllUsers = async () => {
 };
 
 // Get tenant profiles for verhuurder dashboard
-export const getTenantProfiles = async () => {
+export const getTenantProfiles = async (): Promise<any[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('huurders')
       .select('*')
       .eq('profiel_compleet', true)

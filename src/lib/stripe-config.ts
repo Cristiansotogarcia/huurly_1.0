@@ -5,14 +5,13 @@
 
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { logger } from './logger';
-import { getEnvVar } from './env';
 
 // Stripe configuration loaded from environment variables
 export const STRIPE_CONFIG = {
   publishableKey:
-    getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || import.meta.env.STRIPE_PUBLISHABLE_KEY || '',
   huurderPriceId:
-    getEnvVar('VITE_STRIPE_HUURDER_PRICE_ID') || getEnvVar('STRIPE_HUURDER_PRICE_ID') || '',
+    import.meta.env.VITE_STRIPE_HUURDER_PRICE_ID || import.meta.env.STRIPE_HUURDER_PRICE_ID || '',
 };
 
 // Validate configuration

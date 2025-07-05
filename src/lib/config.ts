@@ -3,7 +3,6 @@
  * Handles environment variables and application settings
  */
 import { logger } from './logger';
-import { getEnvVar, isBrowser } from './env';
 
 export interface AppConfig {
   app: {
@@ -87,26 +86,26 @@ const defaultConfig: AppConfig = {
 function getEnvironmentConfig(): Partial<AppConfig> {
   return {
     app: {
-      name: getEnvVar('VITE_APP_NAME') || defaultConfig.app.name,
-      version: getEnvVar('VITE_APP_VERSION') || defaultConfig.app.version,
-      environment: (getEnvVar('VITE_APP_ENV') as any) || defaultConfig.app.environment,
-      baseUrl: getEnvVar('VITE_APP_BASE_URL') || defaultConfig.app.baseUrl
+      name: import.meta.env.VITE_APP_NAME || defaultConfig.app.name,
+      version: import.meta.env.VITE_APP_VERSION || defaultConfig.app.version,
+      environment: (import.meta.env.VITE_APP_ENV as any) || defaultConfig.app.environment,
+      baseUrl: import.meta.env.VITE_APP_BASE_URL || defaultConfig.app.baseUrl
     },
     supabase: {
-      url: getEnvVar('VITE_SUPABASE_URL') || getEnvVar('SUPABASE_URL') || '',
+      url: import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL || '',
       anonKey:
-        getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('SUPABASE_ANON_KEY') || ''
+        import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY || ''
     },
     stripe: {
       publishableKey:
-        getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY') || getEnvVar('STRIPE_PUBLISHABLE_KEY') || '',
-      webhookSecret: getEnvVar('STRIPE_WEBHOOK_SECRET')
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || import.meta.env.STRIPE_PUBLISHABLE_KEY || '',
+      webhookSecret: import.meta.env.STRIPE_WEBHOOK_SECRET
     },
     features: {
-      enableDemo: getEnvVar('VITE_ENABLE_DEMO') === 'true',
-      enablePayments: getEnvVar('VITE_ENABLE_PAYMENTS') !== 'false',
-      enableNotifications: getEnvVar('VITE_ENABLE_NOTIFICATIONS') !== 'false',
-      enableAnalytics: getEnvVar('VITE_ENABLE_ANALYTICS') === 'true'
+      enableDemo: import.meta.env.VITE_ENABLE_DEMO === 'true',
+      enablePayments: import.meta.env.VITE_ENABLE_PAYMENTS !== 'false',
+      enableNotifications: import.meta.env.VITE_ENABLE_NOTIFICATIONS !== 'false',
+      enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true'
     }
   };
 }
@@ -287,7 +286,7 @@ if (getConfig.isDevelopment()) {
   }
   
   // Make config available globally for debugging when in the browser
-  if (isBrowser) {
+  if (typeof window !== 'undefined') {
     (window as any).__HUURLY_CONFIG__ = config;
   }
 }
