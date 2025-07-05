@@ -3,6 +3,7 @@ import { supabase } from '../integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '../lib/database';
 import { ErrorHandler } from '../lib/errors';
 import { logger } from '../lib/logger';
+import { storageService } from '../lib/storage';
 
 export type DocumentType = 'identiteit' | 'inkomen' | 'referentie' | 'uittreksel_bkr' | 'arbeidscontract';
 export type DocumentStatus = 'wachtend' | 'goedgekeurd' | 'afgekeurd';
@@ -36,14 +37,11 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      const fileName = `${userId}/${documentType}/${Date.now()}_${file.name}`;
+      // Upload to Cloudflare R2 using storage service
+      const uploadResult = await storageService.uploadDocument(file, userId, documentType as any);
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        throw ErrorHandler.createFileUploadError(uploadError.message);
+      if (!uploadResult.success || !uploadResult.path) {
+        throw ErrorHandler.createFileUploadError(uploadResult.error?.message || 'Upload failed');
       }
 
       const { data: document, error: dbError } = await supabase
@@ -51,7 +49,7 @@ export class DocumentService extends DatabaseService {
         .insert({
           huurder_id: userId,
           type: documentType,
-          bestand_url: uploadData.path,
+          bestand_url: uploadResult.path,
           bestandsnaam: file.name,
           status: 'wachtend',
           aangemaakt_op: new Date().toISOString(),
@@ -176,7 +174,7 @@ export class DocumentService extends DatabaseService {
         .single();
 
       if (document?.bestand_url) {
-        await supabase.storage.from('documents').remove([document.bestand_url]);
+        await storageService.deleteFile(document.bestand_url);
       }
 
       const { error } = await supabase
@@ -216,15 +214,13 @@ export class DocumentService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      const { data: signedUrl } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(document.bestand_url, 300);
+      const signedUrlResult = await storageService.getSignedUrl(document.bestand_url, 300);
 
-      if (!signedUrl) {
+      if (!signedUrlResult.url) {
         throw new Error('Kon geen toegang verkrijgen tot document');
       }
 
-      return { data: signedUrl.signedUrl, error: null };
+      return { data: signedUrlResult.url, error: null };
     });
   }
 

@@ -1,5 +1,3 @@
-// Supabase types - regenerated 2025-07-16
-
 export type Json =
   | string
   | number
@@ -514,42 +512,6 @@ export type Database = {
           },
         ]
       }
-      opgeslagen_profielen: {
-        Row: {
-          aangemaakt_op: string
-          id: string
-          verhuurder_id: string | null
-          huurder_id: string | null
-        }
-        Insert: {
-          aangemaakt_op?: string
-          id?: string
-          verhuurder_id?: string | null
-          huurder_id?: string | null
-        }
-        Update: {
-          aangemaakt_op?: string
-          id?: string
-          verhuurder_id?: string | null
-          huurder_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "opgeslagen_profielen_verhuurder_id_fkey"
-            columns: ["verhuurder_id"]
-            isOneToOne: false
-            referencedRelation: "verhuurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "opgeslagen_profielen_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "huurders"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       verhuurders: {
         Row: {
           aangemaakt_op: string
@@ -770,16 +732,6 @@ export type Database = {
       filename_prefix: {
         Args: { name: string }
         Returns: string
-      }
-      zoek_huurders: {
-        Args: {
-          in_city?: string | null
-          min_budget?: number | null
-          max_budget?: number | null
-          huisdieren?: boolean | null
-          roken?: boolean | null
-        }
-        Returns: Tables<'actieve_huurders'>[]
       }
     }
     Enums: {
