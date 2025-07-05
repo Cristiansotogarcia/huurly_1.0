@@ -62,19 +62,19 @@ The application relies on all environment variables defined in `.env.example`. I
 Copy `.env.example` to `.env` in the project root and provide your own values for the following keys:
 
 ```env
-SUPABASE_URL=<your-supabase-url>
-SUPABASE_ANON_KEY=<your-supabase-anon-key>
-STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
-STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
+VITE_STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-CLOUDFLARE_R2_ENDPOINT=<your-r2-endpoint>
-CLOUDFLARE_R2_ACCESS_KEY=<your-r2-access-key>
-CLOUDFLARE_R2_SECRET_KEY=<your-r2-secret-key>
-CLOUDFLARE_R2_BUCKET=<your-r2-bucket>
+VITE_CLOUDFLARE_R2_ENDPOINT=<your-r2-endpoint>
+VITE_CLOUDFLARE_R2_ACCESS_KEY=<your-r2-access-key>
+VITE_CLOUDFLARE_R2_SECRET_KEY=<your-r2-secret-key>
+VITE_CLOUDFLARE_R2_BUCKET=<your-r2-bucket>
 ```
-`SUPABASE_URL` and `SUPABASE_ANON_KEY` initialize the frontend Supabase client in `src/integrations/supabase/client.ts`.
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` initialize the frontend Supabase client in `src/integrations/supabase/client.ts`.
 The `SUPABASE_SERVICE_ROLE_KEY` is required for server-side scripts and edge
 functions, including the new `register-user` function that provisions user
 profiles after sign up.
@@ -100,12 +100,12 @@ Stripe payment processing is handled via Supabase Edge Functions.
 Create a `.env` file in the project root with your keys:
 
 ```env
-STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
-STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
+VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
+VITE_STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
 STRIPE_SECRET_KEY=<your-secret-key>
 STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
-SUPABASE_URL=<your-supabase-url>
-SUPABASE_ANON_KEY=<your-supabase-anon-key>
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
 ```
 
