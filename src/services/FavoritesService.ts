@@ -6,7 +6,7 @@ export class FavoritesService extends DatabaseService {
   async listSavedProfiles(landlordId: string): Promise<DatabaseResponse<string[]>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('opgeslagen_profielen')
+        .from('favoriete_profielen')
         .select('huurder_id')
         .eq('verhuurder_id', landlordId);
       const ids = data ? data.map((d) => d.huurder_id) : [];
@@ -17,7 +17,7 @@ export class FavoritesService extends DatabaseService {
   async saveProfile(landlordId: string, tenantId: string): Promise<DatabaseResponse<null>> {
     return this.executeQuery(async () => {
       const { error } = await supabase
-        .from('opgeslagen_profielen')
+        .from('favoriete_profielen')
         .insert({ verhuurder_id: landlordId, huurder_id: tenantId });
       return { data: null, error };
     });
@@ -26,7 +26,7 @@ export class FavoritesService extends DatabaseService {
   async removeProfile(landlordId: string, tenantId: string): Promise<DatabaseResponse<null>> {
     return this.executeQuery(async () => {
       const { error } = await supabase
-        .from('opgeslagen_profielen')
+        .from('favoriete_profielen')
         .delete()
         .eq('verhuurder_id', landlordId)
         .eq('huurder_id', tenantId);

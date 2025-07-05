@@ -34,7 +34,7 @@ export class DashboardDataService extends DatabaseService {
         supabase.from('gebruikers').select('id', { count: 'exact', head: true }).eq('rol', 'verhuurder'),
         supabase.from('documenten').select('status'),
         supabase.from('abonnementen').select('id').eq('status', 'actief'),
-        supabase.from('audit_logs').select('*').order('aangemaakt_op', { ascending: false }).limit(5),
+        supabase.from('notificaties').select('*').order('aangemaakt_op', { ascending: false }).limit(5),
         supabase.from('documenten').select(`
           *,
           huurders (naam, email)
@@ -94,7 +94,7 @@ export class DashboardDataService extends DatabaseService {
         stats: {
           documentsUploaded: documents.length,
           documentsApproved: documents.filter(doc => doc.status === 'goedgekeurd').length,
-          profileComplete: profile?.profiel_compleet || false,
+          profileComplete: !!profile,
           subscriptionActive: !!subscription,
         },
       };
@@ -119,7 +119,7 @@ export class DashboardDataService extends DatabaseService {
         tenantsResult
       ] = await Promise.all([
         supabase.from('verhuurders').select('*').eq('id', userId).single(),
-        supabase.from('huurders').select('*').eq('profiel_compleet', true).order('bijgewerkt_op', { ascending: false })
+        supabase.from('huurders').select('*').order('bijgewerkt_op', { ascending: false })
       ]);
 
       const profile = profileResult.data;
@@ -130,7 +130,7 @@ export class DashboardDataService extends DatabaseService {
         tenants,
         stats: {
           availableTenants: tenants.length,
-          profileComplete: profile?.profiel_compleet || false,
+          profileComplete: !!profile,
         },
       };
 
@@ -175,6 +175,39 @@ export class DashboardDataService extends DatabaseService {
       });
 
       return { data, error: null };
+    });
+  }
+
+  /**
+   * Get landlord dashboard stats
+   */
+  static async getLandlordDashboardStats(userId: string): Promise<DatabaseResponse<any>> {
+    const service = new DashboardDataService();
+    return service.executeQuery(async () => {
+      const [propertiesResult, viewsResult] = await Promise.all([
+        supabase.from('verhuurders').select('aantal_woningen').eq('id', userId).single(),
+        supabase.from('profiel_weergaves').select('id').eq('verhuurder_id', userId)
+      ]);
+
+      const data = {
+        totalProperties: propertiesResult.data?.aantal_woningen || 0,
+        totalViews: viewsResult.data?.length || 0,
+        activeListings: 0, // Add proper query when needed
+        inquiries: 0 // Add proper query when needed
+      };
+
+      return { data, error: null };
+    });
+  }
+
+  /**
+   * Get landlord properties
+   */
+  static async getLandlordProperties(userId: string): Promise<DatabaseResponse<any[]>> {
+    const service = new DashboardDataService();
+    return service.executeQuery(async () => {
+      // For now, return empty array - implement when properties table exists
+      return { data: [], error: null };
     });
   }
 }

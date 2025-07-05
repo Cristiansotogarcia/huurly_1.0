@@ -28,13 +28,10 @@ const ZoekHuurders: React.FC<ZoekHuurdersProps> = ({ user }) => {
   }, [user.id]);
 
   const handleSearch = async () => {
-    const { data, error } = await supabase.rpc('zoek_huurders', {
-      in_city: city || null,
-      min_budget: minBudget ?? null,
-      max_budget: maxBudget ?? null,
-      huisdieren: typeof pets === 'boolean' ? pets : null,
-      roken: typeof smoking === 'boolean' ? smoking : null,
-    });
+    const { data, error } = await supabase
+      .from('actieve_huurders')
+      .select('*')
+      .or(`beschrijving.ilike.%${city || ''}%,locatie_voorkeur.cs.{${city || ''}}`);
 
     if (error) {
       logger.error('Search error', error);
@@ -49,10 +46,10 @@ const ZoekHuurders: React.FC<ZoekHuurdersProps> = ({ user }) => {
       lifestyle: { huisdieren: pets, roken: smoking },
     };
 
-    const enriched = (data || []).map((t: any) => ({
+    const enriched = Array.isArray(data) ? data.map((t: any) => ({
       ...t,
       compatibility: computeCompatibility(t, criteria),
-    }));
+    })) : [];
     setResults(enriched);
   };
 
