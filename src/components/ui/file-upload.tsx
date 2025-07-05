@@ -70,7 +70,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         if (!user?.id) {
           throw new Error('Geen gebruiker ingelogd');
         }
-        const result = await documentService.uploadDocument(file, documentType, user.id);
+        const result = await documentService.uploadDocument(file, documentType as any, user.id);
 
         if (!result.success) {
           throw result.error || new Error('Upload mislukt');

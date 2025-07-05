@@ -93,7 +93,7 @@ export class DashboardService extends DatabaseService {
   async getRecentActivity(limit: number = 10): Promise<DatabaseResponse<any[]>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('audit_logs')
+        .from('notificaties')
         .select(`
           *,
           gebruikers (

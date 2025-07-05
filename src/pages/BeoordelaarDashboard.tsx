@@ -6,7 +6,8 @@ import { useBeoordelaarActions } from '@/hooks/useBeoordelaarActions';
 import DocumentQueue from '@/components/standard/DocumentQueue';
 import DocumentReviewModal from '@/components/modals/DocumentReviewModal';
 import { withAuth } from '@/hocs/withAuth';
-import { User, Document } from '@/types';
+import { User } from '@/types';
+import { Document } from '@/services/DocumentService';
 import { LoadingState } from '@/components/states';
 
 interface BeoordelaarDashboardProps {
@@ -33,8 +34,8 @@ const BeoordelaarDashboard: React.FC<BeoordelaarDashboardProps> = ({ user }) => 
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-gray-700">Document Queue</h2>
           <div className="mt-4 bg-white rounded-lg shadow overflow-hidden">
-            <DocumentQueue documents={documents} onReview={(doc) => {
-              setSelectedDocument(doc);
+            <DocumentQueue documents={documents as any} onReview={(doc: any) => {
+              setSelectedDocument(doc as any);
               setIsModalOpen(true);
             }} />
           </div>

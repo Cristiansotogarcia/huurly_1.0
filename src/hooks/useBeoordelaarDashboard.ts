@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { documentService } from '@/services/DocumentService';
-import { Document } from '@/types'; // Assuming a Document type exists
+import { Document } from '@/services/DocumentService';
 import { logger } from '@/utils/logger';
 
 export const useBeoordelaarDashboard = () => {

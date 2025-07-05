@@ -867,6 +867,26 @@ export class UserService extends DatabaseService {
   }
 
   /**
+   * Get user subscription
+   */
+  async getSubscription(userId: string): Promise<DatabaseResponse<any>> {
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('abonnementen')
+        .select('*')
+        .eq('huurder_id', userId)
+        .eq('status', 'actief')
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        throw this.handleDatabaseError(error);
+      }
+
+      return { data: data || null, error: null };
+    });
+  }
+
+  /**
    * Get user statistics (admin only)
    */
   async getUserStatistics(): Promise<DatabaseResponse<any>> {

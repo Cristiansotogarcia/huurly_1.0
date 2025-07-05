@@ -5,7 +5,8 @@ import { useAuthStore } from '@/store/authStore';
 import { dashboardDataService } from '@/services/DashboardDataService';
 import { userService } from '@/services/UserService';
 import { documentService } from '@/services/DocumentService';
-import { Document, TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
+import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
+import { Document } from '@/services/DocumentService';
 
 export const useHuurder = () => {
   const { user, refresh: refreshAuth } = useAuthStore();
@@ -31,10 +32,10 @@ export const useHuurder = () => {
     setIsLoadingStats(true);
     try {
       const [statsResponse, docsResponse, profileResponse, subResponse, pictureUrl] = await Promise.all([
-        dashboardDataService.getTenantDashboardStats(user.id),
+        dashboardDataService.getTenantDashboardData(user.id),
         documentService.getDocuments(user.id),
         userService.getTenantProfile(user.id),
-        dashboardDataService.getSubscription(user.id),
+        userService.getSubscription(user.id),
         userService.getProfilePictureUrl(user.id),
       ]);
 
@@ -54,7 +55,7 @@ export const useHuurder = () => {
 
       // Handle profile response - extract data properly
       if (profileResponse && profileResponse.success && profileResponse.data) {
-        setTenantProfile(profileResponse.data);
+        setTenantProfile(profileResponse.data as any);
         setHasProfile(!!profileResponse.data);
       } else {
         setTenantProfile(null);
