@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      aanvragen: {
+        Row: {
+          aangemaakt_op: string | null
+          bericht: string | null
+          bijgewerkt_op: string | null
+          huurder_id: string
+          id: string
+          status: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          bericht?: string | null
+          bijgewerkt_op?: string | null
+          huurder_id: string
+          id?: string
+          status?: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          bericht?: string | null
+          bijgewerkt_op?: string | null
+          huurder_id?: string
+          id?: string
+          status?: string | null
+          verhuurder_id?: string
+          woning_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aanvragen_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "actieve_huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
+            isOneToOne: false
+            referencedRelation: "verhuurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       abonnementen: {
         Row: {
           aangemaakt_op: string
@@ -98,6 +160,47 @@ export type Database = {
           },
         ]
       }
+      berichten: {
+        Row: {
+          aangemaakt_op: string | null
+          gelezen: boolean | null
+          id: string
+          inhoud: string
+          onderwerp: string | null
+          ontvanger_id: string
+          verzender_id: string
+          woning_id: string | null
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          gelezen?: boolean | null
+          id?: string
+          inhoud: string
+          onderwerp?: string | null
+          ontvanger_id: string
+          verzender_id: string
+          woning_id?: string | null
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          gelezen?: boolean | null
+          id?: string
+          inhoud?: string
+          onderwerp?: string | null
+          ontvanger_id?: string
+          verzender_id?: string
+          woning_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "berichten_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       betalingen: {
         Row: {
           aangemaakt_op: string | null
@@ -136,6 +239,77 @@ export type Database = {
           stripe_sessie_id?: string | null
         }
         Relationships: []
+      }
+      bezichtiging_verzoeken: {
+        Row: {
+          aangemaakt_op: string | null
+          alternatieve_datum: string | null
+          bevestigde_datum: string | null
+          bijgewerkt_op: string | null
+          gewenste_datum: string
+          huurder_id: string
+          id: string
+          notities: string | null
+          status: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          alternatieve_datum?: string | null
+          bevestigde_datum?: string | null
+          bijgewerkt_op?: string | null
+          gewenste_datum: string
+          huurder_id: string
+          id?: string
+          notities?: string | null
+          status?: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          alternatieve_datum?: string | null
+          bevestigde_datum?: string | null
+          bijgewerkt_op?: string | null
+          gewenste_datum?: string
+          huurder_id?: string
+          id?: string
+          notities?: string | null
+          status?: string | null
+          verhuurder_id?: string
+          woning_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bezichtiging_verzoeken_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "actieve_huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
+            isOneToOne: false
+            referencedRelation: "verhuurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documenten: {
         Row: {
@@ -615,6 +789,86 @@ export type Database = {
             columns: ["huurder_id"]
             isOneToOne: false
             referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      woningen: {
+        Row: {
+          aangemaakt_op: string | null
+          aantal_kamers: number | null
+          aantal_slaapkamers: number | null
+          adres: string
+          beschikbaar_vanaf: string | null
+          beschrijving: string | null
+          bijgewerkt_op: string | null
+          foto_urls: string[] | null
+          huurprijs: number
+          id: string
+          is_actief: boolean | null
+          meubilering: string | null
+          oppervlakte: number | null
+          postcode: string | null
+          provincie: string | null
+          stad: string
+          status: string | null
+          titel: string
+          verhuurder_id: string
+          voorzieningen: string[] | null
+          woning_type: string | null
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          aantal_kamers?: number | null
+          aantal_slaapkamers?: number | null
+          adres: string
+          beschikbaar_vanaf?: string | null
+          beschrijving?: string | null
+          bijgewerkt_op?: string | null
+          foto_urls?: string[] | null
+          huurprijs: number
+          id?: string
+          is_actief?: boolean | null
+          meubilering?: string | null
+          oppervlakte?: number | null
+          postcode?: string | null
+          provincie?: string | null
+          stad: string
+          status?: string | null
+          titel: string
+          verhuurder_id: string
+          voorzieningen?: string[] | null
+          woning_type?: string | null
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          aantal_kamers?: number | null
+          aantal_slaapkamers?: number | null
+          adres?: string
+          beschikbaar_vanaf?: string | null
+          beschrijving?: string | null
+          bijgewerkt_op?: string | null
+          foto_urls?: string[] | null
+          huurprijs?: number
+          id?: string
+          is_actief?: boolean | null
+          meubilering?: string | null
+          oppervlakte?: number | null
+          postcode?: string | null
+          provincie?: string | null
+          stad?: string
+          status?: string | null
+          titel?: string
+          verhuurder_id?: string
+          voorzieningen?: string[] | null
+          woning_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "woningen_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
+            isOneToOne: false
+            referencedRelation: "verhuurders"
             referencedColumns: ["id"]
           },
         ]
