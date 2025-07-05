@@ -203,11 +203,20 @@ export class DashboardDataService extends DatabaseService {
   /**
    * Get landlord properties
    */
-  static async getLandlordProperties(userId: string): Promise<DatabaseResponse<any[]>> {
+  static async getLandlordProperties(userId: string): Promise<DatabaseResponse<Property[]>> {
     const service = new DashboardDataService();
     return service.executeQuery(async () => {
-      // For now, return empty array - implement when properties table exists
-      return { data: [], error: null };
+      const { data, error } = await supabase
+        .from('woningen')
+        .select('*')
+        .eq('verhuurder_id', userId)
+        .order('aangemaakt_op', { ascending: false });
+
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
+      }
+
+      return { data: (data || []) as any[], error: null };
     });
   }
 }
