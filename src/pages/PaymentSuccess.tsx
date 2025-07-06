@@ -54,7 +54,7 @@ const PaymentSuccess = () => {
     // Redirect after a short delay to dashboard
     const timeout = setTimeout(() => {
       console.log("Redirecting to dashboard");
-      navigate("/huurder-dashboard", { replace: true });
+      navigate("/huurder-dashboard");
     }, 3000); // Increased delay to 3 seconds for debugging
 
     return () => clearTimeout(timeout);
