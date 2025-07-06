@@ -117,11 +117,14 @@ export class AuthService {
    */
   async updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
     try {
+      console.log('AuthService.updatePassword - Starting password update...');
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
+      console.log('AuthService.updatePassword - Supabase response:', { error });
       return { error };
     } catch (error) {
+      console.error('AuthService.updatePassword - Catch error:', error);
       return { error: error as AuthError };
     }
   }
