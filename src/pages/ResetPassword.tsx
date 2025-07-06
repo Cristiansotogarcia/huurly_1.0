@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, X, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { StandardModal } from '@/components/standard/StandardModal';
 
 const ResetPassword = () => {
   console.log('ResetPassword component is loading...');
@@ -15,6 +16,7 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingToken, setIsCheckingToken] = useState(true);
   const [passwordError, setPasswordError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({
     length: false,
     uppercase: false,
@@ -96,17 +98,8 @@ const ResetPassword = () => {
       console.log('ResetPassword - Password update result:', success);
       
       if (success) {
-        toast({
-          title: "Wachtwoord gewijzigd",
-          description: "Je wachtwoord is succesvol gewijzigd."
-        });
-        
-        console.log('ResetPassword - Password updated successfully, redirecting...');
-        // Give a small delay to ensure auth state is updated
-        setTimeout(() => {
-          console.log('ResetPassword - Navigating to dashboard...');
-          navigate('/huurder-dashboard');
-        }, 1000);
+        console.log('ResetPassword - Password updated successfully, showing success modal...');
+        setShowSuccessModal(true);
       }
     } catch (error) {
       console.error('Update password error:', error);
@@ -217,6 +210,23 @@ const ResetPassword = () => {
           </div>
         </form>
       </div>
+      
+      <StandardModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Wachtwoord succesvol gewijzigd"
+        description="Je wachtwoord is succesvol gewijzigd. Je kunt nu naar je dashboard gaan."
+        primaryAction={{
+          label: "Ga naar Dashboard",
+          onClick: () => navigate('/huurder-dashboard')
+        }}
+        size="md"
+        closeOnClickOutside={false}
+      >
+        <div className="flex items-center justify-center py-4">
+          <CheckCircle className="h-16 w-16 text-green-500" />
+        </div>
+      </StandardModal>
     </div>
   );
 };
