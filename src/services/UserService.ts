@@ -707,7 +707,7 @@ export class UserService extends DatabaseService {
         const { data: paymentUserIds, error: paymentError } = await supabase
           .from('abonnementen')
           .select('gebruiker_id')
-          .eq('status', 'completed');
+          .eq('status', 'actief');
 
         if (paymentError) {
           throw this.handleDatabaseError(paymentError);
