@@ -1,8 +1,22 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Logo } from '@/components/Logo';
 
 const Privacybeleid: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6 space-y-8">
+    <div className="min-h-screen">
+      {/* Simple header with logo for navigation */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="hover:opacity-75 transition-opacity">
+              <Logo />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto py-12 px-6 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Privacybeleid</h1>
         <p className="text-gray-600">Laatst bijgewerkt: {new Date().toLocaleDateString('nl-NL')}</p>
@@ -179,6 +193,7 @@ const Privacybeleid: React.FC = () => {
           </p>
         </div>
       </section>
+      </div>
     </div>
   );
 };
