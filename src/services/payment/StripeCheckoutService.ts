@@ -37,7 +37,7 @@ export class StripeCheckoutService extends DatabaseService {
         const paymentRecord = await paymentRecordService.createPaymentRecord({
           huurder_id: userId,
           bedrag: Math.round(plan.priceWithTax * 100),
-          status: 'pending',
+          status: 'wachtend',
           start_datum: now,
           aangemaakt_op: now,
           bijgewerkt_op: now
@@ -72,7 +72,7 @@ export class StripeCheckoutService extends DatabaseService {
         logger.info('Checkout-sessie aangemaakt:', { sessionId: data.sessionId });
 
         await paymentRecordService.updatePaymentRecord(paymentRecord.id, { 
-          stripe_session_id: data.sessionId 
+          stripe_sessie_id: data.sessionId 
         });
 
         const { error: stripeError } = await stripe.redirectToCheckout({

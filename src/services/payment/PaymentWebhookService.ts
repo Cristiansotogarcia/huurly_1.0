@@ -10,7 +10,7 @@ export class PaymentWebhookService extends DatabaseService {
       const { data, error } = await supabase
         .from('abonnementen')
         .update({ 
-          status: 'completed',
+          status: 'actief',
           bijgewerkt_op: new Date().toISOString()
         })
         .eq('stripe_sessie_id', sessionId)
@@ -32,7 +32,7 @@ export class PaymentWebhookService extends DatabaseService {
       const { data, error } = await supabase
         .from('abonnementen')
         .update({ 
-          status: 'failed',
+          status: 'geannuleerd',
           bijgewerkt_op: new Date().toISOString()
         })
         .eq('stripe_sessie_id', sessionId)
