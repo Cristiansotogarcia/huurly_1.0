@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
 
 // Initialize Supabase client with service role key for admin operations
 const supabaseUrl = 'https://sqhultitvpivlnlgogen.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseServiceKey) {
-  console.error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+  console.error('SUPABASE_SERVICE_KEY environment variable is required');
   process.exit(1);
 }
 
@@ -119,8 +122,14 @@ async function setupAdminUser(email: string) {
   }
 }
 
-// Get email from command line argument or use default
-const targetEmail = process.argv[2] || 'cristiansotogarcia@gmail.com';
+// Get email from command line argument
+const targetEmail = process.argv[2];
+
+if (!targetEmail) {
+  console.error('Please provide an email address as a command-line argument.');
+  console.log('Usage: bun scripts/setup-admin-user.ts <email>');
+  process.exit(1);
+}
 
 console.log('🚀 Admin User Setup Script');
 console.log('============================\n');
