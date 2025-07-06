@@ -935,8 +935,8 @@ export class UserService extends DatabaseService {
       // Get users with payments
       const { data: paidUsers, error: paymentError } = await supabase
         .from('abonnementen')
-        .select('gebruiker_id')
-        .eq('status', 'completed');
+        .select('huurder_id')
+        .eq('status', 'actief');
 
       if (paymentError) {
         throw this.handleDatabaseError(paymentError);
@@ -949,7 +949,7 @@ export class UserService extends DatabaseService {
           return acc;
         }, {}),
         activeUsers: activeUsers?.length || 0,
-        paidUsers: new Set(paidUsers?.map(p => p.gebruiker_id)).size || 0,
+        paidUsers: new Set(paidUsers?.map(p => p.huurder_id)).size || 0,
       };
 
       return { data: statistics, error: null };

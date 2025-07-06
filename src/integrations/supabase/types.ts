@@ -14,8 +14,7 @@ export type Database = {
           aangemaakt_op: string | null
           bericht: string | null
           bijgewerkt_op: string | null
-          gebruiker_id: string
-          email: string
+          huurder_id: string
           id: string
           status: string | null
           verhuurder_id: string
@@ -25,8 +24,7 @@ export type Database = {
           aangemaakt_op?: string | null
           bericht?: string | null
           bijgewerkt_op?: string | null
-          gebruiker_id: string
-          email: string
+          huurder_id: string
           id?: string
           status?: string | null
           verhuurder_id: string
@@ -36,8 +34,7 @@ export type Database = {
           aangemaakt_op?: string | null
           bericht?: string | null
           bijgewerkt_op?: string | null
-          gebruiker_id?: string
-          email?: string
+          huurder_id?: string
           id?: string
           status?: string | null
           verhuurder_id?: string
@@ -76,57 +73,61 @@ export type Database = {
       }
       abonnementen: {
         Row: {
-          id: string
-          huurder_id: string
-          stripe_subscription_id: string | null
-          stripe_customer_id: string | null
-          stripe_session_id: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
-          start_datum: string
-          eind_datum: string | null
-          bedrag: number
-          currency: string | null
           aangemaakt_op: string
+          bedrag: number
           bijgewerkt_op: string
+          currency: string | null
+          eind_datum: string | null
+          huurder_id: string | null
+          id: string
+          start_datum: string
+          status: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id: string | null
+          stripe_sessie_id: string | null
+          stripe_subscription_id: string | null
         }
         Insert: {
-          id?: string
-          huurder_id: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          stripe_session_id?: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
-          start_datum: string
-          eind_datum?: string | null
-          bedrag: number
-          currency?: string | null
           aangemaakt_op?: string
+          bedrag?: number
           bijgewerkt_op?: string
+          currency?: string | null
+          eind_datum?: string | null
+          huurder_id?: string | null
+          id?: string
+          start_datum: string
+          status?: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id?: string | null
+          stripe_sessie_id?: string | null
+          stripe_subscription_id?: string | null
         }
         Update: {
-          id?: string
-          huurder_id?: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          stripe_session_id?: string | null
-          status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
-          start_datum?: string
-          eind_datum?: string | null
-          bedrag?: number
-          currency?: string | null
           aangemaakt_op?: string
+          bedrag?: number
           bijgewerkt_op?: string
+          currency?: string | null
+          eind_datum?: string | null
+          huurder_id?: string | null
+          id?: string
+          start_datum?: string
+          status?: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id?: string | null
+          stripe_sessie_id?: string | null
+          stripe_subscription_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "abonnementen_gebruiker_id_fkey"
-            columns: ["gebruiker_id"]
+            foreignKeyName: "abonnementen_huurder_id_fkey"
+            columns: ["huurder_id"]
             isOneToOne: false
-            referencedRelation: "gebruikers"
+            referencedRelation: "actieve_huurders"
             referencedColumns: ["id"]
           },
           {
-
+            foreignKeyName: "abonnementen_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -991,7 +992,12 @@ export type Database = {
       }
     }
     Enums: {
-      abonnement_status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+      abonnement_status:
+        | "actief"
+        | "gepauzeerd"
+        | "geannuleerd"
+        | "verlopen"
+        | "wachtend"
       document_status: "wachtend" | "goedgekeurd" | "afgekeurd"
       document_type:
         | "identiteit"
@@ -1121,7 +1127,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      abonnement_status: ["actief", "gepauzeerd", "geannuleerd", "verlopen"],
+      abonnement_status: [
+        "actief",
+        "gepauzeerd",
+        "geannuleerd",
+        "verlopen",
+        "wachtend",
+      ],
       document_status: ["wachtend", "goedgekeurd", "afgekeurd"],
       document_type: [
         "identiteit",

@@ -25,7 +25,7 @@ export class PaymentRecordService extends DatabaseService {
       // Set default values if not provided
       const recordToInsert: PaymentRecordInsert = {
         ...paymentData,
-        status: paymentData.status || 'pending',
+        status: paymentData.status || 'wachtend',
         aangemaakt_op: paymentData.aangemaakt_op || new Date().toISOString(),
         bijgewerkt_op: paymentData.bijgewerkt_op || new Date().toISOString()
       };

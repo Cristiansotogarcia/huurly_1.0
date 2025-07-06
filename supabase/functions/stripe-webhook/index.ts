@@ -2,6 +2,21 @@ import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
+// Helper function to map Stripe subscription status to Dutch enum values
+const mapStripeStatusToDutch = (stripeStatus: string): string => {
+  const statusMap: { [key: string]: string } = {
+    'active': 'actief',
+    'canceled': 'geannuleerd',
+    'incomplete': 'wachtend',
+    'incomplete_expired': 'verlopen',
+    'past_due': 'gepauzeerd',
+    'trialing': 'actief',
+    'unpaid': 'gepauzeerd'
+  };
+  
+  return statusMap[stripeStatus] || 'wachtend';
+};
+
 // CORS headers for browser-based calls
 const vercelUrl = Deno.env.get("VERCEL_URL");
 const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
@@ -97,11 +112,12 @@ serve(async (req) => {
         .upsert(
           {
             huurder_id: userId,
-            status: subscription.status,
+            status: mapStripeStatusToDutch(subscription.status),
             stripe_subscription_id: subscription.id,
+            stripe_sessie_id: session.id,
             start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
             eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
-            bedrag: 65,
+            bedrag: 6500,
             currency: "eur",
           },
           { onConflict: "stripe_subscription_id" }
@@ -161,7 +177,7 @@ serve(async (req) => {
       const { error } = await supabase
         .from("abonnementen")
         .update({
-          status: subscription.status,
+          status: mapStripeStatusToDutch(subscription.status),
           start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
           eind_datum: new Date(subscription.current_period_end * 1000).toISOString(),
         })
