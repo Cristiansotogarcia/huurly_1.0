@@ -18,7 +18,7 @@ export class AuthService {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/?type=signup`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,

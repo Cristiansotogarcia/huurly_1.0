@@ -45,7 +45,7 @@ export class StripeCheckoutService extends DatabaseService {
 
         logger.info('Betaalrecord aangemaakt:', { paymentRecordId: paymentRecord.id });
 
-        const successUrl = `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
+        const successUrl = `${baseUrl}/?payment=success&session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${baseUrl}/huurder-dashboard?payment=cancelled`;
 
         const { data, error } = await supabase.functions.invoke('create-checkout-session', {

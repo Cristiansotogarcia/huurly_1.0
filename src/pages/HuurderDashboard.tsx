@@ -143,19 +143,9 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     }
   }, [user, isSubscribed]);
 
-  // Handle payment redirect
+  // Handle payment cancellation redirect
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment_success')) {
-      toast({
-        title: 'Betaling Gelukt!',
-        description: 'Je abonnement is geactiveerd. Welkom bij Premium!',
-        variant: 'success',
-      });
-      if (refresh) refresh();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
     if (urlParams.get('payment_canceled')) {
       toast({
         title: 'Betaling Geannuleerd',
@@ -164,7 +154,16 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [refresh, toast]);
+  }, [toast]);
+
+  // Refresh subscription status when payment is successful
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment_success')) {
+      if (refresh) refresh();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refresh]);
 
   const onProfileComplete = async (profileData: any) => {
     await handleProfileComplete(profileData, () => {
