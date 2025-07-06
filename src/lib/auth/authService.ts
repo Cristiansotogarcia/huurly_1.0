@@ -120,19 +120,22 @@ export class AuthService {
       console.log('AuthService.updatePassword - Starting password update...');
       console.log('AuthService.updatePassword - Password length:', newPassword.length);
       
-      const { error } = await supabase.auth.updateUser({
+      const result = await supabase.auth.updateUser({
         password: newPassword,
       });
       
       console.log('AuthService.updatePassword - Supabase response completed');
-      console.log('AuthService.updatePassword - Error from Supabase:', error);
-      console.log('AuthService.updatePassword - Error type:', typeof error);
+      console.log('AuthService.updatePassword - Full result:', result);
+      console.log('AuthService.updatePassword - Error from Supabase:', result.error);
       
-      if (error) {
-        console.error('AuthService.updatePassword - Error from Supabase:', error);
-        console.error('AuthService.updatePassword - Error message:', error.message);
-        console.error('AuthService.updatePassword - Error status:', error.status);
-        return { error };
+      if (result.error) {
+        console.error('AuthService.updatePassword - Error from Supabase:', result.error);
+        console.error('AuthService.updatePassword - Error message:', result.error.message);
+        return { error: result.error };
+      }
+      
+      if (result.data && result.data.user) {
+        console.log('AuthService.updatePassword - User updated successfully:', result.data.user.id);
       }
       
       console.log('AuthService.updatePassword - Password updated successfully at Supabase level');
