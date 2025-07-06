@@ -48,7 +48,8 @@ export const useAuth = (): UseAuthReturn => {
         // Only auto-redirect if we're on the home page or login page
         // This prevents redirecting after logout or during password reset
         const currentPath = window.location.pathname;
-        const shouldRedirect = currentPath !== '/wachtwoord-herstellen' && (currentPath === '/' || currentPath === '/login' || currentPath === '/register');
+        const hasRecoveryToken = window.location.hash.includes('type=recovery') || new URLSearchParams(window.location.search).get('type') === 'recovery';
+        const shouldRedirect = currentPath !== '/wachtwoord-herstellen' && !hasRecoveryToken && (currentPath === '/' || currentPath === '/login' || currentPath === '/register');
         
         if (shouldRedirect) {
           setTimeout(() => {

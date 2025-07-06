@@ -26,12 +26,14 @@ const Index = () => {
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
     
+    // If we have a recovery token, redirect to password reset page and don't do any other redirects
     if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
       console.log('Recovery token detected, redirecting to /wachtwoord-herstellen');
       navigate('/wachtwoord-herstellen');
       return;
     }
 
+    // Only redirect authenticated users if they don't have a recovery token
     if (isAuthenticated && user) {
       console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
