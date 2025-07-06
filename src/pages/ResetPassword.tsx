@@ -33,12 +33,15 @@ const ResetPassword = () => {
     setIsCheckingToken(true);
     const hash = location.hash;
     if (!hash || !hash.includes('type=recovery')) {
+      console.log('No recovery token found in hash:', hash);
       toast({
         title: "Ongeldige of verlopen link",
         description: "De wachtwoord reset link is ongeldig of verlopen. Vraag een nieuwe link aan.",
         variant: "destructive"
       });
       navigate('/');
+    } else {
+      console.log('Recovery token found in hash:', hash);
     }
     setIsCheckingToken(false);
   }, [location, navigate, toast]);
