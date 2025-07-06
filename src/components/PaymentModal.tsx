@@ -11,7 +11,7 @@ import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe-config";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
-import { stripeCheckoutService } from "@/services/payment/StripeCheckoutService";
+import { paymentService } from "@/services/PaymentService";
 import { Loader2, X } from "lucide-react";
 
 interface PaymentModalProps {
@@ -53,7 +53,8 @@ export const PaymentModal = ({
 
     setIsLoading(true);
     try {
-      const result = await stripeCheckoutService.createCheckoutSession(user.id);
+            const baseUrl = window.location.origin;
+      const result = await paymentService.createCheckoutSession(user.id, baseUrl);
       if (result.error) {
         toast({
           title: "Fout",

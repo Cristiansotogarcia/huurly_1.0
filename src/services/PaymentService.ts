@@ -22,8 +22,8 @@ export class PaymentService {
   }
 
   // Stripe Checkout Operations
-  async createCheckoutSession(userId: string): Promise<DatabaseResponse<{ url: string }>> {
-    return stripeCheckoutService.createCheckoutSession(userId);
+  async createCheckoutSession(userId: string, baseUrl: string): Promise<DatabaseResponse<{ url: string }>> {
+    return stripeCheckoutService.createCheckoutSession(userId, baseUrl);
   }
 
   // Subscription Operations
