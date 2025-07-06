@@ -28,23 +28,15 @@ const ResetPassword = () => {
 
   // Check if we have a valid token in the URL
   useEffect(() => {
-    // The token is automatically handled by Supabase
-    // We just need to check if we're on the reset-password page with a valid hash
-    setIsCheckingToken(true);
-    const hash = location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
-      console.log('No recovery token found in hash:', hash);
-      toast({
-        title: "Ongeldige of verlopen link",
-        description: "De wachtwoord reset link is ongeldig of verlopen. Vraag een nieuwe link aan.",
-        variant: "destructive"
-      });
-      navigate('/');
-    } else {
-      console.log('Recovery token found in hash:', hash);
-    }
+    // Temporarily allow all access to test redirect flow
+    console.log('ResetPassword - Allowing access for debugging');
     setIsCheckingToken(false);
-  }, [location, navigate, toast]);
+    
+    // Log URL details for debugging
+    console.log('ResetPassword - Full URL:', window.location.href);
+    console.log('ResetPassword - Hash:', location.hash);
+    console.log('ResetPassword - Search:', location.search);
+  }, [location]);
   
   // Update password strength indicators as user types
   useEffect(() => {
