@@ -227,9 +227,16 @@ export const useAuth = (): UseAuthReturn => {
       
       if (error) {
         console.error('Password update error:', error);
+        let errorMessage = error.message;
+        
+        // Handle specific Supabase error messages
+        if (error.message.includes('New password should be different from the old password')) {
+          errorMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
+        }
+        
         toast({
           title: "Wachtwoord wijzigen mislukt",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         return false;
