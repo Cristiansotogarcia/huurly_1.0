@@ -17,6 +17,7 @@ const VerhuurderDashboard = lazy(() => import("./pages/VerhuurderDashboard"));
 const BeoordelaarDashboard = lazy(() => import('./pages/BeoordelaarDashboard'));
 const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ManageSubscription = lazy(() => import('./pages/Subscription/ManageSubscription'));
 
 const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
 
@@ -82,13 +83,21 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/beheerder-dashboard" 
+            <Route
+              path="/beheerder-dashboard"
               element={
                 <ProtectedRoute roles={['beheerder']}>
                   <BeheerderDashboard />
                 </ProtectedRoute>
-              } 
+              }
+            />
+            <Route
+              path="/subscription"
+              element={
+                <ProtectedRoute roles={['huurder']}>
+                  <ManageSubscription />
+                </ProtectedRoute>
+              }
             />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/wachtwoord-herstellen" element={<ResetPassword />} />
