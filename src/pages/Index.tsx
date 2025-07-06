@@ -5,13 +5,28 @@ import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
 import { Logo } from '@/components/Logo';
 import { MultiStepSignupModal } from '@/components/auth/MultiStepSignupModal';
+import { EmailConfirmationModal } from '@/components/modals/EmailConfirmationModal';
+import { EmailVerificationSuccessModal } from '@/components/modals/EmailVerificationSuccessModal';
+import { PaymentSuccessModal } from '@/components/modals/PaymentSuccessModal';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { 
+    user, 
+    isAuthenticated, 
+    showEmailConfirmationModal,
+    showEmailVerificationSuccessModal,
+    showPaymentSuccessModal,
+    signupEmail,
+    setShowEmailConfirmationModal,
+    setShowEmailVerificationSuccessModal,
+    setShowPaymentSuccessModal,
+    handleEmailVerificationSuccess,
+    handlePaymentSuccess
+  } = useAuth();
   const navigate = useNavigate();
   const [showSignup, setShowSignup] = useState(false);
 
@@ -33,7 +48,30 @@ const Index = () => {
       return;
     }
 
-    // Only redirect authenticated users if they don't have a recovery token
+    // Check for email verification success
+    if (hash.includes('type=signup') || searchParams.get('type') === 'signup') {
+      console.log('Email verification success detected');
+      handleEmailVerificationSuccess();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Check for payment success
+    if (searchParams.get('payment') === 'success') {
+      console.log('Payment success detected');
+      const sessionId = searchParams.get('session_id');
+      if (sessionId) {
+        // Handle payment success with session ID if needed
+        console.log('Processing payment success for session:', sessionId);
+      }
+      handlePaymentSuccess();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Only redirect authenticated users if they don't have special URL parameters
     if (isAuthenticated && user) {
       console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
@@ -51,7 +89,7 @@ const Index = () => {
           break;
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, handlePaymentSuccess]);
 
   return (
     <div className="min-h-screen">
@@ -63,6 +101,62 @@ const Index = () => {
       <MultiStepSignupModal 
         isOpen={showSignup} 
         onClose={() => setShowSignup(false)} 
+      />
+      
+      <EmailConfirmationModal
+        isOpen={showEmailConfirmationModal}
+        onClose={() => setShowEmailConfirmationModal(false)}
+        email={signupEmail}
+      />
+      
+      <EmailVerificationSuccessModal
+        isOpen={showEmailVerificationSuccessModal}
+        onClose={() => setShowEmailVerificationSuccessModal(false)}
+        onGoToDashboard={() => {
+          setShowEmailVerificationSuccessModal(false);
+          if (user) {
+            switch (user.role) {
+              case 'huurder':
+                navigate('/huurder-dashboard');
+                break;
+              case 'verhuurder':
+                navigate('/verhuurder-dashboard');
+                break;
+              case 'beoordelaar':
+                navigate('/beoordelaar-dashboard');
+                break;
+              case 'beheerder':
+                navigate('/beheerder-dashboard');
+                break;
+            }
+          }
+        }}
+        userName={user?.name}
+      />
+      
+      <PaymentSuccessModal
+        isOpen={showPaymentSuccessModal}
+        onClose={() => setShowPaymentSuccessModal(false)}
+        onGoToDashboard={() => {
+          setShowPaymentSuccessModal(false);
+          if (user) {
+            switch (user.role) {
+              case 'huurder':
+                navigate('/huurder-dashboard');
+                break;
+              case 'verhuurder':
+                navigate('/verhuurder-dashboard');
+                break;
+              case 'beoordelaar':
+                navigate('/beoordelaar-dashboard');
+                break;
+              case 'beheerder':
+                navigate('/beheerder-dashboard');
+                break;
+            }
+          }
+        }}
+        userName={user?.name}
       />
       
       <footer className="bg-gray-900 text-white py-12">

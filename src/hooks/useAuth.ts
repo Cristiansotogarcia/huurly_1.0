@@ -16,10 +16,24 @@ export interface UseAuthReturn {
   resetPassword: (email: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;
   updateProfile: (updates: Partial<User>) => Promise<boolean>;
+  // Modal states
+  showEmailConfirmationModal: boolean;
+  showEmailVerificationSuccessModal: boolean;
+  showPaymentSuccessModal: boolean;
+  signupEmail: string;
+  setShowEmailConfirmationModal: (show: boolean) => void;
+  setShowEmailVerificationSuccessModal: (show: boolean) => void;
+  setShowPaymentSuccessModal: (show: boolean) => void;
+  handleEmailVerificationSuccess: () => void;
+  handlePaymentSuccess: () => void;
 }
 
 export const useAuth = (): UseAuthReturn => {
   const [isLoading, setIsLoading] = useState(true);
+  const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
+  const [showEmailVerificationSuccessModal, setShowEmailVerificationSuccessModal] = useState(false);
+  const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [signupEmail, setSignupEmail] = useState('');
   const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -95,11 +109,9 @@ export const useAuth = (): UseAuthReturn => {
       }
 
       if (newUser) {
-        login(newUser);
-        toast({
-          title: "Registratie succesvol",
-          description: "Controleer je e-mail voor verificatie."
-        });
+        // Store the signup email and show confirmation modal
+        setSignupEmail(data.email);
+        setShowEmailConfirmationModal(true);
         return { success: true, user: newUser };
       }
 
@@ -305,6 +317,14 @@ export const useAuth = (): UseAuthReturn => {
     }
   };
 
+  const handleEmailVerificationSuccess = () => {
+    setShowEmailVerificationSuccessModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentSuccessModal(true);
+  };
+
   return {
     user,
     isLoading,
@@ -315,5 +335,14 @@ export const useAuth = (): UseAuthReturn => {
     resetPassword,
     updatePassword,
     updateProfile,
+    showEmailConfirmationModal,
+    showEmailVerificationSuccessModal,
+    showPaymentSuccessModal,
+    signupEmail,
+    setShowEmailConfirmationModal,
+    setShowEmailVerificationSuccessModal,
+    setShowPaymentSuccessModal,
+    handleEmailVerificationSuccess,
+    handlePaymentSuccess
   };
 };
