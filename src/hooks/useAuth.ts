@@ -219,15 +219,16 @@ export const useAuth = (): UseAuthReturn => {
   };
 
   const updatePassword = async (newPassword: string): Promise<boolean> => {
-    console.log('updatePassword called with:', newPassword.length, 'chars');
+    console.log('useAuth.updatePassword called with:', newPassword.length, 'chars');
+    console.log('useAuth.updatePassword - Setting loading state...');
     setIsLoading(true);
     try {
-      console.log('Calling authService.updatePassword...');
+      console.log('useAuth.updatePassword - Calling authService.updatePassword...');
       const { error } = await authService.updatePassword(newPassword);
-      console.log('authService.updatePassword result:', { error });
+      console.log('useAuth.updatePassword - authService.updatePassword result:', { error });
       
       if (error) {
-        console.error('Password update error:', error);
+        console.error('useAuth.updatePassword - Password update error:', error);
         let errorMessage = error.message;
         
         // Handle specific Supabase error messages
@@ -235,31 +236,36 @@ export const useAuth = (): UseAuthReturn => {
           errorMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
         }
         
+        console.log('useAuth.updatePassword - Showing error toast...');
         toast({
           title: "Wachtwoord wijzigen mislukt",
           description: errorMessage,
           variant: "destructive"
         });
+        console.log('useAuth.updatePassword - Returning false due to error');
         return false;
       }
 
-      console.log('Password updated successfully');
+      console.log('useAuth.updatePassword - Password updated successfully, showing success toast...');
       toast({
         title: "Wachtwoord gewijzigd",
         description: "Je wachtwoord is succesvol gewijzigd."
       });
+      console.log('useAuth.updatePassword - Returning true for success');
       return true;
     } catch (error) {
-       console.error('Update password catch error:', error);
+       console.error('useAuth.updatePassword - Catch error:', error);
        logger.error('Update password error:', error);
+      console.log('useAuth.updatePassword - Showing catch error toast...');
       toast({
         title: "Wachtwoord wijzigen mislukt",
         description: "Er is een onverwachte fout opgetreden.",
         variant: "destructive"
       });
+      console.log('useAuth.updatePassword - Returning false due to catch error');
       return false;
     } finally {
-      console.log('updatePassword finally block');
+      console.log('useAuth.updatePassword - In finally block, setting loading to false');
       setIsLoading(false);
     }
   };

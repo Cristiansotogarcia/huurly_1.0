@@ -118,22 +118,29 @@ export class AuthService {
   async updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
     try {
       console.log('AuthService.updatePassword - Starting password update...');
+      console.log('AuthService.updatePassword - Password length:', newPassword.length);
       
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
       
-      console.log('AuthService.updatePassword - Update completed, error:', error);
+      console.log('AuthService.updatePassword - Supabase response completed');
+      console.log('AuthService.updatePassword - Error from Supabase:', error);
+      console.log('AuthService.updatePassword - Error type:', typeof error);
       
       if (error) {
         console.error('AuthService.updatePassword - Error from Supabase:', error);
+        console.error('AuthService.updatePassword - Error message:', error.message);
+        console.error('AuthService.updatePassword - Error status:', error.status);
         return { error };
       }
       
-      console.log('AuthService.updatePassword - Password updated successfully');
+      console.log('AuthService.updatePassword - Password updated successfully at Supabase level');
       return { error: null };
     } catch (error) {
       console.error('AuthService.updatePassword - Catch error:', error);
+      console.error('AuthService.updatePassword - Catch error type:', typeof error);
+      console.error('AuthService.updatePassword - Catch error stringified:', JSON.stringify(error));
       return { error: error as AuthError };
     }
   }

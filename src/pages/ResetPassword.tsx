@@ -17,6 +17,15 @@ const ResetPassword = () => {
   const [isCheckingToken, setIsCheckingToken] = useState(true);
   const [passwordError, setPasswordError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Debug state changes
+  console.log('ResetPassword - Current state:', {
+    isLoading,
+    showSuccessModal,
+    passwordError,
+    newPasswordLength: newPassword.length,
+    confirmPasswordLength: confirmPassword.length
+  });
   const [passwordStrength, setPasswordStrength] = useState({
     length: false,
     uppercase: false,
@@ -29,6 +38,35 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
+  // Test toast system on component mount
+  useEffect(() => {
+    console.log('ResetPassword - Testing toast system...');
+    toast({
+      title: "Debug Test",
+      description: "Toast system is working",
+      variant: "default"
+    });
+  }, []);
+
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('ResetPassword - Modal state changed:', showSuccessModal);
+    if (showSuccessModal) {
+      console.log('ResetPassword - SUCCESS MODAL IS NOW OPEN!');
+      // Test if we can trigger another toast when modal opens
+      toast({
+        title: "Modal Debug",
+        description: "Success modal is now open",
+        variant: "default"
+      });
+    }
+  }, [showSuccessModal]);
+
+  // Debug loading state changes
+  useEffect(() => {
+    console.log('ResetPassword - Loading state changed:', isLoading);
+  }, [isLoading]);
 
   // Check if we have a valid token in the URL
   useEffect(() => {
@@ -85,31 +123,72 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('ResetPassword - Form submitted');
     
     if (!validatePasswords()) {
+      console.log('ResetPassword - Password validation failed');
       return;
     }
     
+    console.log('ResetPassword - Password validation passed');
+    console.log('ResetPassword - Setting loading to true...');
     setIsLoading(true);
 
     try {
       console.log('ResetPassword - Starting password update...');
-      const success = await updatePassword(newPassword);
-      console.log('ResetPassword - Password update result:', success);
+      console.log('ResetPassword - Calling updatePassword with password length:', newPassword.length);
       
-      if (success) {
-        console.log('ResetPassword - Password updated successfully, showing success modal...');
+      const success = await updatePassword(newPassword);
+      
+      console.log('ResetPassword - updatePassword completed');
+      console.log('ResetPassword - Password update result:', success);
+      console.log('ResetPassword - Type of success:', typeof success);
+      
+      if (success === true) {
+        console.log('ResetPassword - SUCCESS = TRUE, attempting to show modal...');
+        console.log('ResetPassword - Current showSuccessModal state before update:', showSuccessModal);
+        
+        // Try different approaches to trigger the modal
+        console.log('ResetPassword - Setting showSuccessModal to true...');
         setShowSuccessModal(true);
+        
+        console.log('ResetPassword - Immediately after setShowSuccessModal(true)');
+        
+        // Force a re-render check
+        setTimeout(() => {
+          console.log('ResetPassword - Timeout check - showSuccessModal should be true now');
+        }, 100);
+        
+        // Also try triggering a success toast
+        console.log('ResetPassword - Also triggering success toast...');
+        toast({
+          title: "Password Update Success",
+          description: "This toast should appear if the update was successful",
+          variant: "default"
+        });
+        
+      } else {
+        console.log('ResetPassword - SUCCESS WAS NOT TRUE:', success);
+        toast({
+          title: "Unexpected result",
+          description: `Password update returned: ${success}`,
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Update password error:', error);
+      console.error('ResetPassword - Caught error in handleSubmit:', error);
+      console.error('ResetPassword - Error type:', typeof error);
+      console.error('ResetPassword - Error stringified:', JSON.stringify(error));
+      
       toast({
         title: "Wachtwoord wijzigen mislukt",
         description: "Er is een fout opgetreden bij het wijzigen van je wachtwoord. Probeer het opnieuw.",
         variant: "destructive"
       });
     } finally {
+      console.log('ResetPassword - In finally block, setting loading to false...');
       setIsLoading(false);
+      console.log('ResetPassword - Loading set to false');
     }
   };
 
@@ -198,9 +277,27 @@ const ResetPassword = () => {
                 Wachtwoord wijzigen...
               </>
             ) : (
-              'Wachtwoord wijzigen'
-            )}
-          </Button>
+            'Wachtwoord wijzigen'
+          )}
+        </Button>
+        
+        {/* Debug test button to test modal independently */}
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full mt-2" 
+          onClick={() => {
+            console.log('ResetPassword - Test button clicked, showing modal...');
+            setShowSuccessModal(true);
+            toast({
+              title: "Test Toast",
+              description: "This is a test toast from the debug button",
+              variant: "default"
+            });
+          }}
+        >
+          🐛 Test Modal & Toast (Debug)
+        </Button>
           
           <div className="text-center mt-4">
             <Link to="/" className="text-sm text-primary flex items-center justify-center">
