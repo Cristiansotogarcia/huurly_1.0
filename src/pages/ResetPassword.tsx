@@ -91,15 +91,22 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
+      console.log('ResetPassword - Starting password update...');
       const success = await updatePassword(newPassword);
+      console.log('ResetPassword - Password update result:', success);
       
       if (success) {
         toast({
           title: "Wachtwoord gewijzigd",
           description: "Je wachtwoord is succesvol gewijzigd."
         });
-        // Redirect to dashboard directly
-        navigate('/huurder-dashboard');
+        
+        console.log('ResetPassword - Password updated successfully, redirecting...');
+        // Give a small delay to ensure auth state is updated
+        setTimeout(() => {
+          console.log('ResetPassword - Navigating to dashboard...');
+          navigate('/huurder-dashboard');
+        }, 1000);
       }
     } catch (error) {
       console.error('Update password error:', error);
