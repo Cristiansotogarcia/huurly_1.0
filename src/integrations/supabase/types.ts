@@ -986,6 +986,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      ensure_huurder_profile: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
       filename_prefix: {
         Args: { name: string }
         Returns: string
