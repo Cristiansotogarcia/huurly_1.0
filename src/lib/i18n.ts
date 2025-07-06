@@ -10,17 +10,23 @@ export const initI18n = () => {
     .use(initReactI18next)
     .init({
       lng: 'nl',
-      fallbackLng: 'en',
+      fallbackLng: 'nl', // Changed to use Dutch as fallback to avoid './en' module error
       debug: false,
       interpolation: {
         escapeValue: false,
       },
       backend: {
         loadPath: '/locales/{{lng}}/translation.json',
+        loadTimeout: 10000, // Increased timeout
+        crossDomain: false,
       },
       react: {
         useSuspense: false,
       },
+      // Add error handling
+      initImmediate: false,
+      keySeparator: false,
+      nsSeparator: false,
     });
 
   return i18n;
