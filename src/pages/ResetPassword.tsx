@@ -96,9 +96,10 @@ const ResetPassword = () => {
       if (success) {
         toast({
           title: "Wachtwoord gewijzigd",
-          description: "Je wachtwoord is succesvol gewijzigd. Je kunt nu inloggen met je nieuwe wachtwoord."
+          description: "Je wachtwoord is succesvol gewijzigd."
         });
-        navigate('/');
+        // Redirect to dashboard directly
+        navigate('/huurder-dashboard');
       }
     } catch (error) {
       console.error('Update password error:', error);
