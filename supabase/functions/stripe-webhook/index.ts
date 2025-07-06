@@ -2,11 +2,28 @@ import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// CORS headers for browser-based calls (optional, but safe)
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+// CORS headers for browser-based calls
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+if (vercelUrl) {
+  allowedOrigins.push(`https://${vercelUrl}`);
+}
+
+const corsHeaders = (origin: string) => ({
+  "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+});
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
+const vercelUrl = Deno.env.get("VERCEL_URL");
+
+const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false },
+});
 
 // Verbreding van Stripe session object
 type ExtendedSession = Stripe.Checkout.Session & {
@@ -15,8 +32,9 @@ type ExtendedSession = Stripe.Checkout.Session & {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin") || "";
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(origin) });
   }
 
   try {
@@ -58,39 +76,42 @@ serve(async (req) => {
       const session = event.data.object as ExtendedSession;
       const userId = session.metadata?.user_id;
 
-      const { error: paymentError } = await supabase
-        .from("betalingen")
-        .update({
-          status: "completed",
-          bijgewerkt_op: new Date().toISOString(),
-        })
-        .eq("stripe_sessie_id", session.id);
-
-      if (paymentError) {
-        console.error("❌ Failed to update payment record", {
-          sessionId: session.id,
-          error: paymentError,
-        });
-      }
-
       if (!userId) {
-        throw new Error("User ID not found in session metadata");
+        console.error("❌ User ID not found in session metadata");
+        return new Response("Missing user ID", { status: 400 });
       }
 
+      if (!session.subscription) {
+        console.error("❌ No subscription ID in session");
+        return new Response("Missing subscription ID", { status: 400 });
+      }
+
+
+
+      // ✅ Haal Stripe subscription details op
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
-      const { error } = await supabase.from("abonnementen").insert({
-        huurder_id: userId,
-        status: subscription.status,
-        stripe_subscription_id: subscription.id,
-        start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-        eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
-        bedrag: 65,
-        currency: "eur",
-      });
+      // ✅ Voeg abonnement toe of update bestaande
+      const { error } = await supabase
+        .from("abonnementen")
+        .upsert(
+          {
+            huurder_id: userId,
+            status: subscription.status,
+            stripe_subscription_id: subscription.id,
+            start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+            eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+            bedrag: 65,
+            currency: "eur",
+          },
+          { onConflict: "stripe_subscription_id" }
+        );
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Failed to insert abonnement:", error);
+      }
 
+      // ✅ Notificatie maken
       const { error: notificationError } = await supabase.from("notificaties").insert({
         gebruiker_id: userId,
         type: "payment_success",
@@ -116,10 +137,9 @@ serve(async (req) => {
       const session = event.data.object as ExtendedSession;
 
       const { error: paymentError } = await supabase
-        .from("betalingen")
+        .from("abonnementen")
         .update({
           status: "failed",
-          bijgewerkt_op: new Date().toISOString(),
         })
         .eq("stripe_sessie_id", session.id);
 
@@ -161,7 +181,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {

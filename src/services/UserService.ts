@@ -705,7 +705,7 @@ export class UserService extends DatabaseService {
 
       if (filters?.heeftBetaling) {
         const { data: paymentUserIds, error: paymentError } = await supabase
-          .from('betalingen')
+          .from('abonnementen')
           .select('gebruiker_id')
           .eq('status', 'completed');
 
@@ -934,7 +934,7 @@ export class UserService extends DatabaseService {
 
       // Get users with payments
       const { data: paidUsers, error: paymentError } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .select('gebruiker_id')
         .eq('status', 'completed');
 
