@@ -12,10 +12,9 @@ export class PaymentRecordService extends DatabaseService {
   async createPaymentRecord(paymentData: PaymentRecordInsert): Promise<PaymentRecord> {
     try {
       // Ensure required fields are present
-      if (!paymentData.gebruiker_id || !paymentData.email || !paymentData.bedrag) {
+      if (!paymentData.huurder_id || !paymentData.bedrag) {
         const missingFields = [];
-        if (!paymentData.gebruiker_id) missingFields.push('gebruiker_id');
-        if (!paymentData.email) missingFields.push('email');
+        if (!paymentData.huurder_id) missingFields.push('huurder_id');
         if (!paymentData.bedrag) missingFields.push('bedrag');
         
         const error = new Error(`Missing required fields: ${missingFields.join(', ')}`);
@@ -33,7 +32,7 @@ export class PaymentRecordService extends DatabaseService {
 
       // Log the record we're trying to insert for debugging
       logger.info('Attempting to create payment record', { 
-        record: { ...recordToInsert, email: recordToInsert.email ? '***@***.com' : undefined } 
+        record: { ...recordToInsert, huurder_id: recordToInsert.huurder_id } 
       });
 
       const { data, error } = await supabase
@@ -106,7 +105,7 @@ export class PaymentRecordService extends DatabaseService {
       const { data, error } = await supabase
         .from('abonnementen')
         .select('*')
-        .eq('gebruiker_id', userId)
+        .eq('huurder_id', userId)
         .order('bijgewerkt_op', { ascending: false });
       return { data, error };
     });

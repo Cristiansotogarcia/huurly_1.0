@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
 // CORS headers for browser-based calls
+const vercelUrl = Deno.env.get("VERCEL_URL");
 const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
 if (vercelUrl) {
   allowedOrigins.push(`https://${vercelUrl}`);
@@ -18,7 +19,6 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
-const vercelUrl = Deno.env.get("VERCEL_URL");
 
 const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -139,7 +139,7 @@ serve(async (req) => {
       const { error: paymentError } = await supabase
         .from("abonnementen")
         .update({
-          status: "failed",
+          status: "geannuleerd",
         })
         .eq("stripe_sessie_id", session.id);
 

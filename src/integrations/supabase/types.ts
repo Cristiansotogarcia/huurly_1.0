@@ -14,7 +14,8 @@ export type Database = {
           aangemaakt_op: string | null
           bericht: string | null
           bijgewerkt_op: string | null
-          huurder_id: string
+          gebruiker_id: string
+          email: string
           id: string
           status: string | null
           verhuurder_id: string
@@ -24,7 +25,8 @@ export type Database = {
           aangemaakt_op?: string | null
           bericht?: string | null
           bijgewerkt_op?: string | null
-          huurder_id: string
+          gebruiker_id: string
+          email: string
           id?: string
           status?: string | null
           verhuurder_id: string
@@ -34,7 +36,8 @@ export type Database = {
           aangemaakt_op?: string | null
           bericht?: string | null
           bijgewerkt_op?: string | null
-          huurder_id?: string
+          gebruiker_id?: string
+          email?: string
           id?: string
           status?: string | null
           verhuurder_id?: string
@@ -77,7 +80,7 @@ export type Database = {
           huurder_id: string
           stripe_subscription_id: string | null
           stripe_customer_id: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum: string
           eind_datum: string | null
           bedrag: number
@@ -90,7 +93,7 @@ export type Database = {
           huurder_id: string
           stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum: string
           eind_datum?: string | null
           bedrag: number
@@ -103,7 +106,7 @@ export type Database = {
           huurder_id?: string
           stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
-          status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum?: string
           eind_datum?: string | null
           bedrag?: number
@@ -113,18 +116,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "abonnementen_huurder_id_fkey"
-            columns: ["huurder_id"]
+            foreignKeyName: "abonnementen_gebruiker_id_fkey"
+            columns: ["gebruiker_id"]
             isOneToOne: false
-            referencedRelation: "actieve_huurders"
+            referencedRelation: "gebruikers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "abonnementen_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "huurders"
-            referencedColumns: ["id"]
+
           },
         ]
       }
@@ -201,7 +200,7 @@ export type Database = {
           },
         ]
       }
-      abonnementen: {
+      betalingen: {
         Row: {
           aangemaakt_op: string | null
           bedrag: number
