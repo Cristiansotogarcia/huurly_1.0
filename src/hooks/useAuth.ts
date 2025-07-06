@@ -218,11 +218,15 @@ export const useAuth = (): UseAuthReturn => {
   };
 
   const updatePassword = async (newPassword: string): Promise<boolean> => {
+    console.log('updatePassword called with:', newPassword.length, 'chars');
     setIsLoading(true);
     try {
+      console.log('Calling authService.updatePassword...');
       const { error } = await authService.updatePassword(newPassword);
+      console.log('authService.updatePassword result:', { error });
       
       if (error) {
+        console.error('Password update error:', error);
         toast({
           title: "Wachtwoord wijzigen mislukt",
           description: error.message,
@@ -231,12 +235,14 @@ export const useAuth = (): UseAuthReturn => {
         return false;
       }
 
+      console.log('Password updated successfully');
       toast({
         title: "Wachtwoord gewijzigd",
         description: "Je wachtwoord is succesvol gewijzigd."
       });
       return true;
     } catch (error) {
+       console.error('Update password catch error:', error);
        logger.error('Update password error:', error);
       toast({
         title: "Wachtwoord wijzigen mislukt",
@@ -245,6 +251,7 @@ export const useAuth = (): UseAuthReturn => {
       });
       return false;
     } finally {
+      console.log('updatePassword finally block');
       setIsLoading(false);
     }
   };
