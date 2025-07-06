@@ -80,6 +80,7 @@ export type Database = {
           huurder_id: string
           stripe_subscription_id: string | null
           stripe_customer_id: string | null
+          stripe_session_id: string | null
           status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum: string
           eind_datum: string | null
@@ -93,6 +94,7 @@ export type Database = {
           huurder_id: string
           stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
+          stripe_session_id?: string | null
           status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum: string
           eind_datum?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           huurder_id?: string
           stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
+          stripe_session_id?: string | null
           status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen" | "pending"
           start_datum?: string
           eind_datum?: string | null

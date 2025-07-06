@@ -35,11 +35,10 @@ export class StripeCheckoutService extends DatabaseService {
 
         // Create payment record with proper validation
         const paymentRecord = await paymentRecordService.createPaymentRecord({
-          gebruiker_id: userId,
-          gebruiker_type: 'huurder',
-          email: user.email || '',
+          huurder_id: userId,
           bedrag: Math.round(plan.priceWithTax * 100),
           status: 'pending',
+          start_datum: new Date().toISOString(),
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString()
         });
@@ -79,7 +78,7 @@ export class StripeCheckoutService extends DatabaseService {
 
         // Update payment record with session ID
         await paymentRecordService.updatePaymentRecord(paymentRecord.id, { 
-          stripe_sessie_id: data.sessionId 
+          stripe_session_id: data.sessionId 
         });
 
         // Redirect to Stripe Checkout
