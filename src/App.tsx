@@ -91,7 +91,7 @@ const App = () => (
               } 
             />
             <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/wachtwoord-herstellen" element={<ResetPassword />} />
             <Route path="/privacybeleid" element={<Privacybeleid />} />
             <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
           </Routes>
