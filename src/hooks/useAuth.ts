@@ -46,7 +46,7 @@ export const useAuth = (): UseAuthReturn => {
       if (user) {
         login(user);
         // Only auto-redirect if we're on the home page or login page
-        // This prevents redirecting after logout
+        // This prevents redirecting after logout or during password reset
         const currentPath = window.location.pathname;
         const shouldRedirect = currentPath === '/' || currentPath === '/login' || currentPath === '/register';
         
