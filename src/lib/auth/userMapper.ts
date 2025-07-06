@@ -11,22 +11,32 @@ class UserMapper {
    */
   async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
-      // Get profile data - check if the user exists in gebruikers table first
-      const { data: profileData } = await supabase
+      logger.info('Mapping database role:', supabaseUser.id);
+      
+      // Get profile data - use maybeSingle to handle missing data gracefully
+      const { data: profileData, error: profileError } = await supabase
         .from('gebruikers')
         .select('naam, rol')
         .eq('id', supabaseUser.id)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        logger.warn('Error fetching profile data:', profileError);
+      }
 
       // Check for active subscription - use separate query to avoid join errors
       let hasPayment = false;
       try {
-        const { data: subscriptionData } = await supabase
+        const { data: subscriptionData, error: subscriptionError } = await supabase
           .from('abonnementen')
           .select('status')
           .eq('huurder_id', supabaseUser.id)
           .eq('status', 'actief')
           .limit(1);
+
+        if (subscriptionError) {
+          logger.warn('Error checking subscription:', subscriptionError);
+        }
 
         hasPayment = subscriptionData && subscriptionData.length > 0;
       } catch (error) {
@@ -40,7 +50,7 @@ class UserMapper {
       const dbRole = profileData?.rol || roleMapper.determineRoleFromEmail(supabaseUser.email);
       const mappedRole = roleMapper.mapRoleFromDatabase(dbRole, supabaseUser.email);
 
-      logger.info('Auth mapping - Email:', supabaseUser.email, 'DB Role:', dbRole, 'Mapped Role:', mappedRole);
+      logger.info('Auth mapping - Email:', supabaseUser.email?.substring(0, 5) + '***');
 
       return {
         id: supabaseUser.id,
