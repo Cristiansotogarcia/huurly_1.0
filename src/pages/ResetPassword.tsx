@@ -8,6 +8,8 @@ import { Loader2, ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ResetPassword = () => {
+  console.log('ResetPassword component is loading...');
+  
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
