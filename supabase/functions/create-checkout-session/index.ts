@@ -1,17 +1,77 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "http/server";
+import Stripe from "stripe";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper logging function
+
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT-SESSION] ${step}${detailsStr}`);
+};
+
+const initializeClients = () => {
+  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!stripeSecretKey || !supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing required environment variables");
+  }
+
+  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false },
+  });
+
+  return { stripe, supabase };
+};
+
+const getUser = async (req: Request, supabase: SupabaseClient) => {
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader) {
+    const { data, error } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (!error && data.user) {
+      return data.user;
+    }
+  }
+  return null;
+};
+
+const resolveCustomer = async (stripe: Stripe, email: string, userId: string) => {
+  const { data: customers } = await stripe.customers.list({ email, limit: 1 });
+  if (customers.length > 0) {
+    return customers[0];
+  }
+  return stripe.customers.create({
+    email,
+    metadata: { user_id: userId || 'unknown' },
+  });
+};
+
+const updatePaymentRecord = async (supabase: SupabaseClient, paymentRecordId: string, sessionId: string) => {
+  if (!paymentRecordId) return;
+
+  try {
+    const { error } = await supabase
+      .from('betalingen')
+      .update({
+        stripe_sessie_id: sessionId,
+        bijgewerkt_op: new Date().toISOString(),
+      })
+      .eq('id', paymentRecordId);
+
+    if (error) {
+      console.error('Failed to update payment record:', error);
+    }
+  } catch (error) {
+    console.error('Error updating payment record:', error);
+  }
 };
 
 serve(async (req) => {
@@ -26,72 +86,22 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
-
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!stripeSecretKey) {
-      throw new Error("STRIPE_SECRET_KEY is not configured");
-    }
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Supabase configuration is missing");
-    }
-
-    logStep("Environment variables validated");
-
+    const { stripe, supabase } = initializeClients();
     const { priceId, successUrl, cancelUrl, userId, userEmail, paymentRecordId } = await req.json();
 
     if (!priceId) {
-      throw new Error("Price ID is required");
+      return new Response(JSON.stringify({ error: "Price ID is required" }), { status: 400 });
     }
 
-    logStep("Request body parsed", { priceId, userId, userEmail });
-
-    // Initialize Supabase client with service role for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    });
-
-    // Get authenticated user if authorization header is present
-    let user = null;
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-      if (!userError && userData.user) {
-        user = userData.user;
-        logStep("User authenticated", { userId: user.id, email: user.email });
-      }
-    }
-
-    // Use user from auth header or fallback to provided userEmail
+    const user = await getUser(req, supabase);
     const emailToUse = user?.email || userEmail;
     const userIdToUse = user?.id || userId;
 
     if (!emailToUse) {
-      throw new Error("User email is required");
+      return new Response(JSON.stringify({ error: "User email is required" }), { status: 400 });
     }
 
-    logStep("User data resolved", { email: emailToUse, userId: userIdToUse });
-
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2023-10-16",
-    });
-
-    // Check for existing customer
-    const { data: customers } = await stripe.customers.list({
-      email: emailToUse,
-      limit: 1,
-    });
-
-    let customer = customers.length > 0 ? customers[0] : await stripe.customers.create({
-      email: emailToUse,
-      metadata: { user_id: userIdToUse || 'unknown' },
-    });
-
-    logStep("Customer resolved", { customerId: customer.id, isNew: customers.length === 0 });
+    const customer = await resolveCustomer(stripe, emailToUse, userIdToUse);
 
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
@@ -101,44 +111,14 @@ serve(async (req) => {
       success_url: successUrl || `${req.headers.get("origin")}/payment-success`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/dashboard`,
       subscription_data: {
-        metadata: {
-          user_id: userIdToUse || 'unknown',
-          payment_record_id: paymentRecordId || 'unknown',
-        },
+        metadata: { user_id: userIdToUse, payment_record_id: paymentRecordId },
       },
-      metadata: {
-        user_id: userIdToUse || 'unknown',
-        payment_record_id: paymentRecordId || 'unknown',
-      },
+      metadata: { user_id: userIdToUse, payment_record_id: paymentRecordId },
     });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    await updatePaymentRecord(supabase, paymentRecordId, session.id);
 
-    // Update payment record if provided
-    if (paymentRecordId) {
-      try {
-        const { error: updateError } = await supabase
-          .from('betalingen')
-          .update({
-            stripe_sessie_id: session.id,
-            bijgewerkt_op: new Date().toISOString(),
-          })
-          .eq('id', paymentRecordId);
-
-        if (updateError) {
-          console.error('Failed to update payment record:', updateError);
-        } else {
-          logStep("Payment record updated", { paymentRecordId });
-        }
-      } catch (error) {
-        console.error('Error updating payment record:', error);
-      }
-    }
-
-    return new Response(JSON.stringify({
-      sessionId: session.id,
-      url: session.url,
-    }), {
+    return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
