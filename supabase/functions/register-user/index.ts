@@ -3,8 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors'
 
 serve(async (req) => {
+  console.log('Function invoked. Method:', req.method, 'Origin:', req.headers.get('origin'));
+
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    console.log('Handling OPTIONS request');
+    return new Response('ok', { headers: corsHeaders, status: 200 });
   }
 
   try {
