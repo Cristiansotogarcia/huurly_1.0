@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { createClient} from "@supabase/supabase-js";
 
 const vercelUrl = Deno.env.get("VERCEL_URL");
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "https://huurly.nl", "https://www.huurly.nl"];
 if (vercelUrl) {
   allowedOrigins.push(`https://${vercelUrl}`);
 }
