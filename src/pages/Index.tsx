@@ -19,7 +19,7 @@ const Index = () => {
     // Check for password recovery token first
     const hash = window.location.hash;
     if (hash && hash.includes('type=recovery')) {
-      navigate('/reset-password');
+      navigate('/wachtwoord-herstellen');
       return;
     }
 
