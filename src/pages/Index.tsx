@@ -16,14 +16,24 @@ const Index = () => {
   const [showSignup, setShowSignup] = useState(false);
 
   useEffect(() => {
-    // Check for password recovery token first
+    // Debug: Log all URL parts to understand the structure
+    console.log('Homepage - Full URL:', window.location.href);
+    console.log('Homepage - Hash:', window.location.hash);
+    console.log('Homepage - Search:', window.location.search);
+    console.log('Homepage - Pathname:', window.location.pathname);
+    
+    // Check for password recovery token in hash or search params
     const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
+      console.log('Recovery token detected, redirecting to /wachtwoord-herstellen');
       navigate('/wachtwoord-herstellen');
       return;
     }
 
     if (isAuthenticated && user) {
+      console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
         case 'huurder':
           navigate('/huurder-dashboard');
