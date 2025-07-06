@@ -16,6 +16,13 @@ const Index = () => {
   const [showSignup, setShowSignup] = useState(false);
 
   useEffect(() => {
+    // Check for password recovery token first
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+      navigate('/reset-password');
+      return;
+    }
+
     if (isAuthenticated && user) {
       switch (user.role) {
         case 'huurder':
