@@ -8,7 +8,7 @@ export class PaymentWebhookService extends DatabaseService {
   async handlePaymentSuccess(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .update({ 
           status: 'completed',
           bijgewerkt_op: new Date().toISOString()
@@ -21,7 +21,7 @@ export class PaymentWebhookService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('PAYMENT_SUCCESS', 'betalingen', data.id, null, data);
+      await this.createAuditLog('PAYMENT_SUCCESS', 'abonnementen', data.id, null, data);
 
       return { data, error: null };
     });
@@ -30,7 +30,7 @@ export class PaymentWebhookService extends DatabaseService {
   async handlePaymentFailure(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .update({ 
           status: 'failed',
           bijgewerkt_op: new Date().toISOString()
@@ -43,7 +43,7 @@ export class PaymentWebhookService extends DatabaseService {
         throw ErrorHandler.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('PAYMENT_FAILED', 'betalingen', data.id, null, data);
+      await this.createAuditLog('PAYMENT_FAILED', 'abonnementen', data.id, null, data);
 
       return { data, error: null };
     });

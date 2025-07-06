@@ -2,10 +2,17 @@ import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient} from "@supabase/supabase-js";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+const vercelUrl = Deno.env.get("VERCEL_URL");
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+if (vercelUrl) {
+  allowedOrigins.push(`https://${vercelUrl}`);
+}
+
+const corsHeaders = (origin: string) => ({
+  "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
@@ -60,7 +67,7 @@ const updatePaymentRecord = async (
 
   try {
     const { error } = await supabase
-      .from("betalingen")
+      .from("abonnementen")
       .update({
         stripe_sessie_id: sessionId,
       })
@@ -75,13 +82,11 @@ const updatePaymentRecord = async (
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin") || "";
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: {
-        ...corsHeaders,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
+      headers: corsHeaders(origin),
     });
   }
 
@@ -137,7 +142,7 @@ serve(async (req) => {
 
     logStep("SESSION_CREATED", { sessionId: session.id, url: session.url });
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
@@ -145,7 +150,7 @@ serve(async (req) => {
     logStep("ERROR", { message: errorMessage });
     console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 500,
     });
   }

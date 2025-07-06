@@ -5,8 +5,8 @@ import { ErrorHandler } from '../../lib/errors.ts';
 import { Tables, TablesInsert } from '../../integrations/supabase/types.ts';
 import { logger } from '../../lib/logger.ts';
 
-export type PaymentRecord = Tables<'betalingen'>;
-export type PaymentRecordInsert = TablesInsert<'betalingen'>;
+export type PaymentRecord = Tables<'abonnementen'>;
+export type PaymentRecordInsert = TablesInsert<'abonnementen'>;
 
 export class PaymentRecordService extends DatabaseService {
   async createPaymentRecord(paymentData: PaymentRecordInsert): Promise<PaymentRecord> {
@@ -37,7 +37,7 @@ export class PaymentRecordService extends DatabaseService {
       });
 
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .insert(recordToInsert)
         .select()
         .single();
@@ -64,7 +64,7 @@ export class PaymentRecordService extends DatabaseService {
   async updatePaymentRecord(paymentId: string, updates: Partial<PaymentRecord>): Promise<PaymentRecord> {
     try {
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .update(updates)
         .eq('id', paymentId)
         .select()
@@ -104,7 +104,7 @@ export class PaymentRecordService extends DatabaseService {
 
     return this.executeQuery(async () => {
       const { data, error } = await supabase
-        .from('betalingen')
+        .from('abonnementen')
         .select('*')
         .eq('gebruiker_id', userId)
         .order('bijgewerkt_op', { ascending: false });

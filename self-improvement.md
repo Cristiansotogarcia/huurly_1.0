@@ -1,0 +1,4 @@
+# Self-Improvement Rules
+
+1.  **Rule:** When a database migration renames a table, ensure all references to that table in the codebase (backend functions, frontend services, type definitions, and database triggers) are updated to use the new table name. 
+    **Reasoning:** A mismatch between the table name in the code and the database schema can lead to runtime errors, such as the `record "new" has no field "updated_at"` error encountered in this session. This error occurred because a trigger was referencing a non-existent table. A systematic search for the old table name across the entire project is necessary to prevent such issues.

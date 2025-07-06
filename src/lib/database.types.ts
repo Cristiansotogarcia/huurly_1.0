@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -11,43 +11,43 @@ export type Database = {
     Tables: {
       abonnementen: {
         Row: {
-          aangemaakt_op: string
-          bedrag: number
-          bijgewerkt_op: string
-          currency: string | null
-          eind_datum: string | null
-          huurder_id: string | null
           id: string
-          start_datum: string
-          status: Database["public"]["Enums"]["abonnement_status"]
-          stripe_customer_id: string | null
+          huurder_id: string
           stripe_subscription_id: string | null
+          stripe_customer_id: string | null
+          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          start_datum: string
+          eind_datum: string | null
+          bedrag: number
+          currency: string | null
+          aangemaakt_op: string
+          bijgewerkt_op: string
         }
         Insert: {
-          aangemaakt_op?: string
-          bedrag?: number
-          bijgewerkt_op?: string
-          currency?: string | null
-          eind_datum?: string | null
-          huurder_id?: string | null
           id?: string
-          start_datum: string
-          status?: Database["public"]["Enums"]["abonnement_status"]
-          stripe_customer_id?: string | null
+          huurder_id: string
           stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          start_datum: string
+          eind_datum?: string | null
+          bedrag: number
+          currency?: string | null
+          aangemaakt_op?: string
+          bijgewerkt_op?: string
         }
         Update: {
-          aangemaakt_op?: string
-          bedrag?: number
-          bijgewerkt_op?: string
-          currency?: string | null
-          eind_datum?: string | null
-          huurder_id?: string | null
           id?: string
-          start_datum?: string
-          status?: Database["public"]["Enums"]["abonnement_status"]
-          stripe_customer_id?: string | null
+          huurder_id?: string
           stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+          start_datum?: string
+          eind_datum?: string | null
+          bedrag?: number
+          currency?: string | null
+          aangemaakt_op?: string
+          bijgewerkt_op?: string
         }
         Relationships: [
           {
@@ -97,45 +97,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      betalingen: {
-        Row: {
-          aangemaakt_op: string | null
-          bedrag: number
-          bijgewerkt_op: string | null
-          email: string
-          gebruiker_id: string
-          gebruiker_type: string
-          id: string
-          status: string
-          stripe_betalingsintentie_id: string | null
-          stripe_sessie_id: string | null
-        }
-        Insert: {
-          aangemaakt_op?: string | null
-          bedrag: number
-          bijgewerkt_op?: string | null
-          email: string
-          gebruiker_id: string
-          gebruiker_type: string
-          id?: string
-          status?: string
-          stripe_betalingsintentie_id?: string | null
-          stripe_sessie_id?: string | null
-        }
-        Update: {
-          aangemaakt_op?: string | null
-          bedrag?: number
-          bijgewerkt_op?: string | null
-          email?: string
-          gebruiker_id?: string
-          gebruiker_type?: string
-          id?: string
-          status?: string
-          stripe_betalingsintentie_id?: string | null
-          stripe_sessie_id?: string | null
-        }
-        Relationships: []
       }
       documenten: {
         Row: {

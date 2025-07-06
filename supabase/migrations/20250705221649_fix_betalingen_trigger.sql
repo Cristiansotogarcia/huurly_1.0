@@ -6,7 +6,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_betalingen_bijgewerkt_op
-  BEFORE UPDATE ON public.betalingen
+CREATE TRIGGER update_abonnementen_bijgewerkt_op
+  BEFORE UPDATE ON public.abonnementen
   FOR EACH ROW
   EXECUTE FUNCTION public.update_bijgewerkt_op_column();
