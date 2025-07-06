@@ -9,7 +9,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    historyApiFallback: true,
+    middlewareMode: false,
+    fs: {
+      strict: false,
+    },
+  },
+  preview: {
+    port: 8080,
+    host: "::",
   },
   plugins: [
     react(),
