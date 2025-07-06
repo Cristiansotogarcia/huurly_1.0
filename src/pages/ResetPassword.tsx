@@ -69,31 +69,56 @@ const ResetPassword = () => {
     console.log('ResetPassword - Loading state changed:', isLoading);
   }, [isLoading]);
 
-  // Check if we have a valid recovery token in the URL
+  // Check if we have a valid recovery token in the URL or an active session
   useEffect(() => {
-    console.log('ResetPassword - Checking URL for recovery token...');
-    console.log('ResetPassword - Full URL:', window.location.href);
-    console.log('ResetPassword - Hash:', location.hash);
-    console.log('ResetPassword - Search:', location.search);
-    
-    // Check if we have recovery parameters in the URL
-    const hash = window.location.hash;
-    const searchParams = new URLSearchParams(window.location.search);
-    
-    const hasRecoveryToken = (hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery';
-    
-    if (hasRecoveryToken) {
-      console.log('ResetPassword - Recovery token found, allowing access');
-      setIsCheckingToken(false);
-    } else {
-      console.log('ResetPassword - No recovery token found');
-      toast({
-        title: "Ongeldige toegang",
-        description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link.",
-        variant: "destructive"
-      });
-      navigate('/');
-    }
+    const checkAccess = async () => {
+      console.log('ResetPassword - Checking access...');
+      console.log('ResetPassword - Full URL:', window.location.href);
+      console.log('ResetPassword - Hash:', location.hash);
+      console.log('ResetPassword - Search:', location.search);
+      
+      // Check if we have recovery parameters in the URL
+      const hash = window.location.hash;
+      const searchParams = new URLSearchParams(window.location.search);
+      
+      const hasRecoveryToken = (hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery';
+      
+      if (hasRecoveryToken) {
+        console.log('ResetPassword - Recovery token found in URL, allowing access');
+        setIsCheckingToken(false);
+        return;
+      }
+      
+      // If no URL token, check if we have an active session (from completed recovery)
+      try {
+        console.log('ResetPassword - No URL token, checking for active session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('ResetPassword - Session check result:', { session: !!session, error });
+        
+        if (session && session.user) {
+          console.log('ResetPassword - Active session found, allowing access');
+          setIsCheckingToken(false);
+        } else {
+          console.log('ResetPassword - No active session, denying access');
+          toast({
+            title: "Ongeldige toegang",
+            description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link.",
+            variant: "destructive"
+          });
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('ResetPassword - Error checking session:', error);
+        toast({
+          title: "Ongeldige toegang",
+          description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link.",
+          variant: "destructive"
+        });
+        navigate('/');
+      }
+    };
+
+    checkAccess();
   }, [location, navigate, toast]);
   
   // Update password strength indicators as user types
