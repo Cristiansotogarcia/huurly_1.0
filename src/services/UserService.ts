@@ -878,48 +878,61 @@ export class UserService extends DatabaseService {
         return { data: null, error: null };
       }
 
-      // First, try to get active subscription
-      const { data: activeData, error: activeError } = await supabase
-        .from('abonnementen')
-        .select('*')
-        .eq('huurder_id', userId)
-        .eq('status', 'actief')
-        .single();
-
-      if (activeData) {
-        console.log('Found active subscription for user:', userId);
-        return { data: activeData, error: null };
+      // Check if current user matches the requested userId (for security)
+      if (session.user.id !== userId) {
+        console.warn('User ID mismatch in subscription fetch');
+        return { data: null, error: new Error('Unauthorized') };
       }
 
-      // If no active subscription, check for pending ones
-      const { data: pendingData, error: pendingError } = await supabase
-        .from('abonnementen')
-        .select('*')
-        .eq('huurder_id', userId)
-        .eq('status', 'wachtend')
-        .order('aangemaakt_op', { ascending: false })
-        .limit(1)
-        .single();
+      try {
+        // First, try to get active subscription using maybeSingle to avoid 406 errors
+        const { data: activeData, error: activeError } = await supabase
+          .from('abonnementen')
+          .select('*')
+          .eq('huurder_id', userId)
+          .eq('status', 'actief')
+          .maybeSingle();
 
-      if (pendingData) {
-        console.warn('Found pending subscription for user:', userId, 'Subscription ID:', pendingData.stripe_subscription_id);
-        // Return null for pending subscriptions so user is treated as not subscribed
-        // but log this for debugging
-        return { data: null, error: null };
-      }
-
-      // Handle errors
-      if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "not found"
-        // Log the error but don't throw for authentication issues
-        if (activeError.message?.includes('No API key') || activeError.message?.includes('Not Acceptable')) {
-          console.warn('Authentication issue during subscription fetch:', activeError.message);
+        if (activeError) {
+          console.error('Error fetching active subscription:', activeError);
+          // Return null instead of throwing error to prevent breaking the app
           return { data: null, error: null };
         }
-        throw this.handleDatabaseError(activeError);
-      }
 
-      console.log('No subscription found for user:', userId);
-      return { data: null, error: null };
+        if (activeData) {
+          console.log('Found active subscription for user:', userId);
+          return { data: activeData, error: null };
+        }
+
+        // If no active subscription, check for pending ones
+        const { data: pendingData, error: pendingError } = await supabase
+          .from('abonnementen')
+          .select('*')
+          .eq('huurder_id', userId)
+          .eq('status', 'wachtend')
+          .order('aangemaakt_op', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pendingError) {
+          console.error('Error fetching pending subscription:', pendingError);
+          return { data: null, error: null };
+        }
+
+        if (pendingData) {
+          console.warn('Found pending subscription for user:', userId, 'Subscription ID:', pendingData.stripe_subscription_id);
+          // Return null for pending subscriptions so user is treated as not subscribed
+          return { data: null, error: null };
+        }
+
+        // No subscription found
+        console.log('No subscription found for user:', userId);
+        return { data: null, error: null };
+
+      } catch (error) {
+        console.error('Unexpected error in getSubscription:', error);
+        return { data: null, error: null };
+      }
     });
   }
 
