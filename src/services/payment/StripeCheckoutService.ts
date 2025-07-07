@@ -33,27 +33,15 @@ export class StripeCheckoutService extends DatabaseService {
 
         logger.info('Sessie aanmaken voor gebruiker:', { userId, email: user.email });
 
-        const now = new Date().toISOString();
-        const paymentRecord = await paymentRecordService.createPaymentRecord({
-          huurder_id: userId,
-          bedrag: Math.round(plan.priceWithTax * 100),
-          status: 'wachtend',
-          start_datum: now,
-          aangemaakt_op: now,
-          bijgewerkt_op: now
-        });
-
-        logger.info('Betaalrecord aangemaakt:', { paymentRecordId: paymentRecord.id });
-
         const successUrl = `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${baseUrl}/huurder-dashboard?payment=cancelled`;
 
+        // Create checkout session directly without pre-creating record
         const { data, error } = await supabase.functions.invoke('create-checkout-session', {
           body: {
             priceId: plan.priceId,
             userId: userId,
             userEmail: user.email,
-            paymentRecordId: paymentRecord.id,
             successUrl,
             cancelUrl,
           },
@@ -64,27 +52,15 @@ export class StripeCheckoutService extends DatabaseService {
           throw new Error('Het is niet gelukt om een beveiligde betaalsessie aan te maken. Controleer uw verbinding en probeer het opnieuw.');
         }
 
-        if (!data?.sessionId) {
-          logger.error('Geen sessie-ID ontvangen van create-checkout-session');
+        if (!data?.url) {
+          logger.error('Geen checkout-URL ontvangen van create-checkout-session');
           throw new Error('Kon de betaalsessie niet verifiëren. Probeer het later opnieuw.');
         }
 
-        logger.info('Checkout-sessie aangemaakt:', { sessionId: data.sessionId });
+        logger.info('Checkout-sessie aangemaakt, doorsturen naar Stripe...');
 
-        await paymentRecordService.updatePaymentRecord(paymentRecord.id, { 
-          stripe_sessie_id: data.sessionId 
-        });
-
-        const { error: stripeError } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId,
-        });
-
-        if (stripeError) {
-          logger.error('Fout bij Stripe-omleiding:', stripeError);
-          throw new Error(`We konden u niet doorsturen naar de betaalpagina: ${stripeError.message}`);
-        }
-
-        return { data: { url: data.url || '' }, error: null };
+        // Return the URL for redirect instead of using Stripe client-side redirect
+        return { data: { url: data.url }, error: null };
       } catch (error) {
         logger.error('Fout bij het aanmaken van de checkout-sessie:', error);
         throw error;

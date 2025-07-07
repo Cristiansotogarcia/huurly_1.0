@@ -1,18 +1,7 @@
 import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient} from "@supabase/supabase-js";
-
-const vercelUrl = Deno.env.get("VERCEL_URL");
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "https://huurly.nl", "https://www.huurly.nl"];
-if (vercelUrl) {
-  allowedOrigins.push(`https://${vercelUrl}`);
-}
-
-const corsHeaders = (origin: string) => ({
-  "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-});
+import { corsHeaders } from '../_shared/cors.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
@@ -28,7 +17,11 @@ const initializeClients = () => {
     throw new Error("Missing required environment variables");
   }
 
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+  const stripe = new Stripe(stripeSecretKey, { 
+    apiVersion: "2023-10-16",
+    timeout: 30000, // 30 seconds
+    maxNetworkRetries: 3
+  });
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false },
   });
@@ -58,28 +51,7 @@ const resolveCustomer = async (stripe: InstanceType<typeof Stripe>, email: strin
   });
 };
 
-const updatePaymentRecord = async (
-  supabase: ReturnType<typeof createClient>,
-  paymentRecordId: string,
-  sessionId: string
-) => {
-  if (!paymentRecordId) return;
-
-  try {
-    const { error } = await supabase
-      .from("abonnementen")
-      .update({
-        stripe_sessie_id: sessionId,
-      })
-      .eq("id", paymentRecordId);
-
-    if (error) {
-      console.error("Failed to update payment record:", error);
-    }
-  } catch (error) {
-    console.error("Error updating payment record:", error);
-  }
-};
+// Removed updatePaymentRecord function - webhook will handle all database operations
 
 serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
@@ -94,7 +66,7 @@ serve(async (req) => {
     const { stripe, supabase } = initializeClients();
     const body = await req.json();
     logStep("REQUEST_BODY", body);
-    const { priceId, successUrl, cancelUrl, userId, userEmail, paymentRecordId } = body;
+    const { priceId, successUrl, cancelUrl, userId, userEmail } = body;
 
     if (!priceId) {
       logStep("ERROR", { message: "Price ID is required" });
@@ -124,21 +96,16 @@ serve(async (req) => {
       subscription_data: {
         metadata: {
           user_id: userIdToUse,
-          payment_record_id: paymentRecordId,
         },
       },
       metadata: {
         user_id: userIdToUse,
-        payment_record_id: paymentRecordId,
       },
     };
 
     logStep("SESSION_PAYLOAD", sessionPayload);
 
     const session = await stripe.checkout.sessions.create(sessionPayload);
-
-    logStep("UPDATING_PAYMENT_RECORD", { paymentRecordId, sessionId: session.id });
-    await updatePaymentRecord(supabase, paymentRecordId, session.id);
 
     logStep("SESSION_CREATED", { sessionId: session.id, url: session.url });
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {

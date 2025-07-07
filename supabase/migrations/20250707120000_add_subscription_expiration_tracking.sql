@@ -1,9 +1,30 @@
--- Add expiration notification tracking to abonnementen table
-ALTER TABLE public.abonnementen
-ADD COLUMN IF NOT EXISTS expiration_reminder_sent boolean DEFAULT false,
-ADD COLUMN IF NOT EXISTS expiration_reminder_sent_at timestamptz;
+-- Fix abonnementen table to use proper date types for better date handling
+-- This ensures that date calculations work correctly
 
--- Create function to check for expiring subscriptions (2 weeks before expiry)
+-- First, convert string dates to proper timestamps if needed (only if column is text)
+DO $$
+BEGIN
+  -- Cast start_datum if it's still text
+  BEGIN
+    ALTER TABLE public.abonnementen 
+    ALTER COLUMN start_datum TYPE timestamptz 
+    USING (start_datum || 'T00:00:00Z')::timestamptz;
+  EXCEPTION WHEN others THEN
+    RAISE NOTICE 'start_datum already converted, skipping...';
+  END;
+
+  -- Cast eind_datum if it's still text
+  BEGIN
+    ALTER TABLE public.abonnementen 
+    ALTER COLUMN eind_datum TYPE timestamptz 
+    USING (eind_datum || 'T00:00:00Z')::timestamptz;
+  EXCEPTION WHEN others THEN
+    RAISE NOTICE 'eind_datum already converted, skipping...';
+  END;
+END
+$$;
+
+-- Update the expiration check function to use proper date comparison
 CREATE OR REPLACE FUNCTION check_expiring_subscriptions()
 RETURNS void AS $$
 BEGIN
@@ -20,7 +41,7 @@ BEGIN
     a.huurder_id,
     'systeem',
     'Abonnement verloopt binnenkort',
-    'Je jaarlijkse abonnement verloopt op ' || a.eind_datum || '. Verleng je abonnement om toegang te behouden tot alle functies.',
+    'Je jaarlijkse abonnement verloopt op ' || a.eind_datum::date || '. Verleng je abonnement om toegang te behouden tot alle functies.',
     false
   FROM public.abonnementen a
   WHERE a.status = 'actief'
@@ -38,7 +59,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create function to expire subscriptions
+-- Update the expiration function to use proper date comparison
 CREATE OR REPLACE FUNCTION expire_subscriptions()
 RETURNS void AS $$
 BEGIN
@@ -51,15 +72,3 @@ BEGIN
     AND eind_datum::date < CURRENT_DATE;
 END;
 $$ LANGUAGE plpgsql;
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_abonnementen_status_eind_datum 
-ON public.abonnementen (status, eind_datum);
-
-CREATE INDEX IF NOT EXISTS idx_abonnementen_expiration_reminder 
-ON public.abonnementen (expiration_reminder_sent, eind_datum);
-
--- Note: In production, you would set up a cron job or scheduled task to call:
--- SELECT check_expiring_subscriptions();
--- SELECT expire_subscriptions();
--- This should be run daily.

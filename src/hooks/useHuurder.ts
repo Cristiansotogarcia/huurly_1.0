@@ -68,14 +68,14 @@ export const useHuurder = () => {
         setSubscription(subResponse.data);
       } else {
         setSubscription(null);
-        // Log subscription fetch issues for debugging
-        if (subResponse && !subResponse.success && subResponse.error) {
+        // Only log subscription issues in development to reduce noise
+        if (process.env.NODE_ENV === 'development' && subResponse && !subResponse.success && subResponse.error) {
           console.warn('Subscription fetch failed:', subResponse.error.message);
         }
         
-        // Debug subscription status and check for pending subscriptions
-        await SubscriptionSyncService.debugSubscriptionStatus(user.id);
-        await SubscriptionSyncService.syncPendingSubscriptions(user.id);
+        // Remove excessive debugging calls - only sync if really needed
+        // await SubscriptionSyncService.debugSubscriptionStatus(user.id);
+        // await SubscriptionSyncService.syncPendingSubscriptions(user.id);
       }
 
       // Handle profile picture URL
