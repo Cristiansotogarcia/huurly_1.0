@@ -18,17 +18,11 @@ const mapStripeStatusToDutch = (stripeStatus: string): string => {
 };
 
 // CORS headers for browser-based calls
-const vercelUrl = Deno.env.get("VERCEL_URL");
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
-if (vercelUrl) {
-  allowedOrigins.push(`https://${vercelUrl}`);
-}
-
-const corsHeaders = (origin: string) => ({
-  "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -48,22 +42,11 @@ type ExtendedSession = Stripe.Checkout.Session & {
 };
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin") || "";
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders(origin) });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
-    });
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
 
@@ -129,8 +112,8 @@ serve(async (req) => {
         stripe_sessie_id: session.id,
         start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
         eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
-        bedrag: 6500,
-        currency: "eur",
+        bedrag: session.amount_total,
+        currency: session.currency,
       };
       
       console.log("💾 Upserting subscription data:", subscriptionData);
@@ -216,7 +199,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
