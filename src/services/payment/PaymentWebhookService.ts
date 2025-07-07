@@ -9,6 +9,18 @@ export class PaymentWebhookService extends DatabaseService {
   async handlePaymentSuccess(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
     console.log(`[PaymentWebhookService] Handling payment success for session: ${sessionId}`);
     return this.executeQuery(async () => {
+      // First check if we already have a subscription for this session
+      const { data: existingSubscription } = await supabase
+        .from('abonnementen')
+        .select('*')
+        .eq('stripe_sessie_id', sessionId)
+        .single();
+
+      if (existingSubscription) {
+        console.log('[PaymentWebhookService] Payment already processed for session:', sessionId);
+        return { data: existingSubscription, error: null };
+      }
+
       // Retrieve session details from our secure Supabase function
       const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-stripe-session', {
         body: { session_id: sessionId },
@@ -32,18 +44,21 @@ export class PaymentWebhookService extends DatabaseService {
       }
 
       // Upsert abonnement record
+      const subscriptionData = {
+        huurder_id: userId,
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: subscription.customer,
+        stripe_sessie_id: sessionId,
+        status: 'actief',
+        start_datum: new Date(subscription.current_period_start * 1000).toISOString(),
+        eind_datum: new Date(subscription.current_period_end * 1000).toISOString(),
+        bedrag: session.amount_total,
+        currency: session.currency,
+      };
+
       const { data, error } = await supabase
         .from('abonnementen')
-        .upsert({
-          huurder_id: userId,
-          stripe_subscription_id: subscription.id,
-          stripe_sessie_id: sessionId,
-          status: 'actief',
-          start_datum: new Date(subscription.current_period_start * 1000).toISOString(),
-          eind_datum: new Date(subscription.current_period_end * 1000).toISOString(),
-          bedrag: session.amount_total,
-          currency: session.currency,
-        }, { onConflict: 'stripe_subscription_id' })
+        .upsert(subscriptionData, { onConflict: 'stripe_subscription_id' })
         .select()
         .single();
 
@@ -54,6 +69,15 @@ export class PaymentWebhookService extends DatabaseService {
 
       console.log('[PaymentWebhookService] Subscription successfully upserted:', data);
       await this.createAuditLog('PAYMENT_SUCCESS', 'abonnementen', data.id, null, data);
+
+      // Create success notification
+      await supabase.from('notificaties').insert({
+        gebruiker_id: userId,
+        type: 'systeem',
+        titel: 'Betaling succesvol',
+        inhoud: 'Je jaarlijkse abonnement is geactiveerd. Je hebt nu toegang tot alle functies van Huurly.',
+        gelezen: false,
+      });
 
       return { data, error: null };
     });
