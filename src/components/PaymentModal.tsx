@@ -53,16 +53,28 @@ export const PaymentModal = ({
 
     setIsLoading(true);
     try {
-            const baseUrl = window.location.origin;
+      const baseUrl = window.location.origin;
       const result = await paymentService.createCheckoutSession(user.id, baseUrl);
+      
       if (result.error) {
         toast({
           title: "Fout",
           description: result.error.message || "Er is een fout opgetreden bij het starten van de betaling.",
           variant: "destructive",
         });
+        return;
       }
-      // The redirect is handled by the service
+
+      if (result.data?.url) {
+        // Redirect to Stripe checkout
+        window.location.href = result.data.url;
+      } else {
+        toast({
+          title: "Fout",
+          description: "Geen betaallink ontvangen. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Payment error:", error);
       toast({

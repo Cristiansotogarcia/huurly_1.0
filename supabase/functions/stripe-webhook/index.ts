@@ -17,19 +17,18 @@ const mapStripeStatusToDutch = (stripeStatus: string): string => {
   return statusMap[stripeStatus] || 'wachtend';
 };
 
-// CORS headers for browser-based calls
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
-const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+const stripe = new Stripe(stripeSecretKey, { 
+  apiVersion: "2023-10-16",
+  timeout: 30000, // 30 seconds
+  maxNetworkRetries: 3
+});
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
 });
@@ -42,8 +41,9 @@ type ExtendedSession = Stripe.Checkout.Session & {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin") || "";
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(origin) });
   }
 
   try {
@@ -199,7 +199,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {

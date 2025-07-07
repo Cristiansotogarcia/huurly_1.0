@@ -4,6 +4,8 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
+  timeout: 30000, // 30 seconds
+  maxNetworkRetries: 3
 });
 
 serve(async (req: Request) => {
