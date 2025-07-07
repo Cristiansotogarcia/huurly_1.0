@@ -43,7 +43,7 @@ const PaymentSuccess = () => {
 
           const timeout = setTimeout(() => {
             console.log("Redirecting to dashboard");
-            navigate("/huurder-dashboard");
+            navigate("/huurder-dashboard?payment_success=true");
           }, 3000);
 
           return () => clearTimeout(timeout);
@@ -97,7 +97,7 @@ const PaymentSuccess = () => {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Betaling Mislukt</h1>
           <p className="text-red-600 mb-6">{error}</p>
-          <button onClick={() => navigate('/huurder-dashboard')} className="bg-dutch-blue text-white px-4 py-2 rounded">
+          <button onClick={() => navigate('/huurder-dashboard?payment_success=true')} className="bg-dutch-blue text-white px-4 py-2 rounded">
             Terug naar Dashboard
           </button>
         </div>
