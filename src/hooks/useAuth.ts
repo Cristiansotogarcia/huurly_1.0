@@ -322,7 +322,10 @@ export const useAuth = (): UseAuthReturn => {
   };
 
   const handlePaymentSuccess = () => {
-    setShowPaymentSuccessModal(true);
+    // Add a small delay to ensure the modal shows properly
+    setTimeout(() => {
+      setShowPaymentSuccessModal(true);
+    }, 100);
   };
 
   return {
