@@ -140,6 +140,9 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   useEffect(() => {
     if (user && !isSubscribed) {
       setShowPaymentModal(true);
+    } else if (user && isSubscribed) {
+      // Close payment modal when user becomes subscribed
+      setShowPaymentModal(false);
     }
   }, [user, isSubscribed]);
 
@@ -160,6 +163,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_success')) {
+      // Close the payment modal immediately when payment succeeds
+      setShowPaymentModal(false);
       if (refresh) refresh();
       window.history.replaceState({}, document.title, window.location.pathname);
     }

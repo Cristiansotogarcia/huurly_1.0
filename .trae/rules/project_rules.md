@@ -8,3 +8,4 @@ Make sure you are using sequential thinking mcp when doings tasks in order not t
 
 Do NOT assume anything at anytime. You need to work fact based. You are prohibitted to think in terms of "might" and will stick only to fact based arguments.
 
+Use the mem0-mcp when working with memory.

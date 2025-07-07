@@ -44,6 +44,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 type ExtendedSession = Stripe.Checkout.Session & {
   id: string;
   subscription: string;
+  payment_status: string;
 };
 
 serve(async (req) => {
@@ -88,8 +89,16 @@ serve(async (req) => {
 
     // === CHECKOUT SESSION COMPLETED ===
     if (event.type === "checkout.session.completed") {
+      console.log("🎯 Processing checkout.session.completed event");
       const session = event.data.object as ExtendedSession;
       const userId = session.metadata?.user_id;
+
+      console.log("📋 Session details:", {
+        sessionId: session.id,
+        userId: userId,
+        subscriptionId: session.subscription,
+        paymentStatus: session.payment_status
+      });
 
       if (!userId) {
         console.error("❌ User ID not found in session metadata");
@@ -101,30 +110,40 @@ serve(async (req) => {
         return new Response("Missing subscription ID", { status: 400 });
       }
 
-
-
       // ✅ Haal Stripe subscription details op
+      console.log("🔍 Retrieving subscription from Stripe:", session.subscription);
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
+      
+      console.log("📊 Stripe subscription details:", {
+        id: subscription.id,
+        status: subscription.status,
+        mappedStatus: mapStripeStatusToDutch(subscription.status)
+      });
 
       // ✅ Voeg abonnement toe of update bestaande
+      const subscriptionData = {
+        huurder_id: userId,
+        status: mapStripeStatusToDutch(subscription.status),
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: subscription.customer as string,
+        stripe_sessie_id: session.id,
+        start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
+        eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+        bedrag: 6500,
+        currency: "eur",
+      };
+      
+      console.log("💾 Upserting subscription data:", subscriptionData);
+      
       const { error } = await supabase
         .from("abonnementen")
-        .upsert(
-          {
-            huurder_id: userId,
-            status: mapStripeStatusToDutch(subscription.status),
-            stripe_subscription_id: subscription.id,
-            stripe_sessie_id: session.id,
-            start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-            eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
-            bedrag: 6500,
-            currency: "eur",
-          },
-          { onConflict: "stripe_subscription_id" }
-        );
+        .upsert(subscriptionData, { onConflict: "stripe_subscription_id" });
 
       if (error) {
         console.error("❌ Failed to insert abonnement:", error);
+        return new Response(`Database error: ${error.message}`, { status: 500 });
+      } else {
+        console.log("✅ Successfully upserted subscription for user:", userId);
       }
 
       // ✅ Notificatie maken

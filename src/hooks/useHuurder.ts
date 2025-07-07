@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { dashboardDataService } from '@/services/DashboardDataService';
 import { userService } from '@/services/UserService';
 import { documentService } from '@/services/DocumentService';
+import { SubscriptionSyncService } from '@/services/SubscriptionSyncService';
 import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
 import { Document } from '@/services/DocumentService';
 
@@ -71,6 +72,10 @@ export const useHuurder = () => {
         if (subResponse && !subResponse.success && subResponse.error) {
           console.warn('Subscription fetch failed:', subResponse.error.message);
         }
+        
+        // Debug subscription status and check for pending subscriptions
+        await SubscriptionSyncService.debugSubscriptionStatus(user.id);
+        await SubscriptionSyncService.syncPendingSubscriptions(user.id);
       }
 
       // Handle profile picture URL
