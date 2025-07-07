@@ -24,8 +24,7 @@ const Index = () => {
     setShowEmailConfirmationModal,
     setShowEmailVerificationSuccessModal,
     setShowPaymentSuccessModal,
-    handleEmailVerificationSuccess,
-    handlePaymentSuccess
+    handleEmailVerificationSuccess
   } = useAuth();
   const navigate = useNavigate();
   const [showSignup, setShowSignup] = useState(false);
@@ -57,17 +56,10 @@ const Index = () => {
       return;
     }
 
-    // Check for payment success
+    // Legacy support: redirect old payment success URLs to the new route
     if (searchParams.get('payment') === 'success') {
-      console.log('Payment success detected');
       const sessionId = searchParams.get('session_id');
-      if (sessionId) {
-        // Handle payment success with session ID if needed
-        console.log('Processing payment success for session:', sessionId);
-      }
-      handlePaymentSuccess();
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      navigate(`/payment-success${sessionId ? `?session_id=${sessionId}` : ''}`);
       return;
     }
 
@@ -89,7 +81,7 @@ const Index = () => {
           break;
       }
     }
-  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, handlePaymentSuccess]);
+  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess]);
 
   return (
     <div className="min-h-screen">
