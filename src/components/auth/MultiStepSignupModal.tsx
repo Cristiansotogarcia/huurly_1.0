@@ -60,7 +60,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       if (success && user) {
         toast({
           title: "Registratie succesvol!",
-          description: "Je wordt doorgestuurd naar je dashboard.",
+          description: "Er is een e-mail verzonden om je account te bevestigen.",
         });
         onClose();
 
