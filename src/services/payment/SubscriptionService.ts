@@ -6,6 +6,7 @@ import { PaymentRecord } from './PaymentRecordService';
 
 export interface SubscriptionStatus {
   hasActiveSubscription: boolean;
+  isActive: boolean; // Alias for compatibility
   subscriptionType?: string;
   expiresAt?: string;
   stripeSubscriptionId?: string;
@@ -14,29 +15,61 @@ export interface SubscriptionStatus {
 export class SubscriptionService extends DatabaseService {
   async checkSubscriptionStatus(userId: string): Promise<DatabaseResponse<SubscriptionStatus>> {
     return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('abonnementen')
-        .select('*')
-        .eq('huurder_id', userId)
-        .eq('status', 'actief')
-        .order('bijgewerkt_op', { ascending: false })
-        .limit(1);
-
-      if (error) {
-        return { data: null, error };
+      // Validate session first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('No active session for subscription status check');
+        return { 
+          data: { hasActiveSubscription: false, isActive: false }, 
+          error: null 
+        };
       }
 
-      const hasActiveSubscription = data && data.length > 0;
+      // Security check - ensure user can only check their own subscription
+      if (session.user.id !== userId) {
+        console.warn('User ID mismatch in subscription status check');
+        return { 
+          data: { hasActiveSubscription: false, isActive: false }, 
+          error: new Error('Unauthorized') 
+        };
+      }
 
-      return {
-        data: {
-          hasActiveSubscription,
-          subscriptionType: hasActiveSubscription ? 'yearly' : undefined,
-          expiresAt: hasActiveSubscription ? data[0].eind_datum : undefined,
-          stripeSubscriptionId: hasActiveSubscription ? data[0].stripe_subscription_id : undefined,
-        } as SubscriptionStatus,
-        error: null,
-      };
+      try {
+        const { data, error } = await supabase
+          .from('abonnementen')
+          .select('*')
+          .eq('huurder_id', userId)
+          .eq('status', 'actief')
+          .order('bijgewerkt_op', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error checking subscription status:', error);
+          return { 
+            data: { hasActiveSubscription: false, isActive: false }, 
+            error: null // Return null error to prevent breaking the app
+          };
+        }
+
+        const hasActiveSubscription = data && data.length > 0;
+
+        return {
+          data: {
+            hasActiveSubscription,
+            isActive: hasActiveSubscription, // Alias for compatibility
+            subscriptionType: hasActiveSubscription ? 'yearly' : undefined,
+            expiresAt: hasActiveSubscription ? data[0].eind_datum : undefined,
+            stripeSubscriptionId: hasActiveSubscription ? data[0].stripe_subscription_id : undefined,
+          } as SubscriptionStatus,
+          error: null,
+        };
+      } catch (error) {
+        console.error('Unexpected error in checkSubscriptionStatus:', error);
+        return { 
+          data: { hasActiveSubscription: false, isActive: false }, 
+          error: null 
+        };
+      }
     });
   }
 

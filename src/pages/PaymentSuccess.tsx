@@ -8,16 +8,36 @@ import { paymentService } from "@/services/PaymentService";
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateUser } = useAuthStore();
+  const { user, updateUser, initializeAuth, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
+
+  // Wait for auth to initialize first
+  useEffect(() => {
+    const waitForAuth = async () => {
+      try {
+        console.log("PaymentSuccess: Initializing auth...");
+        await initializeAuth();
+        setAuthInitialized(true);
+      } catch (error) {
+        console.error("PaymentSuccess: Auth initialization failed:", error);
+        setAuthInitialized(true); // Continue anyway
+      }
+    };
+    
+    waitForAuth();
+  }, [initializeAuth]);
 
   useEffect(() => {
+    if (!authInitialized) return;
+
     const processPayment = async () => {
-      console.log("PaymentSuccess component loaded");
+      console.log("PaymentSuccess component loaded, auth initialized");
       const params = new URLSearchParams(location.search);
       const sessionId = params.get("session_id");
       console.log("Session ID:", sessionId);
+      console.log("User authenticated:", isAuthenticated, "User ID:", user?.id);
 
       if (!sessionId) {
         setError("Sessie-ID ontbreekt. Kan de betaling niet verifiëren.");
@@ -25,12 +45,29 @@ const PaymentSuccess = () => {
         return;
       }
 
-      try {
-        console.log("Processing payment success for session:", sessionId);
-        const result = await paymentService.handlePaymentSuccess(sessionId);
-        console.log("Payment success result:", result);
+      // Check if user is authenticated
+      if (!isAuthenticated || !user?.id) {
+        console.warn("PaymentSuccess: User not authenticated, redirecting to home page");
+        // Store session ID in URL params for after login via toast message
+        toast({
+          title: "Authenticatie Vereist",
+          description: "Log in om je betaling te verifiëren. Je betaling is mogelijk al verwerkt.",
+          variant: "default",
+        });
+        navigate(`/?payment_session=${sessionId}`, { replace: true });
+        return;
+      }
 
-        if (result.success) {
+      try {
+        console.log("Checking subscription status for session:", sessionId);
+        
+        // Wait a moment for webhook to process, then check subscription status
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const subscriptionResult = await paymentService.checkSubscriptionStatus(user.id);
+        console.log("Subscription check result:", subscriptionResult);
+
+        if (subscriptionResult.success && subscriptionResult.data?.isActive) {
           toast({
             title: "Betaling ontvangen!",
             description: "Je account is nu geactiveerd en je hebt toegang tot alle functies.",
@@ -41,38 +78,53 @@ const PaymentSuccess = () => {
             updateUser({ hasPayment: true });
           }
 
-          const timeout = setTimeout(() => {
-            console.log("Redirecting to dashboard");
-            navigate("/huurder-dashboard?payment_success=true");
-          }, 3000);
-
-          return () => clearTimeout(timeout);
+          // Redirect immediately
+          console.log("Redirecting to dashboard");
+          navigate("/huurder-dashboard?payment_success=true", { replace: true });
         } else {
-          const errorMessage = result.error?.message || "Er is een onbekende fout opgetreden bij het verwerken van de betaling.";
-          setError(errorMessage);
-          toast({
-            title: "Fout bij betalingsverwerking",
-            description: errorMessage,
-            variant: "destructive",
-          });
+          // If subscription not active yet, try a few more times
+          let attempts = 0;
+          const maxAttempts = 5;
+          
+          while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            attempts++;
+            
+            const retryResult = await paymentService.checkSubscriptionStatus(user.id);
+            console.log(`Subscription check attempt ${attempts}:`, retryResult);
+            
+            if (retryResult.success && retryResult.data?.isActive) {
+              toast({
+                title: "Betaling ontvangen!",
+                description: "Je account is nu geactiveerd en je hebt toegang tot alle functies.",
+                variant: "default",
+              });
+
+              updateUser({ hasPayment: true });
+              navigate("/huurder-dashboard?payment_success=true", { replace: true });
+              return;
+            }
+          }
+          
+          // After all attempts, still not active
+          setError("De betaling wordt nog verwerkt. Je wordt doorgestuurd naar het dashboard waar je de status kunt controleren.");
+          setTimeout(() => {
+            navigate("/huurder-dashboard", { replace: true });
+          }, 3000);
         }
       } catch (err: any) {
-        console.error("Error processing payment success:", err);
-        const errorMessage = err.message || "Er is een kritieke fout opgetreden.";
-        setError(errorMessage);
-        toast({
-          title: "Fout",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        console.error("Error checking subscription status:", err);
+        setError("Er was een probleem bij het controleren van je abonnement. Je wordt doorgestuurd naar het dashboard.");
+        setTimeout(() => {
+          navigate("/huurder-dashboard", { replace: true });
+        }, 3000);
       } finally {
         setIsLoading(false);
       }
     };
 
     processPayment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authInitialized, user, isAuthenticated, location.search, navigate, updateUser]);
 
   if (isLoading) {
     return (
