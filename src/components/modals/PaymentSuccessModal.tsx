@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +24,34 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
   userName,
   subscriptionType = 'Premium',
 }) => {
+  const [canClose, setCanClose] = useState(false);
+
+  // Prevent modal from closing too quickly
+  useEffect(() => {
+    if (isOpen) {
+      setCanClose(false);
+      const timer = setTimeout(() => {
+        setCanClose(true);
+      }, 2000); // 2 second minimum display time
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    if (canClose) {
+      onClose();
+    }
+  };
+
+  const handleGoToDashboard = () => {
+    if (canClose) {
+      onGoToDashboard();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
@@ -74,14 +100,16 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
           <div className="flex space-x-3">
             <Button 
               variant="outline" 
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1"
+              disabled={!canClose}
             >
               Sluiten
             </Button>
             <Button 
-              onClick={onGoToDashboard}
+              onClick={handleGoToDashboard}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={!canClose}
             >
               Naar Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />

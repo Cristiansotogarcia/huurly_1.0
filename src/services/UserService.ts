@@ -871,6 +871,13 @@ export class UserService extends DatabaseService {
    */
   async getSubscription(userId: string): Promise<DatabaseResponse<any>> {
     return this.executeQuery(async () => {
+      // Validate session before making the request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('No active session for subscription fetch');
+        return { data: null, error: null };
+      }
+
       const { data, error } = await supabase
         .from('abonnementen')
         .select('*')
@@ -879,6 +886,11 @@ export class UserService extends DatabaseService {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        // Log the error but don't throw for authentication issues
+        if (error.message?.includes('No API key') || error.message?.includes('Not Acceptable')) {
+          console.warn('Authentication issue during subscription fetch:', error.message);
+          return { data: null, error: null };
+        }
         throw this.handleDatabaseError(error);
       }
 

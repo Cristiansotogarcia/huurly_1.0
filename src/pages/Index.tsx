@@ -71,8 +71,8 @@ const Index = () => {
       return;
     }
 
-    // Only redirect authenticated users if they don't have special URL parameters
-    if (isAuthenticated && user) {
+    // Only redirect authenticated users if they don't have special URL parameters and no modals are shown
+    if (isAuthenticated && user && !showPaymentSuccessModal && !showEmailVerificationSuccessModal) {
       console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
         case 'huurder':

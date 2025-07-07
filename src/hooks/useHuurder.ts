@@ -67,6 +67,10 @@ export const useHuurder = () => {
         setSubscription(subResponse.data);
       } else {
         setSubscription(null);
+        // Log subscription fetch issues for debugging
+        if (subResponse && !subResponse.success && subResponse.error) {
+          console.warn('Subscription fetch failed:', subResponse.error.message);
+        }
       }
 
       // Handle profile picture URL
