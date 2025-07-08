@@ -1,6 +1,6 @@
 import { serve } from 'http/server'
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors'
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   // Get origin from request headers

@@ -59,11 +59,28 @@ export const useAuth = (): UseAuthReturn => {
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
         login(user);
-        // Only auto-redirect if we're on the home page or login page
-        // This prevents redirecting after logout or during password reset
+        
+        // Check if this is a password recovery session
         const currentPath = window.location.pathname;
-        const hasRecoveryToken = window.location.hash.includes('type=recovery') || new URLSearchParams(window.location.search).get('type') === 'recovery';
-        const shouldRedirect = currentPath !== '/wachtwoord-herstellen' && !hasRecoveryToken && (currentPath === '/' || currentPath === '/login' || currentPath === '/register');
+        const urlHash = window.location.hash;
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        // More comprehensive recovery token detection
+        const hasRecoveryToken = 
+          urlHash.includes('type=recovery') || 
+          urlHash.includes('access_token') && urlHash.includes('refresh_token') ||
+          searchParams.get('type') === 'recovery' ||
+          currentPath === '/wachtwoord-herstellen';
+        
+        // Don't auto-redirect if:
+        // 1. User is on password reset page
+        // 2. URL contains recovery tokens
+        // 3. User just logged out (prevent redirect loops)
+        // 4. User is on specific auth pages
+        const isOnAuthPage = ['/wachtwoord-herstellen', '/login', '/register'].includes(currentPath);
+        const isOnHomePage = currentPath === '/';
+        
+        const shouldRedirect = !hasRecoveryToken && !isOnAuthPage && isOnHomePage;
         
         if (shouldRedirect) {
           setTimeout(() => {
@@ -169,6 +186,9 @@ export const useAuth = (): UseAuthReturn => {
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {
+      // Clear local state first to prevent redirect loops
+      logout();
+      
       const { error } = await authService.signOut();
       
       if (error) {
@@ -178,9 +198,13 @@ export const useAuth = (): UseAuthReturn => {
           variant: "destructive"
         });
       } else {
-        logout();
+        // Clear any recovery tokens from URL
+        if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
         // Navigate to home page after successful logout
-        navigate('/');
+        navigate('/', { replace: true });
         toast({
           title: "Succesvol uitgelogd",
           description: "Tot ziens!"

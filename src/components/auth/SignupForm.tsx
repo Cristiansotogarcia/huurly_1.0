@@ -108,9 +108,18 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
-            placeholder="Minimaal 8 karakters"
+            placeholder="••••••••"
             minLength={8}
           />
+          <div className="mt-2 text-xs text-gray-600 space-y-1">
+            <p>Wachtwoord moet bevatten:</p>
+            <ul className="list-disc list-inside space-y-0.5 ml-2">
+              <li>Minimaal 8 karakters</li>
+              <li>Minimaal 1 hoofdletter (A-Z)</li>
+              <li>Minimaal 1 kleine letter (a-z)</li>
+              <li>Minimaal 1 cijfer (0-9)</li>
+            </ul>
+          </div>
         </div>
 
 

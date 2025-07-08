@@ -5,6 +5,7 @@ const allowedOrigins = [
   'http://localhost:8080',
   'https://huurly.nl',
   'https://www.huurly.nl',
+  'https://huurly-1-0-cristiansotogarcia-4472s-projects.vercel.app',
 ];
 
 export const corsHeaders = (origin?: string) => {

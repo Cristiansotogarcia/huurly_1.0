@@ -157,8 +157,18 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   value={formData.password}
                   onChange={(e) => updateFormData('password', e.target.value)}
                   autoComplete="new-password"
+                  placeholder="••••••••"
                   required
                 />
+                <div className="mt-2 text-xs text-gray-600 space-y-1">
+                  <p>Wachtwoord moet bevatten:</p>
+                  <ul className="list-disc list-inside space-y-0.5 ml-2">
+                    <li>Minimaal 8 karakters</li>
+                    <li>Minimaal 1 hoofdletter (A-Z)</li>
+                    <li>Minimaal 1 kleine letter (a-z)</li>
+                    <li>Minimaal 1 cijfer (0-9)</li>
+                  </ul>
+                </div>
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Bevestig wachtwoord</Label>
@@ -168,6 +178,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   value={formData.confirmPassword}
                   onChange={(e) => updateFormData('confirmPassword', e.target.value)}
                   autoComplete="new-password"
+                  placeholder="••••••••"
                   required
                 />
               </div>

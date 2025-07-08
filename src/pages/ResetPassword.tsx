@@ -40,34 +40,6 @@ const ResetPassword = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Test toast system on component mount
-  useEffect(() => {
-    console.log('ResetPassword - Testing toast system...');
-    toast({
-      title: "Debug Test",
-      description: "Toast system is working",
-      variant: "default"
-    });
-  }, []);
-
-  // Debug modal state changes
-  useEffect(() => {
-    console.log('ResetPassword - Modal state changed:', showSuccessModal);
-    if (showSuccessModal) {
-      console.log('ResetPassword - SUCCESS MODAL IS NOW OPEN!');
-      // Test if we can trigger another toast when modal opens
-      toast({
-        title: "Modal Debug",
-        description: "Success modal is now open",
-        variant: "default"
-      });
-    }
-  }, [showSuccessModal]);
-
-  // Debug loading state changes
-  useEffect(() => {
-    console.log('ResetPassword - Loading state changed:', isLoading);
-  }, [isLoading]);
 
   // Check if we have a valid recovery token in the URL or an active session
   useEffect(() => {
@@ -81,7 +53,11 @@ const ResetPassword = () => {
       const hash = window.location.hash;
       const searchParams = new URLSearchParams(window.location.search);
       
-      const hasRecoveryToken = (hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery';
+      // More comprehensive recovery token detection
+      const hasRecoveryToken = 
+        (hash && hash.includes('type=recovery')) ||
+        (hash && hash.includes('access_token') && hash.includes('refresh_token')) ||
+        searchParams.get('type') === 'recovery';
       
       if (hasRecoveryToken) {
         console.log('ResetPassword - Recovery token found in URL, allowing access');
@@ -89,15 +65,27 @@ const ResetPassword = () => {
         return;
       }
       
-      // If no URL token, check if we have an active session (from completed recovery)
+      // If no URL token, check if we have an active recovery session
       try {
         console.log('ResetPassword - No URL token, checking for active session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('ResetPassword - Session check result:', { session: !!session, error });
         
         if (session && session.user) {
-          console.log('ResetPassword - Active session found, allowing access');
-          setIsCheckingToken(false);
+          // Check if this is a recovery session by looking at the user metadata
+          const isRecoverySession = session.user.recovery_sent_at || 
+                                   session.user.email_confirmed_at === null ||
+                                   session.access_token !== session.refresh_token;
+          
+          console.log('ResetPassword - Recovery session check:', isRecoverySession);
+          
+          if (isRecoverySession) {
+            console.log('ResetPassword - Recovery session found, allowing access');
+            setIsCheckingToken(false);
+          } else {
+            console.log('ResetPassword - Normal session found, but allowing access for password change');
+            setIsCheckingToken(false);
+          }
         } else {
           console.log('ResetPassword - No active session, denying access');
           toast({
@@ -322,23 +310,6 @@ const ResetPassword = () => {
           )}
         </Button>
         
-        {/* Debug test button to test modal independently */}
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="w-full mt-2" 
-          onClick={() => {
-            console.log('ResetPassword - Test button clicked, showing modal...');
-            setShowSuccessModal(true);
-            toast({
-              title: "Test Toast",
-              description: "This is a test toast from the debug button",
-              variant: "default"
-            });
-          }}
-        >
-          🐛 Test Modal & Toast (Debug)
-        </Button>
           
           <div className="text-center mt-4">
             <Link to="/" className="text-sm text-primary flex items-center justify-center">
