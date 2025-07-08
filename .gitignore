@@ -31,4 +31,4 @@ dist-ssr
 supabase/.temp/
 
 # Docs
-Environment_Variables_Deployment_Guide.md
+docs/*
