@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/logger';
 import { propertyService } from '@/services/PropertyService';
 import { Property } from '@/services/PropertyService';
 import { useState } from 'react';
@@ -40,7 +40,12 @@ export const useVerhuurderActions = () => {
 
   const handleViewProperty = (property: Property) => {
     logger.log('Viewing property:', property.id);
-    // Could navigate to detail view or open modal
+    navigate(`/property/${property.id}`);
+  };
+
+  const handleManageProperties = () => {
+    logger.log('Navigate to property management');
+    navigate('/properties');
   };
 
   const handleAddNewProperty = () => {
@@ -86,6 +91,7 @@ export const useVerhuurderActions = () => {
     handleLogout,
     handleSearch,
     handleViewProperty,
+    handleManageProperties,
     handleAddNewProperty,
     handleEditProperty,
     handleDeleteProperty,

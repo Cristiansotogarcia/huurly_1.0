@@ -4,22 +4,16 @@ import { DatabaseService, DatabaseResponse } from '../lib/database';
 import { ErrorHandler } from '../lib/errors';
 import { logger } from '../lib/logger';
 import { storageService } from '../lib/storage';
-
-export type DocumentType = 'identiteit' | 'inkomen' | 'referentie' | 'uittreksel_bkr' | 'arbeidscontract';
-export type DocumentStatus = 'wachtend' | 'goedgekeurd' | 'afgekeurd';
-
-export interface Document {
-  id: string;
-  huurder_id: string;
-  type: DocumentType;
-  bestand_url: string;
-  bestandsnaam: string;
-  status: DocumentStatus;
-  beoordelaar_id?: string;
-  beoordeling_notitie?: string | null;
-  aangemaakt_op: string;
-  bijgewerkt_op: string;
-}
+import { 
+  DocumentType, 
+  DocumentStatus, 
+  Document,
+  DocumentUploadData,
+  DocumentReviewData,
+  DOCUMENT_STORAGE_PATHS,
+  validateDocumentType,
+  validateDocumentStatus
+} from '@/types/documents';
 
 export class DocumentService extends DatabaseService {
   async uploadDocument(
@@ -37,8 +31,13 @@ export class DocumentService extends DatabaseService {
     }
 
     return this.executeQuery(async () => {
-      // Upload to Cloudflare R2 using storage service
-      const uploadResult = await storageService.uploadDocument(file, userId, 'identity');
+      // Validate document type
+      if (!validateDocumentType(documentType)) {
+        throw new Error(`Ongeldig documenttype: ${documentType}`);
+      }
+
+      // Upload to Cloudflare R2 using storage service with proper path
+      const uploadResult = await storageService.uploadFile(file, userId, DOCUMENT_STORAGE_PATHS[documentType]);
       
       if (!uploadResult.success || !uploadResult.path) {
         throw ErrorHandler.createFileUploadError(uploadResult.error?.message || 'Upload failed');

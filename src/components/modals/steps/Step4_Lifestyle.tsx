@@ -1,68 +1,102 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ProfileFormData } from '../profileSchema';
+import { Heart, Cigarette, PawPrint } from 'lucide-react';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 export const Step4_Lifestyle = () => {
-  const { control, watch } = useFormContext();
+  const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
+  
   const hasPets = watch('hasPets');
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Levensstijl</h3>
-      <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
+            <Heart className="w-5 h-5 text-pink-600" />
+          </div>
+          <h2 className="text-xl font-semibold">Levensstijl</h2>
+        </div>
+        <p className="text-gray-600">Vertel over je levensstijl en voorkeuren</p>
+      </div>
+
+      <div className="space-y-6">
         <FormField
           control={control}
           name="hasPets"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Huisdieren</FormLabel>
-                <p className="text-sm text-muted-foreground">Heb je huisdieren?</p>
-              </div>
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <Switch
+                <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="flex items-center space-x-2">
+                  <PawPrint className="w-4 h-4" />
+                  <span>Ik heb huisdieren</span>
+                </FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Geef aan of je huisdieren hebt
+                </p>
+              </div>
             </FormItem>
           )}
         />
+
         {hasPets && (
-          <FormField
-            control={control}
-            name="pet_details"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Details over huisdieren</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Bijv: 1 hond, golden retriever, 5 jaar oud" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-2">
+            <Label htmlFor="pet_details">Details over je huisdieren</Label>
+            <Textarea
+              id="pet_details"
+              {...register('pet_details')}
+              placeholder="Bijvoorbeeld: 1 kat, 2 jaar oud, huistrained..."
+              className={errors.pet_details ? 'border-red-500' : ''}
+              rows={3}
+            />
+            {errors.pet_details && (
+              <p className="text-sm text-red-600">{errors.pet_details.message}</p>
             )}
-          />
+          </div>
         )}
+
         <FormField
           control={control}
           name="smokes"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Roken</FormLabel>
-                <p className="text-sm text-muted-foreground">Rook je?</p>
-              </div>
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <Switch
+                <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="flex items-center space-x-2">
+                  <Cigarette className="w-4 h-4" />
+                  <span>Ik rook</span>
+                </FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Geef aan of je rookt (binnen of buiten)
+                </p>
+              </div>
             </FormItem>
           )}
         />
+      </div>
+
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h3 className="font-medium text-blue-900 mb-2">💡 Waarom vragen we dit?</h3>
+        <p className="text-sm text-blue-800">
+          Deze informatie helpt verhuurders om te bepalen of je past bij hun woning en regels. 
+          Eerlijkheid voorkomt problemen later.
+        </p>
       </div>
     </div>
   );

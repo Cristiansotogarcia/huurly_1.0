@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { documentService } from '@/services/DocumentService';
 import { Document } from '@/services/DocumentService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/logger';
 
 export const useBeoordelaarDashboard = () => {
   const { user } = useAuthStore();

@@ -874,13 +874,11 @@ export class UserService extends DatabaseService {
       // Validate session before making the request
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.warn('No active session for subscription fetch');
         return { data: null, error: null };
       }
 
       // Check if current user matches the requested userId (for security)
       if (session.user.id !== userId) {
-        console.warn('User ID mismatch in subscription fetch');
         return { data: null, error: new Error('Unauthorized') };
       }
 
@@ -894,13 +892,11 @@ export class UserService extends DatabaseService {
           .maybeSingle();
 
         if (activeError) {
-          console.error('Error fetching active subscription:', activeError);
           // Return null instead of throwing error to prevent breaking the app
           return { data: null, error: null };
         }
 
         if (activeData) {
-          console.log('Found active subscription for user:', userId);
           return { data: activeData, error: null };
         }
 
@@ -915,22 +911,18 @@ export class UserService extends DatabaseService {
           .maybeSingle();
 
         if (pendingError) {
-          console.error('Error fetching pending subscription:', pendingError);
           return { data: null, error: null };
         }
 
         if (pendingData) {
-          console.warn('Found pending subscription for user:', userId, 'Subscription ID:', pendingData.stripe_subscription_id);
           // Return null for pending subscriptions so user is treated as not subscribed
           return { data: null, error: null };
         }
 
         // No subscription found
-        console.log('No subscription found for user:', userId);
         return { data: null, error: null };
 
       } catch (error) {
-        console.error('Unexpected error in getSubscription:', error);
         return { data: null, error: null };
       }
     });
@@ -1003,6 +995,252 @@ export class UserService extends DatabaseService {
       };
 
       return { data: statistics, error: null };
+    });
+  }
+
+  /**
+   * Alias for getUsers method for admin dashboard compatibility
+   */
+  async getAllUsers(
+    filters?: UserFilters,
+    pagination?: PaginationOptions,
+    sort?: SortOptions
+  ): Promise<DatabaseResponse<any[]>> {
+    return this.getUsers(filters, pagination, sort);
+  }
+
+  /**
+   * Create a new user account (admin only)
+   */
+  async createUserAccount(data: {
+    email: string;
+    password: string;
+    role: UserRole;
+    voornaam: string;
+    achternaam: string;
+    telefoon?: string;
+  }): Promise<DatabaseResponse<any>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: new Error('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    if (!hasPermission) {
+      return {
+        data: null,
+        error: new Error('Geen toegang om gebruikers aan te maken'),
+        success: false,
+      };
+    }
+
+    const sanitizedData = this.sanitizeInput(data);
+    
+    const validation = this.validateRequiredFields(sanitizedData, ['email', 'password', 'role', 'voornaam', 'achternaam']);
+    if (!validation.isValid) {
+      return {
+        data: null,
+        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+        success: false,
+      };
+    }
+
+    if (!this.isValidEmail(sanitizedData.email)) {
+      return {
+        data: null,
+        error: new Error('Ongeldig e-mailadres'),
+        success: false,
+      };
+    }
+
+    if (sanitizedData.telefoon && !this.isValidPhoneNumber(sanitizedData.telefoon)) {
+      return {
+        data: null,
+        error: new Error('Ongeldig telefoonnummer'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      // Create the auth user first using admin client
+      const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
+        email: sanitizedData.email,
+        password: sanitizedData.password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: sanitizedData.voornaam,
+          last_name: sanitizedData.achternaam,
+          role: sanitizedData.role
+        }
+      });
+
+      if (authError || !newUser.user) {
+        throw new Error(`Fout bij aanmaken auth gebruiker: ${authError?.message || 'Onbekende fout'}`);
+      }
+
+      const userId = newUser.user.id;
+
+      try {
+        // Create user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('gebruikers')
+          .insert({
+            id: userId,
+            naam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
+            email: sanitizedData.email,
+            telefoon: sanitizedData.telefoon,
+            rol: sanitizedData.role,
+            profiel_compleet: true,
+            is_actief: true
+          })
+          .select()
+          .single();
+
+        if (profileError) {
+          throw new Error(`Fout bij aanmaken profiel: ${profileError.message}`);
+        }
+
+        // Create role record
+        const { error: roleError } = await supabase
+          .from('gebruiker_rollen')
+          .insert({
+            user_id: userId,
+            role: sanitizedData.role,
+            subscription_status: sanitizedData.role === 'huurder' ? 'pending' : 'active'
+          });
+
+        if (roleError) {
+          throw new Error(`Fout bij aanmaken rol: ${roleError.message}`);
+        }
+
+        // Create role-specific profile if needed
+        if (sanitizedData.role === 'huurder') {
+          await supabase
+            .from('huurders')
+            .insert({
+              id: userId,
+              voornaam: sanitizedData.voornaam,
+              achternaam: sanitizedData.achternaam,
+              email: sanitizedData.email,
+              telefoon: sanitizedData.telefoon || '',
+              profiel_compleet: false
+            });
+        } else if (sanitizedData.role === 'verhuurder') {
+          await supabase
+            .from('verhuurders')
+            .insert({
+              id: userId,
+              bedrijfsnaam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
+              email: sanitizedData.email,
+              telefoon: sanitizedData.telefoon || '',
+              profiel_compleet: true
+            });
+        } else if (sanitizedData.role === 'beoordelaar') {
+          await supabase
+            .from('beoordelaars')
+            .insert({
+              id: userId,
+              naam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
+              email: sanitizedData.email,
+              profiel_compleet: true
+            });
+        }
+
+        await this.createAuditLog('CREATE', 'gebruikers', userId, currentUserId, {
+          action: 'admin_user_creation',
+          role: sanitizedData.role,
+          email: sanitizedData.email
+        });
+
+        return { data: profile, error: null };
+      } catch (error) {
+        // If profile creation fails, clean up the auth user
+        await supabase.auth.admin.deleteUser(userId);
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Reset user password (admin only)
+   */
+  async resetUserPassword(userId: string, newPassword: string): Promise<DatabaseResponse<boolean>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: new Error('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    if (!hasPermission) {
+      return {
+        data: null,
+        error: new Error('Geen toegang om wachtwoorden te resetten'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+        password: newPassword
+      });
+
+      if (error) {
+        throw new Error(`Fout bij wachtwoord reset: ${error.message}`);
+      }
+
+      await this.createAuditLog('UPDATE', 'users', userId, currentUserId, {
+        action: 'password_reset'
+      });
+
+      return { data: true, error: null };
+    });
+  }
+
+  /**
+   * Send password reset email (admin only)
+   */
+  async sendPasswordResetEmail(email: string): Promise<DatabaseResponse<boolean>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: new Error('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    const hasPermission = await this.checkUserPermission(currentUserId, ['Beheerder']);
+    if (!hasPermission) {
+      return {
+        data: null,
+        error: new Error('Geen toegang om wachtwoord reset e-mails te versturen'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/wachtwoord-herstellen`
+      });
+
+      if (error) {
+        throw new Error(`Fout bij versturen reset e-mail: ${error.message}`);
+      }
+
+      await this.createAuditLog('ACTION', 'users', 'password_reset_email', currentUserId, {
+        action: 'password_reset_email_sent',
+        email
+      });
+
+      return { data: true, error: null };
     });
   }
 }
