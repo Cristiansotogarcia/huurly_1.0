@@ -24,20 +24,25 @@ export class AuthService {
         return { user: null, error };
       }
 
-      // Validate input data using Zod schema
-      const validationResult = registerSchema.safeParse({
-        email: data.email,
-        password: data.password,
-        confirmPassword: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: '', // Not required for auth signup
-        agreeToTerms: true // Assumed to be true if reaching this point
-      });
+      // Basic validation for signup - only validate fields actually collected
+      if (!data.email || !data.password || !data.firstName || !data.lastName) {
+        const error = new Error('Alle velden zijn verplicht') as AuthError;
+        error.status = 400;
+        return { user: null, error };
+      }
 
-      if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid input data';
-        const error = new Error(errorMessage) as AuthError;
+      // Validate email format
+      const emailValidation = emailSchema.safeParse(data.email);
+      if (!emailValidation.success) {
+        const error = new Error(emailValidation.error.errors[0]?.message || 'Ongeldig e-mailadres') as AuthError;
+        error.status = 400;
+        return { user: null, error };
+      }
+
+      // Validate password strength
+      const passwordValidation = passwordSchema.safeParse(data.password);
+      if (!passwordValidation.success) {
+        const error = new Error(passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen') as AuthError;
         error.status = 400;
         return { user: null, error };
       }

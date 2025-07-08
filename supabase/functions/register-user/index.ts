@@ -1,6 +1,6 @@
 import { serve } from 'http/server'
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders } from '../_shared/cors'
 
 serve(async (req) => {
   // Get origin from request headers
@@ -16,7 +16,7 @@ serve(async (req) => {
     // Create Supabase client with service role key
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const { id, email, firstName, lastName, role } = await req.json()
@@ -31,7 +31,6 @@ serve(async (req) => {
         naam: `${firstName} ${lastName}`,
         rol: role,
         profiel_compleet: false,
-        is_actief: true,
         aangemaakt_op: new Date().toISOString(),
         bijgewerkt_op: new Date().toISOString(),
       },
@@ -50,11 +49,6 @@ serve(async (req) => {
       const { error: huurderError } = await supabase.from('huurders').upsert(
         {
           id,
-          voornaam: firstName,
-          achternaam: lastName,
-          email,
-          telefoon: '',
-          profiel_compleet: false,
           abonnement_actief: false,
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
@@ -73,9 +67,6 @@ serve(async (req) => {
         {
           id,
           bedrijfsnaam: `${firstName} ${lastName}`,
-          email,
-          telefoon: '',
-          profiel_compleet: true,
           aantal_woningen: 0,
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
@@ -93,9 +84,6 @@ serve(async (req) => {
       const { error: beoordelaarError } = await supabase.from('beoordelaars').upsert(
         {
           id,
-          naam: `${firstName} ${lastName}`,
-          email,
-          profiel_compleet: true,
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
         },
@@ -110,24 +98,8 @@ serve(async (req) => {
       }
     }
 
-    // Create user role record
-    const { error: roleError } = await supabase.from('gebruiker_rollen').upsert(
-      {
-        user_id: id,
-        role: role,
-        subscription_status: role === 'huurder' ? 'pending' : 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: 'user_id',
-      }
-    )
-
-    if (roleError) {
-      console.error('Error creating role:', roleError)
-      throw roleError
-    }
+    // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema
+    // Role information is already stored in the gebruikers table via the 'rol' column
 
     console.log('User registration completed successfully')
 
