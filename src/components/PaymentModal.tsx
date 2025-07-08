@@ -76,7 +76,6 @@ export const PaymentModal = ({
         });
       }
     } catch (error) {
-      console.error("Payment error:", error);
       toast({
         title: "Fout",
         description: "Er is een onverwachte fout opgetreden. Probeer het later opnieuw.",

@@ -314,6 +314,67 @@ export class PropertyService extends DatabaseService {
       return { data: data || [], error: null };
     });
   }
+
+  async getPropertyById(propertyId: string): Promise<DatabaseResponse<Property>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('woningen')
+        .select('*')
+        .eq('id', propertyId)
+        .eq('verhuurder_id', currentUserId)
+        .single();
+
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
+      }
+
+      return { data: data as Property, error: null };
+    });
+  }
+
+  async updatePropertyStatus(propertyId: string, status: 'actief' | 'inactief' | 'verhuurd'): Promise<DatabaseResponse<Property>> {
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return {
+        data: null,
+        error: ErrorHandler.normalize('Niet geautoriseerd'),
+        success: false,
+      };
+    }
+
+    return this.executeQuery(async () => {
+      const { data, error } = await supabase
+        .from('woningen')
+        .update({
+          status,
+          bijgewerkt_op: new Date().toISOString(),
+        })
+        .eq('id', propertyId)
+        .eq('verhuurder_id', currentUserId)
+        .select()
+        .single();
+
+      if (error) {
+        throw ErrorHandler.handleDatabaseError(error);
+      }
+
+      await this.createAuditLog('UPDATE', 'woningen', propertyId, currentUserId, {
+        action: 'status_update',
+        new_status: status
+      });
+
+      return { data: data as Property, error: null };
+    });
+  }
 }
 
 export const propertyService = new PropertyService();

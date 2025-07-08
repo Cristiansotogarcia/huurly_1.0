@@ -2,13 +2,30 @@
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/logger';
 import { User } from '@/types';
+import { useState } from 'react';
 
 export const useHuurderActions = (user: User | null) => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Modal states
+  const [modals, setModals] = useState({
+    settings: false,
+    search: false,
+    helpSupport: false,
+    issueReport: false
+  });
+
+  const openModal = (modalName: keyof typeof modals) => {
+    setModals(prev => ({ ...prev, [modalName]: true }));
+  };
+
+  const closeModal = (modalName: keyof typeof modals) => {
+    setModals(prev => ({ ...prev, [modalName]: false }));
+  };
 
   const handleLogout = async () => {
     try {
@@ -30,28 +47,22 @@ export const useHuurderActions = (user: User | null) => {
 
   const handleSettings = () => {
     logger.log('Opening settings modal');
-    // Add settings functionality here
+    openModal('settings');
   };
 
   const onStartSearch = () => {
     logger.log('Starting property search');
-    // Add search functionality here
+    openModal('search');
   };
 
   const handleReportIssue = () => {
-    logger.log('Reporting an issue');
-    toast({
-      title: 'Issue Reported',
-      description: 'Your issue has been reported successfully.',
-    });
+    logger.log('Opening issue report modal');
+    openModal('issueReport');
   };
 
   const handleHelpSupport = () => {
     logger.log('Opening help and support');
-    toast({
-      title: 'Help & Support',
-      description: 'Opening help and support section.',
-    });
+    openModal('helpSupport');
   };
 
   return {
@@ -60,5 +71,8 @@ export const useHuurderActions = (user: User | null) => {
     onStartSearch,
     handleReportIssue,
     handleHelpSupport,
+    modals,
+    openModal,
+    closeModal,
   };
 };

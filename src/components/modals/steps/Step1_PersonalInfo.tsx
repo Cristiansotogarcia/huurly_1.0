@@ -1,103 +1,94 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { ProfileFormData } from '../profileSchema';
+import { User, Calendar, Phone, Globe } from 'lucide-react';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 export const Step1_PersonalInfo = () => {
-  const { control } = useFormContext();
+  const { control, register, formState: { errors } } = useFormContext<ProfileFormData>();
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Persoonlijke Informatie</h3>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField
-          control={control}
-          name="first_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Voornaam</FormLabel>
-              <FormControl>
-                <Input placeholder="Jan" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <User className="w-5 h-5 text-blue-600" />
+          </div>
+          <h2 className="text-xl font-semibold">Persoonlijke Informatie</h2>
+        </div>
+        <p className="text-gray-600">Begin met je basisgegevens</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="first_name">Voornaam *</Label>
+          <Input
+            id="first_name"
+            {...register('first_name')}
+            placeholder="Je voornaam"
+            className={errors.first_name ? 'border-red-500' : ''}
+          />
+          {errors.first_name && (
+            <p className="text-sm text-red-600">{errors.first_name.message}</p>
           )}
-        />
-        <FormField
-          control={control}
-          name="last_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Achternaam</FormLabel>
-              <FormControl>
-                <Input placeholder="Jansen" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="last_name">Achternaam *</Label>
+          <Input
+            id="last_name"
+            {...register('last_name')}
+            placeholder="Je achternaam"
+            className={errors.last_name ? 'border-red-500' : ''}
+          />
+          {errors.last_name && (
+            <p className="text-sm text-red-600">{errors.last_name.message}</p>
           )}
-        />
-        <FormField
-          control={control}
-          name="date_of_birth"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Geboortedatum</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: nl })
-                      ) : (
-                        <span>Kies een datum</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="date_of_birth">Geboortedatum *</Label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+            <Input
+              id="date_of_birth"
+              type="date"
+              {...register('date_of_birth', { 
+                setValueAs: (value) => value ? new Date(value) : undefined 
+              })}
+              className={`pl-10 ${errors.date_of_birth ? 'border-red-500' : ''}`}
+              max={new Date().toISOString().split('T')[0]}
+              min="1900-01-01"
+            />
+          </div>
+          {errors.date_of_birth && (
+            <p className="text-sm text-red-600">{errors.date_of_birth.message}</p>
           )}
-        />
-        <FormField
-          control={control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telefoonnummer</FormLabel>
-              <FormControl>
-                <Input placeholder="0612345678" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone">Telefoonnummer *</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              id="phone"
+              {...register('phone')}
+              placeholder="+31 6 12345678"
+              className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
+            />
+          </div>
+          {errors.phone && (
+            <p className="text-sm text-red-600">{errors.phone.message}</p>
           )}
-        />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="sex"
@@ -114,49 +105,54 @@ export const Step1_PersonalInfo = () => {
                   <SelectItem value="man">Man</SelectItem>
                   <SelectItem value="vrouw">Vrouw</SelectItem>
                   <SelectItem value="anders">Anders</SelectItem>
+                  <SelectItem value="zeg_ik_liever_niet">Zeg ik liever niet</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={control}
-          name="nationality"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nationaliteit</FormLabel>
-              <FormControl>
-                <Input placeholder="Nederlandse" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+
+        <div className="space-y-2">
+          <Label htmlFor="nationality">Nationaliteit</Label>
+          <div className="relative">
+            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              id="nationality"
+              {...register('nationality')}
+              placeholder="Nederlandse"
+              className={`pl-10 ${errors.nationality ? 'border-red-500' : ''}`}
+            />
+          </div>
+          {errors.nationality && (
+            <p className="text-sm text-red-600">{errors.nationality.message}</p>
           )}
-        />
-        <FormField
-          control={control}
-          name="marital_status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Burgerlijke staat</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecteer burgerlijke staat" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="single">Alleenstaand</SelectItem>
-                  <SelectItem value="samenwonend">Samenwonend</SelectItem>
-                  <SelectItem value="getrouwd">Getrouwd</SelectItem>
-                  <SelectItem value="gescheiden">Gescheiden</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </div>
       </div>
+
+      <FormField
+        control={control}
+        name="marital_status"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Burgerlijke staat</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer burgerlijke staat" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="single">Alleenstaand</SelectItem>
+                <SelectItem value="samenwonend">Samenwonend</SelectItem>
+                <SelectItem value="getrouwd">Getrouwd</SelectItem>
+                <SelectItem value="gescheiden">Gescheiden</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

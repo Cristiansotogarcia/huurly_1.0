@@ -7,6 +7,8 @@ import { AuthResponse, SignUpData, SignInData } from './types.ts';
 import { roleMapper } from './roleMapper.ts';
 import { userMapper } from './userMapper.ts';
 import { paymentChecker } from './paymentChecker.ts';
+import { emailSchema, passwordSchema, registerSchema, loginSchema } from '../validation.ts';
+import { rateLimiter } from './rateLimiter.ts';
 
 export class AuthService {
   /**
@@ -14,6 +16,31 @@ export class AuthService {
    */
   async signUp(data: SignUpData): Promise<AuthResponse> {
     try {
+      // Check rate limiting
+      if (rateLimiter.isRateLimited(data.email, 'signup')) {
+        const timeLeft = rateLimiter.getTimeUntilReset(data.email, 'signup');
+        const error = new Error(`Te veel registratiepogingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
+        error.status = 429;
+        return { user: null, error };
+      }
+
+      // Validate input data using Zod schema
+      const validationResult = registerSchema.safeParse({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: '', // Not required for auth signup
+        agreeToTerms: true // Assumed to be true if reaching this point
+      });
+
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid input data';
+        const error = new Error(errorMessage) as AuthError;
+        error.status = 400;
+        return { user: null, error };
+      }
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -66,6 +93,26 @@ export class AuthService {
    */
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
+      // Check rate limiting
+      if (rateLimiter.isRateLimited(data.email, 'login')) {
+        const timeLeft = rateLimiter.getTimeUntilReset(data.email, 'login');
+        const error = new Error(`Te veel inlogpogingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
+        error.status = 429;
+        return { user: null, error };
+      }
+
+      // Validate input data using Zod schema
+      const validationResult = loginSchema.safeParse({
+        email: data.email,
+        password: data.password
+      });
+
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid credentials';
+        const error = new Error(errorMessage) as AuthError;
+        error.status = 400;
+        return { user: null, error };
+      }
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -76,6 +123,8 @@ export class AuthService {
       }
 
       if (authData.user) {
+        // Reset rate limit on successful login
+        rateLimiter.reset(data.email, 'login');
         const user = await userMapper.mapSupabaseUserToUser(authData.user);
         return { user, error: null };
       }
@@ -103,6 +152,22 @@ export class AuthService {
    */
   async resetPassword(email: string): Promise<{ error: AuthError | null }> {
     try {
+      // Check rate limiting
+      if (rateLimiter.isRateLimited(email, 'passwordReset')) {
+        const timeLeft = rateLimiter.getTimeUntilReset(email, 'passwordReset');
+        const error = new Error(`Te veel wachtwoord reset pogingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
+        error.status = 429;
+        return { error };
+      }
+
+      // Validate email using Zod schema
+      const validationResult = emailSchema.safeParse(email);
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid email address';
+        const error = new Error(errorMessage) as AuthError;
+        error.status = 400;
+        return { error };
+      }
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/wachtwoord-herstellen`,
       });
@@ -117,33 +182,42 @@ export class AuthService {
    */
   async updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
     try {
-      console.log('AuthService.updatePassword - Starting password update...');
-      console.log('AuthService.updatePassword - Password length:', newPassword.length);
+      // Get current user for rate limiting
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: new Error('No authenticated user') as AuthError };
+      }
+
+      // Check rate limiting
+      if (rateLimiter.isRateLimited(user.email!, 'passwordUpdate')) {
+        const timeLeft = rateLimiter.getTimeUntilReset(user.email!, 'passwordUpdate');
+        const error = new Error(`Te veel wachtwoord wijzigingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
+        error.status = 429;
+        return { error };
+      }
+
+      // Validate password using Zod schema
+      const validationResult = passwordSchema.safeParse(newPassword);
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Password does not meet security requirements';
+        const error = new Error(errorMessage) as AuthError;
+        error.status = 400;
+        return { error };
+      }
       
       const result = await supabase.auth.updateUser({
         password: newPassword,
       });
       
-      console.log('AuthService.updatePassword - Supabase response completed');
-      console.log('AuthService.updatePassword - Full result:', result);
-      console.log('AuthService.updatePassword - Error from Supabase:', result.error);
-      
       if (result.error) {
-        console.error('AuthService.updatePassword - Error from Supabase:', result.error);
-        console.error('AuthService.updatePassword - Error message:', result.error.message);
+        logger.error('Password update failed:', result.error.message);
         return { error: result.error };
       }
       
-      if (result.data && result.data.user) {
-        console.log('AuthService.updatePassword - User updated successfully:', result.data.user.id);
-      }
-      
-      console.log('AuthService.updatePassword - Password updated successfully at Supabase level');
+      logger.info('Password updated successfully');
       return { error: null };
     } catch (error) {
-      console.error('AuthService.updatePassword - Catch error:', error);
-      console.error('AuthService.updatePassword - Catch error type:', typeof error);
-      console.error('AuthService.updatePassword - Catch error stringified:', JSON.stringify(error));
+      logger.error('Password update error:', error);
       return { error: error as AuthError };
     }
   }

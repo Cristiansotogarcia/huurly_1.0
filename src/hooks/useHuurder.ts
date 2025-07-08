@@ -2,10 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
-import { dashboardDataService } from '@/services/DashboardDataService';
+import { consolidatedDashboardService } from '@/services/ConsolidatedDashboardService';
 import { userService } from '@/services/UserService';
-import { documentService } from '@/services/DocumentService';
-import { SubscriptionSyncService } from '@/services/SubscriptionSyncService';
 import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
 import { Document } from '@/services/DocumentService';
 
@@ -31,61 +29,49 @@ export const useHuurder = () => {
     if (!user?.id) return;
     setIsLoading(true);
     setIsLoadingStats(true);
+    
     try {
-      const [statsResponse, docsResponse, profileResponse, subResponse, pictureUrl] = await Promise.all([
-        dashboardDataService.getTenantDashboardData(user.id),
-        documentService.getDocuments(user.id),
-        userService.getTenantProfile(user.id),
-        userService.getSubscription(user.id),
-        userService.getProfilePictureUrl(user.id),
-      ]);
-
-      // Handle stats response - extract data properly
-      if (statsResponse && statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
-      } else {
-        setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
-      }
-
-      // Handle documents response - ensure it's always an array
-      if (docsResponse && docsResponse.success && docsResponse.data) {
-        setUserDocuments(Array.isArray(docsResponse.data) ? docsResponse.data : []);
-      } else {
-        setUserDocuments([]);
-      }
-
-      // Handle profile response - extract data properly
-      if (profileResponse && profileResponse.success && profileResponse.data) {
-        setTenantProfile(profileResponse.data as any);
-        setHasProfile(!!profileResponse.data);
-      } else {
-        setTenantProfile(null);
-        setHasProfile(false);
-      }
-
-      // Handle subscription response - extract data properly
-      if (subResponse && subResponse.success && subResponse.data) {
-        setSubscription(subResponse.data);
-      } else {
-        setSubscription(null);
-        // Only log subscription issues in development to reduce noise
-        if (process.env.NODE_ENV === 'development' && subResponse && !subResponse.success && subResponse.error) {
-          console.warn('Subscription fetch failed:', subResponse.error.message);
-        }
+      // Single API call to get all dashboard data
+      const response = await consolidatedDashboardService.getHuurderDashboardData(user.id);
+      
+      if (response.success && response.data) {
+        const { stats, documents, tenantProfile, subscription, profilePictureUrl, hasProfile } = response.data;
         
-        // Remove excessive debugging calls - only sync if really needed
-        // await SubscriptionSyncService.debugSubscriptionStatus(user.id);
-        // await SubscriptionSyncService.syncPendingSubscriptions(user.id);
+        setStats(stats);
+        setUserDocuments(Array.isArray(documents) ? documents : []);
+        setTenantProfile(tenantProfile);
+        setSubscription(subscription);
+        setProfilePictureUrl(profilePictureUrl);
+        setHasProfile(hasProfile);
+      } else {
+        // Set default values on error
+        setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+        setUserDocuments([]);
+        setTenantProfile(null);
+        setSubscription(null);
+        setProfilePictureUrl(null);
+        setHasProfile(false);
+        
+        toast({ 
+          title: 'Fout', 
+          description: 'Kon dashboard gegevens niet laden.', 
+          variant: 'destructive' 
+        });
       }
-
-      // Handle profile picture URL
-      setProfilePictureUrl(pictureUrl || null);
-
     } catch (error) {
-      console.error('Failed to load tenant dashboard:', error);
-      toast({ title: 'Fout', description: 'Kon dashboard gegevens niet laden.', variant: 'destructive' });
-      // Ensure userDocuments is always an array even on error
+      toast({ 
+        title: 'Fout', 
+        description: 'Kon dashboard gegevens niet laden.', 
+        variant: 'destructive' 
+      });
+      
+      // Set safe defaults
+      setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
       setUserDocuments([]);
+      setTenantProfile(null);
+      setSubscription(null);
+      setProfilePictureUrl(null);
+      setHasProfile(false);
     } finally {
       setIsLoading(false);
       setIsLoadingStats(false);
@@ -140,7 +126,6 @@ export const useHuurder = () => {
         description: newStatus ? 'Je profiel is nu zichtbaar voor verhuurders.' : 'Je profiel is nu verborgen.',
       });
     } catch (error) {
-      console.error('Error updating looking status:', error);
       toast({ title: 'Fout', description: 'Kon status niet bijwerken.', variant: 'destructive' });
     } finally {
       setIsUpdatingStatus(false);

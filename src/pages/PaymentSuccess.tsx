@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/hooks/use-toast";
 import { paymentService } from "@/services/PaymentService";
+import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
+import { logger } from "@/lib/logger";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -17,11 +19,11 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const waitForAuth = async () => {
       try {
-        console.log("PaymentSuccess: Initializing auth...");
+        logger.debug("PaymentSuccess: Initializing auth...");
         await initializeAuth();
         setAuthInitialized(true);
       } catch (error) {
-        console.error("PaymentSuccess: Auth initialization failed:", error);
+        logger.error("PaymentSuccess: Auth initialization failed:", error);
         setAuthInitialized(true); // Continue anyway
       }
     };
@@ -33,11 +35,11 @@ const PaymentSuccess = () => {
     if (!authInitialized) return;
 
     const processPayment = async () => {
-      console.log("PaymentSuccess component loaded, auth initialized");
+      logger.debug("PaymentSuccess component loaded, auth initialized");
       const params = new URLSearchParams(location.search);
       const sessionId = params.get("session_id");
-      console.log("Session ID:", sessionId);
-      console.log("User authenticated:", isAuthenticated, "User ID:", user?.id);
+      logger.debug("Session ID:", sessionId);
+      logger.debug("User authenticated:", isAuthenticated, "User ID:", user?.id);
 
       if (!sessionId) {
         setError("Sessie-ID ontbreekt. Kan de betaling niet verifiëren.");
@@ -47,7 +49,7 @@ const PaymentSuccess = () => {
 
       // Check if user is authenticated
       if (!isAuthenticated || !user?.id) {
-        console.warn("PaymentSuccess: User not authenticated, redirecting to home page");
+        logger.warn("PaymentSuccess: User not authenticated, redirecting to home page");
         // Store session ID in URL params for after login via toast message
         toast({
           title: "Authenticatie Vereist",
@@ -59,13 +61,16 @@ const PaymentSuccess = () => {
       }
 
       try {
-        console.log("Checking subscription status for session:", sessionId);
+        logger.debug("Checking subscription status for session:", sessionId);
         
         // Wait a moment for webhook to process, then check subscription status
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const subscriptionResult = await paymentService.checkSubscriptionStatus(user.id);
-        console.log("Subscription check result:", subscriptionResult);
+        // Clear subscription cache to ensure fresh data
+        optimizedSubscriptionService.clearSubscriptionCache(user.id);
+        
+        const subscriptionResult = await optimizedSubscriptionService.checkSubscriptionStatus(user.id);
+        logger.debug("Subscription check result:", subscriptionResult);
 
         if (subscriptionResult.success && subscriptionResult.data?.isActive) {
           toast({
@@ -79,7 +84,7 @@ const PaymentSuccess = () => {
           }
 
           // Redirect immediately
-          console.log("Redirecting to dashboard");
+          logger.debug("Redirecting to dashboard");
           navigate("/huurder-dashboard?payment_success=true", { replace: true });
         } else {
           // If subscription not active yet, try a few more times
@@ -90,8 +95,8 @@ const PaymentSuccess = () => {
             await new Promise(resolve => setTimeout(resolve, 2000));
             attempts++;
             
-            const retryResult = await paymentService.checkSubscriptionStatus(user.id);
-            console.log(`Subscription check attempt ${attempts}:`, retryResult);
+            const retryResult = await optimizedSubscriptionService.refreshSubscriptionStatus(user.id);
+            logger.debug(`Subscription check attempt ${attempts}:`, retryResult);
             
             if (retryResult.success && retryResult.data?.isActive) {
               toast({
@@ -113,7 +118,7 @@ const PaymentSuccess = () => {
           }, 3000);
         }
       } catch (err: any) {
-        console.error("Error checking subscription status:", err);
+        logger.error("Error checking subscription status:", err);
         setError("Er was een probleem bij het controleren van je abonnement. Je wordt doorgestuurd naar het dashboard.");
         setTimeout(() => {
           navigate("/huurder-dashboard", { replace: true });

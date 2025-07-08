@@ -1,8 +1,8 @@
 
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
-import { logger } from '@/utils/logger';
+import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export const useBeheerderActions = () => {
   const logout = useAuthStore((state) => state.logout);

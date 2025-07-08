@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useHuurder } from '@/hooks/useHuurder';
 import { useHuurderActions } from '@/hooks/useHuurderActions';
+import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 import { DashboardHeader, DashboardContent } from "@/components/dashboard";
 import { StatsGrid } from '@/components/standard/StatsGrid';
 import { DocumentsSection } from '@/components/standard/DocumentsSection';
@@ -170,6 +171,32 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     }
   }, [refresh]);
 
+  // Check subscription expiration warning (2 weeks)
+  useEffect(() => {
+    const checkExpirationWarning = async () => {
+      if (user?.id && isSubscribed) {
+        try {
+          const isExpiringSoon = await optimizedSubscriptionService.isSubscriptionExpiringSoon(user.id);
+          if (isExpiringSoon) {
+            const expirationResult = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
+            if (expirationResult.success && expirationResult.data?.daysRemaining) {
+              toast({
+                title: 'Abonnement verloopt binnenkort',
+                description: `Je abonnement verloopt over ${expirationResult.data.daysRemaining} dagen. Zorg ervoor dat je betalingsgegevens up-to-date zijn.`,
+                variant: 'destructive',
+              });
+            }
+          }
+        } catch (error) {
+          // Silently ignore errors in expiration checking
+        }
+      }
+    };
+
+    // Check expiration warning on dashboard load
+    checkExpirationWarning();
+  }, [user?.id, isSubscribed, toast]);
+
   const onProfileComplete = async (profileData: any) => {
     await handleProfileComplete(profileData, () => {
       setShowProfileModal(false);
@@ -181,8 +208,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       setShowDocumentModal(false);
     });
   };
-  
-  console.log("Rendering main dashboard content");
 
   return (
     <>

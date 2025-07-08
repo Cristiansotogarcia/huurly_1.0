@@ -9,9 +9,14 @@ const allowedOrigins = [
 
 export const corsHeaders = (origin?: string) => {
   const requestOrigin = origin || '';
+  const isAllowedOrigin = allowedOrigins.includes(requestOrigin);
+  
   return {
-    'Access-Control-Allow-Origin': allowedOrigins.includes(requestOrigin) ? requestOrigin : '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Origin': isAllowedOrigin ? requestOrigin : 'null',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '86400', // 24 hours
+    'Vary': 'Origin',
   };
 };

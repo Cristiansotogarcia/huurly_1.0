@@ -5,7 +5,14 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
-import { documentService, DocumentType } from "@/services/DocumentService";
+import { documentService } from "@/services/DocumentService";
+import { 
+  DocumentType, 
+  DOCUMENT_TYPE_LABELS, 
+  DOCUMENT_TYPE_DESCRIPTIONS,
+  DOCUMENT_REQUIREMENTS,
+  FILE_VALIDATION_RULES 
+} from '@/types/documents';
 import { 
   Upload, 
   FileText, 

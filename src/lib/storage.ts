@@ -1,7 +1,8 @@
 import { r2Client, R2_BUCKET, R2_PUBLIC_BASE } from '../integrations/cloudflare/client.ts';
 import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { logger } from './logger.ts';
+import { logger } from '@/lib/logger';
+import { DocumentType, DOCUMENT_STORAGE_PATHS, FILE_VALIDATION_RULES } from '@/types/documents';
 
 export interface UploadResult {
   url: string | null;
@@ -17,8 +18,8 @@ export interface FileValidation {
 
 export class StorageService {
   private readonly BUCKET_NAME = R2_BUCKET;
-  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  private readonly ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+  private readonly MAX_FILE_SIZE = FILE_VALIDATION_RULES.maxFileSize;
+  private readonly ALLOWED_TYPES = FILE_VALIDATION_RULES.allowedExtensions;
 
   /**
    * Validate file before upload
@@ -123,7 +124,7 @@ export class StorageService {
   async uploadDocument(
     file: File,
     userId: string,
-    documentType: 'identity' | 'payslip'
+    documentType: DocumentType
   ): Promise<UploadResult> {
     try {
       // Validate file
@@ -137,12 +138,13 @@ export class StorageService {
         };
       }
 
-      // Generate unique file path
+      // Generate unique file path using standardized storage paths
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
       const extension = file.name.split('.').pop();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `documents/${documentType}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
+      const basePath = DOCUMENT_STORAGE_PATHS[documentType];
+      const filePath = `${basePath}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 
       // Upload file
       await r2Client.send(

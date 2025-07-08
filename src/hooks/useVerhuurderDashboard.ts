@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { DashboardDataService } from '@/services/DashboardDataService';
 import { Property } from '@/services/PropertyService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/logger';
 
 export const useVerhuurderDashboard = (userId?: string) => {
   const { user } = useAuthStore();

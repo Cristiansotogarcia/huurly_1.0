@@ -16,10 +16,15 @@ const HuurderDashboard = lazy(() => import("./pages/HuurderDashboard"));
 const VerhuurderDashboard = lazy(() => import("./pages/VerhuurderDashboard"));
 const BeoordelaarDashboard = lazy(() => import('./pages/BeoordelaarDashboard'));
 const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
+const DatabaseCleanup = lazy(() => import('./pages/admin/DatabaseCleanup'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const Analytics = lazy(() => import('./pages/admin/Analytics'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ManageSubscription = lazy(() => import('./pages/Subscription/ManageSubscription'));
 
 const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
+const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
+const PropertyManagement = lazy(() => import('./pages/PropertyManagement'));
 
 const Privacybeleid = lazy(() => import('./pages/Privacybeleid'));
 const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
@@ -51,6 +56,7 @@ const App = () => (
         }>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Index />} />
             <Route 
               path="/huurder-dashboard" 
               element={
@@ -76,6 +82,22 @@ const App = () => (
               }
             />
             <Route
+              path="/property/:id"
+              element={
+                <ProtectedRoute roles={['verhuurder']}>
+                  <PropertyDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties"
+              element={
+                <ProtectedRoute roles={['verhuurder']}>
+                  <PropertyManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/beoordelaar-dashboard"
               element={
                 <ProtectedRoute roles={['beoordelaar']}>
@@ -88,6 +110,30 @@ const App = () => (
               element={
                 <ProtectedRoute roles={['beheerder']}>
                   <BeheerderDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/database-cleanup"
+              element={
+                <ProtectedRoute roles={['beheerder']}>
+                  <DatabaseCleanup />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute roles={['beheerder']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute roles={['beheerder']}>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />
