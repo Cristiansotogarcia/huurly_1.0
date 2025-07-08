@@ -29,3 +29,6 @@ dist-ssr
 *.sw?
 
 supabase/.temp/
+
+# Docs
+Environment_Variables_Deployment_Guide.md
