@@ -11,8 +11,7 @@ interface SignupFormProps {
   onClose: () => void;
 }
 
-export const SignupForm = ({ onClose }: SignupFormProps) => {
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
@@ -28,8 +27,14 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  // keep validation in sync with the password field
+  useEffect(() => {
+    setPasswordValidation(validatePassword(formData.password));
+  }, [formData.password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +51,17 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
       setIsLoading(false);
     }
   };
+
+  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
+      {met ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
+      )}
+      <span>{children}</span>
+    </li>
+  );
 
   const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
     <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
@@ -105,6 +121,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
 
         <div>
           <Label htmlFor="password">Wachtwoord</Label>
+
           <Input
             id="password"
             type="password"
@@ -129,6 +146,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
             </ul>
           </div>
         </div>
+
 
         <Button 
           type="submit" 

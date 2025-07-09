@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,14 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     hasUppercase: false,
     hasLowercase: false,
     hasNumber: false,
-    hasSpecialChar: false
+    hasSpecialChar: false,
   });
+
+  // keep validation in sync with the password field
+  useEffect(() => {
+    setPasswordValidation(validatePassword(formData.password));
+  }, [formData.password]);
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
