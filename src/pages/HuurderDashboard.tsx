@@ -125,17 +125,12 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     },
   ];
 
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      handleLogout();
-    };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [handleLogout]);
+  // The auth store already handles session cleanup on browser close via
+  // `setupConservativeLogout`. Adding another `beforeunload` handler here
+  // caused the auth state to be cleared on a normal page refresh which in
+  // turn triggered redirect loops during initialization.  The effect has been
+  // removed to ensure refreshes keep the session intact.
 
 
   const isSubscribed = subscription && subscription.status === 'active';
