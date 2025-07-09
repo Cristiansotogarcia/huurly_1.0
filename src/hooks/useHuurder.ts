@@ -36,11 +36,11 @@ export const useHuurder = () => {
       const response = await consolidatedDashboardService.getHuurderDashboardData(user.id);
       
       if (response.success && response.data) {
-        const { stats, documents, tenantProfile, subscription, profilePictureUrl, hasProfile } = response.data;
+        const { stats, documents, tenantProfile: mappedProfile, subscription, profilePictureUrl, hasProfile } = response.data;
         
         setStats(stats);
         setUserDocuments(Array.isArray(documents) ? documents : []);
-        setTenantProfile(tenantProfile);
+        setTenantProfile(mappedProfile);
         setSubscription(subscription);
         setProfilePictureUrl(profilePictureUrl);
         setHasProfile(hasProfile);
