@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 // Zorg dat deze function geen Supabase-auth vereist
 export const config = {
   auth: false,
-}
+};
 
 // Helper function to map Stripe subscription status to Dutch enum values
 const mapStripeStatusToDutch = (stripeStatus: string): string => {
@@ -68,9 +68,10 @@ serve(async (req) => {
 
     let event;
     try {
+      // Corrected: Use await constructEventAsync for asynchronous context
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       console.log("✅ Verified Stripe event:", event.type);
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Webhook signature verification failed:", err.message);
       return new Response(`Webhook Error: ${err.message}`, { status: 400 });
     }
@@ -109,6 +110,15 @@ serve(async (req) => {
         mappedStatus: mapStripeStatusToDutch(subscription.status)
       });
 
+      // Corrected: Safely access period.start and period.end
+      const startDate = subscription.items.data[0]?.period?.start;
+      const endDate = subscription.items.data[0]?.period?.end;
+
+      if (startDate === undefined || endDate === undefined) {
+        console.error("❌ Missing subscription period data in Stripe subscription object");
+        return new Response("Missing subscription period data", { status: 500 });
+      }
+
       // ✅ Voeg abonnement toe of update bestaande
       const subscriptionData = {
         huurder_id: userId,
@@ -116,8 +126,8 @@ serve(async (req) => {
         stripe_subscription_id: subscription.id,
         stripe_customer_id: subscription.customer as string,
         stripe_sessie_id: session.id,
-        start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-        eind_datum: new Date(subscription.items.data[0].period.end * 1000).toISOString(),
+        start_datum: new Date(startDate * 1000).toISOString(),
+        eind_datum: new Date(endDate * 1000).toISOString(),
         bedrag: session.amount_total,
         currency: session.currency,
       };
@@ -182,13 +192,30 @@ serve(async (req) => {
     ) {
       const subscription = event.data.object as Stripe.Subscription;
 
+      // Corrected: Safely access period.start and period.end for subscription updates
+      const startDate = subscription.items.data[0]?.period?.start;
+      const endDate = subscription.current_period_end;
+
+      if (startDate === undefined || endDate === undefined) {
+        console.error("❌ Missing subscription period data for update");
+        // Depending on your logic, you might want to return an error response here
+        // or handle this case differently if these fields are not always present
+      }
+
+      const updateData: { status: string; start_datum?: string; eind_datum?: string } = {
+        status: mapStripeStatusToDutch(subscription.status),
+      };
+
+      if (startDate !== undefined) {
+        updateData.start_datum = new Date(startDate * 1000).toISOString();
+      }
+      if (endDate !== undefined) {
+        updateData.eind_datum = new Date(endDate * 1000).toISOString();
+      }
+
       const { error } = await supabase
         .from("abonnementen")
-        .update({
-          status: mapStripeStatusToDutch(subscription.status),
-          start_datum: new Date(subscription.items.data[0].period.start * 1000).toISOString(),
-          eind_datum: new Date(subscription.current_period_end * 1000).toISOString(),
-        })
+        .update(updateData)
         .eq("stripe_subscription_id", subscription.id);
 
       if (error) {
@@ -208,7 +235,7 @@ serve(async (req) => {
       headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Webhook error:", error);
     return new Response(`Webhook Error: ${error.message}`, { status: 400 });
   }
