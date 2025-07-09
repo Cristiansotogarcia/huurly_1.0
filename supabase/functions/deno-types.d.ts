@@ -56,7 +56,7 @@ declare module "stripe" {
   const Stripe: {
     new(apiKey: string, options?: { apiVersion: string }): {
       webhooks: {
-        constructEvent(body: string, signature: string, secret: string): any;
+        constructEventAsync(body: string, signature: string, secret: string): any;
       };
       subscriptions: {
         retrieve(id: string): Promise<Stripe.Subscription>;

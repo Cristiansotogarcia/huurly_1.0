@@ -3,6 +3,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:8080',
+  'http://localhost:9999',
   'https://huurly.nl',
   'https://www.huurly.nl',
   'https://huurly-1-0-cristiansotogarcia-4472s-projects.vercel.app',
