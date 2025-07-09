@@ -7,6 +7,8 @@ export interface AuthState {
   sessionValid: boolean;
   isRefreshing: boolean;
   lastSessionCheck: number;
+  isInPaymentFlow: boolean;
+  paymentFlowStartTime: number | null;
   login: (user: User) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
@@ -14,5 +16,6 @@ export interface AuthState {
   refreshSession: () => Promise<boolean>;
   initializeAuth: () => Promise<void>;
   setSessionValid: (valid: boolean) => void;
+  setPaymentFlow: (inFlow: boolean) => void;
   refresh?: () => void; // Optional method to refresh auth state
 }

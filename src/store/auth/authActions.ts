@@ -22,7 +22,9 @@ export const createAuthActions = (set: any, get: any) => ({
       isAuthenticated: false, 
       sessionValid: false,
       isRefreshing: false,
-      lastSessionCheck: 0
+      lastSessionCheck: 0,
+      isInPaymentFlow: false,
+      paymentFlowStartTime: null
     });
     localStorage.removeItem('auth-storage');
   },
@@ -38,5 +40,13 @@ export const createAuthActions = (set: any, get: any) => ({
 
   setSessionValid: (valid: boolean) => {
     set({ sessionValid: valid, lastSessionCheck: Date.now() });
+  },
+
+  setPaymentFlow: (inFlow: boolean) => {
+    logger.info('AuthStore: Payment flow state changed', { inFlow });
+    set({ 
+      isInPaymentFlow: inFlow,
+      paymentFlowStartTime: inFlow ? Date.now() : null
+    });
   },
 });

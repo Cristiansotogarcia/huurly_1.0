@@ -7,6 +7,22 @@ export const setupConservativeLogout = (get: any) => {
   let isUserInteracting = false;
   let logoutTimer: NodeJS.Timeout | null = null;
 
+  // Check if user is in payment flow
+  const isInPaymentFlow = () => {
+    const state = get();
+    if (!state.isInPaymentFlow) return false;
+    
+    // Auto-clear payment flow after 10 minutes (safety mechanism)
+    const paymentFlowTimeout = 10 * 60 * 1000; // 10 minutes
+    if (state.paymentFlowStartTime && (Date.now() - state.paymentFlowStartTime) > paymentFlowTimeout) {
+      logger.info('Payment flow timeout reached, clearing payment flow state');
+      state.setPaymentFlow(false);
+      return false;
+    }
+    
+    return true;
+  };
+
   // Track internal navigation to prevent logout on app navigation
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
@@ -78,6 +94,12 @@ export const setupConservativeLogout = (get: any) => {
     if (!currentState.isAuthenticated) return;
 
     if (document.visibilityState === 'hidden') {
+      // NEVER logout if user is in payment flow
+      if (isInPaymentFlow()) {
+        logger.info('User in payment flow - skipping logout on visibility change');
+        return;
+      }
+
       // Don't logout if user is actively interacting or navigating
       if (isUserInteracting || isNavigatingWithinApp) {
         return;
@@ -90,9 +112,15 @@ export const setupConservativeLogout = (get: any) => {
       
       // Only logout after a much longer period and if still hidden and not interacting
       logoutTimer = setTimeout(() => {
+        // Double-check payment flow state before logout
+        if (isInPaymentFlow()) {
+          logger.info('Payment flow detected during logout timer - cancelling logout');
+          return;
+        }
+
         if (document.visibilityState === 'hidden' && !isNavigatingWithinApp && !isUserInteracting) {
           const stillHiddenState = get();
-          if (stillHiddenState.isAuthenticated) {
+          if (stillHiddenState.isAuthenticated && !isInPaymentFlow()) {
             logger.info('Page hidden for extended period - logging out user');
             try {
               supabase.auth.signOut();

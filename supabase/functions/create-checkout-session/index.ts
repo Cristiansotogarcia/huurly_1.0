@@ -13,14 +13,30 @@ const initializeClients = () => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!stripeSecretKey || !supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing required environment variables");
+  const missingVars = [];
+  if (!stripeSecretKey) missingVars.push("STRIPE_SECRET_KEY");
+  if (!supabaseUrl) missingVars.push("SUPABASE_URL");
+  if (!supabaseServiceKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (missingVars.length > 0) {
+    logStep("ERROR", { 
+      message: "Missing required environment variables",
+      missing: missingVars
+    });
+    throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
+  }
+
+  // Validate Stripe key format
+  if (!stripeSecretKey.startsWith("sk_")) {
+    logStep("ERROR", { 
+      message: "Invalid Stripe secret key format",
+      keyPrefix: stripeSecretKey.substring(0, 5)
+    });
+    throw new Error("Invalid Stripe secret key format");
   }
 
   const stripe = new Stripe(stripeSecretKey, { 
-    apiVersion: "2023-10-16",
-    timeout: 30000, // 30 seconds
-    maxNetworkRetries: 3
+    apiVersion: "2023-10-16"
   });
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false },

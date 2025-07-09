@@ -44,6 +44,7 @@ declare module "stripe" {
     }
 
     interface Subscription {
+      customer: string;
       items: any;
       id: string;
       status: string;

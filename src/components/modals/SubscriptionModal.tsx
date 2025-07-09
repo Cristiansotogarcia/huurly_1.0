@@ -37,7 +37,7 @@ const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: 
     setIsProcessing(true);
 
     try {
-      const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+      const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
@@ -73,7 +73,7 @@ const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: 
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="mb-4">Klik op de knop hieronder om door te gaan naar de beveiligde betaalpagina van Stripe om je abonnement voor €65/jaar te starten.</p>
+      <p className="mb-4">Klik op de knop hieronder om door te gaan naar de beveiligde betaalpagina van Stripe om je abonnement voor €65 te starten.</p>
       <div className="flex justify-end space-x-2 mt-4">
         <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing}>Annuleren</Button>
         <Button type="submit" disabled={!stripe || isProcessing}>

@@ -7,13 +7,18 @@ export const createSessionManager = (set: any, get: any) => ({
   validateSession: async (): Promise<boolean> => {
     const state = get();
     
+    // Skip cache if user is returning from payment flow
+    const isReturningFromPayment = window.location.search.includes('payment_success') || 
+                                   window.location.search.includes('payment_canceled') ||
+                                   state.isInPaymentFlow;
+    
     const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-    if (state.sessionValid && state.lastSessionCheck > fiveMinutesAgo) {
+    if (state.sessionValid && state.lastSessionCheck > fiveMinutesAgo && !isReturningFromPayment) {
       return true;
     }
 
     try {
-      logger.info('Validating user session...');
+      logger.info('Validating user session...', { isReturningFromPayment });
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -40,6 +45,7 @@ export const createSessionManager = (set: any, get: any) => ({
       if (session.user && (!state.user || state.user.id !== session.user.id)) {
         const user = await authService.mapSupabaseUserToUser(session.user);
         set({ user, isAuthenticated: true });
+        logger.info('Session validated and user updated');
       }
 
       return true;

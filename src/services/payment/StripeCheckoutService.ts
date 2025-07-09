@@ -19,7 +19,7 @@ export class StripeCheckoutService extends DatabaseService {
 
     return this.executeQuery(async () => {
       try {
-        const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+        const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
         const stripe = await getStripe();
         
         if (!stripe) {
@@ -48,13 +48,32 @@ export class StripeCheckoutService extends DatabaseService {
         });
         
         if (error) {
-          logger.error('Fout bij het aanroepen van create-checkout-session functie:', error);
-          throw new Error('Het is niet gelukt om een beveiligde betaalsessie aan te maken. Controleer uw verbinding en probeer het opnieuw.');
+          logger.error('Fout bij het aanroepen van create-checkout-session functie:', {
+            error,
+            message: error.message,
+            details: error.details,
+            context: error.context
+          });
+          
+          // Provide more specific error messages based on the error
+          if (error.message?.includes('environment variables')) {
+            throw new Error('Betalingsconfiguratie ontbreekt. Neem contact op met de beheerder.');
+          } else if (error.message?.includes('Price ID')) {
+            throw new Error('Ongeldige prijsconfiguratie. Neem contact op met de beheerder.');
+          } else if (error.message?.includes('network')) {
+            throw new Error('Netwerkfout. Controleer uw internetverbinding en probeer het opnieuw.');
+          } else {
+            throw new Error('Het is niet gelukt om een beveiligde betaalsessie aan te maken. Probeer het later opnieuw.');
+          }
         }
 
         if (!data?.url) {
-          logger.error('Geen checkout-URL ontvangen van create-checkout-session');
-          throw new Error('Kon de betaalsessie niet verifiëren. Probeer het later opnieuw.');
+          logger.error('Geen checkout-URL ontvangen van create-checkout-session', {
+            data,
+            hasData: !!data,
+            dataKeys: data ? Object.keys(data) : []
+          });
+          throw new Error('Geen betaallink ontvangen. Probeer het opnieuw of neem contact op met de beheerder.');
         }
 
         logger.info('Checkout-sessie aangemaakt, doorsturen naar Stripe...');

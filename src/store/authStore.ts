@@ -15,6 +15,8 @@ export const useAuthStore = create<AuthState>()(
       sessionValid: false,
       isRefreshing: false,
       lastSessionCheck: 0,
+      isInPaymentFlow: false,
+      paymentFlowStartTime: null,
       
       // Spread all the action methods from the separate modules
       ...createAuthActions(set, get),
@@ -27,7 +29,9 @@ export const useAuthStore = create<AuthState>()(
         user: state.user, 
         isAuthenticated: state.isAuthenticated,
         sessionValid: state.sessionValid,
-        lastSessionCheck: state.lastSessionCheck
+        lastSessionCheck: state.lastSessionCheck,
+        isInPaymentFlow: state.isInPaymentFlow,
+        paymentFlowStartTime: state.paymentFlowStartTime
       }),
     }
   )

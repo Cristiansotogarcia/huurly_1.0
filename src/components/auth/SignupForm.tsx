@@ -27,26 +27,11 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     setIsLoading(true);
     
     try {
-      const { success, user } = await signUp({ ...formData, role: 'huurder' });
-      if (success && user) {
+      const { success } = await signUp({ ...formData, role: 'huurder' });
+      if (success) {
+        // Don't navigate immediately - user needs to confirm email first
+        // The useAuth hook will show the email confirmation modal
         onClose();
-
-        switch (user.role) {
-          case 'huurder':
-            navigate('/huurder-dashboard');
-            break;
-          case 'verhuurder':
-            navigate('/verhuurder-dashboard');
-            break;
-          case 'beoordelaar':
-            navigate('/beoordelaar-dashboard');
-            break;
-          case 'beheerder':
-            navigate('/beheerder-dashboard');
-            break;
-          default:
-            navigate('/');
-        }
       }
     } catch (error) {
       console.error('Signup error:', error);

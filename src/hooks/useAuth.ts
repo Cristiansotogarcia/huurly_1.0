@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/types';
 import { authService, SignUpData, SignInData } from '@/lib/auth';
@@ -37,6 +37,7 @@ export const useAuth = (): UseAuthReturn => {
   const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isSigningOut = useRef(false);
 
   useEffect(() => {
     // Initialize auth state
@@ -58,6 +59,11 @@ export const useAuth = (): UseAuthReturn => {
     // Listen to auth state changes
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
+        // Don't process auth changes if we're in the middle of signing out
+        if (isSigningOut.current) {
+          return;
+        }
+        
         login(user);
         
         // Check if this is a password recovery session
@@ -72,15 +78,21 @@ export const useAuth = (): UseAuthReturn => {
           searchParams.get('type') === 'recovery' ||
           currentPath === '/wachtwoord-herstellen';
         
+        // Check if this is an email verification
+        const isEmailVerification = urlHash.includes('type=signup') || searchParams.get('type') === 'signup';
+        
         // Don't auto-redirect if:
         // 1. User is on password reset page
         // 2. URL contains recovery tokens
         // 3. User just logged out (prevent redirect loops)
         // 4. User is on specific auth pages
+        // 5. This is an email verification (let the modal handle it)
+        // 6. User is on payment page or payment success page
         const isOnAuthPage = ['/wachtwoord-herstellen', '/login', '/register'].includes(currentPath);
+        const isOnPaymentPage = currentPath.includes('/payment') || searchParams.has('session_id');
         const isOnHomePage = currentPath === '/';
         
-        const shouldRedirect = !hasRecoveryToken && !isOnAuthPage && isOnHomePage;
+        const shouldRedirect = !hasRecoveryToken && !isOnAuthPage && !isOnPaymentPage && isOnHomePage && !isEmailVerification;
         
         if (shouldRedirect) {
           setTimeout(() => {
@@ -185,6 +197,8 @@ export const useAuth = (): UseAuthReturn => {
 
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
+    isSigningOut.current = true;
+    
     try {
       // Clear local state first to prevent redirect loops
       logout();
@@ -219,6 +233,10 @@ export const useAuth = (): UseAuthReturn => {
       });
     } finally {
       setIsLoading(false);
+      // Reset the signing out flag after a delay to ensure auth state changes have processed
+      setTimeout(() => {
+        isSigningOut.current = false;
+      }, 1000);
     }
   };
 

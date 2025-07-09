@@ -2,6 +2,11 @@ import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
+// Zorg dat deze function geen Supabase-auth vereist
+export const config = {
+  auth: false,
+}
+
 // Helper function to map Stripe subscription status to Dutch enum values
 const mapStripeStatusToDutch = (stripeStatus: string): string => {
   const statusMap: { [key: string]: string } = {
@@ -25,9 +30,7 @@ const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 const stripe = new Stripe(stripeSecretKey, { 
-  apiVersion: "2023-10-16",
-  timeout: 30000, // 30 seconds
-  maxNetworkRetries: 3
+  apiVersion: "2023-10-16"
 });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -38,6 +41,8 @@ type ExtendedSession = Stripe.Checkout.Session & {
   id: string;
   subscription: string;
   payment_status: string;
+  amount_total: number | null;
+  currency: string | null;
 };
 
 serve(async (req) => {
@@ -95,6 +100,7 @@ serve(async (req) => {
 
       // ✅ Haal Stripe subscription details op
       console.log("🔍 Retrieving subscription from Stripe:", session.subscription);
+      // @ts-ignore - Stripe types
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
       
       console.log("📊 Stripe subscription details:", {

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useHuurder } from '@/hooks/useHuurder';
 import { useHuurderActions } from '@/hooks/useHuurderActions';
+import { useAuthStore } from '@/store/authStore';
 import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 import { DashboardHeader, DashboardContent } from "@/components/dashboard";
 import { StatsGrid } from '@/components/standard/StatsGrid';
@@ -42,6 +43,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   const navigate = useNavigate();
 
   const { handleSettings, handleLogout, onStartSearch, handleReportIssue, handleHelpSupport } = useHuurderActions(user);
+  const { setPaymentFlow } = useAuthStore();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -151,6 +153,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_canceled')) {
+      // Clear payment flow state when payment is cancelled
+      setPaymentFlow(false);
       toast({
         title: 'Betaling Geannuleerd',
         description: 'Je betaling is niet voltooid. Je kunt het opnieuw proberen.',
@@ -158,18 +162,19 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [toast]);
+  }, [toast, setPaymentFlow]);
 
   // Refresh subscription status when payment is successful
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_success')) {
-      // Close the payment modal immediately when payment succeeds
+      // Clear payment flow state and close modal when payment succeeds
+      setPaymentFlow(false);
       setShowPaymentModal(false);
       if (refresh) refresh();
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [refresh]);
+  }, [refresh, setPaymentFlow]);
 
   // Check subscription expiration warning (2 weeks)
   useEffect(() => {

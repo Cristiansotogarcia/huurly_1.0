@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
-import { UserService } from '@/services/UserService';
+import { userService } from '@/services/UserService';
 import { User, Settings, Bell, Shield, CreditCard } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -22,8 +22,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   
   // Profile settings state
   const [profileData, setProfileData] = useState({
-    naam: user?.naam || '',
-    telefoon: user?.telefoon || '',
+    naam: user?.name || '',
+    telefoon: user?.user_metadata?.telefoon || '',
     email: user?.email || ''
   });
 
@@ -49,8 +49,9 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     
     setLoading(true);
     try {
-      const result = await UserService.updateUser(user.id, {
-        naam: profileData.naam,
+      const result = await userService.updateProfile(user.id, {
+        voornaam: profileData.naam.split(' ')[0],
+        achternaam: profileData.naam.split(' ').slice(1).join(' '),
         telefoon: profileData.telefoon
       });
 
@@ -307,7 +308,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">Huidig abonnement</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Je hebt een actief jaarabonnement voor €65 per jaar.
+                  Je hebt een actief halfjaarlijks abonnement voor €65.
                 </p>
                 <Button 
                   variant="outline" 

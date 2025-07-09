@@ -34,9 +34,9 @@ export const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessMod
           </DialogTitle>
           <DialogDescription className="text-gray-600">
             {userName ? (
-              <>Bedankt {userName}! Je account is nu geactiveerd en klaar voor gebruik.</>
+              <>Bedankt {userName}! Je account is geactiveerd en klaar voor gebruik.</>
             ) : (
-              <>Bedankt! Je account is nu geactiveerd en klaar voor gebruik.</>
+              <>Bedankt! Je account is geactiveerd en klaar voor gebruik.</>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -48,9 +48,21 @@ export const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessMod
               <div className="text-sm text-green-800">
                 <p className="font-medium">Je account is volledig geactiveerd!</p>
                 <p className="text-green-700 mt-1">
-                  Je kunt nu doorgaan naar je dashboard om je profiel in te stellen.
+                  Om volledig vindbaar te worden voor verhuurders en voorop te lopen in de zoektocht naar je ideale woning, heb je een halfjaarlijks abonnement nodig.
                 </p>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-blue-50 p-4">
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-2">🎯 Met Huurly ben je altijd een stap voor</p>
+              <ul className="text-blue-700 space-y-1">
+                <li>• Word direct vindbaar voor verhuurders</li>
+                <li>• Krijg toegang tot exclusieve woningen</li>
+                <li>• Gebruik ons geavanceerde matching algoritme</li>
+                <li>• Onbeperkte zoekresultaten en premium ondersteuning</li>
+              </ul>
             </div>
           </div>
           
@@ -72,7 +84,7 @@ export const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessMod
           </div>
           
           <p className="text-xs text-gray-500 text-center">
-            Welkom bij Huurly! We zijn blij dat je er bent.
+            Welkom bij Huurly! Start je halfjaarlijks abonnement en kom voorop te staan.
           </p>
         </div>
       </DialogContent>

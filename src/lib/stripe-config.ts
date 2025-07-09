@@ -15,24 +15,37 @@ export const STRIPE_CONFIG = {
 };
 
 // Validate configuration
-const validateConfig = (): { isValid: boolean; errors: string[] } => {
+const validateConfig = (): { isValid: boolean; errors: string[]; details: Record<string, any> } => {
   const errors: string[] = [];
+  const details: Record<string, any> = {};
 
   if (!STRIPE_CONFIG.publishableKey) {
-    errors.push('Stripe publishable key is required');
+    errors.push('Stripe publishable key is required (VITE_STRIPE_PUBLISHABLE_KEY)');
+    details.missingPublishableKey = true;
   }
 
   if (!STRIPE_CONFIG.huurderPriceId) {
-    errors.push('Stripe huurder price ID is required');
+    errors.push('Stripe huurder price ID is required (VITE_STRIPE_HUURDER_PRICE_ID)');
+    details.missingPriceId = true;
   }
 
   if (STRIPE_CONFIG.publishableKey && !STRIPE_CONFIG.publishableKey.startsWith('pk_')) {
-    errors.push('Invalid Stripe publishable key format');
+    errors.push('Invalid Stripe publishable key format - must start with "pk_"');
+    details.invalidKeyFormat = true;
+    details.providedKey = STRIPE_CONFIG.publishableKey.substring(0, 10) + '...';
   }
+
+  // Add debug info
+  details.configStatus = {
+    hasPublishableKey: !!STRIPE_CONFIG.publishableKey,
+    hasPriceId: !!STRIPE_CONFIG.huurderPriceId,
+    keyPrefix: STRIPE_CONFIG.publishableKey ? STRIPE_CONFIG.publishableKey.substring(0, 7) : 'none'
+  };
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    details
   };
 };
 
@@ -44,10 +57,20 @@ export const getStripe = (): Promise<Stripe | null> => {
     const validation = validateConfig();
     
     if (!validation.isValid) {
-      logger.error('Stripe configuration errors:', validation.errors);
+      logger.error('Stripe configuration errors:', {
+        errors: validation.errors,
+        details: validation.details
+      });
+      
+      // In development, show more detailed error
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ Stripe Configuration Failed:', validation);
+      }
+      
       return Promise.resolve(null);
     }
     
+    logger.info('Initializing Stripe with publishable key:', STRIPE_CONFIG.publishableKey.substring(0, 10) + '...');
     stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
   }
   
@@ -57,13 +80,13 @@ export const getStripe = (): Promise<Stripe | null> => {
 // Subscription plans configuration
 export const SUBSCRIPTION_PLANS = {
   huurder: {
-    yearly: {
+    halfyearly: {
       priceId: STRIPE_CONFIG.huurderPriceId,
-      name: 'Huurder Jaarlijks',
+      name: 'Huurder Halfjaarlijks',
       price: 53.72, // Display price (excluding BTW)
       priceWithTax: 65, // Actual charge price (including 21% BTW)
       currency: 'eur',
-      interval: 'jaar',
+      interval: '6 maanden',
       taxRate: 0.21, // 21% BTW
       features: [
         'Zoeken naar woningen',
@@ -131,8 +154,18 @@ export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[keyof typeof SUBSCRI
 if (process.env.NODE_ENV === 'development') {
   const validation = validateConfig();
   if (validation.isValid) {
-    logger.info('✅ Stripe configuration is valid');
+    logger.info('✅ Stripe configuration is valid', {
+      priceId: STRIPE_CONFIG.huurderPriceId,
+      keyPrefix: STRIPE_CONFIG.publishableKey.substring(0, 10) + '...'
+    });
   } else {
-    logger.error('❌ Stripe configuration errors:', validation.errors);
+    logger.error('❌ Stripe configuration errors:', {
+      errors: validation.errors,
+      details: validation.details,
+      env: {
+        VITE_STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 'set' : 'missing',
+        VITE_STRIPE_HUURDER_PRICE_ID: import.meta.env.VITE_STRIPE_HUURDER_PRICE_ID ? 'set' : 'missing'
+      }
+    });
   }
 }

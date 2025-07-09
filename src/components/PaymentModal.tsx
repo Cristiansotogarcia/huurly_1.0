@@ -7,12 +7,14 @@ import {
 } from "@/components/ui/dialog";
 import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
-import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe-config";
+import { SUBSCRIPTION_PLANS, formatPrice, getStripe } from "@/lib/stripe-config";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
 import { paymentService } from "@/services/PaymentService";
 import { Loader2, X } from "lucide-react";
+import { logger } from "@/lib/logger";
+import { logStripeDebugInfo } from "@/utils/stripe-debug";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -27,7 +29,7 @@ export const PaymentModal = ({
   persistent = false,
 }: PaymentModalProps) => {
   // Pricing information for huurders
-  const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+  const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
   const pricingInfo = {
     displayPrice: formatPrice(plan.price),
     actualPrice: formatPrice(plan.priceWithTax),
@@ -39,7 +41,7 @@ export const PaymentModal = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuthStore();
+  const { user, setPaymentFlow } = useAuthStore();
 
   const handlePayment = async () => {
     if (!user) {
@@ -52,11 +54,23 @@ export const PaymentModal = ({
     }
 
     setIsLoading(true);
+    
     try {
+      // Set payment flow state BEFORE starting the payment process
+      setPaymentFlow(true);
+      logger.info('Payment flow started for user:', user.id);
+
       const baseUrl = window.location.origin;
       const result = await paymentService.createCheckoutSession(user.id, baseUrl);
       
       if (result.error) {
+        // Clear payment flow state on error
+        setPaymentFlow(false);
+        
+        // Log debug info when payment fails
+        logger.error('Payment checkout session creation failed:', result.error);
+        await logStripeDebugInfo();
+        
         toast({
           title: "Fout",
           description: result.error.message || "Er is een fout opgetreden bij het starten van de betaling.",
@@ -66,9 +80,13 @@ export const PaymentModal = ({
       }
 
       if (result.data?.url) {
-        // Redirect to Stripe checkout
+        // Use direct URL redirect for simplicity and reliability
+        logger.info('Redirecting to Stripe checkout:', result.data.url);
         window.location.href = result.data.url;
+        // Note: Payment flow state will be cleared when user returns from Stripe
       } else {
+        // Clear payment flow state if no URL received
+        setPaymentFlow(false);
         toast({
           title: "Fout",
           description: "Geen betaallink ontvangen. Probeer het opnieuw.",
@@ -76,6 +94,9 @@ export const PaymentModal = ({
         });
       }
     } catch (error) {
+      // Clear payment flow state on any error
+      setPaymentFlow(false);
+      logger.error('Payment initiation error:', error);
       toast({
         title: "Fout",
         description: "Er is een onverwachte fout opgetreden. Probeer het later opnieuw.",
@@ -129,8 +150,8 @@ export const PaymentModal = ({
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span>Jaarlijks abonnement</span>
-              <span className="font-bold">{pricingInfo.actualPrice}/{pricingInfo.interval}</span>
+              <span>Halfjaarlijks abonnement</span>
+              <span className="font-bold">{pricingInfo.actualPrice}</span>
             </div>
             <ul className="text-sm text-gray-600 space-y-1">
               {pricingInfo.features.map((feature, index) => (

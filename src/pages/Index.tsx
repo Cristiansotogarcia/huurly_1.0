@@ -1,4 +1,3 @@
-
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
@@ -9,7 +8,7 @@ import { EmailConfirmationModal } from '@/components/modals/EmailConfirmationMod
 import { EmailVerificationSuccessModal } from '@/components/modals/EmailVerificationSuccessModal';
 import { PaymentSuccessModal } from '@/components/modals/PaymentSuccessModal';
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -28,6 +27,7 @@ const Index = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [showSignup, setShowSignup] = useState(false);
+  const hasHandledEmailVerification = useRef(false);
 
   useEffect(() => {
     // Debug: Log all URL parts to understand the structure
@@ -47,13 +47,16 @@ const Index = () => {
       return;
     }
 
-    // Check for email verification success
-    if (hash.includes('type=signup') || searchParams.get('type') === 'signup') {
-      console.log('Email verification success detected');
-      handleEmailVerificationSuccess();
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
+    // Check for email verification success - only handle once
+    if ((hash.includes('type=signup') || searchParams.get('type') === 'signup')) {
+      if (!hasHandledEmailVerification.current) {
+        console.log('Email verification success detected');
+        hasHandledEmailVerification.current = true;
+        handleEmailVerificationSuccess();
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      return; // Don't do any redirects when showing email verification modal
     }
 
     // Legacy support: redirect old payment success URLs to the new route
@@ -63,8 +66,13 @@ const Index = () => {
       return;
     }
 
-    // Only redirect authenticated users if they don't have special URL parameters and no modals are shown
-    if (isAuthenticated && user && !showPaymentSuccessModal && !showEmailVerificationSuccessModal) {
+    // Only redirect authenticated users if:
+    // 1. They don't have special URL parameters
+    // 2. No modals are currently shown
+    // 3. We haven't just handled email verification
+    const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
+    
+    if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current) {
       console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
         case 'huurder':
@@ -81,7 +89,7 @@ const Index = () => {
           break;
       }
     }
-  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess]);
+  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal]);
 
   return (
     <div className="min-h-screen">
@@ -103,10 +111,15 @@ const Index = () => {
       
       <EmailVerificationSuccessModal
         isOpen={showEmailVerificationSuccessModal}
-        onClose={() => setShowEmailVerificationSuccessModal(false)}
+        onClose={() => {
+          setShowEmailVerificationSuccessModal(false);
+          // Don't redirect immediately, let user decide
+        }}
         onGoToDashboard={() => {
           setShowEmailVerificationSuccessModal(false);
-          if (user) {
+          // Navigate to dashboard based on user role
+          if (user && isAuthenticated) {
+            console.log('Navigating to dashboard for user role:', user.role);
             switch (user.role) {
               case 'huurder':
                 navigate('/huurder-dashboard');
@@ -120,7 +133,15 @@ const Index = () => {
               case 'beheerder':
                 navigate('/beheerder-dashboard');
                 break;
+              default:
+                console.log('Unknown user role, staying on homepage');
             }
+          } else {
+            console.log('User not authenticated when trying to go to dashboard');
+            // If user is not authenticated yet, wait a bit and try again
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
           }
         }}
         userName={user?.name}

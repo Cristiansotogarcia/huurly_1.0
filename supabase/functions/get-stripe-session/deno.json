@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "http/server": "https://deno.land/std@0.190.0/http/server.ts",
+    "stripe": "https://esm.sh/stripe@14.21.0"
+  }
+}

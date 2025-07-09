@@ -43,7 +43,7 @@ export class PaymentService {
   // Pricing Operations
   getPricingInfo(role: 'huurder' | 'verhuurder') {
     if (role === 'huurder') {
-      const plan = SUBSCRIPTION_PLANS.huurder.yearly;
+      const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
       return {
         displayPrice: formatPrice(plan.price),
         actualPrice: formatPrice(plan.priceWithTax),
