@@ -107,8 +107,8 @@ export const Step2_Employment = () => {
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="font-medium text-blue-900 mb-2">💡 Tip</h3>
         <p className="text-sm text-blue-800">
-          Een hoger inkomen verhoogt je kansen bij verhuurders. Zorg ervoor dat je 
-          documenten zoals loonstroken en arbeidscontract up-to-date zijn.
+          Een juiste inkomen verhoogt je kansen bij verhuurders. Zorg ervoor dat je 
+          documenten zoals loonstroken en arbeidscontract up-to-date en geupload zijn.
         </p>
       </div>
     </div>

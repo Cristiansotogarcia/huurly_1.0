@@ -12,6 +12,7 @@ export const Step4_Lifestyle = () => {
   const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
   
   const hasPets = watch('hasPets');
+  const smokes = watch('smokes');
 
   return (
     <div className="space-y-6">
@@ -89,6 +90,22 @@ export const Step4_Lifestyle = () => {
             </FormItem>
           )}
         />
+
+        {smokes && (
+          <div className="space-y-2">
+            <Label htmlFor="smoking_details">Details over je rookgewoonten</Label>
+            <Textarea
+              id="smoking_details"
+              {...register('smoking_details')}
+              placeholder="Bijvoorbeeld: Alleen buiten, nooit binnen, alleen op balkon..."
+              className={errors.smoking_details ? 'border-red-500' : ''}
+              rows={3}
+            />
+            {errors.smoking_details && (
+              <p className="text-sm text-red-600">{errors.smoking_details.message}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-blue-50 p-4 rounded-lg">

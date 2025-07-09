@@ -30,6 +30,7 @@ export const profileSchema = z.object({
   hasPets: z.boolean(),
   pet_details: z.string().optional(),
   smokes: z.boolean(),
+  smoking_details: z.string().optional(),
 
   // Step 5: Motivation
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),

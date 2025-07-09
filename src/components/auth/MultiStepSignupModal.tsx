@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -7,11 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 
 interface MultiStepSignupModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface PasswordValidation {
+  minLength: boolean;
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasNumber: boolean;
 }
 
 export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalProps) => {
@@ -29,6 +35,24 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Password validation state
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidation>({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false
+  });
+
+  // Function to validate password requirements
+  const validatePassword = (password: string): PasswordValidation => {
+    return {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password)
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -41,6 +65,19 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       toast({
         title: "Wachtwoorden komen niet overeen",
         description: "Controleer of de ingevoerde wachtwoorden hetzelfde zijn.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if all password requirements are met
+    const validation = validatePassword(formData.password);
+    const allRequirementsMet = Object.values(validation).every(Boolean);
+    
+    if (!allRequirementsMet) {
+      toast({
+        title: "Wachtwoord voldoet niet aan de eisen",
+        description: "Zorg ervoor dat je wachtwoord aan alle eisen voldoet.",
         variant: "destructive",
       });
       return;
@@ -101,7 +138,24 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Update password validation in real-time
+    if (field === 'password') {
+      setPasswordValidation(validatePassword(value));
+    }
   };
+
+  // Component for password requirement item
+  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
+      {met ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
+      )}
+      <span>{children}</span>
+    </li>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -160,13 +214,21 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                   placeholder="••••••••"
                   required
                 />
-                <div className="mt-2 text-xs text-gray-600 space-y-1">
-                  <p>Wachtwoord moet bevatten:</p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-2">
-                    <li>Minimaal 8 karakters</li>
-                    <li>Minimaal 1 hoofdletter (A-Z)</li>
-                    <li>Minimaal 1 kleine letter (a-z)</li>
-                    <li>Minimaal 1 cijfer (0-9)</li>
+                <div className="mt-2 text-xs space-y-1">
+                  <p className="text-gray-700 font-medium">Wachtwoord moet bevatten:</p>
+                  <ul className="space-y-1 ml-2">
+                    <PasswordRequirement met={passwordValidation.minLength}>
+                      Minimaal 8 karakters
+                    </PasswordRequirement>
+                    <PasswordRequirement met={passwordValidation.hasUppercase}>
+                      Minimaal 1 hoofdletter (A-Z)
+                    </PasswordRequirement>
+                    <PasswordRequirement met={passwordValidation.hasLowercase}>
+                      Minimaal 1 kleine letter (a-z)
+                    </PasswordRequirement>
+                    <PasswordRequirement met={passwordValidation.hasNumber}>
+                      Minimaal 1 cijfer (0-9)
+                    </PasswordRequirement>
                   </ul>
                 </div>
               </div>

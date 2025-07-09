@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfileFormData } from '../profileSchema';
 import { User, Calendar, Phone, Globe } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import EnhancedDatePicker from '../EnhancedDatePicker';
 
 export const Step1_PersonalInfo = () => {
   const { control, register, formState: { errors } } = useFormContext<ProfileFormData>();
@@ -51,25 +52,26 @@ export const Step1_PersonalInfo = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="date_of_birth">Geboortedatum *</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-            <Input
-              id="date_of_birth"
-              type="date"
-              {...register('date_of_birth', { 
-                setValueAs: (value) => value ? new Date(value) : undefined 
-              })}
-              className={`pl-10 ${errors.date_of_birth ? 'border-red-500' : ''}`}
-              max={new Date().toISOString().split('T')[0]}
-              min="1900-01-01"
-            />
-          </div>
-          {errors.date_of_birth && (
-            <p className="text-sm text-red-600">{errors.date_of_birth.message}</p>
+        <FormField
+          control={control}
+          name="date_of_birth"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Geboortedatum *</FormLabel>
+              <FormControl>
+                <EnhancedDatePicker
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  placeholder="Selecteer geboortedatum"
+                  disabled={(date) => 
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         <div className="space-y-2">
           <Label htmlFor="phone">Telefoonnummer *</Label>

@@ -92,23 +92,24 @@ export const useAuth = (): UseAuthReturn => {
         const isOnPaymentPage = currentPath.includes('/payment') || searchParams.has('session_id');
         const isOnHomePage = currentPath === '/';
         
-        const shouldRedirect = !hasRecoveryToken && !isOnAuthPage && !isOnPaymentPage && isOnHomePage && !isEmailVerification;
+        // Check if user is already on their correct dashboard
+        const expectedDashboard = `/${user.role}-dashboard`;
+        const isOnCorrectDashboard = currentPath === expectedDashboard;
+        
+        const shouldRedirect = !hasRecoveryToken && 
+                              !isOnAuthPage && 
+                              !isOnPaymentPage && 
+                              !isEmailVerification && 
+                              !isOnCorrectDashboard &&
+                              (isOnHomePage || currentPath === '/login');
         
         if (shouldRedirect) {
+          // Add a small delay to prevent rapid redirects
           setTimeout(() => {
-            switch (user.role) {
-              case 'huurder':
-                navigate('/huurder-dashboard');
-                break;
-              case 'verhuurder':
-                navigate('/verhuurder-dashboard');
-                break;
-              case 'beoordelaar':
-                navigate('/beoordelaar-dashboard');
-                break;
-              case 'beheerder':
-                navigate('/beheerder-dashboard');
-                break;
+            const targetPath = expectedDashboard;
+            // Only redirect if we're not already navigating to the target
+            if (window.location.pathname !== targetPath) {
+              navigate(targetPath, { replace: true });
             }
           }, 100);
         }

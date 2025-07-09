@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
 import { User, Calendar, Phone, Globe } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import EnhancedDatePicker from '../EnhancedDatePicker';
 
 interface Step1PersonalInfoProps {
   formData: any;
@@ -23,6 +21,46 @@ export default function Step1PersonalInfo({
 
   const handleProfilePictureUpload = (url: string) => {
     handleInputChange('profilePictureUrl', url);
+  };
+
+  // Handle date input formatting for dd/mm/yyyy
+  const handleDateInputChange = (value: string) => {
+    // Remove any non-numeric characters except /
+    let cleaned = value.replace(/[^\d/]/g, '');
+    
+    // Auto-format as user types
+    if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
+      cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
+    }
+    if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
+      cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
+    }
+    
+    // Limit to dd/mm/yyyy format (10 characters)
+    if (cleaned.length > 10) {
+      cleaned = cleaned.substring(0, 10);
+    }
+    
+    handleInputChange('date_of_birth', cleaned);
+    
+    // If complete date is entered, try to parse it
+    if (cleaned.length === 10) {
+      const parts = cleaned.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+        const year = parseInt(parts[2], 10);
+        
+        // Basic validation
+        if (day >= 1 && day <= 31 && month >= 0 && month <= 11 && year >= 1900 && year <= new Date().getFullYear()) {
+          const date = new Date(year, month, day);
+          // Verify the date is valid (handles invalid dates like 31/02/2023)
+          if (date.getDate() === day && date.getMonth() === month && date.getFullYear() === year) {
+            handleDateSelect('date_of_birth', date);
+          }
+        }
+      }
+    }
   };
 
   return (
@@ -74,16 +112,18 @@ export default function Step1PersonalInfo({
         <div className="space-y-2">
           <Label htmlFor="date_of_birth">Geboortedatum *</Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-            <div className="pl-10">
-              <EnhancedDatePicker
-                selected={formData.date_of_birth}
-                onSelect={(date) => handleDateSelect('date_of_birth', date)}
-                placeholder="Selecteer je geboortedatum"
-                disabled={(date) => date > new Date() || date < new Date(1900, 0, 1)}
-              />
-            </div>
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              id="date_of_birth"
+              value={formData.date_of_birth || ''}
+              onChange={(e) => handleDateInputChange(e.target.value)}
+              placeholder="dd/mm/yyyy"
+              className="pl-10"
+              maxLength={10}
+              required
+            />
           </div>
+          <p className="text-xs text-gray-500">Voer je geboortedatum in als dd/mm/yyyy (bijvoorbeeld: 15/03/1990)</p>
         </div>
 
         <div className="space-y-2">

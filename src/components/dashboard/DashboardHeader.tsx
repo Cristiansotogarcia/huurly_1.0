@@ -54,7 +54,7 @@ const DashboardHeader = ({
                       ✓ Account Actief
                     </Badge>
                     
-                    {subscriptionEndDate && (
+                    {subscriptionEndDate && subscriptionEndDate !== 'N/A' && (
                       <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
                         tot {subscriptionEndDate}
                       </span>
