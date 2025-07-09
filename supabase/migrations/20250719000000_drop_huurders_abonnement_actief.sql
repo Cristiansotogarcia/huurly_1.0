@@ -1,8 +1,8 @@
 -- Remove obsolete abonnement_actief column and update actieve_huurders view
-ALTER TABLE public.huurders DROP COLUMN IF EXISTS abonnement_actief;
-
 DROP VIEW IF EXISTS public.actieve_huurders;
 DROP POLICY IF EXISTS "actieve_huurders_verhuurders_only" ON public.actieve_huurders;
+
+ALTER TABLE public.huurders DROP COLUMN IF EXISTS abonnement_actief;
 
 CREATE VIEW public.actieve_huurders
 WITH (security_invoker = true)
