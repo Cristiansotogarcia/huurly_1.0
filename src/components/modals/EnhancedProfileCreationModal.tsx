@@ -78,7 +78,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Maak je profiel compleet</DialogTitle>
           <DialogDescription>
