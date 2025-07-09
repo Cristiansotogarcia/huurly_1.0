@@ -15,6 +15,105 @@ interface ConsolidatedDashboardData {
 }
 
 export class ConsolidatedDashboardService extends DatabaseService {
+  /** Map raw tenant and user rows to a structured TenantProfile */
+  private mapTenantProfile(rawTenant: any, userRow: any): TenantProfile {
+    if (!rawTenant || !userRow) {
+      return null as unknown as TenantProfile;
+    }
+
+    const fullName = userRow.naam || '';
+    const [firstName, ...lastParts] = fullName.split(' ');
+    const lastName = lastParts.join(' ');
+
+    const housing = rawTenant.woningvoorkeur || {};
+
+    return {
+      id: rawTenant.id,
+      userId: rawTenant.id,
+      firstName,
+      lastName,
+      email: userRow.email,
+      phone: userRow.telefoon || '',
+      dateOfBirth: rawTenant.geboortedatum || '',
+      profession: rawTenant.beroep || '',
+      income: rawTenant.inkomen || 0,
+      bio: rawTenant.beschrijving || '',
+      motivation: rawTenant.motivatie || '',
+      profilePicture: rawTenant.profielfoto_url || undefined,
+      isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
+      preferences: {
+        minBudget: rawTenant.min_huur || 0,
+        maxBudget: rawTenant.max_huur || 0,
+        city: Array.isArray(rawTenant.locatie_voorkeur)
+          ? rawTenant.locatie_voorkeur[0]
+          : rawTenant.locatie_voorkeur || '',
+        bedrooms: rawTenant.min_kamers || 1,
+        propertyType: housing.type || 'appartement',
+        furnishedPreference: housing.meubilering,
+        parkingRequired: housing.parkingRequired,
+        storageNeeds: housing.storageNeeds,
+        leaseDurationPreference: housing.leaseDurationPreference,
+      },
+      moveInDatePreferred: rawTenant.voorkeur_verhuisdatum || undefined,
+      moveInDateEarliest: rawTenant.vroegste_verhuisdatum || undefined,
+      availabilityFlexible: rawTenant.beschikbaarheid_flexibel || undefined,
+      reasonForMoving: rawTenant.reden_verhuizen || undefined,
+      guarantorAvailable: rawTenant.borgsteller_beschikbaar || undefined,
+      guarantorName: rawTenant.borgsteller_naam || undefined,
+      guarantorPhone: rawTenant.borgsteller_telefoon || undefined,
+      guarantorIncome: rawTenant.borgsteller_inkomen || undefined,
+      guarantorRelationship: rawTenant.borgsteller_relatie || undefined,
+      incomeProofAvailable: rawTenant.inkomensbewijs_beschikbaar || undefined,
+      hasPets: rawTenant.huisdieren || undefined,
+      smokes: rawTenant.roken || undefined,
+      documents: [],
+      personalInfo: {
+        fullName,
+        email: userRow.email,
+        phone: userRow.telefoon || '',
+        dateOfBirth: rawTenant.geboortedatum || '',
+        age: rawTenant.leeftijd || undefined,
+        sex: rawTenant.geslacht || undefined,
+        nationality: rawTenant.nationaliteit || undefined,
+        maritalStatus: rawTenant.burgerlijke_staat || undefined,
+      },
+      workAndIncome: {
+        profession: rawTenant.beroep || '',
+        employer: rawTenant.werkgever || undefined,
+        employmentStatus: rawTenant.werkstatus || undefined,
+        contractType: rawTenant.type_arbeidscontract || undefined,
+        monthlyIncome: rawTenant.inkomen || 0,
+        workFromHome: rawTenant.thuiswerken || undefined,
+        incomeProofAvailable: rawTenant.inkomensbewijs_beschikbaar || undefined,
+      },
+      housingPreferences: {
+        minBudget: rawTenant.min_huur || 0,
+        maxBudget: rawTenant.max_huur || 0,
+        city: Array.isArray(rawTenant.locatie_voorkeur)
+          ? rawTenant.locatie_voorkeur[0]
+          : rawTenant.locatie_voorkeur || '',
+        bedrooms: rawTenant.min_kamers || 1,
+        propertyType: housing.type || 'appartement',
+        furnishedPreference: housing.meubilering,
+        parkingRequired: housing.parkingRequired,
+        storageNeeds: housing.storageNeeds,
+        leaseDurationPreference: housing.leaseDurationPreference,
+        moveInDatePreferred: rawTenant.voorkeur_verhuisdatum || undefined,
+        moveInDateEarliest: rawTenant.vroegste_verhuisdatum || undefined,
+        reasonForMoving: rawTenant.reden_verhuizen || undefined,
+      },
+      lifestyleAndMotivation: {
+        bio: rawTenant.beschrijving || '',
+        motivation: rawTenant.motivatie || '',
+        hasPets: rawTenant.huisdieren || undefined,
+        petDetails: rawTenant.details_huisdieren || undefined,
+        smokes: rawTenant.roken || undefined,
+        smokingDetails: rawTenant.details_roken || undefined,
+      },
+      verificationStatus: rawTenant.verificatie_status || 'pending',
+    } as TenantProfile;
+  }
+
   /**
    * Fetch all dashboard data in a single optimized query
    */
@@ -28,6 +127,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
           statsResult,
           documentsResult,
           profileResult,
+          userResult,
           subscriptionResult,
           profilePictureResult
         ] = await Promise.allSettled([
@@ -51,6 +151,13 @@ export class ConsolidatedDashboardService extends DatabaseService {
             .select('*')
             .eq('id', userId)
             .maybeSingle(),
+
+          // Get basic user info
+          supabase
+            .from('gebruikers')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle(),
           
           // Get active subscription using optimized service
           optimizedSubscriptionService.checkSubscriptionStatus(userId),
@@ -68,8 +175,16 @@ export class ConsolidatedDashboardService extends DatabaseService {
           ? documentsResult.value.data
           : [];
 
-        const tenantProfile = profileResult.status === 'fulfilled' && profileResult.value.data
+        const rawTenant = profileResult.status === 'fulfilled' && profileResult.value.data
           ? profileResult.value.data
+          : null;
+
+        const userRow = userResult.status === 'fulfilled' && userResult.value.data
+          ? userResult.value.data
+          : null;
+
+        const tenantProfile = rawTenant && userRow
+          ? this.mapTenantProfile(rawTenant, userRow)
           : null;
 
         const subscription = subscriptionResult.status === 'fulfilled' && subscriptionResult.value.success && subscriptionResult.value.data?.hasActiveSubscription
@@ -80,7 +195,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
           ? profilePictureResult.value
           : null;
 
-        const hasProfile = !!tenantProfile;
+        const hasProfile = !!rawTenant;
 
         const consolidatedData: ConsolidatedDashboardData = {
           stats,
