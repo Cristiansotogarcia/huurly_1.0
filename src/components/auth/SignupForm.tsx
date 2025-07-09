@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Check } from 'lucide-react';
+import { validatePassword, type PasswordValidation } from '@/utils/password';
 
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,6 +19,13 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     password: '',
     firstName: '',
     lastName: ''
+  });
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidation>({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
@@ -39,6 +48,17 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
       setIsLoading(false);
     }
   };
+
+  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
+      {met ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
+      )}
+      <span>{children}</span>
+    </li>
+  );
 
   return (
     <div className="space-y-6">
@@ -91,18 +111,23 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
             id="password"
             type="password"
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData({ ...formData, password: value });
+              setPasswordValidation(validatePassword(value));
+            }}
             required
             placeholder="••••••••"
             minLength={8}
           />
-          <div className="mt-2 text-xs text-gray-600 space-y-1">
-            <p>Wachtwoord moet bevatten:</p>
-            <ul className="list-disc list-inside space-y-0.5 ml-2">
-              <li>Minimaal 8 karakters</li>
-              <li>Minimaal 1 hoofdletter (A-Z)</li>
-              <li>Minimaal 1 kleine letter (a-z)</li>
-              <li>Minimaal 1 cijfer (0-9)</li>
+          <div className="mt-2 text-xs space-y-1">
+            <p className="text-gray-700 font-medium">Wachtwoord moet bevatten:</p>
+            <ul className="space-y-1 ml-2">
+              <PasswordRequirement met={passwordValidation.minLength}>Minimaal 8 karakters</PasswordRequirement>
+              <PasswordRequirement met={passwordValidation.hasUppercase}>Minimaal 1 hoofdletter (A-Z)</PasswordRequirement>
+              <PasswordRequirement met={passwordValidation.hasLowercase}>Minimaal 1 kleine letter (a-z)</PasswordRequirement>
+              <PasswordRequirement met={passwordValidation.hasNumber}>Minimaal 1 cijfer (0-9)</PasswordRequirement>
+              <PasswordRequirement met={passwordValidation.hasSpecialChar}>Minimaal 1 speciale teken</PasswordRequirement>
             </ul>
           </div>
         </div>

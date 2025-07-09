@@ -7,18 +7,13 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Check } from 'lucide-react';
+import { validatePassword, type PasswordValidation } from '@/utils/password';
 
 interface MultiStepSignupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface PasswordValidation {
-  minLength: boolean;
-  hasUppercase: boolean;
-  hasLowercase: boolean;
-  hasNumber: boolean;
-}
 
 export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalProps) => {
   const [step, setStep] = useState(1);
@@ -40,18 +35,10 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     minLength: false,
     hasUppercase: false,
     hasLowercase: false,
-    hasNumber: false
+    hasNumber: false,
+    hasSpecialChar: false
   });
 
-  // Function to validate password requirements
-  const validatePassword = (password: string): PasswordValidation => {
-    return {
-      minLength: password.length >= 8,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasNumber: /[0-9]/.test(password)
-    };
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +215,9 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                     </PasswordRequirement>
                     <PasswordRequirement met={passwordValidation.hasNumber}>
                       Minimaal 1 cijfer (0-9)
+                    </PasswordRequirement>
+                    <PasswordRequirement met={passwordValidation.hasSpecialChar}>
+                      Minimaal 1 speciale teken
                     </PasswordRequirement>
                   </ul>
                 </div>
