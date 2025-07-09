@@ -49,7 +49,6 @@ serve(async (req) => {
       const { error: huurderError } = await supabase.from('huurders').upsert(
         {
           id,
-          abonnement_actief: false,
           aangemaakt_op: new Date().toISOString(),
           bijgewerkt_op: new Date().toISOString(),
         },

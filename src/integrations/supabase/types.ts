@@ -472,7 +472,6 @@ export type Database = {
       huurders: {
         Row: {
           aangemaakt_op: string
-          abonnement_actief: boolean | null
           abonnement_start: string | null
           abonnement_verloopt: string | null
           beroep: string | null
@@ -503,7 +502,6 @@ export type Database = {
         }
         Insert: {
           aangemaakt_op?: string
-          abonnement_actief?: boolean | null
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
           beroep?: string | null
@@ -534,7 +532,6 @@ export type Database = {
         }
         Update: {
           aangemaakt_op?: string
-          abonnement_actief?: boolean | null
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
           beroep?: string | null
@@ -880,7 +877,6 @@ export type Database = {
     Views: {
       actieve_huurders: {
         Row: {
-          abonnement_actief: boolean | null
           abonnement_start: string | null
           abonnement_verloopt: string | null
           beroep: string | null

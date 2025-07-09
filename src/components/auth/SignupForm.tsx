@@ -1,25 +1,23 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import { validatePassword, type PasswordValidation } from '@/utils/password';
-
 import { useAuth } from '@/hooks/useAuth';
 
 interface SignupFormProps {
   onClose: () => void;
 }
 
-export const SignupForm = ({ onClose }: SignupFormProps) => {
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: ''
   });
+
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidation>({
     minLength: false,
     hasUppercase: false,
@@ -27,7 +25,9 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     hasNumber: false,
     hasSpecialChar: false,
   });
+
   const [isLoading, setIsLoading] = useState(false);
+
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -43,9 +43,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
     try {
       const { success } = await signUp({ ...formData, role: 'huurder' });
       if (success) {
-        // Don't navigate immediately - user needs to confirm email first
-        // The useAuth hook will show the email confirmation modal
-        onClose();
+        onClose(); // Emailbevestiging volgt apart
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -53,6 +51,17 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
       setIsLoading(false);
     }
   };
+
+  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
+      {met ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
+      )}
+      <span>{children}</span>
+    </li>
+  );
 
   const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
     <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
@@ -112,6 +121,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
 
         <div>
           <Label htmlFor="password">Wachtwoord</Label>
+
           <Input
             id="password"
             type="password"
@@ -132,7 +142,7 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
               <PasswordRequirement met={passwordValidation.hasUppercase}>Minimaal 1 hoofdletter (A-Z)</PasswordRequirement>
               <PasswordRequirement met={passwordValidation.hasLowercase}>Minimaal 1 kleine letter (a-z)</PasswordRequirement>
               <PasswordRequirement met={passwordValidation.hasNumber}>Minimaal 1 cijfer (0-9)</PasswordRequirement>
-              <PasswordRequirement met={passwordValidation.hasSpecialChar}>Minimaal 1 speciale teken</PasswordRequirement>
+              <PasswordRequirement met={passwordValidation.hasSpecialChar}>Minimaal 1 speciaal teken</PasswordRequirement>
             </ul>
           </div>
         </div>

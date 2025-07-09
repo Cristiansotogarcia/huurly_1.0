@@ -45,6 +45,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
   }, [formData.password]);
 
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
