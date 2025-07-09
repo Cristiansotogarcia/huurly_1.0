@@ -8,7 +8,7 @@ export const config = {
 };
 
 // Helper function to map Stripe subscription status to Dutch enum values
-const mapStripeStatusToDutch = (stripeStatus: string): string => {
+const mapStripeStatusToDutch = (stripeStatus: string ): string => {
   const statusMap: { [key: string]: string } = {
     'active': 'actief',
     'canceled': 'geannuleerd',
@@ -110,9 +110,25 @@ serve(async (req) => {
         mappedStatus: mapStripeStatusToDutch(subscription.status)
       });
 
-      // Corrected: Safely access period.start and period.end
-      const startDate = subscription.items.data[0]?.period?.start;
-      const endDate = subscription.items.data[0]?.period?.end;
+      // For checkout.session.completed, use current_period_start and current_period_end
+      // from the retrieved subscription object.
+      const startDate = subscription.current_period_start;
+      let endDate = subscription.current_period_end;
+
+      // Fallback for endDate if not directly available (e.g., for trial subscriptions without explicit end_date yet)
+      if (endDate === undefined && subscription.items.data[0]?.plan) {
+        const plan = subscription.items.data[0].plan;
+        if (plan.interval && plan.interval_count) {
+          const start = new Date(startDate * 1000);
+          let end = new Date(start);
+          if (plan.interval === 'month') {
+            end.setMonth(start.getMonth() + plan.interval_count);
+          } else if (plan.interval === 'year') {
+            end.setFullYear(start.getFullYear() + plan.interval_count);
+          }
+          endDate = Math.floor(end.getTime() / 1000); // Convert back to Unix timestamp
+        }
+      }
 
       if (startDate === undefined || endDate === undefined) {
         console.error("❌ Missing subscription period data in Stripe subscription object");
@@ -192,8 +208,8 @@ serve(async (req) => {
     ) {
       const subscription = event.data.object as Stripe.Subscription;
 
-      // Corrected: Safely access period.start and period.end for subscription updates
-      const startDate = subscription.items.data[0]?.period?.start;
+      // For subscription updates, current_period_start and current_period_end are usually reliable.
+      const startDate = subscription.current_period_start;
       const endDate = subscription.current_period_end;
 
       if (startDate === undefined || endDate === undefined) {
