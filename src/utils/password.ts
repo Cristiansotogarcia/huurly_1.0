@@ -4,6 +4,7 @@ export interface PasswordValidation {
   hasLowercase: boolean;
   hasNumber: boolean;
   hasSpecialChar: boolean;
+
 }
 
 export const validatePassword = (password: string): PasswordValidation => ({
@@ -11,5 +12,4 @@ export const validatePassword = (password: string): PasswordValidation => ({
   hasUppercase: /[A-Z]/.test(password),
   hasLowercase: /[a-z]/.test(password),
   hasNumber: /[0-9]/.test(password),
-  hasSpecialChar: /[^A-Za-z0-9]/.test(password),
 });

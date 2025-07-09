@@ -344,6 +344,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
       title="Documenten Uploaden"
       icon={Upload}
       size="4xl"
+      maxHeight="max-h-screen"
     >
       <div className="space-y-6">
           {/* Document Types with Individual Upload */}

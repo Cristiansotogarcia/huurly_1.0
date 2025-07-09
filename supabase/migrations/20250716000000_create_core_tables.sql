@@ -53,7 +53,6 @@ CREATE TABLE IF NOT EXISTS public.huurders (
     partner boolean,
     profielfoto_url text,
     roken boolean,
-    abonnement_actief boolean,
     abonnement_start text,
     abonnement_verloopt text,
     voorkeur_verhuisdatum text,

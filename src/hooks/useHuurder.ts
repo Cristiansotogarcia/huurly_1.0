@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { consolidatedDashboardService } from '@/services/ConsolidatedDashboardService';
+import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 import { userService } from '@/services/UserService';
 import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
 import { Document } from '@/services/DocumentService';
@@ -43,6 +44,14 @@ export const useHuurder = () => {
         setSubscription(subscription);
         setProfilePictureUrl(profilePictureUrl);
         setHasProfile(hasProfile);
+
+        // Fetch latest expiration date if subscription is active
+        if (subscription && subscription.status === 'active') {
+          const expiration = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
+          if (expiration.success && expiration.data?.expiresAt) {
+            setSubscription(prev => prev ? { ...prev, end_date: expiration.data.expiresAt, expiresAt: expiration.data.expiresAt } as Subscription : { status: 'active', end_date: expiration.data.expiresAt, expiresAt: expiration.data.expiresAt } as Subscription);
+          }
+        }
       } else {
         // Set default values on error
         setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
@@ -88,8 +97,9 @@ export const useHuurder = () => {
   }, [loadDashboardData, refreshAuth]);
 
   const getSubscriptionEndDate = useCallback(() => {
-    if (subscription?.end_date) {
-      return new Date(subscription.end_date).toLocaleDateString('nl-NL');
+    const end = subscription?.end_date || (subscription as any)?.expiresAt;
+    if (end) {
+      return new Date(end).toLocaleDateString('nl-NL');
     }
     return 'N/A';
   }, [subscription]);
