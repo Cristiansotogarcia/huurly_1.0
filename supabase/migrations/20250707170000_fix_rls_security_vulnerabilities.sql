@@ -151,11 +151,14 @@ AS SELECT
   h.locatie_voorkeur,
   h.profielfoto_url,
   h.beschrijving,
-  h.abonnement_actief,
   h.aangemaakt_op
 FROM public.huurders h
 JOIN public.gebruikers g ON h.id = g.id
-WHERE h.abonnement_actief = true
+WHERE EXISTS (
+    SELECT 1 FROM public.abonnementen a
+    WHERE a.huurder_id = h.id
+      AND a.status = 'actief'
+  )
   AND g.profiel_compleet = true;
 
 -- Revoke all access from anon and authenticated, only allow specific roles
