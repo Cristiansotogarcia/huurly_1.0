@@ -35,7 +35,8 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
     minLength: false,
     hasUppercase: false,
     hasLowercase: false,
-    hasNumber: false
+    hasNumber: false,
+    hasSpecialChar: false
   });
 
 
@@ -214,6 +215,9 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                     </PasswordRequirement>
                     <PasswordRequirement met={passwordValidation.hasNumber}>
                       Minimaal 1 cijfer (0-9)
+                    </PasswordRequirement>
+                    <PasswordRequirement met={passwordValidation.hasSpecialChar}>
+                      Minimaal 1 speciale teken
                     </PasswordRequirement>
                   </ul>
                 </div>
