@@ -74,8 +74,8 @@ export const Step3_Housing = () => {
             <Input
               id="preferred_bedrooms"
               type="number"
-              {...register('preferred_bedrooms', { 
-                setValueAs: (value) => value ? Number(value) : 1 
+              {...register('preferred_bedrooms', {
+                setValueAs: (value) => value ? Number(value) : 1
               })}
               placeholder="1"
               className={`pl-10 ${errors.preferred_bedrooms ? 'border-red-500' : ''}`}
@@ -86,13 +86,6 @@ export const Step3_Housing = () => {
           {errors.preferred_bedrooms && (
             <p className="text-sm text-red-600">{errors.preferred_bedrooms.message}</p>
           )}
-        </div>
-
-        <div className="space-y-2">
-          <Label>Budget range</Label>
-          <div className="text-sm text-gray-600 mb-2">
-            €{minBudget} - €{maxBudget} per maand
-          </div>
         </div>
       </div>
 
@@ -140,6 +133,13 @@ export const Step3_Housing = () => {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label>Budget range</Label>
+        <div className="text-sm text-gray-600 mb-2">
+          €{minBudget} - €{maxBudget} per maand
+        </div>
+      </div>
+
       <div className="bg-green-50 p-4 rounded-lg">
         <h3 className="font-medium text-green-900 mb-2">💡 Tip</h3>
         <p className="text-sm text-green-800">
@@ -148,5 +148,4 @@ export const Step3_Housing = () => {
         </p>
       </div>
     </div>
-  );
-};
+  );};
