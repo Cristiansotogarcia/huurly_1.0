@@ -9,7 +9,7 @@ interface ConsolidatedDashboardData {
   stats: TenantDashboardData;
   documents: Document[];
   tenantProfile: TenantProfile | null;
-  subscription: Subscription | null;
+  subscription: any;
   profilePictureUrl: string | null;
   hasProfile: boolean;
 }
@@ -124,20 +124,12 @@ export class ConsolidatedDashboardService extends DatabaseService {
       try {
         // Execute all queries in parallel for maximum performance
         const [
-          statsResult,
           documentsResult,
           profileResult,
           userResult,
           subscriptionResult,
           profilePictureResult
         ] = await Promise.allSettled([
-          // Get dashboard stats
-          supabase
-            .from('dashboard_stats')
-            .select('*')
-            .eq('user_id', userId)
-            .maybeSingle(),
-          
           // Get user documents
           supabase
             .from('documenten')
@@ -167,9 +159,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
         ]);
 
         // Process results
-        const stats = statsResult.status === 'fulfilled' && statsResult.value.data
-          ? statsResult.value.data
-          : { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 };
+        const stats = { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 };
 
         const documents = documentsResult.status === 'fulfilled' && documentsResult.value.data
           ? documentsResult.value.data
@@ -211,7 +201,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
 
       } catch (error) {
         logger.error('Error fetching consolidated dashboard data:', error);
-        throw error;
+        return { data: null, error: error as Error };
       }
     });
   }
@@ -246,13 +236,13 @@ export class ConsolidatedDashboardService extends DatabaseService {
   /**
    * Update subscription cache when payment is successful
    */
-  async refreshSubscriptionStatus(userId: string): Promise<DatabaseResponse<Subscription | null>> {
+  async refreshSubscriptionStatus(userId: string): Promise<DatabaseResponse<any>> {
     return this.executeQuery(async () => {
       // Use optimized subscription service with cache refresh
       const result = await optimizedSubscriptionService.refreshSubscriptionStatus(userId);
       
       if (result.success && result.data?.hasActiveSubscription) {
-        return { data: { status: 'active', ...result.data } as Subscription, error: null };
+        return { data: result.data, error: null };
       }
 
       return { data: null, error: null };

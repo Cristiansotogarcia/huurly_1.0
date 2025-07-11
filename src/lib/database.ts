@@ -24,7 +24,7 @@ export class DatabaseService {
    * Generic method to handle database operations with consistent error handling
    */
   protected async executeQuery<T>(
-    queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>
+    queryFn: () => Promise<{ data: T | null; error: PostgrestError | Error | null }>
   ): Promise<DatabaseResponse<T>> {
     try {
       const { data, error } = await queryFn();

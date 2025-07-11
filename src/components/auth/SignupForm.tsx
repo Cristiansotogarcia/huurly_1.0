@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ interface SignupFormProps {
   onClose: () => void;
 }
 
- const [formData, setFormData] = useState({
+export const SignupForm = ({ onClose }: SignupFormProps) => {
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
@@ -51,17 +52,6 @@ interface SignupFormProps {
       setIsLoading(false);
     }
   };
-
-  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
-    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
-      {met ? (
-        <Check className="w-3 h-3 text-green-600" />
-      ) : (
-        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
-      )}
-      <span>{children}</span>
-    </li>
-  );
 
   const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
     <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
@@ -146,7 +136,6 @@ interface SignupFormProps {
             </ul>
           </div>
         </div>
-
 
         <Button 
           type="submit" 

@@ -120,12 +120,47 @@ export default function Step3Household({ formData, handleInputChange, calculateH
                   min="0"
                   max="10"
                   value={formData.number_of_children}
-                  onChange={(e) => handleInputChange('number_of_children', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const num = parseInt(e.target.value) || 0;
+                    const newAges = Array(num).fill(0).map((_, index) => formData.children_ages?.[index] || 0);
+                    handleInputChange('number_of_children', num);
+                    handleInputChange('children_ages', newAges);
+                  }}
                   placeholder="2"
                   className="pl-10"
                 />
               </div>
             </div>
+            
+            {formData.number_of_children > 0 && (
+              <div className="space-y-3">
+                <Label>Leeftijden van kinderen</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: formData.number_of_children }, (_, index) => (
+                    <div key={index}>
+                      <Label htmlFor={`child_age_${index}`} className="text-sm">
+                        Kind {index + 1} leeftijd
+                      </Label>
+                      <Input
+                        id={`child_age_${index}`}
+                        type="number"
+                        min="0"
+                        max="25"
+                        value={formData.children_ages?.[index] || ''}
+                        onChange={(e) => {
+                          const ageNum = parseInt(e.target.value) || 0;
+                          const newAges = [...(formData.children_ages || [])];
+                          newAges[index] = ageNum;
+                          handleInputChange('children_ages', newAges);
+                        }}
+                        className="mt-1"
+                        placeholder="Leeftijd"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

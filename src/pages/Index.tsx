@@ -41,7 +41,13 @@ const Index = () => {
     const searchParams = new URLSearchParams(window.location.search);
     
     // If we have a recovery token, redirect to password reset page and don't do any other redirects
-    if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
+    // Use comprehensive recovery token detection
+    const hasRecoveryToken = 
+      hash.includes('type=recovery') || 
+      (hash.includes('access_token') && hash.includes('refresh_token')) ||
+      searchParams.get('type') === 'recovery';
+    
+    if (hasRecoveryToken) {
       console.log('Recovery token detected, redirecting to /wachtwoord-herstellen');
       navigate('/wachtwoord-herstellen');
       return;

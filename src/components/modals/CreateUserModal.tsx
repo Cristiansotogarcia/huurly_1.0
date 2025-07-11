@@ -44,10 +44,10 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     telefoon: '',
   });
 
-  const [errors, setErrors] = useState<Partial<CreateUserFormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserFormData, string>>>({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<CreateUserFormData> = {};
+    const newErrors: Partial<Record<keyof CreateUserFormData, string>> = {};
 
     if (!formData.email) {
       newErrors.email = 'E-mailadres is verplicht';

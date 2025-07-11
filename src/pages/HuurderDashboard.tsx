@@ -42,8 +42,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   } = useHuurder();
   const navigate = useNavigate();
 
-  const { handleSettings, handleLogout, onStartSearch, handleReportIssue, handleHelpSupport } = useHuurderActions(user);
-  const { setPaymentFlow } = useAuthStore();
+  const { handleSettings, handleLogout, onStartSearch, handleReportIssue, handleHelpSupport } = useHuurderActions();
+  const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -136,13 +136,14 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   const isSubscribed = subscription && subscription.status === 'active';
 
   useEffect(() => {
-    if (user && !isSubscribed) {
+    // Only show payment modal if user is loaded, subscription is not loading, and user is not subscribed
+    if (user && !isLoadingSubscription && !isSubscribed) {
       setShowPaymentModal(true);
-    } else if (user && isSubscribed) {
-      // Close payment modal when user becomes subscribed
+    } else if (user && (isSubscribed || isLoadingSubscription)) {
+      // Close payment modal when user becomes subscribed or while loading
       setShowPaymentModal(false);
     }
-  }, [user, isSubscribed]);
+  }, [user, isSubscribed, isLoadingSubscription]);
 
   // Handle payment cancellation redirect
   useEffect(() => {
@@ -259,7 +260,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
               <Button onClick={handleHelpSupport} className="w-full bg-gray-500 hover:bg-gray-600 text-white">
                 Help & Support
               </Button>
-              <Button onClick={() => navigate('/subscription')} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white">
+              <Button onClick={() => navigate('/abonnement')} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white">
                 Abonnement
               </Button>
             </div>

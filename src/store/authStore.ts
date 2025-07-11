@@ -17,6 +17,7 @@ export const useAuthStore = create<AuthState>()(
       lastSessionCheck: 0,
       isInPaymentFlow: false,
       paymentFlowStartTime: null,
+      isLoadingSubscription: false,
       
       // Spread all the action methods from the separate modules
       ...createAuthActions(set, get),
@@ -31,7 +32,8 @@ export const useAuthStore = create<AuthState>()(
         sessionValid: state.sessionValid,
         lastSessionCheck: state.lastSessionCheck,
         isInPaymentFlow: state.isInPaymentFlow,
-        paymentFlowStartTime: state.paymentFlowStartTime
+        paymentFlowStartTime: state.paymentFlowStartTime,
+        isLoadingSubscription: state.isLoadingSubscription
       }),
     }
   )

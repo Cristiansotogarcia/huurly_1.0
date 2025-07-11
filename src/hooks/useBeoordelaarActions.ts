@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { documentService } from '@/services/DocumentService';
 import { useAuthStore } from '@/store/authStore';
+import { enhancedLogger as logger } from '@/lib/logger';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useBeoordelaarActions = () => {
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
-  const { logout } = useAuthStore();
+  const { signOut } = useAuth();
 
   const approveDocument = async (documentId: string) => {
     setIsReviewing(true);
@@ -68,8 +70,12 @@ export const useBeoordelaarActions = () => {
     return false;
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      logger.error('Logout failed:', error);
+    }
   };
 
   return {

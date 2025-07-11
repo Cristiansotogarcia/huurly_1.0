@@ -3,15 +3,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { authService } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { User } from '@/types';
+import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 
 export const createAuthActions = (set: any, get: any) => ({
   login: (user: User) => {
     logger.info('AuthStore: User logged in', { userId: user.id, hasPayment: user.hasPayment });
+    
+    // Clear all subscription cache to ensure fresh data for all users
+    optimizedSubscriptionService.clearAllCache();
+    
     set({ 
       user, 
       isAuthenticated: true, 
       sessionValid: true,
-      lastSessionCheck: Date.now()
+      lastSessionCheck: Date.now(),
+      isLoadingSubscription: false
     });
   },
   
@@ -48,5 +54,9 @@ export const createAuthActions = (set: any, get: any) => ({
       isInPaymentFlow: inFlow,
       paymentFlowStartTime: inFlow ? Date.now() : null
     });
+  },
+
+  setLoadingSubscription: (loading: boolean) => {
+    set({ isLoadingSubscription: loading });
   },
 });

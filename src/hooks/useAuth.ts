@@ -15,6 +15,7 @@ export interface UseAuthReturn {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;
+  updatePasswordWithRecoveryToken: (accessToken: string, refreshToken: string, newPassword: string) => Promise<boolean>;
   updateProfile: (updates: Partial<User>) => Promise<boolean>;
   // Modal states
   showEmailConfirmationModal: boolean;
@@ -72,11 +73,14 @@ export const useAuth = (): UseAuthReturn => {
         const searchParams = new URLSearchParams(window.location.search);
         
         // More comprehensive recovery token detection
+        // Check URL for recovery tokens first, regardless of current path
         const hasRecoveryToken = 
           urlHash.includes('type=recovery') || 
-          urlHash.includes('access_token') && urlHash.includes('refresh_token') ||
-          searchParams.get('type') === 'recovery' ||
-          currentPath === '/wachtwoord-herstellen';
+          (urlHash.includes('access_token') && urlHash.includes('refresh_token')) ||
+          searchParams.get('type') === 'recovery';
+        
+        // Also check if we're currently on the password reset page
+        const isOnPasswordResetPage = currentPath === '/wachtwoord-herstellen';
         
         // Check if this is an email verification
         const isEmailVerification = urlHash.includes('type=signup') || searchParams.get('type') === 'signup';
@@ -97,6 +101,7 @@ export const useAuth = (): UseAuthReturn => {
         const isOnCorrectDashboard = currentPath === expectedDashboard;
         
         const shouldRedirect = !hasRecoveryToken && 
+                              !isOnPasswordResetPage && 
                               !isOnAuthPage && 
                               !isOnPaymentPage && 
                               !isEmailVerification && 
@@ -325,6 +330,45 @@ export const useAuth = (): UseAuthReturn => {
     }
   };
 
+  const updatePasswordWithRecoveryToken = async (newPassword: string, accessToken: string, refreshToken: string): Promise<boolean> => {
+    console.log('useAuth.updatePasswordWithRecoveryToken called');
+    setIsLoading(true);
+    try {
+      const { error } = await authService.updatePasswordWithRecoveryToken(newPassword, accessToken, refreshToken);
+      
+      if (error) {
+        console.error('useAuth.updatePasswordWithRecoveryToken - Error:', error);
+        let errorMessage = error.message;
+        
+        // Handle specific Supabase error messages
+        if (error.message.includes('New password should be different from the old password')) {
+          errorMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
+        }
+        
+        toast({
+          title: "Wachtwoord herstellen mislukt",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      console.log('useAuth.updatePasswordWithRecoveryToken - Success');
+      return true;
+    } catch (error) {
+      console.error('useAuth.updatePasswordWithRecoveryToken - Catch error:', error);
+      logger.error('Update password with recovery token error:', error);
+      toast({
+        title: "Wachtwoord herstellen mislukt",
+        description: "Er is een onverwachte fout opgetreden.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -380,6 +424,7 @@ export const useAuth = (): UseAuthReturn => {
     signOut,
     resetPassword,
     updatePassword,
+    updatePasswordWithRecoveryToken,
     updateProfile,
     showEmailConfirmationModal,
     showEmailVerificationSuccessModal,

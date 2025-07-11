@@ -19,7 +19,7 @@ export class SubscriptionService extends DatabaseService {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         return { 
-          data: { hasActiveSubscription: false, isActive: false }, 
+          data: { hasActiveSubscription: false, isActive: false } as SubscriptionStatus, 
           error: null 
         };
       }
@@ -27,7 +27,7 @@ export class SubscriptionService extends DatabaseService {
       // Security check - ensure user can only check their own subscription
       if (session.user.id !== userId) {
         return { 
-          data: { hasActiveSubscription: false, isActive: false }, 
+          data: null, 
           error: new Error('Unauthorized') 
         };
       }
@@ -62,8 +62,8 @@ export class SubscriptionService extends DatabaseService {
         };
       } catch (error) {
         return { 
-          data: { hasActiveSubscription: false, isActive: false }, 
-          error: null 
+          data: null, 
+          error: error as Error 
         };
       }
     });

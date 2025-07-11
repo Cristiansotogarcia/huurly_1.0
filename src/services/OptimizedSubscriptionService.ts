@@ -18,7 +18,7 @@ interface SubscriptionStatus {
 
 class OptimizedSubscriptionService extends DatabaseService {
   private cache = new Map<string, CachedSubscription>();
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+  private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache (reduced for better responsiveness)
 
   /**
    * Check subscription status with intelligent caching
@@ -29,7 +29,8 @@ class OptimizedSubscriptionService extends DatabaseService {
       const cached = this.getCachedSubscription(userId);
       if (cached) {
         logger.debug('Returning cached subscription status for user:', userId);
-        return this.formatSubscriptionResponse(cached);
+        const formatted = this.formatSubscriptionResponse(cached);
+        return { data: formatted.data, error: null };
       }
 
       // Validate session
@@ -37,7 +38,7 @@ class OptimizedSubscriptionService extends DatabaseService {
       if (!session) {
         return { 
           data: { hasActiveSubscription: false, isActive: false }, 
-          error: null 
+          error: null
         };
       }
 
@@ -45,7 +46,7 @@ class OptimizedSubscriptionService extends DatabaseService {
       if (session.user.id !== userId) {
         return { 
           data: { hasActiveSubscription: false, isActive: false }, 
-          error: new Error('Unauthorized') 
+          error: null
         };
       }
 
@@ -63,19 +64,20 @@ class OptimizedSubscriptionService extends DatabaseService {
           logger.error('Error checking subscription status:', error);
           return { 
             data: { hasActiveSubscription: false, isActive: false }, 
-            error: null 
+            error: error
           };
         }
 
         // Cache the result
         this.setCachedSubscription(userId, data);
 
-        return this.formatSubscriptionResponse(data);
+        const formatted = this.formatSubscriptionResponse(data);
+        return { data: formatted.data, error: null };
       } catch (error) {
         logger.error('Unexpected error in checkSubscriptionStatus:', error);
         return { 
           data: { hasActiveSubscription: false, isActive: false }, 
-          error: null 
+          error: null
         };
       }
     });
@@ -87,6 +89,14 @@ class OptimizedSubscriptionService extends DatabaseService {
   clearSubscriptionCache(userId: string): void {
     this.cache.delete(userId);
     logger.debug('Cleared subscription cache for user:', userId);
+  }
+
+  /**
+   * Clear all subscription cache (call on login to ensure fresh data)
+   */
+  clearAllCache(): void {
+    this.cache.clear();
+    logger.debug('Cleared all subscription cache');
   }
 
   /**
@@ -224,7 +234,8 @@ class OptimizedSubscriptionService extends DatabaseService {
         expiresAt: hasActiveSubscription ? subscription.eind_datum : undefined,
         stripeSubscriptionId: hasActiveSubscription ? subscription.stripe_subscription_id : undefined,
       },
-      error: null
+      error: null,
+      success: true
     };
   }
 

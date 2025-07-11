@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { propertyService, Property } from '@/services/PropertyService';
+import { propertyService } from '@/services/PropertyService';
+import { Property } from '@/types';
 import { applicationService } from '@/services/ApplicationService';
 import { messageService } from '@/services/MessageService';
 import { 
@@ -18,6 +19,7 @@ import {
   MapPin,
   Home,
   Euro,
+  Plus,
   Bed,
   Bath,
   Wifi,
@@ -141,16 +143,13 @@ const PropertyDetailPage: React.FC = () => {
     }).format(price);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      actief: { variant: 'default' as const, label: 'Actief' },
-      inactief: { variant: 'secondary' as const, label: 'Inactief' },
-      verhuurd: { variant: 'destructive' as const, label: 'Verhuurd' }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.actief;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+const getStatusBadge = (isActive: boolean) => {
+  return (
+    <Badge variant={isActive ? 'default' : 'secondary'}>
+      {isActive ? 'Actief' : 'Inactief'}
+    </Badge>
+  );
+};
 
   const getApplicationStatusIcon = (status: string) => {
     switch (status) {
@@ -202,11 +201,11 @@ const PropertyDetailPage: React.FC = () => {
               Terug
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{property.titel}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
               <div className="flex items-center space-x-2 mt-1">
                 <MapPin className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-600">{property.adres}, {property.stad}</span>
-                {getStatusBadge(property.status)}
+                <span className="text-gray-600">{property.address}, {property.city}</span>
+{getStatusBadge(property.isActive)}
               </div>
             </div>
           </div>
@@ -229,29 +228,19 @@ const PropertyDetailPage: React.FC = () => {
             <CardContent className="flex items-center justify-between p-6">
               <div>
                 <p className="text-sm font-medium text-gray-600">Huurprijs</p>
-                <p className="text-2xl font-bold">{formatPrice(property.huurprijs)}</p>
+                <p className="text-2xl font-bold">{formatPrice(property.rent)}</p>
                 <p className="text-xs text-gray-500">per maand</p>
               </div>
               <Euro className="h-8 w-8 text-green-500" />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Oppervlakte</p>
-                <p className="text-2xl font-bold">{property.oppervlakte || 'N/A'}</p>
-                <p className="text-xs text-gray-500">vierkante meters</p>
-              </div>
-              <Home className="h-8 w-8 text-blue-500" />
-            </CardContent>
-          </Card>
 
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
                 <p className="text-sm font-medium text-gray-600">Kamers</p>
-                <p className="text-2xl font-bold">{property.aantal_kamers || 'N/A'}</p>
+                <p className="text-2xl font-bold">{property.bedrooms || 'N/A'}</p>
                 <p className="text-xs text-gray-500">totaal kamers</p>
               </div>
               <Bed className="h-8 w-8 text-purple-500" />
@@ -300,57 +289,18 @@ const PropertyDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Type</p>
-                      <p className="text-sm">{property.woning_type}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Meubilering</p>
-                      <p className="text-sm">{property.meubilering}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Slaapkamers</p>
-                      <p className="text-sm">{property.aantal_slaapkamers || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Beschikbaar vanaf</p>
-                      <p className="text-sm">
-                        {property.beschikbaar_vanaf ? 
-                          new Date(property.beschikbaar_vanaf).toLocaleDateString('nl-NL') : 
-                          'Direct'
-                        }
-                      </p>
-                    </div>
                   </div>
                   
-                  {property.beschrijving && (
+{property.description && (
                     <div>
                       <p className="text-sm font-medium text-gray-600 mb-2">Beschrijving</p>
-                      <p className="text-sm text-gray-700">{property.beschrijving}</p>
+                      <p className="text-sm text-gray-700">{property.description}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Amenities */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Voorzieningen</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {property.voorzieningen && property.voorzieningen.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {property.voorzieningen.map((voorziening, index) => (
-                        <Badge key={index} variant="outline">
-                          {voorziening}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">Geen voorzieningen opgegeven</p>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 

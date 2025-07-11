@@ -22,10 +22,9 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
   const [searchFilters, setSearchFilters] = useState<PropertySearchFilters>({
     stad: '',
     maxHuurprijs: undefined,
-    minKamers: undefined,
     woningType: '',
-    meubilering: '',
-    beschikbaarVanaf: ''
+    minOppervlakte: undefined,
+    maxOppervlakte: undefined
   });
 
   const handleSearch = async () => {
@@ -54,14 +53,7 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
   };
 
   const clearFilters = () => {
-    setSearchFilters({
-      stad: '',
-      maxHuurprijs: undefined,
-      minKamers: undefined,
-      woningType: '',
-      meubilering: '',
-      beschikbaarVanaf: ''
-    });
+    setSearchFilters({ stad: '', maxHuurprijs: undefined, woningType: '', minOppervlakte: undefined, maxOppervlakte: undefined });
     setProperties([]);
   };
 
@@ -118,25 +110,6 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="minKamers">Min. kamers</Label>
-              <div className="relative">
-                <Bed className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="minKamers"
-                  type="number"
-                  value={searchFilters.minKamers || ''}
-                  onChange={(e) => setSearchFilters({ 
-                    ...searchFilters, 
-                    minKamers: e.target.value ? Number(e.target.value) : undefined 
-                  })}
-                  placeholder="2"
-                  className="pl-10"
-                  min="1"
-                  max="10"
-                />
-              </div>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="woningType">Woningtype</Label>
@@ -156,36 +129,7 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="meubilering">Meubilering</Label>
-              <Select 
-                value={searchFilters.meubilering} 
-                onValueChange={(value) => setSearchFilters({ ...searchFilters, meubilering: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer meubilering" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Beide</SelectItem>
-                  <SelectItem value="gemeubileerd">Gemeubileerd</SelectItem>
-                  <SelectItem value="ongemeubileerd">Ongemeubileerd</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="beschikbaarVanaf">Beschikbaar vanaf</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="beschikbaarVanaf"
-                  type="date"
-                  value={searchFilters.beschikbaarVanaf}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, beschikbaarVanaf: e.target.value })}
-                  className="pl-10"
-                />
-              </div>
-            </div>
           </div>
 
           {/* Search Actions */}
@@ -210,32 +154,25 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
                 {properties.map((property) => (
                   <div key={property.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-lg">{property.titel}</h4>
+                      <h4 className="font-medium text-lg">{property.title}</h4>
                       <span className="text-lg font-bold text-green-600">
-                        {formatPrice(property.huurprijs)}/maand
+                        {formatPrice(property.rent)}/maand
                       </span>
                     </div>
                     
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{property.adres}, {property.stad}</span>
+                      <span className="text-sm">{property.address}, {property.city}</span>
                     </div>
                     
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {property.aantal_kamers && (
+                      {property.bedrooms && (
                         <Badge variant="outline">
                           <Bed className="w-3 h-3 mr-1" />
-                          {property.aantal_kamers} kamers
+                          {property.bedrooms} kamers
                         </Badge>
                       )}
-                      {property.oppervlakte && (
-                        <Badge variant="outline">
-                          <Home className="w-3 h-3 mr-1" />
-                          {property.oppervlakte}m²
-                        </Badge>
-                      )}
-                      <Badge variant="outline">{property.woning_type}</Badge>
-                      <Badge variant="outline">{property.meubilering}</Badge>
+                      <Badge variant="outline">{property.propertyType}</Badge>
                     </div>
                     
                     {property.beschrijving && (
@@ -246,7 +183,7 @@ export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProp
                     
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">
-                        Beschikbaar: {property.beschikbaar_vanaf || 'Direct'}
+                        Beschikbaar: {property.availableFrom || 'Direct'}
                       </span>
                       <Button size="sm" variant="outline">
                         Bekijk details

@@ -18,6 +18,7 @@ const ResetPassword = () => {
   const [isCheckingToken, setIsCheckingToken] = useState(true);
   const [passwordError, setPasswordError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [recoveryTokens, setRecoveryTokens] = useState<{accessToken: string, refreshToken: string} | null>(null);
   
   // Debug state changes
   console.log('ResetPassword - Current state:', {
@@ -35,13 +36,13 @@ const ResetPassword = () => {
     special: false,
     match: false
   });
-  const { updatePassword } = useAuth();
+  const { updatePassword, updatePasswordWithRecoveryToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
 
-  // Check if we have a valid recovery token in the URL or an active session
+  // Check if we have a valid recovery token in the URL and handle security properly
   useEffect(() => {
     const checkAccess = async () => {
       console.log('ResetPassword - Checking access...');
@@ -49,61 +50,64 @@ const ResetPassword = () => {
       console.log('ResetPassword - Hash:', location.hash);
       console.log('ResetPassword - Search:', location.search);
       
-      // Check if we have recovery parameters in the URL
+      // Check if we have recovery parameters in the URL and extract tokens
       const hash = window.location.hash;
       const searchParams = new URLSearchParams(window.location.search);
       
-      // More comprehensive recovery token detection
+      // Extract tokens from URL hash
+      let accessToken = '';
+      let refreshToken = '';
+      
+      if (hash) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        accessToken = hashParams.get('access_token') || '';
+        refreshToken = hashParams.get('refresh_token') || '';
+      }
+      
+      // Also check search params as fallback
+      if (!accessToken) {
+        accessToken = searchParams.get('access_token') || '';
+        refreshToken = searchParams.get('refresh_token') || '';
+      }
+      
+      // Check if we have valid recovery tokens
       const hasRecoveryToken = 
         (hash && hash.includes('type=recovery')) ||
-        (hash && hash.includes('access_token') && hash.includes('refresh_token')) ||
+        (accessToken && refreshToken) ||
         searchParams.get('type') === 'recovery';
       
-      if (hasRecoveryToken) {
-        console.log('ResetPassword - Recovery token found in URL, allowing access');
+      if (hasRecoveryToken && accessToken && refreshToken) {
+        console.log('ResetPassword - Recovery tokens found in URL');
+        
+        // Store the tokens for later use
+        setRecoveryTokens({ accessToken, refreshToken });
+        
+        // SECURITY FIX: Immediately sign out any authenticated user
+        // This prevents the security vulnerability where users are auto-logged in
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            console.log('ResetPassword - Found active session, signing out for security');
+            await supabase.auth.signOut();
+            console.log('ResetPassword - User signed out successfully');
+          }
+        } catch (error) {
+          console.error('ResetPassword - Error checking/clearing session:', error);
+        }
+        
+        console.log('ResetPassword - Access granted for password reset');
         setIsCheckingToken(false);
         return;
       }
       
-      // If no URL token, check if we have an active recovery session
-      try {
-        console.log('ResetPassword - No URL token, checking for active session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('ResetPassword - Session check result:', { session: !!session, error });
-        
-        if (session && session.user) {
-          // Check if this is a recovery session by looking at the user metadata
-          const isRecoverySession = session.user.recovery_sent_at || 
-                                   session.user.email_confirmed_at === null ||
-                                   session.access_token !== session.refresh_token;
-          
-          console.log('ResetPassword - Recovery session check:', isRecoverySession);
-          
-          if (isRecoverySession) {
-            console.log('ResetPassword - Recovery session found, allowing access');
-            setIsCheckingToken(false);
-          } else {
-            console.log('ResetPassword - Normal session found, but allowing access for password change');
-            setIsCheckingToken(false);
-          }
-        } else {
-          console.log('ResetPassword - No active session, denying access');
-          toast({
-            title: "Ongeldige toegang",
-            description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link.",
-            variant: "destructive"
-          });
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('ResetPassword - Error checking session:', error);
-        toast({
-          title: "Ongeldige toegang",
-          description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link.",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
+      // If no URL token, deny access for security
+      console.log('ResetPassword - No recovery token found, denying access');
+      toast({
+        title: "Ongeldige toegang",
+        description: "Deze pagina kan alleen worden geopend via een wachtwoord reset link uit uw e-mail.",
+        variant: "destructive"
+      });
+      navigate('/');
     };
 
     checkAccess();
@@ -165,36 +169,39 @@ const ResetPassword = () => {
 
     try {
       console.log('ResetPassword - Starting password update...');
-      console.log('ResetPassword - Calling updatePassword with password length:', newPassword.length);
+      console.log('ResetPassword - Recovery tokens available:', !!recoveryTokens);
       
-      const success = await updatePassword(newPassword);
+      let success;
       
-      console.log('ResetPassword - updatePassword completed');
+      if (recoveryTokens) {
+        console.log('ResetPassword - Using recovery token method');
+        success = await updatePasswordWithRecoveryToken(
+          newPassword,
+          recoveryTokens.accessToken,
+          recoveryTokens.refreshToken
+        );
+      } else {
+        console.log('ResetPassword - Using regular update method');
+        success = await updatePassword(newPassword);
+      }
+      
+      console.log('ResetPassword - Password update completed');
       console.log('ResetPassword - Password update result:', success);
       console.log('ResetPassword - Type of success:', typeof success);
       
       if (success === true) {
-        console.log('ResetPassword - SUCCESS = TRUE, attempting to show modal...');
-        console.log('ResetPassword - Current showSuccessModal state before update:', showSuccessModal);
+        console.log('ResetPassword - SUCCESS = TRUE, password updated successfully');
         
-        // Try different approaches to trigger the modal
-        console.log('ResetPassword - Setting showSuccessModal to true...');
+        // Clear recovery tokens from URL
+        if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Clear stored recovery tokens
+        setRecoveryTokens(null);
+        
+        console.log('ResetPassword - Showing success modal');
         setShowSuccessModal(true);
-        
-        console.log('ResetPassword - Immediately after setShowSuccessModal(true)');
-        
-        // Force a re-render check
-        setTimeout(() => {
-          console.log('ResetPassword - Timeout check - showSuccessModal should be true now');
-        }, 100);
-        
-        // Also try triggering a success toast
-        console.log('ResetPassword - Also triggering success toast...');
-        toast({
-          title: "Password Update Success",
-          description: "This toast should appear if the update was successful",
-          variant: "default"
-        });
         
       } else {
         console.log('ResetPassword - SUCCESS WAS NOT TRUE:', success);
@@ -324,10 +331,10 @@ const ResetPassword = () => {
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
         title="Wachtwoord succesvol gewijzigd"
-        description="Je wachtwoord is succesvol gewijzigd. Je kunt nu naar je dashboard gaan."
+        description="Je wachtwoord is succesvol gewijzigd. Log nu in met je nieuwe wachtwoord."
         primaryAction={{
-          label: "Ga naar Dashboard",
-          onClick: () => navigate('/huurder-dashboard')
+          label: "Ga naar Inloggen",
+          onClick: () => navigate('/login')
         }}
         size="md"
         closeOnClickOutside={false}

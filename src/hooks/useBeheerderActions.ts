@@ -1,40 +1,19 @@
 
-import { useAuthStore } from '@/store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useRoleActions } from './useRoleActions';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger';
 
 export const useBeheerderActions = () => {
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
+  
+  const customActions = {
+    manageUsers: () => {
+      // Placeholder for user management functionality
       toast({
-        title: 'Uitgelogd',
-        description: 'U bent succesvol uitgelogd.',
+        title: "Gebruikersbeheer",
+        description: "Deze functionaliteit wordt binnenkort toegevoegd.",
       });
-    } catch (error) {
-      logger.error('Logout failed:', error);
-      toast({
-        title: 'Fout bij uitloggen',
-        description: 'Er is een fout opgetreden. Probeer het opnieuw.',
-        variant: 'destructive',
-      });
-    }
+    },
   };
 
-  // Placeholder for future admin actions
-  const handleManageUsers = () => {
-    logger.log('Navigate to user management page');
-    // navigate('/admin/users');
-  };
-
-  return {
-    handleLogout,
-    handleManageUsers,
-  };
+  return useRoleActions({ role: 'beheerder', customActions });
 };

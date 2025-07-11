@@ -1,141 +1,159 @@
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseService, DatabaseResponse } from '@/lib/database';
-import { ErrorHandler } from '@/lib/errors';
-import { logger } from '@/lib/logger';
+import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
+import { Property } from '@/types';
+import { isLandlord, hasRole } from '@/utils/roleUtils';
+import { ValidationPresets } from '@/utils/validationUtils';
 
-export interface Property {
-  id: string;
-  verhuurder_id: string;
+// Property creation data interface (matches database schema)
+export interface PropertyCreateData {
   titel: string;
   beschrijving?: string;
   adres: string;
   stad: string;
-  provincie?: string;
-  postcode?: string;
   huurprijs: number;
-  oppervlakte?: number;
-  aantal_kamers?: number;
-  aantal_slaapkamers?: number;
-  woning_type: string;
-  meubilering: string;
-  voorzieningen?: string[];
-  beschikbaar_vanaf?: string;
-  status: 'actief' | 'inactief' | 'verhuurd';
-  foto_urls?: string[];
-  is_actief: boolean;
-  aangemaakt_op: string;
-  bijgewerkt_op: string;
-}
-
-export interface CreatePropertyData {
-  titel: string;
-  beschrijving?: string;
-  adres: string;
-  stad: string;
-  provincie?: string;
-  postcode?: string;
-  huurprijs: number;
-  oppervlakte?: number;
-  aantal_kamers?: number;
   aantal_slaapkamers?: number;
   woning_type?: string;
+  foto_urls?: string[];
+  beschikbaar_vanaf?: string;
+  aantal_kamers?: number;
+  oppervlakte?: number;
+  postcode?: string;
+  provincie?: string;
   meubilering?: string;
   voorzieningen?: string[];
-  beschikbaar_vanaf?: string;
-  foto_urls?: string[];
-  is_actief?: boolean;
+}
+
+// Helper function to convert database row to Property interface
+function mapDatabaseToProperty(dbRow: any): Property {
+  return {
+    id: dbRow.id,
+    landlordId: dbRow.verhuurder_id,
+    title: dbRow.titel,
+    description: dbRow.beschrijving || '',
+    address: dbRow.adres,
+    city: dbRow.stad,
+    rent: dbRow.huurprijs,
+    bedrooms: dbRow.aantal_slaapkamers || 0,
+    propertyType: dbRow.woning_type || '',
+    images: dbRow.foto_urls || [],
+    requirements: {
+      minIncome: 0,
+      allowPets: false
+    },
+    isActive: dbRow.is_actief ?? true,
+    availableFrom: dbRow.beschikbaar_vanaf,
+    furnished: dbRow.meubilering === 'gemeubileerd',
+    parkingAvailable: false,
+    smokingAllowed: false,
+    petsAllowed: false
+  };
 }
 
 export interface PropertySearchFilters {
   stad?: string;
+  minHuurprijs?: number;
   maxHuurprijs?: number;
-  minKamers?: number;
   woningType?: string;
-  meubilering?: string;
-  beschikbaarVanaf?: string;
+  minOppervlakte?: number;
+  maxOppervlakte?: number;
 }
 
-export class PropertyService extends DatabaseService {
-  async createProperty(data: CreatePropertyData): Promise<DatabaseResponse<Property>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
+
+export class PropertyService extends BaseService {
+  constructor() {
+    super('PropertyService');
+  }
+  async createProperty(data: PropertyCreateData): Promise<ServiceResponse<Property>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
+      // Validate user role
+      const { data: gebruiker } = await supabase
+        .from('gebruikers')
+        .select('rol')
+        .eq('id', currentUserId)
+        .single();
+
+      if (!gebruiker || !isLandlord(gebruiker.rol)) {
+        throw new PermissionError('Alleen verhuurders kunnen woningen aanmaken');
+      }
+
+      // Validate input data
+      const validationErrors: string[] = [];
+      
+      if (!data.titel) {
+        validationErrors.push('Titel is verplicht');
+      } else {
+        const titelValidation = ValidationPresets.property.titel(data.titel);
+        if (!titelValidation.isValid) validationErrors.push(titelValidation.error!);
+      }
+      
+      if (!data.adres) {
+        validationErrors.push('Adres is verplicht');
+      } else {
+        const adresValidation = ValidationPresets.property.adres(data.adres);
+        if (!adresValidation.isValid) validationErrors.push(adresValidation.error!);
+      }
+      
+      if (!data.stad) {
+        validationErrors.push('Stad is verplicht');
+      } else {
+        const stadValidation = ValidationPresets.property.stad(data.stad);
+        if (!stadValidation.isValid) validationErrors.push(stadValidation.error!);
+      }
+      
+      if (!data.huurprijs) {
+        validationErrors.push('Huurprijs is verplicht');
+      } else {
+        const prijsValidation = ValidationPresets.property.huurprijs(data.huurprijs);
+        if (!prijsValidation.isValid) validationErrors.push(prijsValidation.error!);
+      }
+      
+      if (validationErrors.length > 0) {
+        throw new ValidationError(validationErrors.join(', '));
+      }
+
+      const propertyData = {
+        verhuurder_id: currentUserId,
+        titel: data.titel,
+        beschrijving: data.beschrijving || null,
+        adres: data.adres,
+        stad: data.stad,
+        provincie: data.provincie || null,
+        postcode: data.postcode || null,
+        huurprijs: data.huurprijs,
+        oppervlakte: data.oppervlakte || null,
+        aantal_kamers: data.aantal_kamers || null,
+        aantal_slaapkamers: data.aantal_slaapkamers || null,
+        woning_type: data.woning_type || 'appartement',
+        meubilering: data.meubilering || 'gemeubileerd',
+        voorzieningen: data.voorzieningen || [],
+        beschikbaar_vanaf: data.beschikbaar_vanaf || null,
+        foto_urls: data.foto_urls || [],
+        status: 'actief' as const,
+        is_actief: true,
+        aangemaakt_op: new Date().toISOString(),
+        bijgewerkt_op: new Date().toISOString(),
       };
-    }
 
-    const sanitizedData = this.sanitizeInput(data);
-    const validation = this.validateRequiredFields(sanitizedData, [
-      'titel', 'adres', 'stad', 'huurprijs'
-    ]);
-
-    if (!validation.isValid) {
-      return {
-        data: null,
-        error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
       const { data: property, error } = await supabase
         .from('woningen')
-        .insert({
-          verhuurder_id: currentUserId,
-          titel: sanitizedData.titel,
-          beschrijving: sanitizedData.beschrijving,
-          adres: sanitizedData.adres,
-          stad: sanitizedData.stad,
-          provincie: sanitizedData.provincie,
-          postcode: sanitizedData.postcode,
-          huurprijs: sanitizedData.huurprijs,
-          oppervlakte: sanitizedData.oppervlakte,
-          aantal_kamers: sanitizedData.aantal_kamers,
-          aantal_slaapkamers: sanitizedData.aantal_slaapkamers,
-          woning_type: sanitizedData.woning_type || 'appartement',
-          meubilering: sanitizedData.meubilering || 'ongemeubileerd',
-          voorzieningen: sanitizedData.voorzieningen || [],
-          beschikbaar_vanaf: sanitizedData.beschikbaar_vanaf,
-          foto_urls: sanitizedData.foto_urls || [],
-          status: 'actief',
-          is_actief: true,
-        })
+        .insert(propertyData)
         .select()
         .single();
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      // Update landlord property count
-      await supabase
-        .from('verhuurders')
-        .update({
-          aantal_woningen: (await this.getPropertyCount(currentUserId)).data || 1
-        })
-        .eq('id', currentUserId);
+      await this.createStandardAuditLog('PROPERTY_CREATE', 'woningen', property.id, null, property, currentUserId);
 
-      await this.createAuditLog('CREATE', 'woningen', property.id, currentUserId, property);
-
-      return { data: property as Property, error: null };
-    });
+      return mapDatabaseToProperty(property);
+    }, 'createProperty', data.titel);
   }
 
-  async getProperties(landlordId?: string): Promise<DatabaseResponse<Property[]>> {
-    const currentUserId = await this.getCurrentUserId();
-    const targetUserId = landlordId || currentUserId;
+  async getProperties(landlordId?: string): Promise<ServiceResponse<Property[]>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
+      const targetUserId = landlordId || currentUserId;
 
-    if (!currentUserId || (!landlordId && !currentUserId)) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
       let query = supabase.from('woningen').select('*').order('aangemaakt_op', { ascending: false });
 
       if (landlordId) {
@@ -147,15 +165,15 @@ export class PropertyService extends DatabaseService {
       const { data, error } = await query;
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      return { data: (data || []) as Property[], error: null };
-    });
+      return (data || []).map(mapDatabaseToProperty);
+    }, 'getProperties', landlordId || 'current user');
   }
 
-  async searchProperties(filters: PropertySearchFilters): Promise<DatabaseResponse<Property[]>> {
-    return this.executeQuery(async () => {
+  async searchProperties(filters: PropertySearchFilters): Promise<ServiceResponse<Property[]>> {
+    return this.executeServiceOperation(async () => {
       let query = supabase
         .from('woningen')
         .select('*')
@@ -166,24 +184,24 @@ export class PropertyService extends DatabaseService {
         query = query.ilike('stad', `%${filters.stad}%`);
       }
 
-      if (filters.maxHuurprijs) {
-        query = query.lte('huurprijs', filters.maxHuurprijs);
+      if (filters.minHuurprijs) {
+        query = query.gte('huurprijs', filters.minHuurprijs);
       }
 
-      if (filters.minKamers) {
-        query = query.gte('aantal_kamers', filters.minKamers);
+      if (filters.maxHuurprijs) {
+        query = query.lte('huurprijs', filters.maxHuurprijs);
       }
 
       if (filters.woningType) {
         query = query.eq('woning_type', filters.woningType);
       }
 
-      if (filters.meubilering) {
-        query = query.eq('meubilering', filters.meubilering);
+      if (filters.minOppervlakte) {
+        query = query.gte('oppervlakte', filters.minOppervlakte);
       }
 
-      if (filters.beschikbaarVanaf) {
-        query = query.gte('beschikbaar_vanaf', filters.beschikbaarVanaf);
+      if (filters.maxOppervlakte) {
+        query = query.lte('oppervlakte', filters.maxOppervlakte);
       }
 
       query = query.order('aangemaakt_op', { ascending: false });
@@ -191,24 +209,26 @@ export class PropertyService extends DatabaseService {
       const { data, error } = await query;
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      return { data: (data || []) as Property[], error: null };
-    });
+      return (data || []).map(mapDatabaseToProperty);
+    }, { operation: 'searchProperties', metadata: filters });
   }
 
-  async updateProperty(id: string, data: Partial<CreatePropertyData>): Promise<DatabaseResponse<Property>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
+  async updateProperty(id: string, data: Partial<PropertyCreateData>): Promise<ServiceResponse<Property>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
+      // Validate user role
+      const { data: gebruiker } = await supabase
+        .from('gebruikers')
+        .select('rol')
+        .eq('id', currentUserId)
+        .single();
 
-    return this.executeQuery(async () => {
+      if (!gebruiker || !isLandlord(gebruiker.rol)) {
+        throw new PermissionError('Alleen verhuurders kunnen woningen bewerken');
+      }
+
       const sanitizedData = this.sanitizeInput(data);
 
       const { data: property, error } = await supabase
@@ -223,26 +243,28 @@ export class PropertyService extends DatabaseService {
         .single();
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('UPDATE', 'woningen', id, currentUserId, property);
+      await this.createStandardAuditLog('PROPERTY_UPDATE', 'woningen', id, null, property, currentUserId);
 
-      return { data: property as Property, error: null };
-    });
+      return mapDatabaseToProperty(property);
+    }, 'updateProperty', id);
   }
 
-  async deleteProperty(id: string): Promise<DatabaseResponse<boolean>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
+  async deleteProperty(id: string): Promise<ServiceResponse<boolean>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
+      // Validate user role
+      const { data: gebruiker } = await supabase
+        .from('gebruikers')
+        .select('rol')
+        .eq('id', currentUserId)
+        .single();
 
-    return this.executeQuery(async () => {
+      if (!gebruiker || !isLandlord(gebruiker.rol)) {
+        throw new PermissionError('Alleen verhuurders kunnen woningen verwijderen');
+      }
+
       const { error } = await supabase
         .from('woningen')
         .delete()
@@ -250,49 +272,32 @@ export class PropertyService extends DatabaseService {
         .eq('verhuurder_id', currentUserId);
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      // Update landlord property count
-      await supabase
-        .from('verhuurders')
-        .update({
-          aantal_woningen: (await this.getPropertyCount(currentUserId)).data || 0
-        })
-        .eq('id', currentUserId);
+      await this.createStandardAuditLog('PROPERTY_DELETE', 'woningen', id, null, null, currentUserId);
 
-      await this.createAuditLog('DELETE', 'woningen', id, currentUserId, null);
-
-      return { data: true, error: null };
-    });
+      return true;
+    }, 'deleteProperty', id);
   }
 
-  async getPropertyCount(landlordId: string): Promise<DatabaseResponse<number>> {
-    return this.executeQuery(async () => {
+  async getPropertyCount(landlordId: string): Promise<ServiceResponse<number>> {
+    return this.executeServiceOperation(async () => {
       const { count, error } = await supabase
         .from('woningen')
         .select('*', { count: 'exact', head: true })
         .eq('verhuurder_id', landlordId);
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      return { data: count || 0, error: null };
-    });
+      return count || 0;
+    }, { operation: 'getPropertyCount', resourceId: landlordId });
   }
 
-  async getPropertyApplications(propertyId: string): Promise<DatabaseResponse<any[]>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
+  async getPropertyApplications(propertyId: string): Promise<ServiceResponse<any[]>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
       const { data, error } = await supabase
         .from('aanvragen')
         .select(`
@@ -308,24 +313,15 @@ export class PropertyService extends DatabaseService {
         .order('aangemaakt_op', { ascending: false });
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      return { data: data || [], error: null };
-    });
+      return data || [];
+    }, 'getPropertyApplications', propertyId);
   }
 
-  async getPropertyById(propertyId: string): Promise<DatabaseResponse<Property>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
+  async getPropertyById(propertyId: string): Promise<ServiceResponse<Property>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
       const { data, error } = await supabase
         .from('woningen')
         .select('*')
@@ -334,24 +330,15 @@ export class PropertyService extends DatabaseService {
         .single();
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      return { data: data as Property, error: null };
-    });
+      return mapDatabaseToProperty(data);
+    }, 'getPropertyById', propertyId);
   }
 
-  async updatePropertyStatus(propertyId: string, status: 'actief' | 'inactief' | 'verhuurd'): Promise<DatabaseResponse<Property>> {
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return {
-        data: null,
-        error: ErrorHandler.normalize('Niet geautoriseerd'),
-        success: false,
-      };
-    }
-
-    return this.executeQuery(async () => {
+  async updatePropertyStatus(propertyId: string, status: 'actief' | 'inactief' | 'verhuurd'): Promise<ServiceResponse<Property>> {
+    return this.executeAuthenticatedOperation(async (currentUserId) => {
       const { data, error } = await supabase
         .from('woningen')
         .update({
@@ -364,16 +351,16 @@ export class PropertyService extends DatabaseService {
         .single();
 
       if (error) {
-        throw ErrorHandler.handleDatabaseError(error);
+        throw this.handleDatabaseError(error);
       }
 
-      await this.createAuditLog('UPDATE', 'woningen', propertyId, currentUserId, {
+      await this.createStandardAuditLog('UPDATE', 'woningen', propertyId, {
         action: 'status_update',
         new_status: status
       });
 
-      return { data: data as Property, error: null };
-    });
+      return mapDatabaseToProperty(data);
+    }, 'updatePropertyStatus', propertyId);
   }
 }
 

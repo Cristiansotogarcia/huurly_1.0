@@ -183,7 +183,53 @@ export class AuthService {
   }
 
   /**
-   * Update user password
+   * Update user password using recovery token (for password reset)
+   */
+  async updatePasswordWithRecoveryToken(newPassword: string, accessToken: string, refreshToken: string): Promise<{ error: AuthError | null }> {
+    try {
+      // Validate password using Zod schema
+      const validationResult = passwordSchema.safeParse(newPassword);
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Password does not meet security requirements';
+        const error = new Error(errorMessage) as AuthError;
+        error.status = 400;
+        return { error };
+      }
+
+      // Set the session using the recovery tokens
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+
+      if (sessionError) {
+        logger.error('Failed to set session with recovery tokens:', sessionError.message);
+        return { error: sessionError };
+      }
+
+      // Update the password
+      const result = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      
+      if (result.error) {
+        logger.error('Password update failed:', result.error.message);
+        return { error: result.error };
+      }
+
+      // Immediately sign out to prevent automatic login
+      await supabase.auth.signOut();
+      
+      logger.info('Password updated successfully with recovery token');
+      return { error: null };
+    } catch (error) {
+      logger.error('Password update with recovery token error:', error);
+      return { error: error as AuthError };
+    }
+  }
+
+  /**
+   * Update user password (for authenticated users)
    */
   async updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
     try {

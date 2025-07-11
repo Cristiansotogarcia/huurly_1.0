@@ -53,10 +53,10 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     setIsUploading(true);
 
     try {
-      // Create a unique filename
+      // Create a unique filename with Huurly_PP_ prefix
       const timestamp = new Date().getTime();
       const fileExtension = file.name.split('.').pop() || 'jpg';
-      const fileName = `${timestamp}.${fileExtension}`;
+      const fileName = `Huurly_PP_${userId}_${timestamp}.${fileExtension}`;
       const filePath = `${userId}/${fileName}`;
 
       // Delete existing profile picture if it exists

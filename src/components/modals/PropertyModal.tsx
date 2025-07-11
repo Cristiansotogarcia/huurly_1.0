@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Property, CreatePropertyData, propertyService } from '@/services/PropertyService';
+import { propertyService, PropertyCreateData } from '@/services/PropertyService';
+import { Property } from '@/types';
 import { Plus, X } from 'lucide-react';
 
 interface PropertyModalProps {
@@ -25,22 +26,14 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<CreatePropertyData>({
+  const [formData, setFormData] = useState<PropertyCreateData>({
     titel: '',
     beschrijving: '',
     adres: '',
     stad: '',
-    provincie: '',
-    postcode: '',
     huurprijs: 0,
-    oppervlakte: 0,
-    aantal_kamers: 1,
-    aantal_slaapkamers: 1,
     woning_type: 'appartement',
-    meubilering: 'ongemeubileerd',
-    voorzieningen: [],
     beschikbaar_vanaf: '',
-    is_actief: true,
   });
 
   const [newVoorziening, setNewVoorziening] = useState('');
@@ -48,21 +41,13 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
   useEffect(() => {
     if (property) {
       setFormData({
-        titel: property.titel,
-        beschrijving: property.beschrijving || '',
-        adres: property.adres,
-        stad: property.stad,
-        provincie: property.provincie || '',
-        postcode: property.postcode || '',
-        huurprijs: property.huurprijs,
-        oppervlakte: property.oppervlakte || 0,
-        aantal_kamers: property.aantal_kamers || 1,
-        aantal_slaapkamers: property.aantal_slaapkamers || 1,
-        woning_type: property.woning_type || 'appartement',
-        meubilering: property.meubilering || 'ongemeubileerd',
-        voorzieningen: property.voorzieningen || [],
-        beschikbaar_vanaf: property.beschikbaar_vanaf || '',
-        is_actief: property.is_actief ?? true,
+        titel: property.title,
+        beschrijving: property.description || '',
+        adres: property.address,
+        stad: property.city,
+        huurprijs: property.rent,
+        woning_type: property.propertyType || 'appartement',
+        beschikbaar_vanaf: property.availableFrom || '',
       });
     } else {
       // Reset form for new property
@@ -71,17 +56,9 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
         beschrijving: '',
         adres: '',
         stad: '',
-        provincie: '',
-        postcode: '',
         huurprijs: 0,
-        oppervlakte: 0,
-        aantal_kamers: 1,
-        aantal_slaapkamers: 1,
         woning_type: 'appartement',
-        meubilering: 'ongemeubileerd',
-        voorzieningen: [],
         beschikbaar_vanaf: '',
-        is_actief: true,
       });
     }
   }, [property, isOpen]);
@@ -335,14 +312,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is_actief"
-              checked={formData.is_actief}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_actief: checked }))}
-            />
-            <Label htmlFor="is_actief">Woning is actief</Label>
-          </div>
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

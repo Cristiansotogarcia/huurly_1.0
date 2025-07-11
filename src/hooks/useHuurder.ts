@@ -6,10 +6,10 @@ import { consolidatedDashboardService } from '@/services/ConsolidatedDashboardSe
 import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 import { userService } from '@/services/UserService';
 import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
-import { Document } from '@/services/DocumentService';
+import { Document } from '@/types/documents';
 
 export const useHuurder = () => {
-  const { user, refresh: refreshAuth } = useAuthStore();
+  const { user, refresh: refreshAuth, setLoadingSubscription } = useAuthStore();
   const { toast } = useToast();
 
   // State from useHuurderDashboard
@@ -30,6 +30,7 @@ export const useHuurder = () => {
     if (!user?.id) return;
     setIsLoading(true);
     setIsLoadingStats(true);
+    setLoadingSubscription(true);
     
     try {
       // Single API call to get all dashboard data
@@ -49,7 +50,14 @@ export const useHuurder = () => {
         if (subscription && subscription.status === 'active') {
           const expiration = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
           if (expiration.success && expiration.data?.expiresAt) {
-            setSubscription(prev => prev ? { ...prev, end_date: expiration.data.expiresAt, expiresAt: expiration.data.expiresAt } as Subscription : { status: 'active', end_date: expiration.data.expiresAt, expiresAt: expiration.data.expiresAt } as Subscription);
+            setSubscription(prev => prev ? { ...prev, end_date: expiration.data.expiresAt } : {
+              id: subscription.id || '',
+              user_id: user.id,
+              status: 'active',
+              start_date: subscription.start_date || new Date().toISOString(),
+              end_date: expiration.data.expiresAt,
+              stripe_subscription_id: subscription.stripe_subscription_id || ''
+            } as Subscription);
           }
         }
       } else {
@@ -84,6 +92,7 @@ export const useHuurder = () => {
     } finally {
       setIsLoading(false);
       setIsLoadingStats(false);
+      setLoadingSubscription(false);
     }
   }, [user?.id, toast]);
 

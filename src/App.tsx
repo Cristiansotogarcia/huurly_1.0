@@ -28,6 +28,9 @@ const PropertyManagement = lazy(() => import('./pages/PropertyManagement'));
 
 const Privacybeleid = lazy(() => import('./pages/Privacybeleid'));
 const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
+const PropertySearch = lazy(() => import('./pages/PropertySearch'));
+const IssueReporting = lazy(() => import('./pages/IssueReporting'));
+const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 
 
 const queryClient = new QueryClient({
@@ -57,6 +60,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Index />} />
+            <Route path="/dashboard" element={<ProtectedRoute roles={['huurder', 'verhuurder', 'beoordelaar', 'beheerder']}><Index /></ProtectedRoute>} />
             <Route 
               path="/huurder-dashboard" 
               element={
@@ -138,7 +142,7 @@ const App = () => (
               }
             />
             <Route
-              path="/subscription"
+              path="/abonnement"
               element={
                 <ProtectedRoute roles={['huurder']}>
                   <ManageSubscription />
@@ -149,6 +153,18 @@ const App = () => (
             <Route path="/wachtwoord-herstellen" element={<ResetPassword />} />
             <Route path="/privacybeleid" element={<Privacybeleid />} />
             <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
+            <Route
+              path="/property-search"
+              element={<PropertySearch />}
+            />
+            <Route
+              path="/issue-reporting"
+              element={<IssueReporting />}
+            />
+            <Route
+              path="/help-support"
+              element={<HelpSupport />}
+            />
             {/* Catch-all route for 404s */}
             <Route path="*" element={
               <div className="min-h-screen flex flex-col items-center justify-center">

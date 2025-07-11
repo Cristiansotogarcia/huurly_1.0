@@ -113,14 +113,45 @@ export const motivationSchema = z.object({
 });
 
 // Complete tenant profile schema
-export const completeTenantProfileSchema = personalInfoSchema
-  .merge(employmentSchema)
-  .merge(householdSchema)
-  .merge(housingPreferencesSchema)
-  .merge(timingSchema)
-  .merge(guarantorSchema)
-  .merge(lifestyleSchema)
-  .merge(motivationSchema);
+export const completeTenantProfileSchema = z.object({
+  // Personal info
+  ...personalInfoSchema.shape,
+  // Employment
+  ...employmentSchema.shape,
+  // Household
+  ...householdSchema.shape,
+  // Housing preferences (without refine)
+  minBudget: z.number().min(300, 'Minimum budget moet minimaal €300 zijn').max(10000, 'Minimum budget mag maximaal €10.000 zijn'),
+  maxBudget: z.number().min(300, 'Maximum budget moet minimaal €300 zijn').max(10000, 'Maximum budget mag maximaal €10.000 zijn'),
+  city: z.string().min(2, 'Stad moet minimaal 2 karakters bevatten').max(100, 'Stad mag maximaal 100 karakters bevatten'),
+  bedrooms: z.number().min(1, 'Aantal slaapkamers moet minimaal 1 zijn').max(10, 'Aantal slaapkamers mag maximaal 10 zijn'),
+  propertyType: z.enum(['appartement', 'eengezinswoning', 'studio', 'kamer', 'penthouse']),
+  furnishedPreference: z.enum(['gemeubileerd', 'ongemeubileerd', 'gedeeltelijk_gemeubileerd', 'geen_voorkeur']).optional(),
+  parkingRequired: z.boolean().optional(),
+  storageNeeds: z.enum(['geen', 'klein', 'groot']).optional(),
+  leaseDurationPreference: z.enum(['kort_termijn', 'lang_termijn', 'onbeperkt']).optional(),
+  // Timing (without refine)
+  moveInDatePreferred: z.string(),
+  moveInDateEarliest: z.string(),
+  availabilityFlexible: z.boolean().optional(),
+  reasonForMoving: z.string().min(10, 'Reden voor verhuizen moet minimaal 10 karakters bevatten').max(500, 'Reden voor verhuizen mag maximaal 500 karakters bevatten').optional(),
+  // Guarantor
+  ...guarantorSchema.shape,
+  // Lifestyle
+  ...lifestyleSchema.shape,
+  // Motivation
+  ...motivationSchema.shape,
+}).refine((data) => data.maxBudget >= data.minBudget, {
+  message: 'Maximum budget moet groter of gelijk zijn aan minimum budget',
+  path: ['maxBudget'],
+}).refine((data) => {
+  const preferredDate = new Date(data.moveInDatePreferred);
+  const earliestDate = new Date(data.moveInDateEarliest);
+  return preferredDate >= earliestDate;
+}, {
+  message: 'Gewenste verhuisdatum moet op of na de vroegste verhuisdatum liggen',
+  path: ['moveInDatePreferred'],
+});
 
 // Payment validation schemas
 export const paymentSchema = z.object({

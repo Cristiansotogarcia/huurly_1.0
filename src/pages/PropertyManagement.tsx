@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PropertyModal } from '@/components/modals/PropertyModal';
 import { useToast } from '@/hooks/use-toast';
-import { propertyService, Property } from '@/services/PropertyService';
+import { propertyService } from '@/services/PropertyService';
+import { Property } from '@/types';
 import { 
   Plus, 
   Search, 
@@ -100,32 +101,28 @@ const PropertyManagementPage: React.FC = () => {
     }).format(price);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      actief: { variant: 'default' as const, label: 'Actief', color: 'bg-green-100 text-green-800' },
-      inactief: { variant: 'secondary' as const, label: 'Inactief', color: 'bg-gray-100 text-gray-800' },
-      verhuurd: { variant: 'destructive' as const, label: 'Verhuurd', color: 'bg-red-100 text-red-800' }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.actief;
-    return <Badge className={config.color}>{config.label}</Badge>;
+  const getStatusBadge = (isActive: boolean) => {
+    return (
+      <Badge variant={isActive ? 'default' : 'secondary'}>
+        {isActive ? 'Actief' : 'Inactief'}
+      </Badge>
+    );
   };
 
   const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.titel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.stad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.adres.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.address.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesFilter = filterStatus === 'all' || property.status === filterStatus;
-    
+    const matchesFilter = true;
     return matchesSearch && matchesFilter;
   });
 
   const propertyStats = {
     total: properties.length,
-    active: properties.filter(p => p.status === 'actief').length,
-    rented: properties.filter(p => p.status === 'verhuurd').length,
-    totalValue: properties.reduce((sum, p) => sum + p.huurprijs, 0)
+    active: properties.filter(p => p.isActive).length,
+    rented: properties.filter(p => !p.isActive).length,
+    totalValue: properties.reduce((sum, p) => sum + p.rent, 0)
   };
 
   return (
@@ -241,13 +238,13 @@ const PropertyManagementPage: React.FC = () => {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold mb-1">{property.titel}</h3>
+                        <h3 className="text-lg font-semibold mb-1">{property.title}</h3>
                         <div className="flex items-center text-gray-600 text-sm">
                           <MapPin className="w-4 h-4 mr-1" />
-                          <span>{property.adres}, {property.stad}</span>
+                          <span>{property.address}, {property.city}</span>
                         </div>
                       </div>
-                      {getStatusBadge(property.status)}
+                      {getStatusBadge(property.isActive)}
                     </div>
 
                     <div className="space-y-2 mb-4">
@@ -256,37 +253,19 @@ const PropertyManagementPage: React.FC = () => {
                           <Euro className="w-4 h-4 mr-1" />
                           Huurprijs
                         </span>
-                        <span className="font-semibold">{formatPrice(property.huurprijs)}/maand</span>
+                        <span className="font-semibold">{formatPrice(property.rent)}/maand</span>
                       </div>
                       
-                      {property.oppervlakte && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="flex items-center text-gray-600">
-                            <Home className="w-4 h-4 mr-1" />
-                            Oppervlakte
-                          </span>
-                          <span>{property.oppervlakte}m²</span>
-                        </div>
-                      )}
                       
-                      {property.aantal_kamers && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="flex items-center text-gray-600">
-                            <Bed className="w-4 h-4 mr-1" />
-                            Kamers
-                          </span>
-                          <span>{property.aantal_kamers}</span>
-                        </div>
-                      )}
                       
                       <div className="flex items-center justify-between text-sm">
                         <span className="flex items-center text-gray-600">
                           <Calendar className="w-4 h-4 mr-1" />
                           Beschikbaar
                         </span>
-                        <span>
-                          {property.beschikbaar_vanaf ? 
-                            new Date(property.beschikbaar_vanaf).toLocaleDateString('nl-NL') : 
+                      <span>
+                          {property.availableFrom ? 
+                            new Date(property.availableFrom).toLocaleDateString('nl-NL') : 
                             'Direct'
                           }
                         </span>

@@ -12,8 +12,9 @@ export const createSessionManager = (set: any, get: any) => ({
                                    window.location.search.includes('payment_canceled') ||
                                    state.isInPaymentFlow;
     
-    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-    if (state.sessionValid && state.lastSessionCheck > fiveMinutesAgo && !isReturningFromPayment) {
+    // Use longer cache time to reduce validation frequency
+    const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+    if (state.sessionValid && state.lastSessionCheck > tenMinutesAgo && !isReturningFromPayment && !state.isRefreshing) {
       return true;
     }
 
@@ -60,18 +61,22 @@ export const createSessionManager = (set: any, get: any) => ({
     const state = get();
     
     if (state.isRefreshing) {
-      // Wait for the current refresh to complete and return its result
-      return new Promise<boolean>((resolve) => {
-        const checkRefresh = () => {
-          const currentState = get();
-          if (!currentState.isRefreshing) {
-            resolve(currentState.sessionValid);
-          } else {
-            setTimeout(checkRefresh, 100);
-          }
-        };
-        checkRefresh();
-      });
+      // Wait for the current refresh to complete using a more efficient approach
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max wait
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const currentState = get();
+        if (!currentState.isRefreshing) {
+          return currentState.sessionValid;
+        }
+        attempts++;
+      }
+      
+      // If still refreshing after max attempts, return current state
+      logger.warn('Session refresh timeout reached');
+      return get().sessionValid;
     }
 
     set({ isRefreshing: true });
