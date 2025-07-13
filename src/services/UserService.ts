@@ -1228,7 +1228,7 @@ export class UserService extends DatabaseService {
 
     return this.executeQuery(async () => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/wachtwoord-herstellen`
+        redirectTo: `${window.location.origin}/auth/confirm`
       });
 
       if (error) {

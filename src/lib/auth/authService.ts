@@ -174,7 +174,7 @@ export class AuthService {
         return { error };
       }
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/wachtwoord-herstellen`,
+        redirectTo: `${window.location.origin}/auth/confirm`,
       });
       return { error };
     } catch (error) {
@@ -196,6 +196,22 @@ export class AuthService {
         return { error };
       }
 
+      // Validate tokens before attempting to use them
+      if (!accessToken || !refreshToken) {
+        const error = new Error('Ongeldige herstellink. De tokens ontbreken.') as AuthError;
+        error.status = 400;
+        return { error };
+      }
+
+      // Check if tokens are properly formatted (basic validation)
+      if (accessToken.length < 10 || refreshToken.length < 10) {
+        const error = new Error('Ongeldige herstellink. De tokens zijn beschadigd.') as AuthError;
+        error.status = 400;
+        return { error };
+      }
+
+      logger.info('Attempting to set session with recovery tokens');
+      
       // Set the session using the recovery tokens
       const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
@@ -204,8 +220,24 @@ export class AuthService {
 
       if (sessionError) {
         logger.error('Failed to set session with recovery tokens:', sessionError.message);
-        return { error: sessionError };
+        
+        // Provide user-friendly Dutch error messages
+        let userFriendlyMessage = 'Er is een fout opgetreden bij het valideren van de herstellink.';
+        
+        if (sessionError.message.includes('invalid_grant') || 
+            sessionError.message.includes('token') ||
+            sessionError.message.includes('expired')) {
+          userFriendlyMessage = 'De herstellink is verlopen of al gebruikt. Vraag een nieuwe herstellink aan.';
+        } else if (sessionError.message.includes('invalid_request')) {
+          userFriendlyMessage = 'De herstellink is ongeldig. Controleer of je de volledige link uit je e-mail hebt gebruikt.';
+        }
+        
+        const error = new Error(userFriendlyMessage) as AuthError;
+        error.status = sessionError.status || 400;
+        return { error };
       }
+
+      logger.info('Session set successfully, updating password');
 
       // Update the password
       const result = await supabase.auth.updateUser({
@@ -214,7 +246,21 @@ export class AuthService {
       
       if (result.error) {
         logger.error('Password update failed:', result.error.message);
-        return { error: result.error };
+        
+        // Provide user-friendly Dutch error messages for password update
+        let userFriendlyMessage = 'Er is een fout opgetreden bij het wijzigen van je wachtwoord.';
+        
+        if (result.error.message.includes('same password') || 
+            result.error.message.includes('different')) {
+          userFriendlyMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
+        } else if (result.error.message.includes('weak') || 
+                   result.error.message.includes('requirements')) {
+          userFriendlyMessage = 'Het wachtwoord voldoet niet aan de veiligheidseisen.';
+        }
+        
+        const error = new Error(userFriendlyMessage) as AuthError;
+        error.status = result.error.status || 400;
+        return { error };
       }
 
       // Immediately sign out to prevent automatic login
@@ -224,7 +270,11 @@ export class AuthService {
       return { error: null };
     } catch (error) {
       logger.error('Password update with recovery token error:', error);
-      return { error: error as AuthError };
+      
+      // Provide a generic user-friendly Dutch error message for unexpected errors
+      const userFriendlyError = new Error('Er is een onverwachte fout opgetreden. Probeer het opnieuw of vraag een nieuwe herstellink aan.') as AuthError;
+      userFriendlyError.status = 500;
+      return { error: userFriendlyError };
     }
   }
 

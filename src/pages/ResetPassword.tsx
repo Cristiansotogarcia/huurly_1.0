@@ -1,88 +1,60 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import { Loader2, ArrowLeft, Check, X, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { StandardModal } from '@/components/standard/StandardModal';
-import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 const ResetPassword = () => {
-  
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingToken, setIsCheckingToken] = useState(true);
   const [passwordError, setPasswordError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [recoveryTokens, setRecoveryTokens] = useState<{accessToken: string, refreshToken: string} | null>(null);
-  
+
   const [passwordStrength, setPasswordStrength] = useState({
     length: false,
     uppercase: false,
     lowercase: false,
     number: false,
     special: false,
-    match: false
+    match: false,
   });
-  const { updatePassword, updatePasswordWithRecoveryToken } = useAuth();
+  const { updatePassword, signOut } = useAuth();
+  const { setPasswordResetLock, logout } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
 
-
   useEffect(() => {
-    const checkAccess = async () => {
-      const hash = window.location.hash;
-      const searchParams = new URLSearchParams(window.location.search);
-
-      let accessToken = '';
-      let refreshToken = '';
-      if (hash) {
-        const hashParams = new URLSearchParams(hash.substring(1));
-        accessToken = hashParams.get('access_token') || '';
-        refreshToken = hashParams.get('refresh_token') || '';
-      }
-      if (!accessToken) {
-        accessToken = searchParams.get('access_token') || '';
-        refreshToken = searchParams.get('refresh_token') || '';
-      }
-
-      const hasRecoveryToken =
-        hash.includes('type=recovery') ||
-        (accessToken && refreshToken) ||
-        searchParams.get('type') === 'recovery';
-
-      if (hasRecoveryToken && accessToken && refreshToken) {
-        setRecoveryTokens({ accessToken, refreshToken });
-        // SECURITY FIX: Prevent auto-login by clearing any active session
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session) {
-            await supabase.auth.signOut();
-          }
-        } catch {
-          // ignore
-        }
-        setIsCheckingToken(false);
-        return;
-      }
-
-      toast({
-        title: 'Ongeldige toegang',
-        description:
-          'Deze pagina kan alleen worden geopend via een wachtwoord reset link uit uw e-mail.',
-        variant: 'destructive',
-      });
-      navigate('/');
+    // SECURITY FIX: Immediately set password reset lock and clear any existing sessions
+    // This prevents race conditions where user gets logged in during password reset flow
+    logger.info('ResetPassword: Setting password reset lock and clearing sessions');
+    
+    // Set the password reset lock to prevent any auth operations
+    setPasswordResetLock(true);
+    
+    // Clear any existing authentication state to prevent conflicts
+    logout();
+    
+    // Check if we have recovery tokens but aren't on the password reset page
+    const urlHash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasRecoveryToken = 
+      urlHash.includes('type=recovery') || 
+      (urlHash.includes('access_token') && urlHash.includes('refresh_token')) ||
+      searchParams.get('type') === 'recovery';
+    
+    // Cleanup function to clear the lock when component unmounts
+    return () => {
+      logger.info('ResetPassword: Clearing password reset lock on unmount');
+      setPasswordResetLock(false);
     };
-
-    checkAccess();
-  }, [location, navigate, toast]);
+  }, [setPasswordResetLock, logout]);
   
   // Update password strength indicators as user types
   useEffect(() => {
@@ -135,38 +107,60 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      let success: boolean;
+      const success = await updatePassword(newPassword);
 
-      if (recoveryTokens) {
-        success = await updatePasswordWithRecoveryToken(
-          newPassword,
-          recoveryTokens.accessToken,
-          recoveryTokens.refreshToken
-        );
-      } else {
-        success = await updatePassword(newPassword);
-      }
-
-      if (success === true) {
+      if (success) {
+        logger.info('ResetPassword: Password updated successfully, clearing lock and signing out');
+        
+        // Clear the password reset lock since the operation completed successfully
+        setPasswordResetLock(false);
+        
         if (
           window.location.hash.includes('access_token') ||
           window.location.hash.includes('type=recovery')
         ) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
-        setRecoveryTokens(null);
         setShowSuccessModal(true);
+        await signOut();
       } else {
         toast({
-          title: "Unexpected result",
-          description: `Password update returned: ${success}`,
+          title: "Onverwacht resultaat",
+          description: "Er is een onverwachte fout opgetreden. Probeer het opnieuw.",
           variant: "destructive"
         });
       }
-    } catch {
+    } catch (error: any) {
+      logger.error('ResetPassword: Password update failed, clearing lock', error);
+      
+      // Clear the password reset lock since the operation failed
+      setPasswordResetLock(false);
+      
+      // Enhanced error handling with user-friendly Dutch messages
+      let errorTitle = "Wachtwoord wijzigen mislukt";
+      let errorDescription = "Er is een fout opgetreden bij het wijzigen van je wachtwoord.";
+      
+      if (error?.message) {
+        // Use the user-friendly error messages from authService
+        if (error.message.includes('verlopen') || error.message.includes('gebruikt')) {
+          errorTitle = "Herstellink verlopen";
+          errorDescription = error.message + " Ga terug naar de inlogpagina en vraag een nieuwe herstellink aan.";
+        } else if (error.message.includes('ongeldig') || error.message.includes('beschadigd')) {
+          errorTitle = "Ongeldige herstellink";
+          errorDescription = error.message + " Controleer of je de volledige link uit je e-mail hebt gebruikt.";
+        } else if (error.message.includes('wachtwoord')) {
+          errorTitle = "Wachtwoord probleem";
+          errorDescription = error.message;
+        } else {
+          errorDescription = error.message;
+        }
+      } else {
+        errorDescription += " Probeer het opnieuw of vraag een nieuwe herstellink aan.";
+      }
+      
       toast({
-        title: "Wachtwoord wijzigen mislukt",
-        description: "Er is een fout opgetreden bij het wijzigen van je wachtwoord. Probeer het opnieuw.",
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive"
       });
     } finally {
@@ -186,16 +180,7 @@ const ResetPassword = () => {
     </div>
   );
 
-  if (isCheckingToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 text-gray-600">Valideren van reset link...</p>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
