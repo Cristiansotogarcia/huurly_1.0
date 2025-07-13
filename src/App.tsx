@@ -19,8 +19,9 @@ const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
 const DatabaseCleanup = lazy(() => import('./pages/admin/DatabaseCleanup'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const Analytics = lazy(() => import('./pages/admin/Analytics'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+
 const AuthConfirm = lazy(() => import('./pages/AuthConfirm'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ManageSubscription = lazy(() => import('./pages/Subscription/ManageSubscription'));
 
 const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
@@ -153,6 +154,7 @@ const App = () => (
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/auth/confirm" element={<AuthConfirm />} />
             <Route path="/wachtwoord-herstellen" element={<ResetPassword />} />
+
             <Route path="/privacybeleid" element={<Privacybeleid />} />
             <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
             <Route

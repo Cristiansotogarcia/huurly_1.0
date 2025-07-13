@@ -13,7 +13,6 @@ class RateLimiter {
     login: { maxAttempts: 5, windowMs: 15 * 60 * 1000 }, // 5 attempts per 15 minutes
     signup: { maxAttempts: 3, windowMs: 60 * 60 * 1000 }, // 3 attempts per hour
     passwordReset: { maxAttempts: 3, windowMs: 60 * 60 * 1000 }, // 3 attempts per hour
-    passwordUpdate: { maxAttempts: 5, windowMs: 60 * 60 * 1000 }, // 5 attempts per hour
   };
 
   /**
@@ -73,6 +72,38 @@ class RateLimiter {
     const timeLeft = Math.max(0, entry.resetTime - now);
     
     return Math.ceil(timeLeft / 1000);
+  }
+
+  /**
+   * Record an attempt for rate limiting
+   */
+  recordAttempt(identifier: string, action: keyof typeof this.configs): void {
+    const key = `${action}:${identifier}`;
+    const config = this.configs[action];
+    const now = Date.now();
+    
+    const entry = this.limits.get(key);
+    
+    if (!entry) {
+      // First attempt
+      this.limits.set(key, {
+        count: 1,
+        resetTime: now + config.windowMs
+      });
+    } else {
+      // Check if window has expired
+      if (now > entry.resetTime) {
+        // Reset the counter
+        this.limits.set(key, {
+          count: 1,
+          resetTime: now + config.windowMs
+        });
+      } else {
+        // Increment counter
+        entry.count++;
+        this.limits.set(key, entry);
+      }
+    }
   }
 
   /**

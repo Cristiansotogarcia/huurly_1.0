@@ -1,0 +1,15 @@
+<h2>Wachtwoord Herstellen</h2>
+
+<p>Volg deze link om uw wachtwoord te herstellen:</p>
+<p>
+  <a href="{{ .SiteURL }}/wachtwoord-herstellen?token={{ .Token }}&type=recovery&email={{ .Email }}">
+    Wachtwoord Herstellen
+  </a>
+</p>
+
+<p>Als de link niet werkt, kopieer en plak dan deze URL in uw browser:</p>
+<p>{{ .SiteURL }}/wachtwoord-herstellen?token={{ .Token }}&type=recovery&email={{ .Email }}</p>
+
+<p>Deze link is 1 uur geldig.</p>
+
+<p>Als u dit verzoek niet heeft gedaan, kunt u deze e-mail negeren.</p>

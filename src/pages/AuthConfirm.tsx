@@ -79,13 +79,7 @@ const AuthConfirm = () => {
         });
 
         // Handle different confirmation types
-        if (type === 'recovery') {
-          // For password recovery, the user now has a session.
-          // Redirect them to the password reset page.
-          console.log('AuthConfirm: Redirecting to password reset page.');
-          navigate('/wachtwoord-herstellen');
-          return;
-        } else if (type === 'email') {
+        if (type === 'email') {
           // For email verification, show success and redirect to dashboard
           toast({
             title: 'E-mail geverifieerd',

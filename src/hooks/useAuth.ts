@@ -13,9 +13,9 @@ export interface UseAuthReturn {
   signUp: (data: SignUpData) => Promise<{ success: boolean; user?: User }>;
   signIn: (data: SignInData) => Promise<{ success: boolean; user?: User }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<boolean>;
-  updatePassword: (newPassword: string) => Promise<boolean>;
   updateProfile: (updates: Partial<User>) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; message?: string }>;
   // Modal states
   showEmailConfirmationModal: boolean;
   showEmailVerificationSuccessModal: boolean;
@@ -34,34 +34,12 @@ export const useAuth = (): UseAuthReturn => {
   const [showEmailVerificationSuccessModal, setShowEmailVerificationSuccessModal] = useState(false);
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
   const [signupEmail, setSignupEmail] = useState('');
-  const { user, isAuthenticated, login, logout, updateUser, setPasswordResetLock, isPasswordResetActive } = useAuthStore();
+  const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isSigningOut = useRef(false);
 
-  // Helper function to detect if we're in a password reset flow
-  const isPasswordResetFlow = (): boolean => {
-    const currentPath = window.location.pathname;
-    const urlHash = window.location.hash;
-    const searchParams = new URLSearchParams(window.location.search);
-    
-    // Check if we're on the password reset page
-    const isOnPasswordResetPage = currentPath === '/wachtwoord-herstellen';
-    
-    // Check for recovery tokens in URL
-    const hasRecoveryToken = 
-      urlHash.includes('type=recovery') || 
-      (urlHash.includes('access_token') && urlHash.includes('refresh_token')) ||
-      searchParams.get('type') === 'recovery';
-    
-    // If we have recovery tokens, force redirect to password reset page
-    if (hasRecoveryToken && !isOnPasswordResetPage) {
-      window.location.href = '/wachtwoord-herstellen' + window.location.hash;
-      return true;
-    }
-    
-    return isOnPasswordResetPage || hasRecoveryToken;
-  };
+
 
   useEffect(() => {
     // Initialize auth state
@@ -69,38 +47,6 @@ export const useAuth = (): UseAuthReturn => {
       try {
         const currentUser = await authService.getCurrentUser();
         if (currentUser) {
-          // SECURITY FIX: Check for password reset flow before logging in
-          // This prevents race condition where user gets logged in before ResetPassword.tsx can sign them out
-          if (isPasswordResetFlow()) {
-            logger.info('Password reset flow detected in initializeAuth, setting lock and adding delay to prevent race condition');
-            
-            // Set password reset lock to prevent any auth operations
-            setPasswordResetLock(true);
-            
-            // Clear any existing session to prevent conflicts
-            logout();
-            
-            // Add a delay to ensure the password reset page has time to initialize
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Double-check if we're still in password reset flow after delay
-            if (isPasswordResetFlow()) {
-              logger.info('Still in password reset flow after delay, skipping login');
-              setIsLoading(false);
-              return;
-            }
-            
-            // Clear the lock if we're no longer in password reset flow
-            setPasswordResetLock(false);
-          }
-          
-          // Check if password reset is currently active before logging in
-          if (isPasswordResetActive()) {
-            console.log('Password reset is active, skipping login to prevent race condition');
-            setIsLoading(false);
-            return;
-          }
-          
           login(currentUser);
         }
       } catch (error) {
@@ -120,50 +66,20 @@ export const useAuth = (): UseAuthReturn => {
           return;
         }
         
-        // SECURITY FIX: Don't login during password reset flow to prevent race condition
-        // This prevents unwanted redirects when recovery tokens are processed by Supabase
-        if (isPasswordResetFlow()) {
-          logger.info('Password reset flow detected, setting lock and skipping login to prevent race condition');
-          setPasswordResetLock(true);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Check if password reset is currently active before logging in
-        if (isPasswordResetActive()) {
-          logger.info('Password reset is active, skipping login to prevent race condition');
-          setIsLoading(false);
-          return;
-        }
-        
         login(user);
         
-        // Check if this is a password recovery session
+        // Check if this is an email verification
         const currentPath = window.location.pathname;
         const urlHash = window.location.hash;
         const searchParams = new URLSearchParams(window.location.search);
-        
-        // More comprehensive recovery token detection
-        // Check URL for recovery tokens first, regardless of current path
-        const hasRecoveryToken = 
-          urlHash.includes('type=recovery') || 
-          (urlHash.includes('access_token') && urlHash.includes('refresh_token')) ||
-          searchParams.get('type') === 'recovery';
-        
-        // Also check if we're currently on the password reset page
-        const isOnPasswordResetPage = currentPath === '/wachtwoord-herstellen';
-        
-        // Check if this is an email verification
         const isEmailVerification = urlHash.includes('type=signup') || searchParams.get('type') === 'signup';
         
         // Don't auto-redirect if:
-        // 1. User is on password reset page
-        // 2. URL contains recovery tokens
-        // 3. User just logged out (prevent redirect loops)
-        // 4. User is on specific auth pages
-        // 5. This is an email verification (let the modal handle it)
-        // 6. User is on payment page or payment success page
-        const isOnAuthPage = ['/wachtwoord-herstellen', '/login', '/register'].includes(currentPath);
+        // 1. User just logged out (prevent redirect loops)
+        // 2. User is on specific auth pages
+        // 3. This is an email verification (let the modal handle it)
+        // 4. User is on payment page or payment success page
+        const isOnAuthPage = ['/login', '/register'].includes(currentPath);
         const isOnPaymentPage = currentPath.includes('/payment') || searchParams.has('session_id');
         const isOnHomePage = currentPath === '/';
         
@@ -171,9 +87,7 @@ export const useAuth = (): UseAuthReturn => {
         const expectedDashboard = `/${user.role}-dashboard`;
         const isOnCorrectDashboard = currentPath === expectedDashboard;
         
-        const shouldRedirect = !hasRecoveryToken && 
-                              !isOnPasswordResetPage && 
-                              !isOnAuthPage && 
+        const shouldRedirect = !isOnAuthPage && 
                               !isOnPaymentPage && 
                               !isEmailVerification && 
                               !isOnCorrectDashboard &&
@@ -317,89 +231,9 @@ export const useAuth = (): UseAuthReturn => {
     }
   };
 
-  const resetPassword = async (email: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      const { error } = await authService.resetPassword(email);
-      
-      if (error) {
-        toast({
-          title: "Wachtwoord reset mislukt",
-          description: error.message,
-          variant: "destructive"
-        });
-        return false;
-      }
 
-      toast({
-        title: "Wachtwoord reset verzonden",
-        description: "Controleer je e-mail voor instructies."
-      });
-      return true;
-    } catch (error) {
-       logger.error('Reset password error:', error);
-      toast({
-        title: "Wachtwoord reset mislukt",
-        description: "Er is een onverwachte fout opgetreden.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const updatePassword = async (newPassword: string): Promise<boolean> => {
-    console.log('useAuth.updatePassword called with:', newPassword.length, 'chars');
-    console.log('useAuth.updatePassword - Setting loading state...');
-    setIsLoading(true);
-    try {
-      console.log('useAuth.updatePassword - Calling authService.updatePassword...');
-      const { error } = await authService.updatePassword(newPassword);
-      console.log('useAuth.updatePassword - authService.updatePassword result:', { error });
-      
-      if (error) {
-        console.error('useAuth.updatePassword - Password update error:', error);
-        let errorMessage = error.message;
-        
-        // Handle specific Supabase error messages
-        if (error.message.includes('New password should be different from the old password')) {
-          errorMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
-        }
-        
-        console.log('useAuth.updatePassword - Showing error toast...');
-        toast({
-          title: "Wachtwoord wijzigen mislukt",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        console.log('useAuth.updatePassword - Returning false due to error');
-        return false;
-      }
 
-      console.log('useAuth.updatePassword - Password updated successfully, showing success toast...');
-      toast({
-        title: "Wachtwoord gewijzigd",
-        description: "Je wachtwoord is succesvol gewijzigd."
-      });
-      console.log('useAuth.updatePassword - Returning true for success');
-      return true;
-    } catch (error) {
-       console.error('useAuth.updatePassword - Catch error:', error);
-       logger.error('Update password error:', error);
-      console.log('useAuth.updatePassword - Showing catch error toast...');
-      toast({
-        title: "Wachtwoord wijzigen mislukt",
-        description: "Er is een onverwachte fout opgetreden.",
-        variant: "destructive"
-      });
-      console.log('useAuth.updatePassword - Returning false due to catch error');
-      return false;
-    } finally {
-      console.log('useAuth.updatePassword - In finally block, setting loading to false');
-      setIsLoading(false);
-    }
-  };
 
   const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
     setIsLoading(true);
@@ -447,15 +281,42 @@ export const useAuth = (): UseAuthReturn => {
     }, 100);
   };
 
+  const resetPassword = async (email: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const result = await authService.resetPassword(email);
+      return result;
+    } catch (error) {
+      logger.error('Reset password error:', error);
+      return {
+        success: false,
+        message: 'Er is een onverwachte fout opgetreden bij het versturen van de reset e-mail.'
+      };
+    }
+  };
+
+  const updatePassword = async (password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const result = await authService.updatePassword(password);
+      return result;
+    } catch (error) {
+      logger.error('Update password error:', error);
+      return {
+        success: false,
+        message: 'Er is een onverwachte fout opgetreden bij het bijwerken van het wachtwoord.'
+      };
+    }
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated,
     signUp,
     signIn,
+    signOut,
+    updateProfile,
     resetPassword,
     updatePassword,
-    updateProfile,
     showEmailConfirmationModal,
     showEmailVerificationSuccessModal,
     showPaymentSuccessModal,
@@ -464,7 +325,6 @@ export const useAuth = (): UseAuthReturn => {
     setShowEmailVerificationSuccessModal,
     setShowPaymentSuccessModal,
     handleEmailVerificationSuccess,
-    handlePaymentSuccess,
-    signOut
+    handlePaymentSuccess
   };
 };

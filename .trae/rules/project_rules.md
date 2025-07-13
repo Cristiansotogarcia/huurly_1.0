@@ -16,3 +16,7 @@
 - Use Context7 to make sure all libraries used are up 2 date.
 
 - Files in the Reffrece Docs Folder is ONLY to be used as reffrence. Do not use it in coding by any means!
+
+- document all coding changes you made in changelog.md in a structured way
+
+- before you start coding, use changelog.md to know what has been done and what you need to do.

@@ -18,8 +18,6 @@ export const useAuthStore = create<AuthState>()(
       isInPaymentFlow: false,
       paymentFlowStartTime: null,
       isLoadingSubscription: false,
-      isPasswordResetLocked: false,
-      passwordResetLockTime: null,
       
       // Spread all the action methods from the separate modules
       ...createAuthActions(set, get),
@@ -35,9 +33,7 @@ export const useAuthStore = create<AuthState>()(
         lastSessionCheck: state.lastSessionCheck,
         isInPaymentFlow: state.isInPaymentFlow,
         paymentFlowStartTime: state.paymentFlowStartTime,
-        isLoadingSubscription: state.isLoadingSubscription,
-        isPasswordResetLocked: state.isPasswordResetLocked,
-        passwordResetLockTime: state.passwordResetLockTime
+        isLoadingSubscription: state.isLoadingSubscription
       }),
     }
   )

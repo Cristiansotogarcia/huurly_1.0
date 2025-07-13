@@ -66,19 +66,7 @@ const UserManagementPage: React.FC = () => {
             throw new Error(suspendResult.error?.message || 'Fout bij deactiveren');
           }
           break;
-        case 'reset-password-email':
-          if (userData?.email) {
-            const resetResult = await userService.sendPasswordResetEmail(userData.email);
-            if (resetResult.success) {
-              toast({
-                title: 'Wachtwoord reset e-mail verstuurd',
-                description: `Er is een wachtwoord reset e-mail verstuurd naar ${userData.email}.`,
-              });
-            } else {
-              throw new Error(resetResult.error?.message || 'Fout bij versturen reset e-mail');
-            }
-          }
-          break;
+
         default:
           break;
       }
@@ -164,12 +152,7 @@ const UserManagementPage: React.FC = () => {
       variant: 'outline' as const,
       icon: Users
     },
-    {
-      label: 'Reset e-mail sturen',
-      action: 'reset-password-email',
-      variant: 'outline' as const,
-      icon: Mail
-    }
+
   ];
 
   return (

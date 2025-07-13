@@ -152,176 +152,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * Reset password for a user
-   */
-  async resetPassword(email: string): Promise<{ error: AuthError | null }> {
-    try {
-      // Check rate limiting
-      if (rateLimiter.isRateLimited(email, 'passwordReset')) {
-        const timeLeft = rateLimiter.getTimeUntilReset(email, 'passwordReset');
-        const error = new Error(`Te veel wachtwoord reset pogingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
-        error.status = 429;
-        return { error };
-      }
 
-      // Validate email using Zod schema
-      const validationResult = emailSchema.safeParse(email);
-      if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid email address';
-        const error = new Error(errorMessage) as AuthError;
-        error.status = 400;
-        return { error };
-      }
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/confirm`,
-      });
-      return { error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
-  }
 
-  /**
-   * Update user password using recovery token (for password reset)
-   */
-  async updatePasswordWithRecoveryToken(newPassword: string, accessToken: string, refreshToken: string): Promise<{ error: AuthError | null }> {
-    try {
-      // Validate password using Zod schema
-      const validationResult = passwordSchema.safeParse(newPassword);
-      if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Password does not meet security requirements';
-        const error = new Error(errorMessage) as AuthError;
-        error.status = 400;
-        return { error };
-      }
 
-      // Validate tokens before attempting to use them
-      if (!accessToken || !refreshToken) {
-        const error = new Error('Ongeldige herstellink. De tokens ontbreken.') as AuthError;
-        error.status = 400;
-        return { error };
-      }
 
-      // Check if tokens are properly formatted (basic validation)
-      if (accessToken.length < 10 || refreshToken.length < 10) {
-        const error = new Error('Ongeldige herstellink. De tokens zijn beschadigd.') as AuthError;
-        error.status = 400;
-        return { error };
-      }
 
-      logger.info('Attempting to set session with recovery tokens');
-      
-      // Set the session using the recovery tokens
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-
-      if (sessionError) {
-        logger.error('Failed to set session with recovery tokens:', sessionError.message);
-        
-        // Provide user-friendly Dutch error messages
-        let userFriendlyMessage = 'Er is een fout opgetreden bij het valideren van de herstellink.';
-        
-        if (sessionError.message.includes('invalid_grant') || 
-            sessionError.message.includes('token') ||
-            sessionError.message.includes('expired')) {
-          userFriendlyMessage = 'De herstellink is verlopen of al gebruikt. Vraag een nieuwe herstellink aan.';
-        } else if (sessionError.message.includes('invalid_request')) {
-          userFriendlyMessage = 'De herstellink is ongeldig. Controleer of je de volledige link uit je e-mail hebt gebruikt.';
-        }
-        
-        const error = new Error(userFriendlyMessage) as AuthError;
-        error.status = sessionError.status || 400;
-        return { error };
-      }
-
-      logger.info('Session set successfully, updating password');
-
-      // Update the password
-      const result = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      
-      if (result.error) {
-        logger.error('Password update failed:', result.error.message);
-        
-        // Provide user-friendly Dutch error messages for password update
-        let userFriendlyMessage = 'Er is een fout opgetreden bij het wijzigen van je wachtwoord.';
-        
-        if (result.error.message.includes('same password') || 
-            result.error.message.includes('different')) {
-          userFriendlyMessage = 'Het nieuwe wachtwoord moet anders zijn dan je huidige wachtwoord.';
-        } else if (result.error.message.includes('weak') || 
-                   result.error.message.includes('requirements')) {
-          userFriendlyMessage = 'Het wachtwoord voldoet niet aan de veiligheidseisen.';
-        }
-        
-        const error = new Error(userFriendlyMessage) as AuthError;
-        error.status = result.error.status || 400;
-        return { error };
-      }
-
-      // Immediately sign out to prevent automatic login
-      await supabase.auth.signOut();
-      
-      logger.info('Password updated successfully with recovery token');
-      return { error: null };
-    } catch (error) {
-      logger.error('Password update with recovery token error:', error);
-      
-      // Provide a generic user-friendly Dutch error message for unexpected errors
-      const userFriendlyError = new Error('Er is een onverwachte fout opgetreden. Probeer het opnieuw of vraag een nieuwe herstellink aan.') as AuthError;
-      userFriendlyError.status = 500;
-      return { error: userFriendlyError };
-    }
-  }
-
-  /**
-   * Update user password (for authenticated users)
-   */
-  async updatePassword(newPassword: string): Promise<{ error: AuthError | null }> {
-    try {
-      // Get current user for rate limiting
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return { error: new Error('No authenticated user') as AuthError };
-      }
-
-      // Check rate limiting
-      if (rateLimiter.isRateLimited(user.email!, 'passwordUpdate')) {
-        const timeLeft = rateLimiter.getTimeUntilReset(user.email!, 'passwordUpdate');
-        const error = new Error(`Te veel wachtwoord wijzigingen. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`) as AuthError;
-        error.status = 429;
-        return { error };
-      }
-
-      // Validate password using Zod schema
-      const validationResult = passwordSchema.safeParse(newPassword);
-      if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Password does not meet security requirements';
-        const error = new Error(errorMessage) as AuthError;
-        error.status = 400;
-        return { error };
-      }
-      
-      const result = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      
-      if (result.error) {
-        logger.error('Password update failed:', result.error.message);
-        return { error: result.error };
-      }
-      
-      logger.info('Password updated successfully');
-      return { error: null };
-    } catch (error) {
-      logger.error('Password update error:', error);
-      return { error: error as AuthError };
-    }
-  }
 
   /**
    * Get current user session
@@ -407,6 +242,96 @@ export class AuthService {
       return { error: null };
     } catch (error) {
       return { error: error as Error };
+    }
+  }
+
+  /**
+   * Reset password for email
+   */
+  async resetPassword(email: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Check rate limiting
+      if (rateLimiter.isRateLimited(email, 'passwordReset')) {
+        const timeLeft = rateLimiter.getTimeUntilReset(email, 'passwordReset');
+        return {
+          success: false,
+          message: `Te veel reset verzoeken. Probeer over ${Math.ceil(timeLeft / 60)} minuten opnieuw.`
+        };
+      }
+
+      // Validate email format
+      const emailValidation = emailSchema.safeParse(email);
+      if (!emailValidation.success) {
+        return {
+          success: false,
+          message: 'Ongeldig e-mailadres'
+        };
+      }
+
+      // Record the attempt
+      rateLimiter.recordAttempt(email, 'passwordReset');
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/wachtwoord-herstellen`
+      });
+
+      if (error) {
+        logger.error('Reset password error:', error);
+        return {
+          success: false,
+          message: 'Er is een fout opgetreden bij het versturen van de reset e-mail.'
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Reset e-mail verzonden! Controleer uw inbox.'
+      };
+    } catch (error) {
+      logger.error('Reset password error:', error);
+      return {
+        success: false,
+        message: 'Er is een onverwachte fout opgetreden.'
+      };
+    }
+  }
+
+  /**
+   * Update user password
+   */
+  async updatePassword(password: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Validate password strength
+      const passwordValidation = passwordSchema.safeParse(password);
+      if (!passwordValidation.success) {
+        return {
+          success: false,
+          message: passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen'
+        };
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) {
+        logger.error('Update password error:', error);
+        return {
+          success: false,
+          message: 'Er is een fout opgetreden bij het bijwerken van het wachtwoord.'
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Wachtwoord succesvol bijgewerkt!'
+      };
+    } catch (error) {
+      logger.error('Update password error:', error);
+      return {
+        success: false,
+        message: 'Er is een onverwachte fout opgetreden.'
+      };
     }
   }
 

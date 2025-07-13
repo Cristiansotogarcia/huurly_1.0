@@ -70,33 +70,5 @@ export const createAuthActions = (set: any, get: any) => ({
     set({ isLoadingSubscription: loading });
   },
 
-  setPasswordResetLock: (locked: boolean) => {
-    logger.info('AuthStore: Password reset lock changed', { locked });
-    set({ 
-      isPasswordResetLocked: locked,
-      passwordResetLockTime: locked ? Date.now() : null
-    });
-  },
 
-  isPasswordResetActive: () => {
-    const state = get();
-    if (!state.isPasswordResetLocked || !state.passwordResetLockTime) {
-      return false;
-    }
-    
-    // Auto-clear password reset lock after 5 minutes (safety mechanism)
-    const passwordResetTimeout = 5 * 60 * 1000; // 5 minutes
-    const timeSinceLock = Date.now() - state.passwordResetLockTime;
-    
-    if (timeSinceLock > passwordResetTimeout) {
-      logger.info('AuthStore: Password reset lock expired, clearing');
-      set({ 
-        isPasswordResetLocked: false,
-        passwordResetLockTime: null
-      });
-      return false;
-    }
-    
-    return true;
-  },
 });

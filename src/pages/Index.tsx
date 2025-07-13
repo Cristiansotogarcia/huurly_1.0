@@ -30,19 +30,8 @@ const Index = () => {
   const hasHandledEmailVerification = useRef(false);
 
   useEffect(() => {
-    // Detect password recovery flow and skip other redirects when on reset page or token present
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
-    const currentPath = window.location.pathname;
-    const hasRecoveryToken =
-      hash.includes('type=recovery') ||
-      (hash.includes('access_token') && hash.includes('refresh_token')) ||
-      searchParams.get('type') === 'recovery' ||
-      currentPath === '/wachtwoord-herstellen';
-    if (hasRecoveryToken) {
-      navigate('/wachtwoord-herstellen');
-      return;
-    }
 
     // Check for email verification success - only handle once
     if ((hash.includes('type=signup') || searchParams.get('type') === 'signup')) {
