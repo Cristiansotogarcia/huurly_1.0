@@ -1,6 +1,8 @@
 # Huurly: Streamlining the Rental Process
 
-Welcome to the Huurly project repository. Huurly is a platform designed to simplify the rental process for both landlords and tenants.
+Welcome to the Huurly project repository. Huurly is a platform designed to simplify the rental process for both landlords and tenants in the Dutch market, focusing on a unique reverse-search model: "Laat De Woning Jou Vinden" (Let The Home Find You).
+
+## Getting Started
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -20,7 +22,7 @@ npm i
 npm run dev
 ```
 
-
+## Development Environment
 
 **Edit a file directly in GitHub**
 
@@ -36,15 +38,15 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+## Technologies Used
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend:** React, TypeScript, shadcn/ui, Tailwind CSS
+- **Backend & Database:** Supabase (PostgreSQL, Auth, Edge Functions)
+- **File Storage:** Cloudflare R2
+- **Payments:** Stripe
+- **Email Notifications:** Resend
 
 ## Build
 
@@ -53,7 +55,6 @@ Before building the project, install the dependencies:
 ```sh
 npm install
 ```
-
 
 The application relies on all environment variables defined in `.env.example`. If any of these are missing the site may render a blank page.
 
@@ -81,44 +82,58 @@ profiles after sign up.
 `CLOUDFLARE_R2_*` settings configure the Cloudflare R2 client used for file uploads.
 Do **not** commit your `.env` file to version control.
 
+## Deployment
 
-## How can I deploy this project?
+This project is configured for deployment on Vercel for the frontend and Supabase Edge Functions for the backend logic. All file storage is handled through Cloudflare R2.
 
-Simply open [Lovable](https://lovable.dev/projects/a34df531-6d73-49f2-a598-55dce02e8cba) and click on Share -> Publish.
+### Vercel Deployment
 
-## Can I connect a custom domain to my Lovable project?
+Set the following environment variables in your Vercel dashboard:
 
-Yes, you can!
+```
+# Supabase Configuration
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Stripe Configuration
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+VITE_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+VITE_STRIPE_HUURDER_PRICE_ID=your_price_id
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Cloudflare R2 Configuration
+CLOUDFLARE_R2_ENDPOINT=your_r2_endpoint
+CLOUDFLARE_R2_ACCESS_KEY=your_access_key
+CLOUDFLARE_R2_SECRET_KEY=your_secret_key
+CLOUDFLARE_R2_BUCKET=your_bucket_name
+
+# Client-side versions (Vercel will automatically expose VITE_ prefixed vars)
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_CLOUDFLARE_R2_ENDPOINT=your_r2_endpoint
+VITE_CLOUDFLARE_R2_ACCESS_KEY=your_access_key
+VITE_CLOUDFLARE_R2_SECRET_KEY=your_secret_key
+VITE_CLOUDFLARE_R2_BUCKET=your_bucket_name
+```
+
+### Supabase Edge Functions Deployment
+
+Use the Supabase CLI to deploy your Edge Functions:
+
+```bash
+supabase functions deploy
+```
+
+Ensure your Supabase project is linked and environment variables are set using `supabase secrets set`.
 
 ## Stripe Setup
 
-Stripe payment processing is handled via Supabase Edge Functions.
-Create a `.env` file in the project root with your keys:
-
-```env
-VITE_STRIPE_PUBLISHABLE_KEY=<your-publishable-key>
-VITE_STRIPE_HUURDER_PRICE_ID=<your-huurder-price-id>
-STRIPE_SECRET_KEY=<your-secret-key>
-STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
-VITE_SUPABASE_URL=<your-supabase-url>
-VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
-```
-
-Run the Vite dev server with:
-
-```sh
-npm run dev
-```
-
+Stripe payment processing is handled via Supabase Edge Functions. Ensure your `.env` file (for local development) and Vercel environment variables (for production) are configured with the correct Stripe keys and webhook secret.
 
 ## Database Scripts
 
-The scripts in `src/scripts` interact directly with your Supabase project. The former `seedDatabase.ts` utility has been removed, so only administrative scripts remain. They expect the following environment variables to be set before running:
+The scripts in `src/scripts` interact directly with your Supabase project. They expect the following environment variables to be set before running:
 
 ```env
 SUPABASE_URL=<your-supabase-url>
@@ -144,3 +159,5 @@ To add a new language:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+

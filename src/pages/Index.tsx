@@ -30,25 +30,16 @@ const Index = () => {
   const hasHandledEmailVerification = useRef(false);
 
   useEffect(() => {
-    // Debug: Log all URL parts to understand the structure
-    console.log('Homepage - Full URL:', window.location.href);
-    console.log('Homepage - Hash:', window.location.hash);
-    console.log('Homepage - Search:', window.location.search);
-    console.log('Homepage - Pathname:', window.location.pathname);
-    
-    // Check for password recovery token in hash or search params
+    // Detect password recovery flow and skip other redirects when on reset page or token present
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
-    
-    // If we have a recovery token, redirect to password reset page and don't do any other redirects
-    // Use comprehensive recovery token detection
-    const hasRecoveryToken = 
-      hash.includes('type=recovery') || 
+    const currentPath = window.location.pathname;
+    const hasRecoveryToken =
+      hash.includes('type=recovery') ||
       (hash.includes('access_token') && hash.includes('refresh_token')) ||
-      searchParams.get('type') === 'recovery';
-    
+      searchParams.get('type') === 'recovery' ||
+      currentPath === '/wachtwoord-herstellen';
     if (hasRecoveryToken) {
-      console.log('Recovery token detected, redirecting to /wachtwoord-herstellen');
       navigate('/wachtwoord-herstellen');
       return;
     }
