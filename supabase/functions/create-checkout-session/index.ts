@@ -27,15 +27,15 @@ if (!stripeSecretKey.startsWith("sk_")) {
   throw new Error("Ongeldig Stripe secret key formaat");
 }
 
-// Initialize clients once
+// Initialize Stripe client once
 const stripe = new Stripe(stripeSecretKey, { 
   apiVersion: "2023-10-16"
 });
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-});
 
-const getUser = async (req: Request, supabase: ReturnType<typeof createClient>) => {
+const getUser = async (req: Request) => {
+  const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
+    auth: { persistSession: false },
+  });
   const authHeader = req.headers.get("Authorization");
   if (authHeader) {
     const { data, error } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
@@ -77,6 +77,11 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client for this request
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
+      auth: { persistSession: false },
+    });
+
     const body = await req.json();
     const { priceId, successUrl, cancelUrl, userId, userEmail } = body;
 
@@ -85,7 +90,7 @@ serve(async (req) => {
     }
 
     // Parallelize user lookup and customer resolution preparation
-    const user = await getUser(req, supabase);
+    const user = await getUser(req);
     const emailToUse = user?.email || userEmail;
     const userIdToUse = user?.id || userId;
 
