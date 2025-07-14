@@ -12,7 +12,7 @@
 - `profielfoto_url` was renamed to `profielfoto_url_old` and then the correct column became `profiel_foto`
 - `kinderen` column was replaced with `aantal_kinderen` during table restructuring
 
-**Solution:** 
+**Solution:**
 - Updated ProfilePictureUpload.tsx to use `profiel_foto` instead of `profielfoto_url_old`
 - Updated UserService.ts to use `profiel_foto` for profile picture queries
 - Updated UserService.ts to use `aantal_kinderen` instead of `kinderen` for children count filtering
@@ -756,3 +756,20 @@ Successfully implemented a complete password reset functionality using the lates
 - [x] Supabase client imports are standardized across the project
 
 ---
+
+## Enhancement: Complete Huurders Table Mapping in Profile Modal - January 2025
+
+**Change:** Ensured all columns from public.huurders table are mapped to form fields in the enhanced profile modal.
+
+**Details:**
+- Updated profileSchema.ts to include missing fields: inkomensbewijs_beschikbaar, borgsteller_beschikbaar, borgsteller_naam, borgsteller_relatie, borgsteller_telefoon, borgsteller_inkomen.
+- Modified Step2_Employment.tsx to add UI for inkomensbewijs_beschikbaar checkbox and conditional borgsteller section.
+- Modified Step3_Housing.tsx to add fields for min_kamers, max_kamers, vroegste_verhuisdatum, voorkeur_verhuisdatum, and beschikbaarheid_flexibel.
+
+**Files Modified:**
+- src/components/modals/profileSchema.ts
+- src/components/modals/steps/Step2_Employment.tsx
+- src/components/modals/steps/Step3_Housing.tsx
+- changelog.md
+
+**Result:** All huurders table columns now have corresponding data entry points in the profile modal, improving data completeness.

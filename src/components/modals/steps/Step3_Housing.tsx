@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProfileFormData } from '../profileSchema';
-import { Home, MapPin, Bed, Euro } from 'lucide-react';
+import { Home, MapPin, Bed, Euro, Calendar } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export const Step3_Housing = () => {
   const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
@@ -87,6 +88,26 @@ export const Step3_Housing = () => {
             <p className="text-sm text-red-600">{errors.preferred_bedrooms.message}</p>
           )}
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="min_kamers">Minimaal aantal kamers</Label>
+          <Input
+            id="min_kamers"
+            type="number"
+            {...register('min_kamers', { setValueAs: (v) => v ? Number(v) : 1 })}
+            placeholder="1"
+            min="1"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="max_kamers">Maximaal aantal kamers</Label>
+          <Input
+            id="max_kamers"
+            type="number"
+            {...register('max_kamers', { setValueAs: (v) => v ? Number(v) : undefined })}
+            placeholder="5"
+            min="1"
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -147,6 +168,103 @@ export const Step3_Housing = () => {
           huur mag maximaal 30-40% van je netto inkomen zijn.
         </p>
       </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="vroegste_verhuisdatum"
+          render={({ field }) => {
+            const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+              let value = e.target.value;
+              let cleaned = value.replace(/[^\d/]/g, '');
+              if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
+                cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
+              }
+              if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
+                cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
+              }
+              if (cleaned.length > 10) {
+                cleaned = cleaned.substring(0, 10);
+              }
+              field.onChange(cleaned);
+            };
+            return (
+              <FormItem>
+                <FormLabel>Vroegste verhuisdatum</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      {...field}
+                      onChange={handleDateInputChange}
+                      placeholder="dd/mm/jjjj"
+                      className="pl-10"
+                      maxLength={10}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+        <FormField
+          control={control}
+          name="voorkeur_verhuisdatum"
+          render={({ field }) => {
+            const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+              let value = e.target.value;
+              let cleaned = value.replace(/[^\d/]/g, '');
+              if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
+                cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
+              }
+              if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
+                cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
+              }
+              if (cleaned.length > 10) {
+                cleaned = cleaned.substring(0, 10);
+              }
+              field.onChange(cleaned);
+            };
+            return (
+              <FormItem>
+                <FormLabel>Voorkeur verhuisdatum</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      {...field}
+                      onChange={handleDateInputChange}
+                      placeholder="dd/mm/jjjj"
+                      className="pl-10"
+                      maxLength={10}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+      </div>
+      <FormField
+        control={control}
+        name="beschikbaarheid_flexibel"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel>
+                Beschikbaarheid flexibel
+              </FormLabel>
+            </div>
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

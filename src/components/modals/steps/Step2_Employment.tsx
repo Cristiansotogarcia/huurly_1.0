@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfileFormData } from '../profileSchema';
 import { Briefcase, Building, Euro, FileText, Users, Plus } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export const Step2_Employment = () => {
   const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
@@ -106,6 +107,25 @@ export const Step2_Employment = () => {
             <p className="text-sm text-red-600">{errors.monthly_income.message}</p>
           )}
         </div>
+        <FormField
+          control={control}
+          name="inkomensbewijs_beschikbaar"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  Inkomensbewijs beschikbaar
+                </FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Partner Income Section */}
@@ -184,6 +204,76 @@ export const Step2_Employment = () => {
         </div>
       </div>
 
+      <div className="space-y-4 p-4 bg-indigo-50 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <Users className="w-4 h-4 text-indigo-600" />
+          <h3 className="font-medium text-indigo-900">Borgsteller Informatie</h3>
+        </div>
+        <FormField
+          control={control}
+          name="borgsteller_beschikbaar"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  Borgsteller beschikbaar
+                </FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
+        {watch('borgsteller_beschikbaar') && (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_naam">Naam borgsteller</Label>
+              <Input
+                id="borgsteller_naam"
+                {...register('borgsteller_naam')}
+                placeholder="Naam van borgsteller"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_relatie">Relatie tot borgsteller</Label>
+              <Input
+                id="borgsteller_relatie"
+                {...register('borgsteller_relatie')}
+                placeholder="Bijv. ouder, familielid"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_telefoon">Telefoon borgsteller</Label>
+              <Input
+                id="borgsteller_telefoon"
+                {...register('borgsteller_telefoon')}
+                placeholder="Telefoonnummer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_inkomen">Inkomen borgsteller</Label>
+              <div className="relative">
+                <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="borgsteller_inkomen"
+                  type="number"
+                  {...register('borgsteller_inkomen', { setValueAs: (v) => v ? Number(v) : 0 })}
+                  placeholder="3000"
+                  className="pl-10"
+                  min="0"
+                  step="100"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Extra Income Section */}
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="font-medium text-blue-900 mb-2">💡 Tip</h3>
         <p className="text-sm text-blue-800">

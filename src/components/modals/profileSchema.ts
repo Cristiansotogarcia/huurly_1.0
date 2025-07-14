@@ -44,6 +44,7 @@ export const profileSchema = z.object({
   employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
   work_contract_type: z.string().optional(),
   monthly_income: z.number().min(0, 'Inkomen mag niet negatief zijn'),
+  inkomensbewijs_beschikbaar: z.boolean().default(false),
   work_from_home: z.boolean().default(false),
   extra_income: z.number().min(0, 'Extra inkomen mag niet negatief zijn').optional(),
   extra_income_description: z.string().max(200, 'Beschrijving mag maximaal 200 karakters lang zijn').optional(),
@@ -54,6 +55,11 @@ export const profileSchema = z.object({
   partner_profession: z.string().optional(),
   partner_employment_status: z.string().optional(),
   partner_monthly_income: z.number().min(0, 'Partner inkomen mag niet negatief zijn').optional(),
+  borgsteller_beschikbaar: z.boolean().default(false),
+  borgsteller_naam: z.string().optional(),
+  borgsteller_relatie: z.string().optional(),
+  borgsteller_telefoon: z.string().optional(),
+  borgsteller_inkomen: z.number().min(0).optional(),
 
   // Step 4: Housing Preferences
   preferred_city: z.array(z.string()).min(1, 'Minimaal één voorkeursstad is verplicht'),
