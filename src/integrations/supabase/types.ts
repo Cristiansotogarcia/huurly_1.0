@@ -499,6 +499,12 @@ export type Database = {
           voorkeur_verhuisdatum: string | null
           vroegste_verhuisdatum: string | null
           woningvoorkeur: Json | null
+          has_children: boolean | null
+          number_of_children: number | null
+          children_ages: number[] | null
+          partner_income: number | null
+          extra_income: number | null
+          extra_income_description: string | null
         }
         Insert: {
           aangemaakt_op?: string
@@ -529,6 +535,12 @@ export type Database = {
           voorkeur_verhuisdatum?: string | null
           vroegste_verhuisdatum?: string | null
           woningvoorkeur?: Json | null
+          has_children?: boolean | null
+          number_of_children?: number | null
+          children_ages?: number[] | null
+          partner_income?: number | null
+          extra_income?: number | null
+          extra_income_description?: string | null
         }
         Update: {
           aangemaakt_op?: string
@@ -559,6 +571,12 @@ export type Database = {
           voorkeur_verhuisdatum?: string | null
           vroegste_verhuisdatum?: string | null
           woningvoorkeur?: Json | null
+          has_children?: boolean | null
+          number_of_children?: number | null
+          children_ages?: number[] | null
+          partner_income?: number | null
+          extra_income?: number | null
+          extra_income_description?: string | null
         }
         Relationships: [
           {

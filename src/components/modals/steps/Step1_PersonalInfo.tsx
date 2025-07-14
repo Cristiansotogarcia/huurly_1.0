@@ -4,12 +4,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProfileFormData } from '../profileSchema';
-import { User, Calendar, Phone, Globe } from 'lucide-react';
+import { User, Calendar, Phone, Globe, Baby } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import EnhancedDatePicker from '../EnhancedDatePicker';
+// Removed EnhancedDatePicker import as we're using text input now
 
 export const Step1_PersonalInfo = () => {
-  const { control, register, formState: { errors } } = useFormContext<ProfileFormData>();
+  const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
+  
+  const hasChildren = watch('has_children');
+  const numberOfChildren = watch('number_of_children') || 0;
 
   return (
     <div className="space-y-6">
@@ -55,22 +58,48 @@ export const Step1_PersonalInfo = () => {
         <FormField
           control={control}
           name="date_of_birth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Geboortedatum *</FormLabel>
-              <FormControl>
-                <EnhancedDatePicker
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  placeholder="Selecteer geboortedatum"
-                  disabled={(date) => 
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+              let value = e.target.value;
+              
+              // Remove any non-numeric characters except /
+              let cleaned = value.replace(/[^\d/]/g, '');
+              
+              // Auto-format as user types
+              if (cleaned.length >= 2 && cleaned.charAt(2) !== '/') {
+                cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
+              }
+              if (cleaned.length >= 5 && cleaned.charAt(5) !== '/') {
+                cleaned = cleaned.substring(0, 5) + '/' + cleaned.substring(5);
+              }
+              
+              // Limit to dd/mm/yyyy format (10 characters)
+              if (cleaned.length > 10) {
+                cleaned = cleaned.substring(0, 10);
+              }
+              
+              field.onChange(cleaned);
+            };
+            
+            return (
+              <FormItem>
+                <FormLabel>Geboortedatum *</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      {...field}
+                      onChange={handleDateInputChange}
+                      placeholder="dd/mm/jjjj"
+                      className="pl-10"
+                      maxLength={10}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <div className="space-y-2">
@@ -155,6 +184,93 @@ export const Step1_PersonalInfo = () => {
           </FormItem>
         )}
       />
+
+      {/* Children Information */}
+      <div className="space-y-4">
+        <FormField
+          control={control}
+          name="has_children"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Heb je kinderen?</FormLabel>
+              <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value ? 'true' : 'false'}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="false">Nee</SelectItem>
+                  <SelectItem value="true">Ja</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {hasChildren && (
+          <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Baby className="w-4 h-4 text-blue-600" />
+              <h3 className="font-medium text-blue-900">Informatie over kinderen</h3>
+            </div>
+            
+            <FormField
+              control={control}
+              name="number_of_children"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Aantal kinderen</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecteer aantal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {numberOfChildren > 0 && (
+              <div className="space-y-2">
+                <Label>Leeftijden van kinderen</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Array.from({ length: numberOfChildren }, (_, index) => (
+                    <FormField
+                      key={index}
+                      control={control}
+                      name={`children_ages.${index}` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder={`Kind ${index + 1}`}
+                              min="0"
+                              max="25"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,8 +1,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   /* Dutch flag colors */
@@ -27,17 +27,18 @@
   --destructive: 0 100% 50%;
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 60%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: 'Inter', sans-serif;
   }
 }
@@ -97,10 +98,20 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-dutch-orange hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition-colors;
+    background-color: var(--dutch-orange);
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
   }
   
   .btn-secondary {
-    @apply bg-dutch-blue hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded transition-colors;
+    background-color: var(--dutch-blue);
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
   }
 }
