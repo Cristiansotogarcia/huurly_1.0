@@ -1,5 +1,32 @@
 # Huurly Project Changelog
 
+## Stripe Checkout Dutch Locale Configuration - January 2025
+
+**Change:** Added Dutch locale parameter to Stripe checkout session creation
+
+**Problem:** Stripe checkout pages were defaulting to the user's browser language or English instead of consistently displaying in Dutch for all users
+
+**Root Cause:** The `create-checkout-session` function was not explicitly setting a locale parameter, causing Stripe to use default language detection
+
+**Solution:** 
+- Added `locale: "nl"` parameter to the sessionPayload object in the create-checkout-session function
+- This ensures all Stripe checkout pages display in Dutch regardless of user's browser settings
+- Maintains consistency with the existing Dutch language implementation throughout the application
+
+**Technical Changes:**
+- Modified `sessionPayload` object in `supabase/functions/create-checkout-session/index.ts`
+- Added `locale: "nl"` parameter to force Dutch language on all Stripe checkout sessions
+- Complements existing Dutch language features like `mapStripeStatusToDutch()` in webhook handling
+- Aligns with frontend `'nl-NL'` formatting used in `stripe-config.ts`
+
+**Files Modified:**
+- `supabase/functions/create-checkout-session/index.ts`
+- `changelog.md`
+
+**Result:** All Stripe checkout pages now consistently display in Dutch for all users
+
+---
+
 ## Migration Fix: Betalingen Table Reference Error - January 2025
 
 **Change:** Fixed migration error in `20250105000005_fix_betalingen_trigger_again.sql`

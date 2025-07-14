@@ -109,6 +109,7 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl || `${req.headers.get("origin")}/payment-success`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/dashboard`,
+      locale: "nl",
       subscription_data: {
         metadata: {
           user_id: userIdToUse,
