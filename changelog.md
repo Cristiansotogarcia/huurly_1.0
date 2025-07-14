@@ -1,28 +1,55 @@
 # Huurly Project Changelog
 
+## Database Authentication Error Fix - January 2025
+
+**Problem:** Getting 400 Bad Request error with "No API key found" when accessing admin dashboard, causing database queries to fail
+
+**Root Cause:** The `useBeheerderDashboard` hook was making API calls to `userService.getUsers()` before authentication was fully established, causing Supabase queries to fail due to missing authentication context
+
+**Solution:**
+- Added authentication guards to `useBeheerderDashboard` hook
+- Implemented proper timing checks to ensure API calls only happen after authentication is complete
+- Added role-based authorization checks within the hook
+- Improved error handling and logging
+
+**Technical Changes:**
+- Updated `src/hooks/useBeheerderDashboard.ts`:
+  - Added `useAuth` hook integration for authentication state
+  - Added authentication and authorization guards before API calls
+  - Implemented proper loading state management based on auth status
+  - Added role verification (only 'beheerder' can access)
+  - Improved error logging with `logger` instead of `console.error`
+  - Updated dependency array to include auth state variables
+
+**Files Modified:**
+- `src/hooks/useBeheerderDashboard.ts`
+- `changelog.md`
+
+---
+
 ## Password Reset Loading Issue Fix - January 2025
 
-### Issue Fixed
-**FIXED**: Password reset page hanging in loading state after token verification
-- **Problem**: After successful token verification, the password reset page remained stuck in loading state
-- **Root Cause**: Auth state change listener triggered heavy user mapping database queries that caused the page to hang
-- **Solution**: Removed dependency on useAuth hook and used direct Supabase auth.updateUser() call
-- **Impact**: Password reset flow now works smoothly without hanging
+**Problem:** Password reset page was hanging in loading state after token verification
 
-### Technical Details
-- **File Modified**: `src/pages/ResetPassword.tsx` - Removed useAuth dependency and implemented direct password update
-- **Changes**: 
-  - Removed `useAuth` hook import and usage
-  - Added direct `supabase.auth.updateUser()` call
-  - Added `passwordSchema` validation (imported from `@/lib/validation`)
-  - Added sign out after password update to clear session
-  - Fixed import error for `passwordSchema`
-- **Benefits**: 
-  - Eliminates hanging during user role mapping
-  - Faster password reset process
-  - Cleaner session management
-- **TypeScript**: No compilation errors
-- **Verification**: Password reset flow now completes successfully
+**Root Cause:** The `onAuthStateChange` callback in `authService.ts` was triggering heavy user mapping database queries through `userMapper.mapSupabaseUserToUser` after password token verification, causing the UI to remain in loading state
+
+**Solution:** 
+- Modified `ResetPassword.tsx` to directly use `supabase.auth.updateUser()` instead of the `useAuth` hook
+- Added password validation using `passwordSchema` from `@/lib/validation`
+- Implemented automatic sign-out after successful password update to ensure clean authentication state
+- Bypassed the heavy user mapping process that was causing the hang
+
+**Technical Changes:**
+- Updated `src/pages/ResetPassword.tsx`:
+  - Removed `useAuth` import and usage
+  - Added direct Supabase client usage for password updates
+  - Added `passwordSchema` validation (corrected import from `@/lib/validation`)
+  - Added automatic sign-out after password update
+  - Improved error handling and user feedback
+
+**Files Modified:**
+- `src/pages/ResetPassword.tsx`
+- `changelog.md`
 
 ---
 
