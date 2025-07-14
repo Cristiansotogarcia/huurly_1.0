@@ -1,4 +1,31 @@
 # Huurly Project Changelog
+## Fix: Payment Modal Flash on Login - January 2025
+
+**Change:** Fixed payment modal flashing for users who have already confirmed their payment when they log in.
+
+**Problem:** Users with active subscriptions were experiencing a brief flash of the payment modal during login, creating a poor user experience and confusion about their payment status.
+
+**Root Cause:** A race condition in the payment modal visibility logic in `HuurderDashboard.tsx`. The modal was controlled by a useEffect that checked `!isLoadingSubscription && !isSubscribed`, but there was a brief moment during login where `isLoadingSubscription` became `false` before the actual subscription data had loaded, causing the modal to flash.
+
+**Solution:** 
+- Added `hasInitialDataLoaded` state to track when the first data load completes
+- Modified the payment modal visibility logic to only show the modal after initial data has been loaded
+- This prevents the modal from showing prematurely during the initial loading phase while maintaining correct behavior for unsubscribed users
+
+**Technical Changes:**
+- Added `hasInitialDataLoaded` state variable to `HuurderDashboard.tsx`
+- Added useEffect to track when initial data loading completes
+- Updated payment modal visibility logic to include `hasInitialDataLoaded` condition
+- Enhanced the dependency array to include the new state variable
+
+**Files Modified:**
+- `src/pages/HuurderDashboard.tsx`
+- `changelog.md`
+
+**Result:** Users with active subscriptions no longer see a payment modal flash during login, providing a smooth and professional user experience.
+
+---
+
 ## Performance Optimization: Payment Processing Flow - January 2025
 
 **Change:** Optimized the `create-checkout-session` edge function for significantly faster payment processing.

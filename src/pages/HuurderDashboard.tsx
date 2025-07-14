@@ -45,9 +45,10 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   const { handleSettings, handleLogout, onStartSearch, handleReportIssue, handleHelpSupport } = useHuurderActions();
   const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
 
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const { toast } = useToast();
   
   // Define profile sections for the ProfileOverview component
@@ -135,15 +136,22 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
 
   const isSubscribed = subscription && subscription.status === 'active';
 
+  // Track when initial data has been loaded to prevent modal flash
   useEffect(() => {
-    // Only show payment modal if user is loaded, subscription is not loading, and user is not subscribed
-    if (user && !isLoadingSubscription && !isSubscribed) {
+    if (user && !isLoadingSubscription && !hasInitialDataLoaded) {
+      setHasInitialDataLoaded(true);
+    }
+  }, [user, isLoadingSubscription, hasInitialDataLoaded]);
+
+  useEffect(() => {
+    // Only show payment modal if user is loaded, initial data has loaded, subscription is not loading, and user is not subscribed
+    if (user && hasInitialDataLoaded && !isLoadingSubscription && !isSubscribed) {
       setShowPaymentModal(true);
     } else if (user && (isSubscribed || isLoadingSubscription)) {
       // Close payment modal when user becomes subscribed or while loading
       setShowPaymentModal(false);
     }
-  }, [user, isSubscribed, isLoadingSubscription]);
+  }, [user, isSubscribed, isLoadingSubscription, hasInitialDataLoaded]);
 
   // Handle payment cancellation redirect
   useEffect(() => {
