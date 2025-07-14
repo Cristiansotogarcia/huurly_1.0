@@ -153,7 +153,7 @@ export default function Step1PersonalInfo({
               <SelectItem value="man">Man</SelectItem>
               <SelectItem value="vrouw">Vrouw</SelectItem>
               <SelectItem value="anders">Anders</SelectItem>
-              <SelectItem value="geen_antwoord">Zeg ik liever niet</SelectItem>
+              <SelectItem value="zeg_ik_liever_niet">Zeg ik liever niet</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -181,10 +181,9 @@ export default function Step1PersonalInfo({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="single">Alleenstaand</SelectItem>
-            <SelectItem value="relationship">Relatie</SelectItem>
-            <SelectItem value="married">Getrouwd</SelectItem>
-            <SelectItem value="divorced">Gescheiden</SelectItem>
-            <SelectItem value="widowed">Weduwe/weduwnaar</SelectItem>
+            <SelectItem value="samenwonend">Samenwonend</SelectItem>
+            <SelectItem value="getrouwd">Getrouwd</SelectItem>
+            <SelectItem value="gescheiden">Gescheiden</SelectItem>
           </SelectContent>
         </Select>
       </div>

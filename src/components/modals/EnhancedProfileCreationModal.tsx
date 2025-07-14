@@ -40,7 +40,8 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      // Initialize with default values using correct field names
+      // Step 1: Personal Info
+      profilePictureUrl: '',
       first_name: '',
       last_name: '',
       date_of_birth: '',
@@ -48,24 +49,51 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       sex: 'zeg_ik_liever_niet',
       nationality: 'Nederlandse',
       marital_status: 'single',
+      
+      // Children information
       has_children: false,
       number_of_children: 0,
       children_ages: [],
+      
+      // Step 2: Employment
       profession: '',
       employer: '',
       employment_status: 'full-time',
+      work_contract_type: '',
       monthly_income: 0,
-      partner_income: 0,
-      extra_income: 0,
+      work_from_home: false,
+      extra_income: undefined,
       extra_income_description: '',
-      preferred_city: '',
+      
+      // Step 3: Household
+      has_partner: false,
+      partner_name: '',
+      partner_profession: '',
+      partner_employment_status: '',
+      partner_monthly_income: undefined,
+      
+      // Step 4: Housing Preferences
+      preferred_city: [],
       preferred_property_type: 'appartement',
-      preferred_bedrooms: 1,
-      maxBudget: 1000,
-      minBudget: 500,
+      preferred_bedrooms: undefined,
+      furnished_preference: undefined,
+      min_budget: undefined,
+      max_budget: 1000,
+      min_kamers: undefined,
+      max_kamers: undefined,
+      vroegste_verhuisdatum: '',
+      voorkeur_verhuisdatum: '',
+      beschikbaarheid_flexibel: false,
+      parking_required: false,
+      storage_needs: '',
+      
+      // Step 4: Lifestyle
       hasPets: false,
+      pet_details: '',
       smokes: false,
       smoking_details: '',
+      
+      // Step 8: Profile & Motivation
       bio: '',
       motivation: '',
     },

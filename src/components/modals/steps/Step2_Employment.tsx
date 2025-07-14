@@ -117,23 +117,23 @@ export const Step2_Employment = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="partner_income">Maandelijks netto inkomen partner</Label>
+            <Label htmlFor="partner_monthly_income">Maandelijks netto inkomen partner</Label>
             <div className="relative">
               <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                id="partner_income"
+                id="partner_monthly_income"
                 type="number"
-                {...register('partner_income', { 
+                {...register('partner_monthly_income', { 
                   setValueAs: (value) => value ? Number(value) : 0 
                 })}
                 placeholder="2500"
-                className={`pl-10 ${errors.partner_income ? 'border-red-500' : ''}`}
+                className={`pl-10 ${errors.partner_monthly_income ? 'border-red-500' : ''}`}
                 min="0"
                 step="100"
               />
             </div>
-            {errors.partner_income && (
-              <p className="text-sm text-red-600">{errors.partner_income.message}</p>
+            {errors.partner_monthly_income && (
+              <p className="text-sm text-red-600">{errors.partner_monthly_income.message}</p>
             )}
           </div>
         </div>

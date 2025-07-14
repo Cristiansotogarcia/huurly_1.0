@@ -27,18 +27,22 @@ export default function Step4Housing({ formData, handleInputChange }: Step4Housi
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="preferred_city">Gewenste stad *</Label>
+          <Label htmlFor="preferred_city">Gewenste steden *</Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               id="preferred_city"
-              value={formData.preferred_city}
-              onChange={(e) => handleInputChange('preferred_city', e.target.value)}
-              placeholder="Amsterdam"
+              value={Array.isArray(formData.preferred_city) ? formData.preferred_city.join(', ') : formData.preferred_city || ''}
+              onChange={(e) => {
+                const cities = e.target.value.split(',').map(city => city.trim()).filter(city => city.length > 0);
+                handleInputChange('preferred_city', cities);
+              }}
+              placeholder="Amsterdam, Utrecht, Den Haag"
               className="pl-10"
               required
             />
           </div>
+          <p className="text-sm text-gray-500">Meerdere steden scheiden met komma's</p>
         </div>
 
         <div className="space-y-2">
@@ -60,30 +64,29 @@ export default function Step4Housing({ formData, handleInputChange }: Step4Housi
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="preferred_bedrooms">Aantal slaapkamers</Label>
+          <Label htmlFor="min_kamers">Minimum aantal kamers</Label>
           <Input
-            id="preferred_bedrooms"
+            id="min_kamers"
             type="number"
-            min="0"
+            min="1"
             max="10"
-            value={formData.preferred_bedrooms}
-            onChange={(e) => handleInputChange('preferred_bedrooms', parseInt(e.target.value) || 1)}
+            value={formData.min_kamers || ''}
+            onChange={(e) => handleInputChange('min_kamers', parseInt(e.target.value) || null)}
             placeholder="2"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="furnished_preference">Gemeubileerd</Label>
-          <Select value={formData.furnished_preference} onValueChange={(value) => handleInputChange('furnished_preference', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecteer voorkeur" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gemeubileerd">Gemeubileerd</SelectItem>
-              <SelectItem value="ongemeubileerd">Ongemeubileerd</SelectItem>
-              <SelectItem value="geen_voorkeur">Geen voorkeur</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="max_kamers">Maximum aantal kamers</Label>
+          <Input
+            id="max_kamers"
+            type="number"
+            min="1"
+            max="10"
+            value={formData.max_kamers || ''}
+            onChange={(e) => handleInputChange('max_kamers', parseInt(e.target.value) || null)}
+            placeholder="4"
+          />
         </div>
       </div>
 
@@ -120,7 +123,38 @@ export default function Step4Housing({ formData, handleInputChange }: Step4Housi
         </div>
       </div>
 
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="vroegste_verhuisdatum">Vroegste verhuisdatum</Label>
+          <Input
+            id="vroegste_verhuisdatum"
+            type="date"
+            value={formData.vroegste_verhuisdatum || ''}
+            onChange={(e) => handleInputChange('vroegste_verhuisdatum', e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="voorkeur_verhuisdatum">Gewenste verhuisdatum</Label>
+          <Input
+            id="voorkeur_verhuisdatum"
+            type="date"
+            value={formData.voorkeur_verhuisdatum || ''}
+            onChange={(e) => handleInputChange('voorkeur_verhuisdatum', e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="beschikbaarheid_flexibel"
+            checked={formData.beschikbaarheid_flexibel}
+            onCheckedChange={(checked) => handleInputChange('beschikbaarheid_flexibel', checked)}
+          />
+          <Label htmlFor="beschikbaarheid_flexibel">Flexibele verhuisdatum</Label>
+        </div>
+
         <div className="flex items-center space-x-2">
           <Checkbox
             id="parking_required"

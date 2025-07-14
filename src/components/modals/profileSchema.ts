@@ -42,25 +42,42 @@ export const profileSchema = z.object({
   profession: z.string().min(1, 'Beroep is verplicht'),
   employer: z.string().min(1, 'Werkgever is verplicht'),
   employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
+  work_contract_type: z.string().optional(),
   monthly_income: z.number().min(0, 'Inkomen mag niet negatief zijn'),
-  partner_income: z.number().min(0, 'Partner inkomen mag niet negatief zijn').optional(),
+  work_from_home: z.boolean().default(false),
   extra_income: z.number().min(0, 'Extra inkomen mag niet negatief zijn').optional(),
   extra_income_description: z.string().max(200, 'Beschrijving mag maximaal 200 karakters lang zijn').optional(),
+  
+  // Step 3: Household
+  has_partner: z.boolean().default(false),
+  partner_name: z.string().optional(),
+  partner_profession: z.string().optional(),
+  partner_employment_status: z.string().optional(),
+  partner_monthly_income: z.number().min(0, 'Partner inkomen mag niet negatief zijn').optional(),
 
-  // Step 3: Housing Preferences
-  preferred_city: z.string().min(1, 'Voorkeursstad is verplicht'),
-  preferred_property_type: z.enum(['appartement', 'huis', 'studio'], { required_error: 'Woningtype is verplicht' }),
-  preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer'),
-  maxBudget: z.number().min(1, "Budget moet groter dan 0 zijn"),
-  minBudget: z.number().min(0, "Budget mag niet negatief zijn"),
+  // Step 4: Housing Preferences
+  preferred_city: z.array(z.string()).min(1, 'Minimaal één voorkeursstad is verplicht'),
+  preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
+  preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer').optional(),
+  furnished_preference: z.enum(['gemeubileerd', 'ongemeubileerd', 'geen_voorkeur']).optional(),
+  min_budget: z.number().min(0, "Budget mag niet negatief zijn").optional(),
+  max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
+  min_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
+  max_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
+  vroegste_verhuisdatum: z.string().optional(),
+  voorkeur_verhuisdatum: z.string().optional(),
+  beschikbaarheid_flexibel: z.boolean().default(false),
+  parking_required: z.boolean().default(false),
+  storage_needs: z.string().optional(),
 
-  // Step 4: Lifestyle
-  hasPets: z.boolean(),
+  // Step 4: Lifestyle (separate component)
+  hasPets: z.boolean().default(false),
   pet_details: z.string().optional(),
-  smokes: z.boolean(),
+  smokes: z.boolean().default(false),
   smoking_details: z.string().optional(),
 
-  // Step 5: Motivation
+  // Step 8: Profile & Motivation
+  profilePictureUrl: z.string().optional(),
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),
   motivation: z.string().min(50, 'Motivatie moet minimaal 50 karakters lang zijn').max(500, 'Motivatie mag maximaal 500 karakters lang zijn'),
 });

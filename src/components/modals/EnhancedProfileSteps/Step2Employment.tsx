@@ -55,12 +55,11 @@ export default function Step2Employment({ formData, handleInputChange }: Step2Em
               <SelectValue placeholder="Selecteer status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="vast_contract">Vast contract</SelectItem>
-              <SelectItem value="tijdelijk_contract">Tijdelijk contract</SelectItem>
+              <SelectItem value="full-time">Vast contract (full-time)</SelectItem>
+              <SelectItem value="part-time">Tijdelijk contract (part-time)</SelectItem>
               <SelectItem value="zzp">ZZP</SelectItem>
               <SelectItem value="student">Student</SelectItem>
               <SelectItem value="werkloos">Werkloos</SelectItem>
-              <SelectItem value="pensioen">Pensioen</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -91,6 +90,33 @@ export default function Step2Employment({ formData, handleInputChange }: Step2Em
           />
         </div>
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="extra_income">Extra inkomen (optioneel)</Label>
+        <div className="relative">
+          <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            id="extra_income"
+            type="number"
+            value={formData.extra_income || ''}
+            onChange={(e) => handleInputChange('extra_income', parseInt(e.target.value) || null)}
+            placeholder="1000"
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {formData.extra_income && (
+        <div className="space-y-2">
+          <Label htmlFor="extra_income_description">Beschrijving extra inkomen</Label>
+          <Input
+            id="extra_income_description"
+            value={formData.extra_income_description || ''}
+            onChange={(e) => handleInputChange('extra_income_description', e.target.value)}
+            placeholder="Bijv. freelance werk, uitkering, etc."
+          />
+        </div>
+      )}
 
       <div className="flex items-center space-x-2">
         <Checkbox

@@ -84,7 +84,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       // Store URL in Supabase
       await supabase
         .from('huurders')
-        .update({ profielfoto_url: publicUrl })
+        .update({ profiel_foto: publicUrl })
         .eq('id', userId);
 
       // Update preview immediately
@@ -134,7 +134,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       // Remove URL from Supabase
       await supabase
         .from('huurders')
-        .update({ profielfoto_url: null })
+        .update({ profiel_foto: null })
         .eq('id', userId);
 
       // Clear preview and notify parent

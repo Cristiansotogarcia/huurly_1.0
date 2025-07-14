@@ -458,9 +458,9 @@ export class UserService extends DatabaseService {
 
       if (filters?.hasChildren !== undefined) {
         if (filters.hasChildren) {
-          tenantQuery = tenantQuery.gt('kinderen', 0);
+          tenantQuery = tenantQuery.gt('aantal_kinderen', 0);
         } else {
-          tenantQuery = tenantQuery.eq('kinderen', 0);
+          tenantQuery = tenantQuery.eq('aantal_kinderen', 0);
         }
       }
 
@@ -594,11 +594,11 @@ export class UserService extends DatabaseService {
     try {
       const { data: tenant } = await supabase
         .from('huurders')
-        .select('profielfoto_url')
+        .select('profiel_foto')
         .eq('id', userId)
         .single();
 
-      return tenant?.profielfoto_url || null;
+      return tenant?.profiel_foto || null;
     } catch (error) {
       logger.error('Error fetching profile picture URL:', error);
       return null;

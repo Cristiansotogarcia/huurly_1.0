@@ -1,4 +1,101 @@
 # Huurly Project Changelog
+
+## Fix: Database Column Name Mismatches - January 2025
+
+**Change:** Fixed TypeScript compilation errors caused by incorrect database column name references in ProfilePictureUpload.tsx and UserService.ts.
+
+**Problem:** The application was using outdated column names that no longer existed in the database schema:
+- `profielfoto_url_old` was being used instead of `profiel_foto` for profile picture URLs
+- `kinderen` was being used instead of `aantal_kinderen` for children count filtering
+
+**Root Cause:** Database schema changes had renamed/restructured columns, but the application code was not updated to reflect these changes. The migration files showed that:
+- `profielfoto_url` was renamed to `profielfoto_url_old` and then the correct column became `profiel_foto`
+- `kinderen` column was replaced with `aantal_kinderen` during table restructuring
+
+**Solution:** 
+- Updated ProfilePictureUpload.tsx to use `profiel_foto` instead of `profielfoto_url_old`
+- Updated UserService.ts to use `profiel_foto` for profile picture queries
+- Updated UserService.ts to use `aantal_kinderen` instead of `kinderen` for children count filtering
+
+**Technical Changes:**
+- Modified ProfilePictureUpload.tsx: Changed `.update({ profielfoto_url_old: publicUrl })` to `.update({ profiel_foto: publicUrl })`
+- Modified ProfilePictureUpload.tsx: Changed `.update({ profielfoto_url_old: null })` to `.update({ profiel_foto: null })`
+- Modified UserService.ts: Changed `.select('profielfoto_url_old')` to `.select('profiel_foto')`
+- Modified UserService.ts: Changed `tenant?.profielfoto_url_old` to `tenant?.profiel_foto`
+- Modified UserService.ts: Changed `.gt('kinderen', 0)` to `.gt('aantal_kinderen', 0)`
+- Modified UserService.ts: Changed `.eq('kinderen', 0)` to `.eq('aantal_kinderen', 0)`
+
+**Files Modified:**
+- `src/components/ProfilePictureUpload.tsx`
+- `src/services/UserService.ts`
+- `changelog.md`
+
+**Result:** TypeScript compilation now passes without errors (exit code 0). Profile picture upload/removal and children filtering functionality now work correctly with the current database schema.
+
+**Key Learning:** Always verify database column names match the current schema after migrations, especially when columns are renamed or restructured.
+
+---
+## Fix: Database Migration Column Reference Error - January 2025
+
+**Change:** Fixed critical error in huurders table restructure migration script that was causing deployment failures.
+
+**Problem:** The migration script `20250105000000_restructure_huurders_table.sql` was failing with error "column 'kinderen' does not exist" during database push. The script was attempting to reference the `kinderen` column in a data migration step after it had already been dropped in an earlier step.
+
+**Root Cause:** The migration script had incorrect step ordering - it was trying to migrate data from the `kinderen` column to new columns (`heeft_kinderen` and `aantal_kinderen`) in Step 8, but the `kinderen` column was already dropped in Step 3. This created a logical error where the script referenced a non-existent column.
+
+**Solution:** 
+- Reordered migration steps to perform data migration BEFORE dropping source columns
+- Moved data migration from Step 8 to Step 2 (before column renames and drops)
+- Updated all subsequent step numbers to maintain logical flow
+- Ensured data is migrated from `kinderen` to `has_children` and `number_of_children` before renaming these columns to Dutch equivalents
+- Removed duplicate data migration section that was causing the error
+
+**Technical Changes:**
+- Moved data migration logic to Step 2: `UPDATE public.huurders SET has_children = CASE WHEN kinderen > 0 THEN true ELSE false END, number_of_children = COALESCE(kinderen, 0)`
+- Reordered steps: Data migration → Column renames → Column drops → Comments → Functions → Triggers → Indexes → RLS
+- Updated step numbering from 1-11 to maintain logical sequence
+- Removed redundant data migration section that referenced dropped columns
+
+**Files Modified:**
+- `supabase/migrations/20250105000000_restructure_huurders_table.sql`
+- `changelog.md`
+
+**Result:** Database migration now executes successfully without column reference errors. The huurders table restructure can be deployed safely with proper data preservation and Dutch column naming.
+
+**Key Learning:** Always perform data migration operations BEFORE dropping source columns in database migrations to avoid reference errors.
+
+---
+
+## Migration Fix: Duplicate Key Constraint Error - January 2025
+
+**Change:** Resolved duplicate key constraint violation when applying huurders table restructure migration.
+
+**Problem:** Migration was failing with `ERROR: duplicate key value violates unique constraint "schema_migrations_pkey"` when attempting to apply migration `20250105000000_restructure_huurders_table.sql`. The migration version already existed in the `schema_migrations` table from a previous partial application.
+
+**Root Cause:** The migration had been partially applied previously, leaving an entry in `schema_migrations` table. Attempting to reapply the same migration version caused a primary key constraint violation.
+
+**Solution:** 
+- Created new migration file with fresh timestamp: `20250714171602_restructure_huurders_table_fixed.sql`
+- Copied the corrected migration content to the new file
+- Deleted the problematic original migration file
+- Successfully applied the new migration
+
+**Technical Changes:**
+- Created `supabase/migrations/20250714171602_restructure_huurders_table_fixed.sql`
+- Deleted `supabase/migrations/20250105000000_restructure_huurders_table.sql`
+- Migration applied successfully with exit code 0
+
+**Files Modified:**
+- `supabase/migrations/20250714171602_restructure_huurders_table_fixed.sql` (created)
+- `supabase/migrations/20250105000000_restructure_huurders_table.sql` (deleted)
+- `changelog.md`
+
+**Result:** Migration now executes successfully without duplicate key constraint violations. The huurders table restructure is properly applied with correct data migration ordering.
+
+**Key Learning:** When migration versions conflict, create a new migration with a fresh timestamp rather than attempting to modify existing migration entries.
+
+---
+
 ## Fix: Payment Modal Flash on Login - January 2025
 
 **Change:** Fixed payment modal flashing for users who have already confirmed their payment when they log in.

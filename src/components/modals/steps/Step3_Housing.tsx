@@ -10,8 +10,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 export const Step3_Housing = () => {
   const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
   
-  const minBudget = watch('minBudget');
-  const maxBudget = watch('maxBudget');
+  const minBudget = watch('min_budget');
+  const maxBudget = watch('max_budget');
 
   return (
     <div className="space-y-6">
@@ -91,44 +91,44 @@ export const Step3_Housing = () => {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="minBudget">Minimum budget *</Label>
+          <Label htmlFor="min_budget">Minimum budget *</Label>
           <div className="relative">
             <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              id="minBudget"
+              id="min_budget"
               type="number"
-              {...register('minBudget', { 
+              {...register('min_budget', { 
                 setValueAs: (value) => value ? Number(value) : 0 
               })}
               placeholder="500"
-              className={`pl-10 ${errors.minBudget ? 'border-red-500' : ''}`}
+              className={`pl-10 ${errors.min_budget ? 'border-red-500' : ''}`}
               min="0"
               step="50"
             />
           </div>
-          {errors.minBudget && (
-            <p className="text-sm text-red-600">{errors.minBudget.message}</p>
+          {errors.min_budget && (
+            <p className="text-sm text-red-600">{errors.min_budget.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="maxBudget">Maximum budget *</Label>
+          <Label htmlFor="max_budget">Maximum budget *</Label>
           <div className="relative">
             <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              id="maxBudget"
+              id="max_budget"
               type="number"
-              {...register('maxBudget', { 
+              {...register('max_budget', { 
                 setValueAs: (value) => value ? Number(value) : 0 
               })}
               placeholder="1000"
-              className={`pl-10 ${errors.maxBudget ? 'border-red-500' : ''}`}
+              className={`pl-10 ${errors.max_budget ? 'border-red-500' : ''}`}
               min="0"
               step="50"
             />
           </div>
-          {errors.maxBudget && (
-            <p className="text-sm text-red-600">{errors.maxBudget.message}</p>
+          {errors.max_budget && (
+            <p className="text-sm text-red-600">{errors.max_budget.message}</p>
           )}
         </div>
       </div>
@@ -148,4 +148,5 @@ export const Step3_Housing = () => {
         </p>
       </div>
     </div>
-  );};
+  );
+};
