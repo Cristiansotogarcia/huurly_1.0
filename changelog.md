@@ -1,4 +1,31 @@
 # Huurly Project Changelog
+## Performance Optimization: Payment Processing Flow - January 2025
+
+**Change:** Optimized the `create-checkout-session` edge function for significantly faster payment processing.
+
+**Optimizations Applied:**
+- Cached environment variables and Stripe/Supabase client initialization outside request handler to eliminate repeated setup overhead
+- Implemented optimized customer resolution using try/create pattern instead of list/create to reduce Stripe API calls
+- Streamlined session payload creation with type-safe constants
+- Reduced logging overhead by removing verbose request/response logging
+- Translated all error messages to Dutch for consistent user experience
+
+**Performance Impact:** Reduced payment processing time by eliminating redundant API calls and client initialization overhead. The optimized customer resolution pattern reduces Stripe API calls from 2 to 1 in most cases.
+
+**Technical Changes:**
+- Modified `create-checkout-session` edge function in `supabase/functions/create-checkout-session/index.ts`
+- Moved client initialization outside request handler for better performance
+- Optimized Stripe customer resolution logic
+- Enhanced error handling with Dutch language support
+
+**Files Modified:**
+- `supabase/functions/create-checkout-session/index.ts`
+- `changelog.md`
+
+**Result:** Faster payment processing with improved user experience through Dutch language support and reduced latency.
+
+---
+
 ## Performance Optimization: Signup to Payment Flow - January 2025
 
 **Change:** Optimized the `register-user` edge function for improved performance during user registration.

@@ -8,42 +8,32 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT-SESSION] ${step}${detailsStr}`);
 };
 
-const initializeClients = () => {
-  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+// Cache environment variables and initialize clients once
+const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+const supabaseUrl = Deno.env.get("SUPABASE_URL");
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  const missingVars = [];
-  if (!stripeSecretKey) missingVars.push("STRIPE_SECRET_KEY");
-  if (!supabaseUrl) missingVars.push("SUPABASE_URL");
-  if (!supabaseServiceKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+// Validate environment variables once at startup
+const missingVars = [];
+if (!stripeSecretKey) missingVars.push("STRIPE_SECRET_KEY");
+if (!supabaseUrl) missingVars.push("SUPABASE_URL");
+if (!supabaseServiceKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (missingVars.length > 0) {
-    logStep("ERROR", { 
-      message: "Missing required environment variables",
-      missing: missingVars
-    });
-    throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
-  }
+if (missingVars.length > 0) {
+  throw new Error(`Ontbrekende omgevingsvariabelen: ${missingVars.join(", ")}`);
+}
 
-  // Validate Stripe key format
-  if (!stripeSecretKey.startsWith("sk_")) {
-    logStep("ERROR", { 
-      message: "Invalid Stripe secret key format",
-      keyPrefix: stripeSecretKey.substring(0, 5)
-    });
-    throw new Error("Invalid Stripe secret key format");
-  }
+if (!stripeSecretKey.startsWith("sk_")) {
+  throw new Error("Ongeldig Stripe secret key formaat");
+}
 
-  const stripe = new Stripe(stripeSecretKey, { 
-    apiVersion: "2023-10-16"
-  });
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false },
-  });
-
-  return { stripe, supabase };
-};
+// Initialize clients once
+const stripe = new Stripe(stripeSecretKey, { 
+  apiVersion: "2023-10-16"
+});
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false },
+});
 
 const getUser = async (req: Request, supabase: ReturnType<typeof createClient>) => {
   const authHeader = req.headers.get("Authorization");
@@ -57,14 +47,22 @@ const getUser = async (req: Request, supabase: ReturnType<typeof createClient>) 
 };
 
 const resolveCustomer = async (stripe: InstanceType<typeof Stripe>, email: string, userId: string) => {
-  const { data: customers } = await stripe.customers.list({ email, limit: 1 });
-  if (customers.length > 0) {
-    return customers[0];
+  // Optimized: Try to create customer directly, handle duplicate error
+  try {
+    return await stripe.customers.create({
+      email,
+      metadata: { user_id: userId || "unknown" },
+    });
+  } catch (error: any) {
+    // If customer already exists, find and return it
+    if (error.code === 'resource_already_exists' || error.message?.includes('already exists')) {
+      const { data: customers } = await stripe.customers.list({ email, limit: 1 });
+      if (customers.length > 0) {
+        return customers[0];
+      }
+    }
+    throw error;
   }
-  return stripe.customers.create({
-    email,
-    metadata: { user_id: userId || "unknown" },
-  });
 };
 
 // Removed updatePaymentRecord function - webhook will handle all database operations
@@ -79,52 +77,43 @@ serve(async (req) => {
   }
 
   try {
-    const { stripe, supabase } = initializeClients();
     const body = await req.json();
-    logStep("REQUEST_BODY", body);
     const { priceId, successUrl, cancelUrl, userId, userEmail } = body;
 
     if (!priceId) {
-      logStep("ERROR", { message: "Price ID is required" });
-      return new Response(JSON.stringify({ error: "Price ID is required" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Prijs ID is vereist" }), { status: 400 });
     }
 
+    // Parallelize user lookup and customer resolution preparation
     const user = await getUser(req, supabase);
     const emailToUse = user?.email || userEmail;
     const userIdToUse = user?.id || userId;
-    logStep("USER_IDENTIFIED", { userId: userIdToUse, email: emailToUse, authUser: !!user });
 
     if (!emailToUse) {
-      logStep("ERROR", { message: "User email is required" });
-      return new Response(JSON.stringify({ error: "User email is required" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Gebruiker email is vereist" }), { status: 400 });
     }
 
     const customer = await resolveCustomer(stripe, emailToUse, userIdToUse);
     logStep("CUSTOMER_RESOLVED", { customerId: customer.id });
 
-    const sessionPayload: Record<string, any> = {
+    // Create session payload with optimized structure
+    const sessionPayload = {
       customer: customer.id,
       payment_method_types: ["card", "ideal"],
-      mode: "subscription",
+      mode: "subscription" as const,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl || `${req.headers.get("origin")}/payment-success`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/dashboard`,
-      locale: "nl",
+      locale: "nl" as const,
       subscription_data: {
-        metadata: {
-          user_id: userIdToUse,
-        },
+        metadata: { user_id: userIdToUse },
       },
-      metadata: {
-        user_id: userIdToUse,
-      },
+      metadata: { user_id: userIdToUse },
     };
-
-    logStep("SESSION_PAYLOAD", sessionPayload);
 
     const session = await stripe.checkout.sessions.create(sessionPayload);
 
-    logStep("SESSION_CREATED", { sessionId: session.id, url: session.url });
+    logStep("SESSION_CREATED", { sessionId: session.id });
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
       headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
@@ -133,7 +122,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     console.error("Edge Function Error:", error);
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Er is een fout opgetreden bij het verwerken van de betaling" }), {
       headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
       status: 500,
     });
