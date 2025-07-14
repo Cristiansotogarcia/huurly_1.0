@@ -145,7 +145,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
 
   useEffect(() => {
     // Only show payment modal if user is loaded, initial data has loaded, subscription is not loading, and user is not subscribed
-    if (user && hasInitialDataLoaded && !isLoadingSubscription && !isSubscribed) {
+    if (user && hasInitialDataLoaded && !isLoading && !isLoadingSubscription && !isSubscribed) {
       setShowPaymentModal(true);
     } else if (user && (isSubscribed || isLoadingSubscription)) {
       // Close payment modal when user becomes subscribed or while loading

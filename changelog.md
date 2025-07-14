@@ -112,7 +112,7 @@
 **Technical Changes:**
 - Added `hasInitialDataLoaded` state variable to `HuurderDashboard.tsx`
 - Added useEffect to track when initial data loading completes
-- Updated payment modal visibility logic to include `hasInitialDataLoaded` condition
+- Updated payment modal visibility logic to include `hasInitialDataLoaded` and `!isLoading` conditions
 - Enhanced the dependency array to include the new state variable
 
 **Files Modified:**
