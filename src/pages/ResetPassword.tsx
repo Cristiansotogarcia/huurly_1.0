@@ -7,13 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { passwordSchema } from '@/lib/validation';
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { updatePassword } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,12 +77,24 @@ const ResetPassword: React.FC = () => {
     setError('');
 
     try {
-      const result = await updatePassword(password);
+      // Validate password strength
+      const passwordValidation = passwordSchema.safeParse(password);
+      if (!passwordValidation.success) {
+        setError(passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen');
+        return;
+      }
 
-      if (!result.success) {
-        setError(result.message || 'Er is een fout opgetreden bij het bijwerken van uw wachtwoord.');
+      // Update password directly using Supabase
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (updateError) {
+        setError('Er is een fout opgetreden bij het bijwerken van het wachtwoord.');
       } else {
-        toast.success(result.message || 'Wachtwoord succesvol bijgewerkt!');
+        toast.success('Wachtwoord succesvol bijgewerkt!');
+        // Sign out to clear the session and redirect to login
+        await supabase.auth.signOut();
         navigate('/login', { replace: true });
       }
     } catch (err) {

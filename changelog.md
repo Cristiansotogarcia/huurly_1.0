@@ -1,5 +1,31 @@
 # Huurly Project Changelog
 
+## Password Reset Loading Issue Fix - January 2025
+
+### Issue Fixed
+**FIXED**: Password reset page hanging in loading state after token verification
+- **Problem**: After successful token verification, the password reset page remained stuck in loading state
+- **Root Cause**: Auth state change listener triggered heavy user mapping database queries that caused the page to hang
+- **Solution**: Removed dependency on useAuth hook and used direct Supabase auth.updateUser() call
+- **Impact**: Password reset flow now works smoothly without hanging
+
+### Technical Details
+- **File Modified**: `src/pages/ResetPassword.tsx` - Removed useAuth dependency and implemented direct password update
+- **Changes**: 
+  - Removed `useAuth` hook import and usage
+  - Added direct `supabase.auth.updateUser()` call
+  - Added `passwordSchema` validation (imported from `@/lib/validation`)
+  - Added sign out after password update to clear session
+  - Fixed import error for `passwordSchema`
+- **Benefits**: 
+  - Eliminates hanging during user role mapping
+  - Faster password reset process
+  - Cleaner session management
+- **TypeScript**: No compilation errors
+- **Verification**: Password reset flow now completes successfully
+
+---
+
 ## Password Reset Flow Code Quality Improvements - December 2024
 
 ### Issue Fixed
