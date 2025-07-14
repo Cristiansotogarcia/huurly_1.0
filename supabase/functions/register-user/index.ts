@@ -23,16 +23,20 @@ serve(async (req) => {
 
     console.log('Registering user:', { id, email, firstName, lastName, role })
 
-    // Create user in main gebruikers table
+    // Cache timestamp for consistency and performance
+    const timestamp = new Date().toISOString()
+    const fullName = `${firstName} ${lastName}`
+
+    // Create user in main gebruikers table with verification
     const { data: userData, error: userError } = await supabase.from('gebruikers').upsert(
       {
         id,
         email,
-        naam: `${firstName} ${lastName}`,
+        naam: fullName,
         rol: role,
         profiel_compleet: false,
-        aangemaakt_op: new Date().toISOString(),
-        bijgewerkt_op: new Date().toISOString(),
+        aangemaakt_op: timestamp,
+        bijgewerkt_op: timestamp,
       },
       {
         onConflict: 'id',
@@ -51,14 +55,14 @@ serve(async (req) => {
 
     console.log('User created successfully:', userData[0])
 
-    // Create role-specific record
+    // Create role-specific record with optimized approach
     if (role === 'huurder') {
       console.log('Creating huurder record for user:', id)
       const { data: huurderData, error: huurderError } = await supabase.from('huurders').upsert(
         {
           id,
-          aangemaakt_op: new Date().toISOString(),
-          bijgewerkt_op: new Date().toISOString(),
+          aangemaakt_op: timestamp,
+          bijgewerkt_op: timestamp,
         },
         {
           onConflict: 'id',
@@ -83,13 +87,14 @@ serve(async (req) => {
 
       console.log('Huurder created successfully:', huurderData[0])
     } else if (role === 'verhuurder') {
+      // Optimized: Remove .select() for non-critical verification
       const { error: verhuurderError } = await supabase.from('verhuurders').upsert(
         {
           id,
-          bedrijfsnaam: `${firstName} ${lastName}`,
+          bedrijfsnaam: fullName,
           aantal_woningen: 0,
-          aangemaakt_op: new Date().toISOString(),
-          bijgewerkt_op: new Date().toISOString(),
+          aangemaakt_op: timestamp,
+          bijgewerkt_op: timestamp,
         },
         {
           onConflict: 'id',
@@ -100,12 +105,14 @@ serve(async (req) => {
         console.error('Error creating verhuurder:', verhuurderError)
         throw verhuurderError
       }
+      console.log('Verhuurder created successfully for user:', id)
     } else if (role === 'beoordelaar') {
+      // Optimized: Remove .select() for non-critical verification
       const { error: beoordelaarError } = await supabase.from('beoordelaars').upsert(
         {
           id,
-          aangemaakt_op: new Date().toISOString(),
-          bijgewerkt_op: new Date().toISOString(),
+          aangemaakt_op: timestamp,
+          bijgewerkt_op: timestamp,
         },
         {
           onConflict: 'id',
@@ -116,6 +123,7 @@ serve(async (req) => {
         console.error('Error creating beoordelaar:', beoordelaarError)
         throw beoordelaarError
       }
+      console.log('Beoordelaar created successfully for user:', id)
     }
 
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema

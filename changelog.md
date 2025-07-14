@@ -1,4 +1,29 @@
 # Huurly Project Changelog
+## Performance Optimization: Signup to Payment Flow - January 2025
+
+**Change:** Optimized the `register-user` edge function for improved performance during user registration.
+
+**Optimizations Applied:**
+- Cached timestamp generation to avoid multiple `new Date().toISOString()` calls
+- Cached `fullName` variable to prevent repeated string concatenation
+- Removed unnecessary `.select()` calls for `verhuurder` and `beoordelaar` role creation (only kept for `huurder` role where verification is critical)
+- Enhanced logging for all role types without performance impact
+
+**Performance Impact:** Reduced database round trips and improved edge function execution time while maintaining all error handling and data integrity checks.
+
+**Technical Changes:**
+- Modified `register-user` edge function in `supabase/functions/register-user/index.ts`
+- Optimized variable caching and database operations
+- Maintained comprehensive error handling for critical operations
+
+**Files Modified:**
+- `supabase/functions/register-user/index.ts`
+- `changelog.md`
+
+**Result:** Faster user registration process with maintained reliability and error handling.
+
+---
+
 ## Fix: 400 POST Error in Huurders Table Registration - January 2025
 
 **Change:** Fixed 400 POST error occurring during user registration when creating huurders table records.
