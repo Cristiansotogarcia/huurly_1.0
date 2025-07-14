@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log('Registering user:', { id, email, firstName, lastName, role })
 
     // Create user in main gebruikers table
-    const { error: userError } = await supabase.from('gebruikers').upsert(
+    const { data: userData, error: userError } = await supabase.from('gebruikers').upsert(
       {
         id,
         email,
@@ -37,16 +37,24 @@ serve(async (req) => {
       {
         onConflict: 'id',
       }
-    )
+    ).select()
 
     if (userError) {
       console.error('Error creating user:', userError)
       throw userError
     }
 
+    if (!userData || userData.length === 0) {
+      console.error('User creation failed - no data returned')
+      throw new Error('Failed to create user record')
+    }
+
+    console.log('User created successfully:', userData[0])
+
     // Create role-specific record
     if (role === 'huurder') {
-      const { error: huurderError } = await supabase.from('huurders').upsert(
+      console.log('Creating huurder record for user:', id)
+      const { data: huurderData, error: huurderError } = await supabase.from('huurders').upsert(
         {
           id,
           aangemaakt_op: new Date().toISOString(),
@@ -55,12 +63,25 @@ serve(async (req) => {
         {
           onConflict: 'id',
         }
-      )
+      ).select()
 
       if (huurderError) {
-        console.error('Error creating huurder:', huurderError)
+        console.error('Error creating huurder:', {
+          error: huurderError,
+          code: huurderError.code,
+          message: huurderError.message,
+          details: huurderError.details,
+          hint: huurderError.hint
+        })
         throw huurderError
       }
+
+      if (!huurderData || huurderData.length === 0) {
+        console.error('Huurder creation failed - no data returned')
+        throw new Error('Failed to create huurder record')
+      }
+
+      console.log('Huurder created successfully:', huurderData[0])
     } else if (role === 'verhuurder') {
       const { error: verhuurderError } = await supabase.from('verhuurders').upsert(
         {

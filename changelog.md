@@ -1,4 +1,32 @@
 # Huurly Project Changelog
+## Fix: 400 POST Error in Huurders Table Registration - January 2025
+
+**Change:** Fixed 400 POST error occurring during user registration when creating huurders table records.
+
+**Problem:** Users were being successfully created in `auth.users` and `public.gebruikers` tables, but the registration process was failing with a 400 POST error when attempting to insert into the `public.huurders` table. The Supabase logs showed the error was coming from the `register-user` edge function.
+
+**Root Cause:** The error was caused by a foreign key constraint violation. The `huurders` table has a foreign key constraint `huurders_id_fkey` that requires the `id` to exist in the `public.gebruikers` table. While the `gebruikers` record was being created, there was insufficient error handling and validation to ensure the record was successfully inserted before attempting to create the dependent `huurders` record.
+
+**Solution:** 
+- Enhanced the `register-user` edge function with better error handling and validation
+- Added `.select()` to the `gebruikers` upsert operation to verify the record was actually created
+- Added validation to check that `userData` is returned before proceeding
+- Enhanced error logging for the `huurders` insert operation with detailed error information
+- Added validation to ensure `huurderData` is returned after the upsert operation
+
+**Technical Changes:**
+- Modified `register-user` edge function to include comprehensive error handling
+- Added detailed logging for debugging foreign key constraint issues
+- Ensured proper validation of database operations before proceeding to dependent table inserts
+
+**Files Modified:**
+- `supabase/functions/register-user/index.ts`
+- `changelog.md`
+
+**Result:** User registration now properly validates each step of the process and provides detailed error information for debugging, preventing foreign key constraint violations.
+
+---
+
 ## Fix: User Registration Race Condition - January 2025
 
 **Change:** Fixed race condition in user registration process that prevented users from being created in public.gebruikers and public.huurders tables.
