@@ -23,45 +23,11 @@ class UserMapper {
         hasPayment = true;
       }
       
-      // If no role in JWT claims, fallback to database query
+      // If no role in JWT claims, fallback to user metadata or email
       if (!mappedRole) {
-        logger.info('No role in JWT claims, falling back to database query');
-        
-        // Get profile data - use maybeSingle to handle missing data gracefully
-        const { data: profileData, error: profileError } = await supabase
-          .from('gebruikers')
-          .select('naam, rol')
-          .eq('id', supabaseUser.id)
-          .maybeSingle();
-
-        if (profileError) {
-          logger.warn('Error fetching profile data:', profileError);
-        }
-
-        // Check for active subscription if not in JWT claims
-        if (!hasPayment) {
-          try {
-            const { data: subscriptionData, error: subscriptionError } = await supabase
-              .from('abonnementen')
-              .select('status')
-              .eq('huurder_id', supabaseUser.id)
-              .eq('status', 'actief')
-              .limit(1);
-
-            if (subscriptionError) {
-              logger.warn('Error checking subscription:', subscriptionError);
-            }
-
-            hasPayment = subscriptionData && subscriptionData.length > 0;
-          } catch (error) {
-            logger.warn('Could not check subscription status:', error);
-            hasPayment = false;
-          }
-        }
-
-        // Map the role with fallback - use rol from profile or determine from email
-        const dbRole = profileData?.rol || roleMapper.determineRoleFromEmail(supabaseUser.email);
-        mappedRole = roleMapper.mapRoleFromDatabase(dbRole, supabaseUser.email);
+        logger.info('No role in JWT claims, falling back to user metadata or email');
+        const roleFromMeta = supabaseUser.user_metadata?.role || roleMapper.determineRoleFromEmail(supabaseUser.email);
+        mappedRole = roleMapper.mapRoleFromDatabase(roleFromMeta, supabaseUser.email);
       }
 
       // Get name from profile or user metadata

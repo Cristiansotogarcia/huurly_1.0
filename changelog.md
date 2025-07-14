@@ -1,4 +1,73 @@
 # Huurly Project Changelog
+## Fix: User Registration Race Condition - January 2025
+
+**Change:** Fixed race condition in user registration process that prevented users from being created in public.gebruikers and public.huurders tables.
+
+**Problem:** During user signup, the userMapper.mapSupabaseUserToUser function was attempting to query the 'gebruikers' table before the 'register-user' edge function had completed creating the user records. This created a race condition where the userMapper would fail to find the user data, causing the registration process to fail even though the user was successfully created in auth.users.
+
+**Root Cause:** The userMapper was making database queries to fetch user role and profile information immediately after signup, but these queries occurred before the register-user edge function had time to insert the records into the public tables.
+
+**Solution:** 
+- Modified userMapper.ts to avoid database queries during initial user mapping
+- Changed the fallback logic to rely on user metadata and email-based role determination instead of database queries
+- This eliminates the race condition and allows the registration process to complete successfully
+
+**Technical Changes:**
+- Updated userMapper.mapSupabaseUserToUser to use supabaseUser.user_metadata?.role as fallback
+- Removed database queries for 'gebruikers' and 'abonnementen' tables during initial mapping
+- Maintained existing role mapping logic using roleMapper.determineRoleFromEmail
+
+## Fix: User Creation Timeout - January 2025
+
+**Change:** Resolved a 504 Gateway Timeout error that occurred during user registration.
+
+**Problem:** The user creation process was failing with a 504 Gateway Timeout error. This was caused by the `register-user` edge function being blocked by restrictive Row Level Security (RLS) policies on the `gebruikers`, `huurders`, `verhuurders`, and `beoordelaars` tables.
+
+**Root Cause:** The RLS policies for these tables did not explicitly allow the `service_role` to perform insert operations. When the `register-user` function, which uses the `service_role` key, attempted to insert new records, the database would not respond, leading to a timeout.
+
+**Solution:** 
+- Updated the RLS policies for the `gebruikers`, `huurders`, `verhuurders`, and `beoordelaars` tables to allow the `service_role` to perform all operations.
+- This was achieved by adding the condition `auth.jwt() ->> 'role' = 'service_role'` to the `USING` and `WITH CHECK` clauses of the policies.
+
+**Technical Changes:**
+- Modified the RLS policies for the `gebruikers`, `huurders`, `verhuurders`, and `beoordelaars` tables.
+
+**Files Modified:**
+- `supabase/migrations/20250106000001_fix_huurders_rls_for_service_role.sql`
+- `changelog.md`
+
+**Result:** User registration now completes successfully without a timeout, and the RLS policies correctly handle both user-level and service-level access.
+
+---
+
+## Fix: RLS Policy for Service Role User Creation - January 2025
+
+**Change:** Fixed RLS policies to allow service_role operations for user creation in production
+
+**Problem:** User creation was failing in production with a 406 error when the register-user edge function tried to insert into the huurders table. The error occurred because the RLS policy "Eigen huurder" only allowed users to access their own records (auth.uid() = id), but when using service_role permissions, auth.uid() returns null, causing the policy to block the insertion.
+
+**Root Cause:** Recent RLS security vulnerability fixes made policies more restrictive without accounting for legitimate service_role operations needed for user registration. The register-user edge function uses service_role permissions to create user records, but the RLS policies were blocking these operations.
+
+**Solution:** 
+- Updated RLS policies for huurders, gebruikers, verhuurders, and beoordelaars tables to allow service_role operations
+- Added condition `auth.jwt() ->> 'role' = 'service_role'` to both USING and WITH CHECK clauses
+- This allows the register-user edge function to successfully create user records while maintaining security for regular user operations
+- Maintains existing security model where users can only access their own records
+
+**Technical Changes:**
+- Modified "Eigen huurder" policy on public.huurders table
+- Modified "Eigen gebruiker" policy on public.gebruikers table  
+- Modified "Eigen verhuurder" policy on public.verhuurders table
+- Modified "Eigen beoordelaar" policy on public.beoordelaars table
+- All policies now allow both user self-access and service_role operations
+
+**Files Modified:**
+- `supabase/migrations/20250106000001_fix_huurders_rls_for_service_role.sql`
+- `changelog.md`
+
+**Result:** User registration now works correctly in production while maintaining proper security restrictions
+
+---
 
 ## Stripe Checkout Dutch Locale Configuration - January 2025
 
