@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 // Initialize Supabase client with service role key for admin operations
-const supabaseUrl = 'https://sqhultitvpivlnlgogen.supabase.co';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://sqhultitvpivlnlgogen.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseServiceKey) {

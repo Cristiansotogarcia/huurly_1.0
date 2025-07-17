@@ -29,11 +29,11 @@ if (!bucket) missingVars.push('VITE_CLOUDFLARE_R2_BUCKET');
 if (missingVars.length > 0) {
   console.error('❌ Missing Cloudflare R2 configuration:');
   missingVars.forEach(varName => console.error(`  - ${varName}`));
-  console.error('\nPlease check your .env file contains:');
-  console.error('VITE_CLOUDFLARE_R2_ENDPOINT=https://5c65d8c11ba2e5ee7face692ed22ad1c.eu.r2.cloudflarestorage.com');
-  console.error('VITE_CLOUDFLARE_R2_ACCESS_KEY=a6339b9b54b193196a48f04cd3b08676');
-  console.error('VITE_CLOUDFLARE_R2_SECRET_KEY=b5c114462876e91e7ede109a069209661fc3005edfbb148890e1dfcb2be86bb8');
-  console.error('VITE_CLOUDFLARE_R2_BUCKET=documents');
+  console.error('\nPlease check your .env file contains the required variables:');
+  console.error('VITE_CLOUDFLARE_R2_ENDPOINT=<your-r2-endpoint>');
+  console.error('VITE_CLOUDFLARE_R2_ACCESS_KEY=<your-access-key>');
+  console.error('VITE_CLOUDFLARE_R2_SECRET_KEY=<your-secret-key>');
+  console.error('VITE_CLOUDFLARE_R2_BUCKET=<your-bucket-name>');
   process.exit(1);
 }
 

@@ -68,9 +68,13 @@ export class DirectUploadService {
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${folder}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 
-      // Use hardcoded values for now (can be moved to config)
-      const accountId = '5c65d8c11ba2e5ee7face692ed22ad1c';
-      const bucket = 'documents';
+      // Use environment variables
+      const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+      const bucket = import.meta.env.VITE_CLOUDFLARE_R2_BUCKET || 'documents';
+      
+      if (!accountId) {
+        throw new Error('Cloudflare Account ID not configured');
+      }
       
       // Create public URL
       const publicUrl = `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${filePath}`;
@@ -119,8 +123,13 @@ export class DirectUploadService {
    * Get public URL for file
    */
   getPublicUrl(filePath: string): string {
-    const accountId = '5c65d8c11ba2e5ee7face692ed22ad1c';
-    const bucket = 'documents';
+    const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+    const bucket = import.meta.env.VITE_CLOUDFLARE_R2_BUCKET || 'documents';
+    
+    if (!accountId) {
+      throw new Error('Cloudflare Account ID not configured');
+    }
+    
     return `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${filePath}`;
   }
 

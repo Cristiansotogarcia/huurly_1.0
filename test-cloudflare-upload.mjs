@@ -12,8 +12,13 @@ const __dirname = dirname(__filename);
 async function testCloudflareUpload() {
   console.log('=== Testing Cloudflare R2 Upload with File ===');
   
-  const supabaseUrl = 'https://sqhultitvpivlnlgogen.supabase.co';
-  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxaHVsdGl0dnBpdmxubGdvZ2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMDgxNTIsImV4cCI6MjA2NTY4NDE1Mn0.ZPfzoKgcMrzcKA5klMaef9jZSb258IlwKUBz244oJ3E';
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !anonKey) {
+    console.error('❌ Missing Supabase configuration. Please check your .env file.');
+    process.exit(1);
+  }
   
   try {
     // Create a simple test file (JPEG)
