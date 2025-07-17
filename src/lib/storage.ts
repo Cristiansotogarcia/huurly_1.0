@@ -1,4 +1,4 @@
-import { r2Client, R2_BUCKET, R2_PUBLIC_BASE } from '../integrations/cloudflare/client.ts';
+import { r2Client, R2_BUCKET, R2_PUBLIC_BASE, isR2ConfigValid } from '../integrations/cloudflare/client.ts';
 import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from '@/lib/logger';
@@ -74,6 +74,16 @@ export class StorageService {
     folder: string = 'general'
   ): Promise<UploadResult> {
     try {
+      // Validate Cloudflare configuration
+      if (!isR2ConfigValid || !r2Client) {
+        return {
+          url: null,
+          path: null,
+          error: new Error('Cloudflare R2 is niet correct geconfigureerd. Neem contact op met support.'),
+          success: false
+        };
+      }
+
       // Validate file
       const validation = this.validateFile(file);
       if (!validation.isValid) {
@@ -88,12 +98,16 @@ export class StorageService {
       // Generate unique file path
       const filePath = this.generateFilePath(userId, file.name, folder);
 
+      // Convert File to Uint8Array for AWS SDK compatibility
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
       // Upload file to Cloudflare R2
       await r2Client.send(
         new PutObjectCommand({
           Bucket: this.BUCKET_NAME,
           Key: filePath,
-          Body: file,
+          Body: uint8Array,
           ContentType: file.type,
         })
       );
@@ -108,7 +122,7 @@ export class StorageService {
       };
 
     } catch (error) {
-       logger.error('Upload error:', error);
+      logger.error('Upload error:', error);
       return {
         url: null,
         path: null,
@@ -127,6 +141,16 @@ export class StorageService {
     documentType: DocumentType
   ): Promise<UploadResult> {
     try {
+      // Validate Cloudflare configuration
+      if (!isR2ConfigValid || !r2Client) {
+        return {
+          url: null,
+          path: null,
+          error: new Error('Cloudflare R2 is niet correct geconfigureerd. Neem contact op met support.'),
+          success: false
+        };
+      }
+
       // Validate file
       const validation = this.validateFile(file);
       if (!validation.isValid) {
@@ -146,12 +170,16 @@ export class StorageService {
       const basePath = DOCUMENT_STORAGE_PATHS[documentType];
       const filePath = `${basePath}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 
+      // Convert File to Uint8Array for AWS SDK compatibility
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
       // Upload file
       await r2Client.send(
         new PutObjectCommand({
           Bucket: this.BUCKET_NAME,
           Key: filePath,
-          Body: file,
+          Body: uint8Array,
           ContentType: file.type,
         })
       );
@@ -202,6 +230,13 @@ export class StorageService {
    */
   async deleteFile(filePath: string): Promise<{ success: boolean; error: Error | null }> {
     try {
+      if (!isR2ConfigValid || !r2Client) {
+        return {
+          success: false,
+          error: new Error('Cloudflare R2 is niet correct geconfigureerd. Neem contact op met support.')
+        };
+      }
+
       await r2Client.send(
         new DeleteObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
       );
@@ -210,7 +245,7 @@ export class StorageService {
         error: null,
       };
     } catch (error) {
-       logger.error('Delete error:', error);
+      logger.error('Delete error:', error);
       return {
         success: false,
         error: error as Error
@@ -226,6 +261,13 @@ export class StorageService {
     expiresIn: number = 3600
   ): Promise<{ url: string | null; error: Error | null }> {
     try {
+      if (!isR2ConfigValid || !r2Client) {
+        return {
+          url: null,
+          error: new Error('Cloudflare R2 is niet correct geconfigureerd. Neem contact op met support.')
+        };
+      }
+
       const command = new GetObjectCommand({
         Bucket: this.BUCKET_NAME,
         Key: filePath,
@@ -233,7 +275,7 @@ export class StorageService {
       const url = await getSignedUrl(r2Client, command, { expiresIn });
       return { url, error: null };
     } catch (error) {
-       logger.error('Signed URL error:', error);
+      logger.error('Signed URL error:', error);
       return {
         url: null,
         error: error as Error
@@ -245,6 +287,9 @@ export class StorageService {
    * Get public URL for file
    */
   getPublicUrl(filePath: string): string {
+    if (!isR2ConfigValid || !R2_PUBLIC_BASE) {
+      return '';
+    }
     return `${R2_PUBLIC_BASE}/${filePath}`;
   }
 
@@ -266,6 +311,10 @@ export class StorageService {
    */
   async fileExists(filePath: string): Promise<boolean> {
     try {
+      if (!isR2ConfigValid || !r2Client) {
+        return false;
+      }
+
       await r2Client.send(
         new HeadObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
       );
@@ -281,6 +330,10 @@ export class StorageService {
    */
   async getFileMetadata(filePath: string): Promise<any> {
     try {
+      if (!isR2ConfigValid || !r2Client) {
+        return null;
+      }
+
       const { Metadata } = await r2Client.send(
         new HeadObjectCommand({ Bucket: this.BUCKET_NAME, Key: filePath })
       );
@@ -299,6 +352,13 @@ export class StorageService {
     limit: number = 100
   ): Promise<{ files: any[]; error: Error | null }> {
     try {
+      if (!isR2ConfigValid || !r2Client) {
+        return {
+          files: [],
+          error: new Error('Cloudflare R2 is niet correct geconfigureerd. Neem contact op met support.')
+        };
+      }
+
       const { Contents } = await r2Client.send(
         new ListObjectsV2Command({ Bucket: this.BUCKET_NAME, Prefix: folderPath, MaxKeys: limit })
       );

@@ -9,13 +9,16 @@ import { DashboardHeader, DashboardContent } from "@/components/dashboard";
 import { StatsGrid } from '@/components/standard/StatsGrid';
 import { DocumentsSection } from '@/components/standard/DocumentsSection';
 import ProfileOverview, { ProfileSection } from '@/components/standard/ProfileOverview';
-import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart } from 'lucide-react';
+import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart, AlertCircle } from 'lucide-react';
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
 // import { PaymentModal } from "@/components/PaymentModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from '@/hocs/withAuth';
 import { User } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+// Cloudflare Images components removed - using R2 for documents only
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface HuurderDashboardProps {
   user: User;
@@ -52,6 +55,20 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
   const { toast } = useToast();
   
   // Define profile sections for the ProfileOverview component
+  const [isProfileComplete, setIsProfileComplete] = useState(true);
+  const [missingDocuments, setMissingDocuments] = useState(false);
+
+  useEffect(() => {
+    const checkCompleteness = () => {
+      if (!tenantProfile) return;
+      const requiredFields = ['profession', 'income', 'age', 'preferredLocations', 'maxRent']; // updated to English
+      const isComplete = requiredFields.every(field => tenantProfile[field] != null);
+      setIsProfileComplete(isComplete);
+      setMissingDocuments(userDocuments.length < 3);
+    };
+    checkCompleteness();
+  }, [tenantProfile, userDocuments]);
+
   const profileSections: ProfileSection[] = tenantProfile ? [
     {
       title: 'Persoonlijke Informatie',
@@ -60,8 +77,13 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       fields: [
         { label: 'Naam', value: tenantProfile.personalInfo?.fullName },
         { label: 'Email', value: user?.email },
-        { label: 'Telefoonnummer', value: tenantProfile.personalInfo?.phone }, // Changed from phoneNumber to phone
+        { label: 'Telefoonnummer', value: tenantProfile.personalInfo?.phone },
         { label: 'Geboortedatum', value: tenantProfile.personalInfo?.dateOfBirth },
+        { label: 'Leeftijd', value: tenantProfile.age },
+        { label: 'Partner', value: tenantProfile.hasPartner ? 'Ja' : 'Nee' },
+        { label: 'Kinderen', value: tenantProfile.numberOfChildren },
+        { label: 'Huisdieren', value: tenantProfile.hasPets ? 'Ja' : 'Nee' },
+        { label: 'Roken', value: tenantProfile.smokes ? 'Ja' : 'Nee' },
       ],
     },
     {
@@ -69,9 +91,15 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       icon: Briefcase,
       iconColor: 'text-green-600',
       fields: [
-        { label: 'Beroep', value: tenantProfile.workAndIncome?.profession },
+        { label: 'Beroep', value: tenantProfile.profession },
         { label: 'Werkgever', value: tenantProfile.workAndIncome?.employer },
-        { label: 'Maandelijks Inkomen', value: tenantProfile.workAndIncome?.monthlyIncome },
+        { label: 'Maandelijks Inkomen', value: tenantProfile.income },
+        { label: 'Inkomensbewijs beschikbaar', value: tenantProfile.incomeProofAvailable ? 'Ja' : 'Nee' },
+        { label: 'Borgsteller beschikbaar', value: tenantProfile.guarantorAvailable ? 'Ja' : 'Nee' },
+        { label: 'Borgsteller Naam', value: tenantProfile.guarantorName },
+        { label: 'Borgsteller Relatie', value: tenantProfile.guarantorRelationship },
+        { label: 'Borgsteller Telefoon', value: tenantProfile.guarantorPhone },
+        { label: 'Borgsteller Inkomen', value: tenantProfile.guarantorIncome },
       ],
     },
     {
@@ -79,9 +107,14 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       icon: Home,
       iconColor: 'text-purple-600',
       fields: [
-        { label: 'Gewenste Locatie', value: tenantProfile.housingPreferences?.city }, // Changed from desiredLocation to city
-        { label: 'Budget', value: `€${tenantProfile.housingPreferences?.minBudget} - €${tenantProfile.housingPreferences?.maxBudget}` }, // Changed from budget to minBudget-maxBudget
-        { label: 'Aantal Kamers', value: tenantProfile.housingPreferences?.bedrooms }, // Changed from numberOfRooms to bedrooms
+        { label: 'Gewenste Locatie', value: tenantProfile.preferredLocations?.join(', ') },
+        { label: 'Budget', value: tenantProfile.maxRent },
+        { label: 'Min Kamers', value: tenantProfile.minRooms },
+        { label: 'Max Kamers', value: tenantProfile.maxRooms },
+        { label: 'Vroegste Verhuisdatum', value: tenantProfile.earliestMoveDate },
+        { label: 'Voorkeur Verhuisdatum', value: tenantProfile.preferredMoveDate },
+        { label: 'Beschikbaarheid Flexibel', value: tenantProfile.availabilityFlexible ? 'Ja' : 'Nee' },
+        { label: 'Woningvoorkeur', value: tenantProfile.housingPreferences ? Object.entries(tenantProfile.housingPreferences).map(([key, value]) => `${key}: ${value}`).join(', ') : '' },
       ],
     },
     {
@@ -89,6 +122,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       icon: Heart,
       iconColor: 'text-red-600',
       fields: [
+        { label: 'Beschrijving', value: tenantProfile.description },
         { label: 'Motivatie', value: tenantProfile.lifestyleAndMotivation?.motivation },
       ],
     },
@@ -218,6 +252,15 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
     });
   };
 
+  // Move before return, after other states and useEffects
+  const [showProfileAlert, setShowProfileAlert] = useState(true);
+  const [showDocumentsAlert, setShowDocumentsAlert] = useState(true);
+
+  useEffect(() => {
+    setShowProfileAlert(!isProfileComplete);
+    setShowDocumentsAlert(missingDocuments);
+  }, [isProfileComplete, missingDocuments]);
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -238,11 +281,104 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
             onLogout={handleLogout}
           />
         )}
-
         <div className="p-4 sm:p-6 lg:p-8">
+          {/* Unified Profile Header - Desktop & Mobile */}
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="relative">
+              {/* Simple Header without Cover/Profile Photos */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  {user?.user_metadata?.full_name || user?.email}
+                </h1>
+                <p className="text-gray-600 mt-1">Huurder Dashboard</p>
+              </div>
+            </div>
 
-          <DashboardContent>
-            <StatsGrid stats={huurderStats} />
+            {/* Centralized Notifications & Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-4">
+              {/* Notifications */}
+              <div className="space-y-3 mb-6">
+                {showProfileAlert && (
+                  <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <AlertCircle className="h-5 w-5 text-orange-400 mr-3 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-orange-800">Profiel onvolledig</p>
+                        <p className="text-sm text-orange-700 mt-1">Vul je profiel aan om beter zichtbaar te zijn.</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowProfileAlert(false)}
+                        className="ml-4 text-orange-400 hover:text-orange-600 text-xl"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {showDocumentsAlert && (
+                  <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <AlertCircle className="h-5 w-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">Documenten ontbreken</p>
+                        <p className="text-sm text-red-700 mt-1">Upload ontbrekende documenten.</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowDocumentsAlert(false)}
+                        className="ml-4 text-red-400 hover:text-red-600 text-xl"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Centralized Stats */}
+              <div className="mb-6">
+                <StatsGrid stats={huurderStats} className="grid grid-cols-2 md:grid-cols-4 gap-4" />
+              </div>
+
+              {/* Centralized Action Buttons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <Button 
+                  variant="default" 
+                  className="w-full justify-center"
+                  onClick={() => setShowProfileModal(true)}
+                >
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  Profiel bewerken
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => setShowDocumentModal(true)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Documenten beheren
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => navigate('/property-search')}
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Woningen zoeken
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => navigate('/help-support')}
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Help & Support
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Sections Below */}
+          <div className="max-w-4xl mx-auto space-y-6">
             <ProfileOverview 
               sections={profileSections}
               title="Profiel Overzicht"
@@ -256,26 +392,9 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
               emptyStateTitle="Nog geen documenten geüpload."
               emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."
             />
-            
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-              <Button onClick={onStartSearch} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                Start Zoeken
-              </Button>
-              <Button onClick={handleReportIssue} className="w-full bg-red-500 hover:bg-red-600 text-white">
-                Meld Probleem
-              </Button>
-              <Button onClick={handleHelpSupport} className="w-full bg-gray-500 hover:bg-gray-600 text-white">
-                Help & Support
-              </Button>
-              <Button onClick={() => navigate('/abonnement')} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white">
-                Abonnement
-              </Button>
-            </div>
-          </DashboardContent>
+          </div>
         </div>
       </div>
-
       <DashboardModals
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}

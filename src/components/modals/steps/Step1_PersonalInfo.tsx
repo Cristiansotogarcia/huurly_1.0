@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,13 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfileFormData } from '../profileSchema';
 import { User, Calendar, Phone, Globe, Baby } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-// Removed EnhancedDatePicker import as we're using text input now
+import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
+import { useAuthStore } from '@/store/authStore';
 
 export const Step1_PersonalInfo = () => {
-  const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
-  
+  const { control, register, formState: { errors }, watch, setValue } = useFormContext<ProfileFormData>();
+  const { user } = useAuthStore();
+  const profilePictureUrl = watch('profilePictureUrl') || '';
   const hasChildren = watch('has_children');
   const numberOfChildren = watch('number_of_children') || 0;
+
+  const handleProfilePictureUploaded = (url: string) => {
+    setValue('profilePictureUrl', url);
+  };
 
   return (
     <div className="space-y-6">
@@ -24,6 +30,15 @@ export const Step1_PersonalInfo = () => {
           <h2 className="text-xl font-semibold">Persoonlijke Informatie</h2>
         </div>
         <p className="text-gray-600">Begin met je basisgegevens</p>
+      </div>
+
+      {/* Profile Picture Upload */}
+      <div className="flex justify-center mb-6">
+        <ProfilePictureUpload
+          userId={user?.id || ''}
+          currentImageUrl={profilePictureUrl}
+          onImageUploaded={handleProfilePictureUploaded}
+        />
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">

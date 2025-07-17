@@ -773,3 +773,9 @@ Successfully implemented a complete password reset functionality using the lates
 - changelog.md
 
 **Result:** All huurders table columns now have corresponding data entry points in the profile modal, improving data completeness.
+
+### Version [Current Date]
+
+#### Bug Fixes
+- Updated supabase import path in `CoverPhotoUpload.tsx` to resolve module not found error.
+- Added missing 'userId' prop to `ProfilePictureUpload` component in `HuurderDashboard.tsx` to fix TypeScript type error.

@@ -1,4 +1,3 @@
-
 import { FileText, Upload, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,14 +9,16 @@ interface DocumentsSectionProps {
 export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: DocumentsSectionProps) => {
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
-      case 'identiteitsbewijs':
+      case 'identiteit':
         return 'Identiteitsbewijs';
-      case 'loonstrook':
-        return 'Loonstrook';
+      case 'inkomen':
+        return 'Inkomensbewijs';
       case 'arbeidscontract':
         return 'Arbeidscontract';
       case 'referentie':
         return 'Referentie';
+      case 'uittreksel_bkr':
+        return 'BKR Uittreksel';
       default:
         return 'Document';
     }

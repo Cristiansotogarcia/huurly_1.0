@@ -71,16 +71,16 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
 
   const documentTypes = [
     {
-      type: 'identiteitsbewijs' as DocumentType,
+      type: 'identiteit' as DocumentType,
       label: 'Identiteitsbewijs',
       description: 'Paspoort, ID-kaart of rijbewijs',
       icon: FileText,
       required: true,
     },
     {
-      type: 'loonstrook' as DocumentType,
-      label: 'Loonstrook',
-      description: 'Laatste 3 maanden loonstroken',
+      type: 'inkomen' as DocumentType,
+      label: 'Inkomensbewijs',
+      description: 'Laatste 3 maanden loonstroken of jaaropgave',
       icon: FileText,
       required: true,
     },
@@ -95,6 +95,13 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
       type: 'referentie' as DocumentType,
       label: 'Referentie',
       description: 'Referentie van vorige verhuurder',
+      icon: FileText,
+      required: false,
+    },
+    {
+      type: 'uittreksel_bkr' as DocumentType,
+      label: 'BKR Uittreksel',
+      description: 'Recent BKR-uittreksel (niet ouder dan 3 maanden)',
       icon: FileText,
       required: false,
     },

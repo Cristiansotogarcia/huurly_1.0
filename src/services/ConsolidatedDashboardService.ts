@@ -39,7 +39,8 @@ export class ConsolidatedDashboardService extends DatabaseService {
       income: rawTenant.inkomen || 0,
       bio: rawTenant.beschrijving || '',
       motivation: rawTenant.motivatie || '',
-      profilePicture: rawTenant.profielfoto_url || undefined,
+      profilePicture: rawTenant.profiel_foto || undefined,
+      coverPhoto: rawTenant.cover_foto || undefined,
       isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
       preferences: {
         minBudget: rawTenant.min_huur || 0,
@@ -154,7 +155,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
           // Get active subscription using optimized service
           optimizedSubscriptionService.checkSubscriptionStatus(userId),
           
-          // Get profile picture URL from storage
+          // Get profile picture URL from database
           this.getProfilePictureUrl(userId)
         ]);
 
@@ -207,26 +208,17 @@ export class ConsolidatedDashboardService extends DatabaseService {
   }
 
   /**
-   * Get profile picture URL from storage
+   * Get profile picture URL from database
    */
   private async getProfilePictureUrl(userId: string): Promise<string | null> {
     try {
-      const { data } = await supabase.storage
-        .from('profile-pictures')
-        .list(`${userId}/`, {
-          limit: 1,
-          sortBy: { column: 'updated_at', order: 'desc' }
-        });
+      const { data: tenant } = await supabase
+        .from('huurders')
+        .select('profiel_foto, cover_foto')
+        .eq('id', userId)
+        .single();
 
-      if (data && data.length > 0) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-pictures')
-          .getPublicUrl(`${userId}/${data[0].name}`);
-        
-        return publicUrl;
-      }
-      
-      return null;
+      return tenant?.profiel_foto || null;
     } catch (error) {
       logger.error('Error getting profile picture URL:', error);
       return null;

@@ -79,6 +79,7 @@ export interface CreateTenantProfileData {
   rookt?: boolean;
   detailsRoken?: string;
   profielfotoUrl?: string;
+  coverFotoUrl?: string;
 }
 
 export interface UserFilters {
@@ -339,6 +340,7 @@ export class UserService extends DatabaseService {
           },
           
           profielfoto_url: sanitizedData.profielfotoUrl || null,
+          cover_foto: sanitizedData.coverFotoUrl || null,
         };
 
         // Calculate age from birth date

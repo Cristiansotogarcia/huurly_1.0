@@ -170,6 +170,8 @@ export const useHuurder = () => {
         slaapkamers: profileData.bedrooms || profileData.preferred_bedrooms || 1,
         woningtype: profileData.propertyType || profileData.preferred_property_type || 'appartement',
         gewensteWoonplaats: profileData.preferredLocation || profileData.preferred_city || '',
+        profielfotoUrl: profileData.profilePictureUrl || profileData.profile_picture_url || '',
+        coverFotoUrl: profileData.coverPhotoUrl || profileData.cover_foto_url || '',
       };
       await userService.updateTenantProfile(dutchProfileData);
       toast({ title: 'Profiel bijgewerkt!', description: 'Je profiel is succesvol bijgewerkt.' });

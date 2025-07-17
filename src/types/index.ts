@@ -32,15 +32,23 @@ export interface TenantProfile {
   sex?: string;
   nationality?: string;
   maritalStatus?: string;
+  age?: number;
   
   // Employment & Income
-  profession: string;
-  employer?: string;
-  employmentStatus?: string;
-  workContractType?: string;
-  income: number;
-  monthlyIncome?: number;
-  workFromHome?: boolean;
+  profession?: string;
+  income?: number;
+  
+  // Housing Preferences
+  preferredLocations?: string[];
+  maxRent?: number;
+  minRooms?: number;
+  maxRooms?: number;
+  earliestMoveDate?: string;
+  preferredMoveDate?: string;
+  
+  // Other fields
+  description?: string;
+  coverPhoto?: string;
   
   // Household Composition
   hasPartner?: boolean;
@@ -80,9 +88,9 @@ export interface TenantProfile {
   // Guarantor Information
   guarantorAvailable?: boolean;
   guarantorName?: string;
+  guarantorRelationship?: string;
   guarantorPhone?: string;
   guarantorIncome?: number;
-  guarantorRelationship?: string;
   incomeProofAvailable?: boolean;
   
   // Emergency Contact
