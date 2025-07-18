@@ -11,6 +11,7 @@ interface ConsolidatedDashboardData {
   tenantProfile: TenantProfile | null;
   subscription: any;
   profilePictureUrl: string | null;
+  coverPhotoUrl: string | null;
   hasProfile: boolean;
 }
 
@@ -155,8 +156,8 @@ export class ConsolidatedDashboardService extends DatabaseService {
           // Get active subscription using optimized service
           optimizedSubscriptionService.checkSubscriptionStatus(userId),
           
-          // Get profile picture URL from database
-          this.getProfilePictureUrl(userId)
+          // Get profile and cover photo URLs from database
+          this.getPhotoUrls(userId)
         ]);
 
         // Process results
@@ -182,9 +183,9 @@ export class ConsolidatedDashboardService extends DatabaseService {
           ? { status: 'active', ...subscriptionResult.value.data }
           : null;
 
-        const profilePictureUrl = profilePictureResult.status === 'fulfilled'
+        const photoUrls = profilePictureResult.status === 'fulfilled'
           ? profilePictureResult.value
-          : null;
+          : { profilePictureUrl: null, coverPhotoUrl: null };
 
         const hasProfile = !!rawTenant;
 
@@ -193,7 +194,8 @@ export class ConsolidatedDashboardService extends DatabaseService {
           documents,
           tenantProfile,
           subscription,
-          profilePictureUrl,
+          profilePictureUrl: photoUrls.profilePictureUrl,
+          coverPhotoUrl: photoUrls.coverPhotoUrl,
           hasProfile
         };
 
@@ -208,9 +210,9 @@ export class ConsolidatedDashboardService extends DatabaseService {
   }
 
   /**
-   * Get profile picture URL from database
+   * Get profile picture and cover photo URLs from database
    */
-  private async getProfilePictureUrl(userId: string): Promise<string | null> {
+  private async getPhotoUrls(userId: string): Promise<{ profilePictureUrl: string | null; coverPhotoUrl: string | null }> {
     try {
       const { data: tenant } = await supabase
         .from('huurders')
@@ -218,10 +220,13 @@ export class ConsolidatedDashboardService extends DatabaseService {
         .eq('id', userId)
         .single();
 
-      return tenant?.profiel_foto || null;
+      return {
+        profilePictureUrl: tenant?.profiel_foto || null,
+        coverPhotoUrl: tenant?.cover_foto || null
+      };
     } catch (error) {
-      logger.error('Error getting profile picture URL:', error);
-      return null;
+      logger.error('Error getting photo URLs:', error);
+      return { profilePictureUrl: null, coverPhotoUrl: null };
     }
   }
 

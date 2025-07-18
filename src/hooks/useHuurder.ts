@@ -18,6 +18,7 @@ export const useHuurder = () => {
   const [tenantProfile, setTenantProfile] = useState<TenantProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -37,13 +38,14 @@ export const useHuurder = () => {
       const response = await consolidatedDashboardService.getHuurderDashboardData(user.id);
       
       if (response.success && response.data) {
-        const { stats, documents, tenantProfile: mappedProfile, subscription, profilePictureUrl, hasProfile } = response.data;
+        const { stats, documents, tenantProfile: mappedProfile, subscription, profilePictureUrl, coverPhotoUrl, hasProfile } = response.data;
         
         setStats(stats);
         setUserDocuments(Array.isArray(documents) ? documents : []);
         setTenantProfile(mappedProfile);
         setSubscription(subscription);
         setProfilePictureUrl(profilePictureUrl);
+        setCoverPhotoUrl(coverPhotoUrl);
         setHasProfile(hasProfile);
 
         // Fetch latest expiration date if subscription is active
@@ -67,6 +69,7 @@ export const useHuurder = () => {
         setTenantProfile(null);
         setSubscription(null);
         setProfilePictureUrl(null);
+        setCoverPhotoUrl(null);
         setHasProfile(false);
         
         toast({ 
@@ -88,6 +91,7 @@ export const useHuurder = () => {
       setTenantProfile(null);
       setSubscription(null);
       setProfilePictureUrl(null);
+      setCoverPhotoUrl(null);
       setHasProfile(false);
     } finally {
       setIsLoading(false);
@@ -196,6 +200,7 @@ export const useHuurder = () => {
     stats,
     isLoadingStats,
     profilePictureUrl,
+    coverPhotoUrl,
     tenantProfile,
     isLookingForPlace,
     isUpdatingStatus,

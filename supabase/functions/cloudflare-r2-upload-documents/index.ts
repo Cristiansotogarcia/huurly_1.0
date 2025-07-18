@@ -55,7 +55,7 @@ Deno.serve(async req => {
   try {
     const access = Deno.env.get('CLOUDFLARE_R2_ACCESS_KEY_ID')!;
     const secret = Deno.env.get('CLOUDFLARE_R2_SECRET_KEY')!;
-    const bucket = Deno.env.get('CLOUDFLARE_R2_BUCKET') || 'beelden';
+    const bucket = Deno.env.get('CLOUDFLARE_R2_BUCKET') || 'documents';
     const endpoint = Deno.env.get('CLOUDFLARE_R2_ENDPOINT')!;
     const region   = 'auto';
 
@@ -98,7 +98,7 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: 'Upload failed', status: put.status, detail: txt }), { status: put.status, headers: corsHeaders });
     }
 
-    const publicUrl = `https://beelden.huurly.nl/${objPath}`;
+    const publicUrl = `https://documents.huurly.nl/${objPath}`;
 
     return new Response(JSON.stringify({
       success : true,

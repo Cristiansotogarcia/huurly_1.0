@@ -9,6 +9,7 @@ import { DashboardHeader, DashboardContent } from "@/components/dashboard";
 import { StatsGrid } from '@/components/standard/StatsGrid';
 import { DocumentsSection } from '@/components/standard/DocumentsSection';
 import ProfileOverview, { ProfileSection } from '@/components/standard/ProfileOverview';
+import { ProfilePhotoSection } from '@/components/dashboard/ProfilePhotoSection';
 import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart, AlertCircle } from 'lucide-react';
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
 // import { PaymentModal } from "@/components/PaymentModal";
@@ -282,20 +283,13 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
           />
         )}
         <div className="p-4 sm:p-6 lg:p-8">
-          {/* Unified Profile Header - Desktop & Mobile */}
-          <div className="max-w-4xl mx-auto mb-6">
-            <div className="relative">
-              {/* Simple Header without Cover/Profile Photos */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {user?.user_metadata?.full_name || user?.email}
-                </h1>
-                <p className="text-gray-600 mt-1">Huurder Dashboard</p>
-              </div>
-            </div>
-
-            {/* Centralized Notifications & Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-4">
+          {/* Content Sections - Proper Order */}
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* 1. Cover Photo and Profile Photo Section - First */}
+            <ProfilePhotoSection />
+            
+            {/* 2. Profile Actions and Stats Section - Second */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               {/* Notifications */}
               <div className="space-y-3 mb-6">
                 {showProfileAlert && (
@@ -334,12 +328,12 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
                 )}
               </div>
 
-              {/* Centralized Stats */}
+              {/* Stats */}
               <div className="mb-6">
                 <StatsGrid stats={huurderStats} className="grid grid-cols-2 md:grid-cols-4 gap-4" />
               </div>
 
-              {/* Centralized Action Buttons */}
+              {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Button 
                   variant="default" 
@@ -375,10 +369,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
                 </Button>
               </div>
             </div>
-          </div>
-
-          {/* Content Sections Below */}
-          <div className="max-w-4xl mx-auto space-y-6">
+            
+            {/* 3. Profile Overview - Third */}
             <ProfileOverview 
               sections={profileSections}
               title="Profiel Overzicht"

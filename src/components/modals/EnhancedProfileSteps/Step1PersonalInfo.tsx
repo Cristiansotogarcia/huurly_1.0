@@ -79,6 +79,7 @@ export default function Step1PersonalInfo({
       <div className="flex justify-center">
         <ProfilePictureUpload
           userId={user?.id || ''}
+          type="profile"
           currentImageUrl={formData.profilePictureUrl}
           onImageUploaded={handleProfilePictureUpload}
         />

@@ -36,6 +36,7 @@ export const Step1_PersonalInfo = () => {
       <div className="flex justify-center mb-6">
         <ProfilePictureUpload
           userId={user?.id || ''}
+          type="profile"
           currentImageUrl={profilePictureUrl}
           onImageUploaded={handleProfilePictureUploaded}
         />

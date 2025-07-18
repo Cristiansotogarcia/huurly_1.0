@@ -774,7 +774,73 @@ Successfully implemented a complete password reset functionality using the lates
 
 **Result:** All huurders table columns now have corresponding data entry points in the profile modal, improving data completeness.
 
-### Version [Current Date]
+## Fix: Resolved Upload Loop and Display Issues for Profile and Cover Photos - [Current Date]
+### Changes:
+- Removed redundant Supabase updates in `PhotoSection.tsx` handlers, as the upload service already handles database updates.
+- This prevents the double upload attempt that was causing the loop.
+- Ensured refresh is called after upload to update the displayed photos.
+
+**Files Modified:**
+- `src/components/PhotoSection.tsx`
+
+**Verification:**
+- TypeScript compilation passes without errors.
+
+---
+
+#### Major Fix: Cover Photo and Profile Picture Rendering on Huurders Dashboard - January 2025
+
+**Problem Analysis:** Cover photos and profile pictures were not rendering on the Huurders dashboard despite having upload functionality.
+
+**Root Causes Identified:**
+1. **Missing Cover Photo URL in Data Flow**: `ConsolidatedDashboardService.getProfilePictureUrl()` only returned profile picture URL, not cover photo URL
+2. **Incomplete Data Interface**: `ConsolidatedDashboardData` interface lacked `coverPhotoUrl` field
+3. **Missing Hook State**: `useHuurder` hook didn't manage cover photo URL state
+4. **Component Integration Gap**: `ProfilePhotoSection` component was not integrated into `HuurderDashboard`
+5. **Undefined Cover URL**: `PhotoSection.getCurrentCoverUrl()` always returned `undefined`
+
+**Solutions Implemented:**
+
+1. **Enhanced ConsolidatedDashboardService.ts:**
+   - Added `coverPhotoUrl: string | null` to `ConsolidatedDashboardData` interface
+   - Renamed `getProfilePictureUrl` to `getPhotoUrls` with return type `{ profilePictureUrl: string | null; coverPhotoUrl: string | null }`
+   - Updated `getHuurderDashboardData` to properly extract and assign both photo URLs
+
+2. **Updated useHuurder.ts:**
+   - Added `coverPhotoUrl` state management
+   - Integrated cover photo URL from consolidated dashboard service
+   - Included `coverPhotoUrl` in hook return values
+
+3. **Fixed PhotoSection.tsx:**
+   - Updated `getCurrentCoverUrl()` to return `coverPhotoUrl` from `useHuurder` hook instead of `undefined`
+   - Ensured proper cover photo URL retrieval and rendering
+
+4. **Integrated ProfilePhotoSection into HuurderDashboard.tsx:**
+   - Added `ProfilePhotoSection` import
+   - Integrated component into dashboard content sections
+   - Enabled cover photo and profile picture upload/display functionality
+
+5. **Fixed CoverPhoto.tsx:**
+   - Corrected syntax error (duplicate `) : (` on line 79)
+
+**Technical Details:**
+- **Database Schema**: Both `profiel_foto` and `cover_foto` columns were already present in `huurders` table
+- **Upload Infrastructure**: All upload components (`ProfilePicture`, `CoverPhoto`, `useImageUpload`) were functional
+- **Cloudflare R2 Integration**: Storage and retrieval mechanisms were working correctly
+- **Issue**: Data flow from database to UI components was incomplete
+
+**Files Modified:**
+- `src/services/ConsolidatedDashboardService.ts` - Enhanced photo URL retrieval
+- `src/hooks/useHuurder.ts` - Added cover photo state management
+- `src/components/PhotoSection.tsx` - Fixed cover photo URL retrieval
+- `src/pages/HuurderDashboard.tsx` - Integrated ProfilePhotoSection component
+- `src/components/CoverPhoto.tsx` - Fixed syntax error
+
+**Result:** Cover photos and profile pictures now render correctly on the Huurders dashboard with full upload and display functionality.
+
+**Verification:** TypeScript compilation passes without errors after all modifications.
+
+---
 
 #### Bug Fixes
 - Updated supabase import path in `CoverPhotoUpload.tsx` to resolve module not found error.

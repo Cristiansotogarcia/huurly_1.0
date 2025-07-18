@@ -12,177 +12,148 @@ export interface FileValidation {
 }
 
 export class CloudflareR2UploadService {
-  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  private readonly ALLOWED_TYPES = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-  private readonly CUSTOM_DOMAIN = 'documents.huurly.nl';
+  private readonly PROFILE_MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5 MB
+  private readonly COVER_MAX_FILE_SIZE   = 10 * 1024 * 1024;  // 10 MB
+  private readonly DOC_MAX_FILE_SIZE     = 50 * 1024 * 1024;  // 50 MB – adjust at will
+  private readonly ALLOWED_TYPES         = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+  private readonly ALLOWED_DOC_TYPES     = ['pdf', 'doc', 'docx', 'txt', 'xlsx']; // add / remove as needed
 
-  /**
-   * Validate file before upload
-   */
-  validateFile(file: File): FileValidation {
-    // Check file size
-    if (file.size > this.MAX_FILE_SIZE) {
-      return {
-        isValid: false,
-        error: `Bestand is te groot. Maximum grootte is 5MB.`
-      };
+  /* ------------------------------------------------------------------ */
+  validateFile(
+    file: File,
+    type: 'profile' | 'cover' | 'document'
+  ): FileValidation {
+    const limits = {
+      profile: { size: this.PROFILE_MAX_FILE_SIZE, label: '5MB' },
+      cover:   { size: this.COVER_MAX_FILE_SIZE,   label: '10MB' },
+      document:{ size: this.DOC_MAX_FILE_SIZE,     label: '50MB' }
+    };
+
+    const limit = limits[type];
+    if (file.size > limit.size) {
+      return { isValid: false, error: `Bestand is te groot. Maximum grootte is ${limit.label}.` };
     }
 
-    // Check file type
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    if (!extension || !this.ALLOWED_TYPES.includes(extension)) {
+    const allowed = type === 'document' ? this.ALLOWED_DOC_TYPES : this.ALLOWED_TYPES;
+    const ext     = file.name.split('.').pop()?.toLowerCase();
+    if (!ext || !allowed.includes(ext)) {
       return {
         isValid: false,
-        error: `Bestandstype niet toegestaan. Toegestane types: ${this.ALLOWED_TYPES.join(', ')}.`
+        error: `Bestandstype niet toegestaan. Toegestane types: ${allowed.join(', ')}.`
       };
     }
 
     return { isValid: true };
   }
 
-  /**
-   * Upload profile picture using Supabase Edge Function
-   */
+  /* ------------------------------------------------------------------ */
+  private async uploadViaEdge(
+    file: File,
+    userId: string,
+    folder: string,
+    functionName: 'cloudflare-r2-upload' | 'cloudflare-r2-upload-documents' = 'cloudflare-r2-upload'
+  ): Promise<UploadResult> {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !anonKey) {
+        throw new Error('Supabase configuratie ontbreekt (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).');
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', userId);
+      formData.append('folder', folder);
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+        method: 'POST',
+        headers: {
+          apikey: anonKey,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: formData
+      });
+
+      let payload: any = null;
+      try { payload = await res.json(); } catch {}
+      if (!res.ok || !payload?.success) {
+        const msg = payload?.error || `Upload function error: ${res.status}`;
+        throw new Error(msg);
+      }
+      return { url: payload.url ?? null, error: null, success: true };
+    } catch (err) {
+      console.error('UploadViaEdge error:', err);
+      return { url: null, error: err as Error, success: false };
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
   async uploadProfilePicture(file: File, userId: string): Promise<UploadResult> {
-    try {
-      // Validate file
-      const validation = this.validateFile(file);
-      if (!validation.isValid) {
-        return {
-          url: null,
-          error: new Error(validation.error),
-          success: false
-        };
-      }
+    const validation = this.validateFile(file, 'profile');
+    if (!validation.isValid) return { url: null, error: new Error(validation.error), success: false };
+    if (!userId) return { url: null, error: new Error('User not authenticated'), success: false };
 
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', userId);
-      formData.append('folder', 'Profile');
+    const result = await this.uploadViaEdge(file, userId, 'Profile');
+    if (!result.success || !result.url) return result;
 
-      // Upload using Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('cloudflare-r2-upload', {
-        body: formData,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Upload failed');
-      }
-
-      if (!data?.success || !data?.url) {
-        throw new Error(data?.error || 'Upload failed');
-      }
-
-      // Update Supabase with the new URL
-      const { error: updateError } = await supabase
-        .from('huurders')
-        .update({ profiel_foto: data.url })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating Supabase:', updateError);
-        return {
-          url: null,
-          error: new Error('Failed to update profile picture in database'),
-          success: false
-        };
-      }
-
-      return {
-        url: data.url,
-        error: null,
-        success: true
-      };
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      return {
-        url: null,
-        error: error as Error,
-        success: false
-      };
+    const { error } = await supabase
+      .from('huurders')
+      .update({ profiel_foto: result.url })
+      .eq('id', userId);
+    if (error) {
+      console.error('Error updating profiel_foto:', error);
+      return { url: null, error: new Error('Kon profielfoto niet opslaan in database.'), success: false };
     }
+    return result;
   }
 
-  /**
-   * Upload cover photo using Supabase Edge Function
-   */
   async uploadCoverPhoto(file: File, userId: string): Promise<UploadResult> {
-    try {
-      // Validate file
-      const validation = this.validateFile(file);
-      if (!validation.isValid) {
-        return {
-          url: null,
-          error: new Error(validation.error),
-          success: false
-        };
-      }
+    const validation = this.validateFile(file, 'cover');
+    if (!validation.isValid) return { url: null, error: new Error(validation.error), success: false };
+    if (!userId) return { url: null, error: new Error('User not authenticated'), success: false };
 
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', userId);
-      formData.append('folder', 'Cover');
+    const result = await this.uploadViaEdge(file, userId, 'Cover');
+    if (!result.success || !result.url) return result;
 
-      // Upload using Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('cloudflare-r2-upload', {
-        body: formData,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Upload failed');
-      }
-
-      if (!data?.success || !data?.url) {
-        throw new Error(data?.error || 'Upload failed');
-      }
-
-      // Update Supabase with the new URL
-      const { error: updateError } = await supabase
-        .from('huurders')
-        .update({ cover_foto: data.url })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating Supabase:', updateError);
-        return {
-          url: null,
-          error: new Error('Failed to update cover photo in database'),
-          success: false
-        };
-      }
-
-      return {
-        url: data.url,
-        error: null,
-        success: true
-      };
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      return {
-        url: null,
-        error: error as Error,
-        success: false
-      };
+    const { error } = await supabase
+      .from('huurders')
+      .update({ cover_foto: result.url })
+      .eq('id', userId);
+    if (error) {
+      console.error('Error updating cover_foto:', error);
+      return { url: null, error: new Error('Kon coverfoto niet opslaan in database.'), success: false };
     }
+    return result;
   }
 
-  /**
-   * Format file size for display
-   */
+  /* NEW: documents ----------------------------------------------------- */
+  async uploadDocument(file: File, userId: string): Promise<UploadResult> {
+    const validation = this.validateFile(file, 'document');
+    if (!validation.isValid) return { url: null, error: new Error(validation.error), success: false };
+    if (!userId) return { url: null, error: new Error('User not authenticated'), success: false };
+
+    const result = await this.uploadViaEdge(file, userId, 'Documents', 'cloudflare-r2-upload-documents');
+    if (!result.success || !result.url) return result;
+
+    /* Optional: store in your documents table */
+    // const { error } = await supabase.from('documents').insert({ user_id: userId, url: result.url });
+    // if (error) { ... }
+
+    return result;
+  }
+
+  /* ------------------------------------------------------------------ */
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
-    
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   }
 }
 
-// Export singleton instance
 export const cloudflareR2UploadService = new CloudflareR2UploadService();
