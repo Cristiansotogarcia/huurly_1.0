@@ -185,19 +185,20 @@ const PropertySearch: React.FC = () => {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <Button
                 variant="outline"
                 onClick={() => navigate('/huurder-dashboard')}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 w-fit"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Terug naar Dashboard</span>
+                <span className="hidden sm:inline">Terug naar Dashboard</span>
+                <span className="sm:hidden">Terug</span>
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Woningen Zoeken</h1>
-                <p className="text-gray-600">Vind je perfecte woning</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Woningen Zoeken</h1>
+                <p className="text-gray-600 text-sm sm:text-base">Vind je perfecte woning</p>
               </div>
             </div>
           </div>
@@ -224,7 +225,7 @@ const PropertySearch: React.FC = () => {
               </div>
 
               {/* Filters Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <Label htmlFor="location">Locatie</Label>
                   <Input
@@ -291,11 +292,11 @@ const PropertySearch: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4">
-                <Button variant="outline" onClick={clearFilters}>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4">
+                <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
                   Filters Wissen
                 </Button>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 text-center sm:text-right">
                   {filteredProperties.length} van {properties.length} woningen gevonden
                 </p>
               </div>

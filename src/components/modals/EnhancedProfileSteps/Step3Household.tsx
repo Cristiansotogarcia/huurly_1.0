@@ -5,14 +5,27 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Users, Baby, Euro } from 'lucide-react';
+import { useFormContext, Controller } from 'react-hook-form';
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-interface Step3HouseholdProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
-  calculateHouseholdSize: () => number;
-}
+export default function Step3Household() {
+  const { register, control, watch, formState: { errors } } = useFormContext();
 
-export default function Step3Household({ formData, handleInputChange, calculateHouseholdSize }: Step3HouseholdProps) {
+  const hasPartner = watch('has_partner');
+  const hasChildren = watch('has_children');
+  const numberOfChildren = watch('number_of_children') || 0;
+
+  const calculateHouseholdSize = () => {
+    let size = 1; // The user themselves
+    if (hasPartner) {
+      size += 1;
+    }
+    if (hasChildren && numberOfChildren > 0) {
+      size += Number(numberOfChildren);
+    }
+    return size;
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -27,55 +40,71 @@ export default function Step3Household({ formData, handleInputChange, calculateH
 
       {/* Partner Information */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="has_partner"
-            checked={formData.has_partner}
-            onCheckedChange={(checked) => handleInputChange('has_partner', checked)}
-          />
-          <Label htmlFor="has_partner">Ik heb een partner</Label>
-        </div>
+        <FormField
+          control={control}
+          name="has_partner"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="has_partner">Ik heb een partner</Label>
+              </div>
+            </FormItem>
+          )}
+        />
 
-        {formData.has_partner && (
+        {hasPartner && (
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="partner_name">Partner naam</Label>
                 <Input
                   id="partner_name"
-                  value={formData.partner_name}
-                  onChange={(e) => handleInputChange('partner_name', e.target.value)}
+                  {...register('partner_name')}
                   placeholder="Naam van je partner"
                 />
+                {errors.partner_name && <p className="text-red-500 text-xs">{`${errors.partner_name.message}`}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="partner_profession">Partner beroep</Label>
                 <Input
                   id="partner_profession"
-                  value={formData.partner_profession}
-                  onChange={(e) => handleInputChange('partner_profession', e.target.value)}
+                  {...register('partner_profession')}
                   placeholder="Beroep van je partner"
                 />
+                 {errors.partner_profession && <p className="text-red-500 text-xs">{`${errors.partner_profession.message}`}</p>}
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="partner_employment_status">Partner werkstatus</Label>
-                <Select value={formData.partner_employment_status} onValueChange={(value) => handleInputChange('partner_employment_status', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecteer status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="vast_contract">Vast contract</SelectItem>
-                    <SelectItem value="tijdelijk_contract">Tijdelijk contract</SelectItem>
-                    <SelectItem value="zzp">ZZP</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="werkloos">Werkloos</SelectItem>
-                    <SelectItem value="pensioen">Pensioen</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="partner_employment_status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecteer status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="vast_contract">Vast contract</SelectItem>
+                        <SelectItem value="tijdelijk_contract">Tijdelijk contract</SelectItem>
+                        <SelectItem value="zzp">ZZP</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="werkloos">Werkloos</SelectItem>
+                        <SelectItem value="pensioen">Pensioen</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                 {errors.partner_employment_status && <p className="text-red-500 text-xs">{`${errors.partner_employment_status.message}`}</p>}
               </div>
 
               <div className="space-y-2">
@@ -85,12 +114,12 @@ export default function Step3Household({ formData, handleInputChange, calculateH
                   <Input
                     id="partner_monthly_income"
                     type="number"
-                    value={formData.partner_monthly_income}
-                    onChange={(e) => handleInputChange('partner_monthly_income', parseInt(e.target.value) || 0)}
+                    {...register('partner_monthly_income', { valueAsNumber: true })}
                     placeholder="3500"
                     className="pl-10"
                   />
                 </div>
+                {errors.partner_monthly_income && <p className="text-red-500 text-xs">{`${errors.partner_monthly_income.message}`}</p>}
               </div>
             </div>
           </div>
@@ -99,16 +128,25 @@ export default function Step3Household({ formData, handleInputChange, calculateH
 
       {/* Children Information */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="has_children"
-            checked={formData.has_children}
-            onCheckedChange={(checked) => handleInputChange('has_children', checked)}
-          />
-          <Label htmlFor="has_children">Ik heb kinderen</Label>
-        </div>
+        <FormField
+          control={control}
+          name="has_children"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="has_children">Ik heb kinderen</Label>
+              </div>
+            </FormItem>
+          )}
+        />
 
-        {formData.has_children && (
+        {hasChildren && (
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
             <div className="space-y-2">
               <Label htmlFor="number_of_children">Aantal kinderen</Label>
@@ -119,24 +157,19 @@ export default function Step3Household({ formData, handleInputChange, calculateH
                   type="number"
                   min="0"
                   max="10"
-                  value={formData.number_of_children}
-                  onChange={(e) => {
-                    const num = parseInt(e.target.value) || 0;
-                    const newAges = Array(num).fill(0).map((_, index) => formData.children_ages?.[index] || 0);
-                    handleInputChange('number_of_children', num);
-                    handleInputChange('children_ages', newAges);
-                  }}
+                  {...register('number_of_children', { valueAsNumber: true })}
                   placeholder="2"
                   className="pl-10"
                 />
               </div>
+              {errors.number_of_children && <p className="text-red-500 text-xs">{`${errors.number_of_children.message}`}</p>}
             </div>
             
-            {formData.number_of_children > 0 && (
+            {numberOfChildren > 0 && (
               <div className="space-y-3">
                 <Label>Leeftijden van kinderen</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  {Array.from({ length: formData.number_of_children }, (_, index) => (
+                  {Array.from({ length: numberOfChildren }, (_, index) => (
                     <div key={index}>
                       <Label htmlFor={`child_age_${index}`} className="text-sm">
                         Kind {index + 1} leeftijd
@@ -146,16 +179,11 @@ export default function Step3Household({ formData, handleInputChange, calculateH
                         type="number"
                         min="0"
                         max="25"
-                        value={formData.children_ages?.[index] || ''}
-                        onChange={(e) => {
-                          const ageNum = parseInt(e.target.value) || 0;
-                          const newAges = [...(formData.children_ages || [])];
-                          newAges[index] = ageNum;
-                          handleInputChange('children_ages', newAges);
-                        }}
+                        {...register(`children_ages.${index}`, { valueAsNumber: true })}
                         className="mt-1"
                         placeholder="Leeftijd"
                       />
+                      {errors.children_ages?.[index] && <p className="text-red-500 text-xs">{`${errors.children_ages[index].message}`}</p>}
                     </div>
                   ))}
                 </div>

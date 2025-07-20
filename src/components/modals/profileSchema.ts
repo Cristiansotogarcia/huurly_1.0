@@ -70,10 +70,70 @@ export const profileSchema = z.object({
   max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
   min_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
   max_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
-  vroegste_verhuisdatum: z.string().optional(),
-  voorkeur_verhuisdatum: z.string().optional(),
+  vroegste_verhuisdatum: z.string()
+    .optional()
+    .refine((dateStr) => {
+      if (!dateStr || dateStr === '') return true; // Optional field
+      
+      // Check format
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        return false;
+      }
+      
+      const [day, month, year] = dateStr.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      
+      // Check if the date is valid
+      if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
+        return false;
+      }
+      
+      // Check if date is not too far in the past (before 2020)
+      if (year < 2020) {
+        return false;
+      }
+      
+      return true;
+    }, 'Ongeldige datum - gebruik dd/mm/jjjj formaat'),
+  voorkeur_verhuisdatum: z.string()
+    .optional()
+    .refine((dateStr) => {
+      if (!dateStr || dateStr === '') return true; // Optional field
+      
+      // Check format
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        return false;
+      }
+      
+      const [day, month, year] = dateStr.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      
+      // Check if the date is valid
+      if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
+        return false;
+      }
+      
+      // Check if date is not too far in the past (before 2020)
+      if (year < 2020) {
+        return false;
+      }
+      
+      return true;
+    }, 'Ongeldige datum - gebruik dd/mm/jjjj formaat'),
   beschikbaarheid_flexibel: z.boolean().default(false),
   parking_required: z.boolean().default(false),
+  // Storage preferences as checkboxes
+  storage_kelder: z.boolean().default(false),
+  storage_zolder: z.boolean().default(false),
+  storage_berging: z.boolean().default(false),
+  storage_garage: z.boolean().default(false),
+  storage_schuur: z.boolean().default(false),
+  
+  // Timing fields moved from Step 5
+  move_in_date_preferred: z.date().optional(),
+  move_in_date_earliest: z.date().optional(),
+  availability_flexible: z.boolean().default(false),
+  lease_duration_preference: z.enum(['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel']).optional(),
   storage_needs: z.string().optional(),
 
   // Step 4: Lifestyle (separate component)

@@ -178,66 +178,66 @@ const IssueManagementModal = ({
       icon={AlertTriangle}
       size="4xl"
     >
-      <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="actions">Acties</TabsTrigger>
+      <Tabs defaultValue="details" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
+            <TabsTrigger value="details" className="px-2 sm:px-4">Details</TabsTrigger>
+            <TabsTrigger value="timeline" className="px-2 sm:px-4">Timeline</TabsTrigger>
+            <TabsTrigger value="actions" className="px-2 sm:px-4">Acties</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+          <TabsContent value="details" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Issue Information */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg">
                     {getCategoryIcon(issue.category)}
                     <span className="ml-2">Issue Informatie</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Titel:</span>
-                      <span className="font-medium">{issue.title}</span>
+                <CardContent className="space-y-3 sm:space-y-4 pt-0">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Titel:</span>
+                      <span className="font-medium text-sm break-words">{issue.title}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Categorie:</span>
-                      <Badge variant="outline">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Categorie:</span>
+                      <Badge variant="outline" className="text-xs w-fit">
                         {issue.category === 'technical' ? 'Technisch' :
                          issue.category === 'user_complaint' ? 'Gebruiker Klacht' :
                          issue.category === 'payment' ? 'Betaling' :
                          issue.category === 'verification' ? 'Verificatie' : 'Overig'}
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Prioriteit:</span>
-                      <Badge className={getPriorityColor(issue.priority)}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Prioriteit:</span>
+                      <Badge className={`${getPriorityColor(issue.priority)} text-xs w-fit`}>
                         {issue.priority === 'high' ? 'Hoog' :
                          issue.priority === 'medium' ? 'Gemiddeld' : 'Laag'}
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className={getStatusColor(issue.status)}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <Badge className={`${getStatusColor(issue.status)} text-xs w-fit`}>
                         {issue.status === 'open' ? 'Open' :
                          issue.status === 'in_progress' ? 'In behandeling' :
                          issue.status === 'resolved' ? 'Opgelost' : 'Geëscaleerd'}
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Gemeld door:</span>
-                      <span className="font-medium">{issue.reportedBy}</span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Gemeld door:</span>
+                      <span className="font-medium text-sm break-words">{issue.reportedBy}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Gemeld op:</span>
-                      <span className="font-medium">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Gemeld op:</span>
+                      <span className="font-medium text-sm">
                         {new Date(issue.createdAt).toLocaleDateString('nl-NL')}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Toegewezen aan:</span>
-                      <span className="font-medium">{issue.assignedTo || 'Niet toegewezen'}</span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                      <span className="text-sm text-gray-600">Toegewezen aan:</span>
+                      <span className="font-medium text-sm break-words">{issue.assignedTo || 'Niet toegewezen'}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -245,25 +245,25 @@ const IssueManagementModal = ({
 
               {/* Issue Description */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg">
                     <FileText className="w-4 h-4 mr-2" />
                     Beschrijving
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="pt-0">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <h4 className="font-medium mb-2">Probleem beschrijving:</h4>
-                      <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                      <h4 className="font-medium mb-2 text-sm sm:text-base">Probleem beschrijving:</h4>
+                      <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-3 rounded-lg">
                         {issue.description}
                       </p>
                     </div>
                     
                     {issue.steps && (
                       <div>
-                        <h4 className="font-medium mb-2">Stappen om te reproduceren:</h4>
-                        <ol className="list-decimal list-inside space-y-1 text-gray-700">
+                        <h4 className="font-medium mb-2 text-sm sm:text-base">Stappen om te reproduceren:</h4>
+                        <ol className="list-decimal list-inside space-y-1 text-sm sm:text-base text-gray-700">
                           {issue.steps.map((step: string, index: number) => (
                             <li key={index}>{step}</li>
                           ))}
@@ -273,8 +273,8 @@ const IssueManagementModal = ({
                     
                     {issue.expectedBehavior && (
                       <div>
-                        <h4 className="font-medium mb-2">Verwacht gedrag:</h4>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                        <h4 className="font-medium mb-2 text-sm sm:text-base">Verwacht gedrag:</h4>
+                        <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-3 rounded-lg">
                           {issue.expectedBehavior}
                         </p>
                       </div>
@@ -282,8 +282,8 @@ const IssueManagementModal = ({
                     
                     {issue.actualBehavior && (
                       <div>
-                        <h4 className="font-medium mb-2">Werkelijk gedrag:</h4>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                        <h4 className="font-medium mb-2 text-sm sm:text-base">Werkelijk gedrag:</h4>
+                        <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-3 rounded-lg">
                           {issue.actualBehavior}
                         </p>
                       </div>
@@ -295,37 +295,37 @@ const IssueManagementModal = ({
 
             {/* User Information */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center text-base sm:text-lg">
                   <User className="w-4 h-4 mr-2" />
                   Gebruiker Informatie
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <span className="text-gray-600">Naam:</span>
-                    <p className="font-medium">{issue.userInfo?.name || 'Onbekend'}</p>
+                    <span className="text-sm text-gray-600">Naam:</span>
+                    <p className="font-medium text-sm break-words">{issue.userInfo?.name || 'Onbekend'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">E-mail:</span>
-                    <p className="font-medium">{issue.userInfo?.email || 'Onbekend'}</p>
+                    <span className="text-sm text-gray-600">E-mail:</span>
+                    <p className="font-medium text-sm break-all">{issue.userInfo?.email || 'Onbekend'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Rol:</span>
-                    <p className="font-medium">{issue.userInfo?.role || 'Onbekend'}</p>
+                    <span className="text-sm text-gray-600">Rol:</span>
+                    <p className="font-medium text-sm">{issue.userInfo?.role || 'Onbekend'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Browser:</span>
-                    <p className="font-medium">{issue.userInfo?.browser || 'Onbekend'}</p>
+                    <span className="text-sm text-gray-600">Browser:</span>
+                    <p className="font-medium text-sm">{issue.userInfo?.browser || 'Onbekend'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">OS:</span>
-                    <p className="font-medium">{issue.userInfo?.os || 'Onbekend'}</p>
+                    <span className="text-sm text-gray-600">OS:</span>
+                    <p className="font-medium text-sm">{issue.userInfo?.os || 'Onbekend'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Laatste activiteit:</span>
-                    <p className="font-medium">
+                    <span className="text-sm text-gray-600">Laatste activiteit:</span>
+                    <p className="font-medium text-sm">
                       {issue.userInfo?.lastActivity ? 
                         new Date(issue.userInfo.lastActivity).toLocaleDateString('nl-NL') : 
                         'Onbekend'}

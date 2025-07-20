@@ -4,14 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Clock, Heart } from 'lucide-react';
+import { FileText, Clock } from 'lucide-react';
+import { useFormContext } from 'react-hook-form';
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-interface Step7ReferencesProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
-}
+export default function Step7References() {
+  const { control, register, formState: { errors } } = useFormContext();
 
-export default function Step7References({ formData, handleInputChange }: Step7ReferencesProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -25,14 +24,20 @@ export default function Step7References({ formData, handleInputChange }: Step7Re
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="references_available"
-            checked={formData.references_available}
-            onCheckedChange={(checked) => handleInputChange('references_available', checked)}
-          />
-          <Label htmlFor="references_available">Ik kan referenties van vorige verhuurders overleggen</Label>
-        </div>
+        <FormField
+          control={control}
+          name="references_available"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <Label>Ik kan referenties van vorige verhuurders overleggen</Label>
+              </div>
+            </FormItem>
+          )}
+        />
       </div>
 
       <div className="space-y-2">
@@ -40,82 +45,25 @@ export default function Step7References({ formData, handleInputChange }: Step7Re
         <div className="relative">
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            id="rental_history_years"
+            {...register('rental_history_years', { valueAsNumber: true })}
             type="number"
             min="0"
             max="50"
-            value={formData.rental_history_years}
-            onChange={(e) => handleInputChange('rental_history_years', parseInt(e.target.value) || 0)}
             placeholder="5"
             className="pl-10"
           />
         </div>
+        {errors.rental_history_years && <p className="text-red-500 text-xs">{`${errors.rental_history_years.message}`}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="reason_for_moving">Reden voor verhuizing</Label>
         <Textarea
-          id="reason_for_moving"
-          value={formData.reason_for_moving}
-          onChange={(e) => handleInputChange('reason_for_moving', e.target.value)}
+          {...register('reason_for_moving')}
           placeholder="Beschrijf waarom je op zoek bent naar een nieuwe woning (bijv. nieuwe baan, studiebeëindiging, groeiende familie)"
           className="min-h-[100px]"
         />
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-semibold flex items-center">
-          <Heart className="w-4 h-4 mr-2 text-red-500" />
-          Levensstijl
-        </h3>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="has_pets"
-              checked={formData.has_pets}
-              onCheckedChange={(checked) => handleInputChange('has_pets', checked)}
-            />
-            <Label htmlFor="has_pets">Ik heb huisdieren</Label>
-          </div>
-
-          {formData.has_pets && (
-            <div className="ml-6 space-y-2">
-              <Label htmlFor="pet_details">Huisdier details</Label>
-              <Textarea
-                id="pet_details"
-                value={formData.pet_details}
-                onChange={(e) => handleInputChange('pet_details', e.target.value)}
-                placeholder="Beschrijf je huisdieren (type, aantal, grootte, etc.)"
-                className="min-h-[80px]"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="smokes"
-              checked={formData.smokes}
-              onCheckedChange={(checked) => handleInputChange('smokes', checked)}
-            />
-            <Label htmlFor="smokes">Ik rook</Label>
-          </div>
-
-          {formData.smokes && (
-            <div className="ml-6 space-y-2">
-              <Label htmlFor="smoking_details">Rook details</Label>
-              <Textarea
-                id="smoking_details"
-                value={formData.smoking_details}
-                onChange={(e) => handleInputChange('smoking_details', e.target.value)}
-                placeholder="Beschrijf je rookgewoonten (bijv. alleen buiten, sociale roker, etc.)"
-                className="min-h-[80px]"
-              />
-            </div>
-          )}
-        </div>
+        {errors.reason_for_moving && <p className="text-red-500 text-xs">{`${errors.reason_for_moving.message}`}</p>}
       </div>
     </div>
   );

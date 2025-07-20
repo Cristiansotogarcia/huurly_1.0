@@ -126,17 +126,18 @@ const PropertyManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Eigenschappen Beheer</h1>
-            <p className="text-gray-600">Beheer al je woningen en huurvoorstellen</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Eigenschappen Beheer</h1>
+            <p className="text-sm sm:text-base text-gray-600">Beheer al je woningen en huurvoorstellen</p>
           </div>
-          <Button onClick={() => setIsPropertyModalOpen(true)}>
+          <Button onClick={() => setIsPropertyModalOpen(true)} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
-            Nieuwe Woning
+            <span className="hidden sm:inline">Nieuwe Woning</span>
+            <span className="sm:hidden">Toevoegen</span>
           </Button>
         </div>
 

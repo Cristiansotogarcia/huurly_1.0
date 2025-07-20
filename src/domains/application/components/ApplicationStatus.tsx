@@ -91,15 +91,17 @@ export const ApplicationStatus: React.FC<ApplicationStatusProps> = ({
   const { status, submitted_at, updated_at, notes, next_steps } = applicationStatus;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
       {/* Status Header */}
-      <div className="flex items-center space-x-3 mb-6">
-        {getStatusIcon(status)}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="flex items-start sm:items-center space-x-3 mb-4 sm:mb-6">
+        <div className="flex-shrink-0 mt-1 sm:mt-0">
+          {getStatusIcon(status)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">
             Status: {getStatusText(status)}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             Laatst bijgewerkt: {new Date(updated_at).toLocaleDateString('nl-NL', {
               year: 'numeric',
               month: 'long',
@@ -112,40 +114,40 @@ export const ApplicationStatus: React.FC<ApplicationStatusProps> = ({
       </div>
 
       {/* Status Badge */}
-      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mb-4 ${
+      <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border mb-3 sm:mb-4 ${
         getStatusColor(status)
       }`}>
         {getStatusText(status)}
       </div>
 
       {/* Status Description */}
-      <div className="mb-6">
-        <p className="text-gray-700">
+      <div className="mb-4 sm:mb-6">
+        <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
           {getStatusDescription(status)}
         </p>
       </div>
 
       {/* Notes */}
       {notes && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Opmerkingen</h3>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-gray-700">{notes}</p>
+        <div className="mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Opmerkingen</h3>
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+            <p className="text-sm sm:text-base text-gray-700">{notes}</p>
           </div>
         </div>
       )}
 
       {/* Next Steps */}
       {next_steps && next_steps.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Volgende stappen</h3>
+        <div className="mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Volgende stappen</h3>
           <ul className="space-y-2">
             {next_steps.map((step, index) => (
               <li key={index} className="flex items-start space-x-2">
-                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="text-gray-700">{step}</span>
+                <span className="text-sm sm:text-base text-gray-700">{step}</span>
               </li>
             ))}
           </ul>
@@ -155,15 +157,15 @@ export const ApplicationStatus: React.FC<ApplicationStatusProps> = ({
       {/* Timeline */}
       {showTimeline && (
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Tijdlijn</h3>
-          <div className="space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Tijdlijn</h3>
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Aanvraag ingediend</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm font-medium text-gray-900">Aanvraag ingediend</p>
+                <p className="text-xs sm:text-sm text-gray-600">
                   {new Date(submitted_at).toLocaleDateString('nl-NL', {
                     year: 'numeric',
                     month: 'long',
@@ -184,10 +186,10 @@ export const ApplicationStatus: React.FC<ApplicationStatusProps> = ({
                   }`}></div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">
                     Status bijgewerkt naar: {getStatusText(status)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     {new Date(updated_at).toLocaleDateString('nl-NL', {
                       year: 'numeric',
                       month: 'long',

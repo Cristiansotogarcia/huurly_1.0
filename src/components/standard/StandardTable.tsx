@@ -200,13 +200,13 @@ export function StandardTable<T extends Record<string, any>>({
   return (
     <div className={className}>
       {searchable && (
-        <div className="flex items-center mb-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex items-center mb-3 sm:mb-4">
+          <div className="relative flex-1 max-w-full sm:max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input
               type="search"
               placeholder={searchPlaceholder}
-              className="pl-8 w-full"
+              className="pl-8 w-full text-sm sm:text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -224,72 +224,81 @@ export function StandardTable<T extends Record<string, any>>({
         </div>
       )}
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableHead 
-                  key={index}
-                  className={cn(
-                    column.sortable && sortable ? 'cursor-pointer select-none' : '',
-                    column.className
-                  )}
-                  onClick={() => column.sortable && sortable && handleSort(column.accessorKey)}
-                >
-                  <div className="flex items-center">
-                    {column.header}
-                    {sortable && column.sortable && sortConfig && sortConfig.key === column.accessorKey && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedData.length === 0 ? (
+      <div className="border rounded-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Geen resultaten gevonden.
-                </TableCell>
+                {columns.map((column, index) => (
+                  <TableHead 
+                    key={index}
+                    className={cn(
+                      column.sortable && sortable ? 'cursor-pointer select-none' : '',
+                      'text-xs sm:text-sm whitespace-nowrap',
+                      column.className
+                    )}
+                    onClick={() => column.sortable && sortable && handleSort(column.accessorKey)}
+                  >
+                    <div className="flex items-center">
+                      <span className="truncate">{column.header}</span>
+                      {sortable && column.sortable && sortConfig && sortConfig.key === column.accessorKey && (
+                        <span className="ml-1 flex-shrink-0">
+                          {sortConfig.direction === 'asc' ? (
+                            <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : (
-              sortedData.map((item, rowIndex) => (
-                <TableRow 
-                  key={rowIndex}
-                  className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
-                  onClick={() => onRowClick && onRowClick(item)}
-                >
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={colIndex} className={column.className}>
-                      {getCellValue(item, column)}
-                    </TableCell>
-                  ))}
+            </TableHeader>
+            <TableBody>
+              {sortedData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-16 sm:h-24 text-center text-sm sm:text-base">
+                    Geen resultaten gevonden.
+                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                sortedData.map((item, rowIndex) => (
+                  <TableRow 
+                    key={rowIndex}
+                    className={cn(
+                      onRowClick ? 'cursor-pointer hover:bg-gray-50' : '',
+                      'text-xs sm:text-sm'
+                    )}
+                    onClick={() => onRowClick && onRowClick(item)}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <TableCell key={colIndex} className={cn('whitespace-nowrap', column.className)}>
+                        <div className="truncate max-w-[120px] sm:max-w-none">
+                          {getCellValue(item, column)}
+                        </div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 mt-3 sm:mt-4">
+          <div className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
             Pagina {pagination.currentPage} van {pagination.totalPages}
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
               disabled={pagination.currentPage === 1}
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
               Vorige
             </Button>
@@ -298,6 +307,7 @@ export function StandardTable<T extends Record<string, any>>({
               size="sm"
               onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
               disabled={pagination.currentPage === pagination.totalPages}
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
               Volgende
             </Button>

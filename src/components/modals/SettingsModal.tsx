@@ -92,31 +92,35 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Settings className="w-5 h-5" />
+          <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Instellingen</span>
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">
-              <User className="w-4 h-4 mr-2" />
-              Profiel
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+            <TabsTrigger value="profile" className="text-xs sm:text-sm p-2 sm:p-3">
+              <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Profiel</span>
+              <span className="xs:hidden">Prof</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="w-4 h-4 mr-2" />
-              Meldingen
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm p-2 sm:p-3">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Meldingen</span>
+              <span className="xs:hidden">Meld</span>
             </TabsTrigger>
-            <TabsTrigger value="privacy">
-              <Shield className="w-4 h-4 mr-2" />
-              Privacy
+            <TabsTrigger value="privacy" className="text-xs sm:text-sm p-2 sm:p-3">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Privacy</span>
+              <span className="xs:hidden">Priv</span>
             </TabsTrigger>
-            <TabsTrigger value="subscription">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Abonnement
+            <TabsTrigger value="subscription" className="text-xs sm:text-sm p-2 sm:p-3">
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Abonnement</span>
+              <span className="xs:hidden">Abo</span>
             </TabsTrigger>
           </TabsList>
 
@@ -161,12 +165,12 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-4">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="email-notifications">E-mailnotificaties</Label>
-                  <p className="text-sm text-gray-500">Ontvang belangrijke updates via e-mail</p>
+          <TabsContent value="notifications" className="space-y-3 sm:space-y-4 mt-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-start sm:items-center justify-between gap-3">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="email-notifications" className="text-sm sm:text-base">E-mailnotificaties</Label>
+                  <p className="text-xs sm:text-sm text-gray-500">Ontvang belangrijke updates via e-mail</p>
                 </div>
                 <Switch
                   id="email-notifications"
@@ -174,6 +178,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   onCheckedChange={(checked) => 
                     setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
                   }
+                  className="mt-1 sm:mt-0"
                 />
               </div>
 

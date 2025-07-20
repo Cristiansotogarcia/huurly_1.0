@@ -86,13 +86,13 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Huurverzoek Indienen</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Huurverzoek Indienen</h2>
         {propertyTitle && (
           <p className="text-gray-600 mt-1">Voor: {propertyTitle}</p>
         )}
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Vul onderstaande gegevens in om je huurverzoek in te dienen.
         </p>
       </div>
@@ -116,7 +116,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         </div>
 
         {/* Move-in Date and Income */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Gewenste inhuurdatum *
@@ -185,7 +185,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         </div>
 
         {/* Pets and Smoking */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="flex items-center">
               <input
@@ -245,12 +245,12 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end space-x-4 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-6 border-t">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full sm:w-auto px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
               disabled={isLoading}
             >
               Annuleren
@@ -258,7 +258,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           )}
           <button
             type="submit"
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full sm:w-auto px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? 'Indienen...' : 'Aanvraag Indienen'}

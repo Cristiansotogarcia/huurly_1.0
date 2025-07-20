@@ -1,5 +1,75 @@
 # Huurly Project Changelog
 
+## TypeScript Error Fixes - January 2025
+
+### Fix: Missing 'woningtype' Field in Profile Creation
+
+**Change:** Fixed TypeScript compilation error in `useHuurder.ts` handleProfileComplete function.
+
+**Problem:** The `CreateTenantProfileData` interface requires a `woningtype` field, but it was missing from the `dutchProfileData` object being passed to `userService.updateTenantProfile()`. This caused TypeScript error 2345: "Property 'woningtype' is missing in type but required in type 'CreateTenantProfileData'."
+
+**Root Cause:** The `handleProfileComplete` function was mapping form data to Dutch field names but missed the required `woningtype` field, even though it was correctly implemented in the `toggleLookingStatus` function.
+
+**Solution:** Added the missing `woningtype` field mapping to the `dutchProfileData` object:
+```typescript
+woningtype: profileData.housing_preferences?.property_type || profileData.preferred_property_type || 'appartement'
+```
+
+**Technical Changes:**
+- Added `woningtype` field mapping in `handleProfileComplete` function
+- Used same mapping pattern as existing `woningtype_voorkeur` field
+- Added fallback value of 'appartement' to ensure field is never undefined
+- Follows the same pattern used in `toggleLookingStatus` function
+
+**Files Modified:**
+- `src/hooks/useHuurder.ts`
+- `changelog.md`
+
+**Result:** TypeScript compilation now passes without errors (exit code 0). Profile creation functionality works correctly with all required fields properly mapped.
+
+---
+
+## UI/UX Improvements - January 2025
+
+- **EnhancedProfileCreationModal**: Implemented automatic date formatting with forward slash separators for date inputs
+  - Created reusable `DateInput` component with automatic dd/mm/yyyy formatting and cursor advancement
+  - Updated `date_of_birth` field in `Step1PersonalInfo.tsx` to use new DateInput component
+  - Updated `vroegste_verhuisdatum` and `voorkeur_verhuisdatum` fields in `Step4Housing.tsx` to use new DateInput component
+  - Added proper validation in `profileSchema.ts` for date format consistency
+  - Users can now type dates continuously (e.g., "13091990") and it automatically formats to "13/09/1990" with cursor advancement
+- **EnhancedProfileCreationModal**: Updated modal width from `size="4xl"` to `size="5xl"` to prevent horizontal scrolling and better accommodate content
+- **EnhancedProfileCreationModal**: Updated modal width from `size="lg"` to `size="4xl"` to match DocumentUploadModal width (896px vs 512px)
+- Updated the HuurderDashboard to display the user's name instead of their email address.
+- Removed the 'Cover Foto' and 'Profielfoto' titles from the PhotoSection.
+- Modified the CoverPhoto component to make the 'Foto wijzigen' button permanently visible.
+
+### Fixes
+- Corrected the display of 'Woningvoorkeur' in the profile overview to properly format housing preferences and exclude undefined or empty values, showing 'N.v.t.' when no preferences are set.
+- **Enhanced Profile Modal Responsiveness**: Converted `EnhancedProfileCreationModal` from raw Dialog components to BaseModal with `size="lg"` for better desktop width utilization, improved responsive behavior, proper margins, and consistency with other modals like DocumentUploadModal.
+- Fixed TypeScript JSX structure errors in Header.tsx after removing Registreren button - resolved improper nesting and extra closing tags.
+- Updated Header.tsx to remove Registreren button and style Inloggen button with orange background and white text.
+- Modified HuurderDashboard.tsx layout to prevent overlaps: changed stats positioning, increased margins, made action buttons responsive with single column on mobile.
+- Fixed a TypeScript error in the `handleProfileComplete` function by correctly mapping `stad`, `woningtype`, and `slaapkamers` to the tenant profile.
+- Fixed TypeScript errors in the enhanced profile modal steps by removing extraneous closing braces.
+- **Enhanced Profile Modal Width Fix**: Fixed width issue in EnhancedProfileCreationModal.tsx to prevent horizontal scrolling while maintaining responsiveness by updating DialogContent className from 'max-w-[95vw] sm:max-w-[480px] md:max-w-[520px] lg:max-w-[560px]' to 'max-w-[90vw] sm:max-w-[440px] md:max-w-[480px] lg:max-w-[520px]'. This ensures the modal stays within safe viewport bounds and eliminates horizontal scrolling on all screen sizes.
+
+- **Issue:** TypeScript error due to missing `isHidden` property in `ProfileField` type.
+- **Fix:** Added `isHidden?: boolean` to the `ProfileField` interface in `ProfileOverview.tsx`.
+- **Enhancement:** Updated `ProfileOverview.tsx` to conditionally render fields based on the `isHidden` property, preventing hidden fields from being displayed.
+
+### V1.1.3 - 2024-07-26
+- **Enhancement:** Updated `HuurderDashboard.tsx` to display the user's full name in the `DashboardHeader` instead of their email address.
+
+### Fixes
+
+- **UI Bug:** Adjusted the profile picture in `PhotoSection.tsx` to correctly overlap the cover photo, improving the visual layout of the user's profile page.
+- **UI Bug:** Corrected the positioning of the profile picture upload button in `ProfilePicture.tsx`. The button now correctly appears on top of the profile picture as intended.
+- **Fix:** Resolved an issue where the clickable area of the "Foto wijzigen" button on the cover photo was inconsistent. The entire button is now responsive to clicks, improving user experience.
+- **Fix:** Corrected the inconsistent clickable area for the cover photo upload button by separating the dropzone functionality from the label, ensuring the entire button is consistently interactive.
+- **Feature:** The four statistics cards on the tenant dashboard have been moved to be next to the profile picture, under the cover photo. They have also been made smaller with less white space for a more compact and integrated look.
+
+---
+
 ## Fix: Database Column Name Mismatches - January 2025
 
 **Change:** Fixed TypeScript compilation errors caused by incorrect database column name references in ProfilePictureUpload.tsx and UserService.ts.

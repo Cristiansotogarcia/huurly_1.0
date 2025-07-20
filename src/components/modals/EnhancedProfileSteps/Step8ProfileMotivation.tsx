@@ -3,13 +3,13 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, User } from 'lucide-react';
+import { useFormContext } from 'react-hook-form';
 
-interface Step8ProfileMotivationProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
-}
+export default function Step8ProfileMotivation() {
+  const { register, watch, formState: { errors } } = useFormContext();
+  const bio = watch('bio', '');
+  const motivation = watch('motivation', '');
 
-export default function Step8ProfileMotivation({ formData, handleInputChange }: Step8ProfileMotivationProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -27,16 +27,15 @@ export default function Step8ProfileMotivation({ formData, handleInputChange }: 
         <div className="relative">
           <User className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
           <Textarea
-            id="bio"
-            value={formData.bio}
-            onChange={(e) => handleInputChange('bio', e.target.value)}
+            {...register('bio')}
             placeholder="Vertel iets over jezelf, je hobby's, werk, en wat voor type huurder je bent. Dit helpt verhuurders om je beter te leren kennen."
             className="min-h-[120px] pl-10 pt-3"
             required
           />
         </div>
+        {errors.bio && <p className="text-red-500 text-xs">{`${errors.bio.message}`}</p>}
         <p className="text-sm text-gray-500">
-          Tekens: {formData.bio.length}/500 (minimaal 50 tekens aanbevolen)
+          Tekens: {bio.length}/500 (minimaal 50 tekens aanbevolen)
         </p>
       </div>
 
@@ -45,16 +44,15 @@ export default function Step8ProfileMotivation({ formData, handleInputChange }: 
         <div className="relative">
           <MessageCircle className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
           <Textarea
-            id="motivation"
-            value={formData.motivation}
-            onChange={(e) => handleInputChange('motivation', e.target.value)}
+            {...register('motivation')}
             placeholder="Vertel waarom je op zoek bent naar een nieuwe woning en wat je zoekt. Bijvoorbeeld: nieuwe baan, studiebeëindiging, of gewoon tijd voor verandering."
             className="min-h-[120px] pl-10 pt-3"
             required
           />
         </div>
+        {errors.motivation && <p className="text-red-500 text-xs">{`${errors.motivation.message}`}</p>}
         <p className="text-sm text-gray-500">
-          Tekens: {formData.motivation.length}/500 (minimaal 30 tekens aanbevolen)
+          Tekens: {motivation.length}/500 (minimaal 30 tekens aanbevolen)
         </p>
       </div>
 

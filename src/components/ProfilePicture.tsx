@@ -33,9 +33,9 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
   });
 
   const sizeClasses = {
-    small: 'w-32 h-32',
-    medium: 'w-40 h-40',
-    large: 'w-48 h-48'
+    small: 'w-24 h-24 sm:w-32 sm:h-32',
+    medium: 'w-32 h-32 sm:w-40 sm:h-40',
+    large: 'w-36 h-36 sm:w-48 sm:h-48'
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -62,8 +62,8 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
     return currentImageUrl || null;
   };
 
-  return (
-    <div className={cn('relative', className)}>
+    return (
+    <div className={cn('relative inline-block', className)}>
       {/* Profile Picture Container */}
       <div className="relative group">
         <Avatar className={cn(

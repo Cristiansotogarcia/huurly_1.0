@@ -57,7 +57,7 @@ export const CoverPhoto: React.FC<CoverPhotoProps> = ({
     <div className={cn('relative', className)}>
       {/* Cover Photo Container */}
       <div className="relative group">
-        <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
           {getImageUrl() ? (
             <img
               src={getImageUrl()}
@@ -75,12 +75,12 @@ export const CoverPhoto: React.FC<CoverPhotoProps> = ({
 
           {/* Upload Button Overlay */}
           {!isUploading && (
-            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div {...getRootProps()} className="absolute bottom-4 right-4 transition-opacity duration-200">
+              <input {...getInputProps()} ref={fileInputRef} id="cover-photo-input" />
               <label
-                {...getRootProps()}
+                htmlFor="cover-photo-input"
                 className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2 border border-gray-300"
               >
-                <input {...getInputProps()} ref={fileInputRef} />
                 <Camera className="w-4 h-4" />
                 <span className="text-sm font-medium">Foto wijzigen</span>
               </label>

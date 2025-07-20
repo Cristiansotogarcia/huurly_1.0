@@ -1,19 +1,16 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Calendar } from 'lucide-react';
 import EnhancedDatePicker from '../EnhancedDatePicker';
+import { useFormContext, Controller } from 'react-hook-form';
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-interface Step5TimingProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
-  handleDateSelect: (field: 'date_of_birth' | 'move_in_date_preferred' | 'move_in_date_earliest', date: Date | undefined) => void;
-}
+export default function Step5Timing() {
+  const { control, formState: { errors } } = useFormContext();
 
-export default function Step5Timing({ formData, handleInputChange, handleDateSelect }: Step5TimingProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -29,58 +26,85 @@ export default function Step5Timing({ formData, handleInputChange, handleDateSel
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="move_in_date_preferred">Gewenste inhuurdatum</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-            <div className="pl-10">
-              <EnhancedDatePicker
-                selected={formData.move_in_date_preferred}
-                onSelect={(date) => handleDateSelect('move_in_date_preferred', date)}
-                placeholder="Gewenste datum"
-              />
-            </div>
-          </div>
+          <Controller
+            name="move_in_date_preferred"
+            control={control}
+            render={({ field }) => (
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+                <div className="pl-10">
+                  <EnhancedDatePicker
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    placeholder="Gewenste datum"
+                  />
+                </div>
+              </div>
+            )}
+          />
+          {errors.move_in_date_preferred && <p className="text-red-500 text-xs">{`${errors.move_in_date_preferred.message}`}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="move_in_date_earliest">Vroegst mogelijke datum</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-            <div className="pl-10">
-              <EnhancedDatePicker
-                selected={formData.move_in_date_earliest}
-                onSelect={(date) => handleDateSelect('move_in_date_earliest', date)}
-                placeholder="Vroegste datum"
-              />
-            </div>
-          </div>
+          <Controller
+            name="move_in_date_earliest"
+            control={control}
+            render={({ field }) => (
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+                <div className="pl-10">
+                  <EnhancedDatePicker
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    placeholder="Vroegste datum"
+                  />
+                </div>
+              </div>
+            )}
+          />
+          {errors.move_in_date_earliest && <p className="text-red-500 text-xs">{`${errors.move_in_date_earliest.message}`}</p>}
         </div>
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="availability_flexible"
-            checked={formData.availability_flexible}
-            onCheckedChange={(checked) => handleInputChange('availability_flexible', checked)}
-          />
-          <Label htmlFor="availability_flexible">Ik ben flexibel met de datum</Label>
-        </div>
+        <FormField
+          control={control}
+          name="availability_flexible"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <Label>Ik ben flexibel met de datum</Label>
+              </div>
+            </FormItem>
+          )}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="lease_duration_preference">Gewenste huurperiode</Label>
-        <Select value={formData.lease_duration_preference} onValueChange={(value) => handleInputChange('lease_duration_preference', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecteer voorkeur" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="6_maanden">6 maanden</SelectItem>
-            <SelectItem value="1_jaar">1 jaar</SelectItem>
-            <SelectItem value="2_jaar">2 jaar</SelectItem>
-            <SelectItem value="langer">Langer dan 2 jaar</SelectItem>
-            <SelectItem value="flexibel">Flexibel</SelectItem>
-          </SelectContent>
-        </Select>
+        <Controller
+          name="lease_duration_preference"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer voorkeur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6_maanden">6 maanden</SelectItem>
+                <SelectItem value="1_jaar">1 jaar</SelectItem>
+                <SelectItem value="2_jaar">2 jaar</SelectItem>
+                <SelectItem value="langer">Langer dan 2 jaar</SelectItem>
+                <SelectItem value="flexibel">Flexibel</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.lease_duration_preference && <p className="text-red-500 text-xs">{`${errors.lease_duration_preference.message}`}</p>}
       </div>
     </div>
   );

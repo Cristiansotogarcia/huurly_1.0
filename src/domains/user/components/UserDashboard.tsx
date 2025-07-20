@@ -22,9 +22,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
             {user.profile.avatar_url ? (
@@ -52,7 +52,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 rounded-lg">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Snelle Acties</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <button
@@ -162,7 +162,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Recente Activiteit</h2>
         {statistics.recent_activity && statistics.recent_activity.length > 0 ? (
           <div className="space-y-3">
@@ -192,9 +192,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       </div>
 
       {/* Account Status */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="text-center">
             <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${
               user.verification.email_verified ? 'bg-green-100' : 'bg-red-100'

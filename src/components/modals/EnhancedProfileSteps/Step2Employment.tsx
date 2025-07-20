@@ -1,17 +1,22 @@
 
 import React from 'react';
+import { useFormContext, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Briefcase, Euro } from 'lucide-react';
+import { ProfileFormData } from '../profileSchema';
 
-interface Step2EmploymentProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
-}
-
-export default function Step2Employment({ formData, handleInputChange }: Step2EmploymentProps) {
+export default function Step2Employment() {
+  const { register, control, watch, formState: { errors } } = useFormContext<ProfileFormData>();
+  const extraIncome = watch('extra_income');
+  
+  // Convert to number and check if it's a valid positive number
+  const extraIncomeValue = Number(extraIncome);
+  const showExtraIncomeDescription = !isNaN(extraIncomeValue) && extraIncomeValue > 0;
+  
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -29,50 +34,44 @@ export default function Step2Employment({ formData, handleInputChange }: Step2Em
           <Label htmlFor="profession">Beroep *</Label>
           <Input
             id="profession"
-            value={formData.profession}
-            onChange={(e) => handleInputChange('profession', e.target.value)}
+            {...register('profession')}
             placeholder="Software Developer"
             required
           />
+          {errors.profession && <p className="text-red-500 text-xs">{errors.profession.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="employer">Werkgever</Label>
           <Input
             id="employer"
-            value={formData.employer}
-            onChange={(e) => handleInputChange('employer', e.target.value)}
+            {...register('employer')}
             placeholder="Bedrijfsnaam"
           />
+          {errors.employer && <p className="text-red-500 text-xs">{errors.employer.message}</p>}
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="employment_status">Status</Label>
-          <Select value={formData.employment_status} onValueChange={(value) => handleInputChange('employment_status', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecteer status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full-time">Vast contract (full-time)</SelectItem>
-              <SelectItem value="part-time">Tijdelijk contract (part-time)</SelectItem>
-              <SelectItem value="zzp">ZZP</SelectItem>
-              <SelectItem value="student">Student</SelectItem>
-              <SelectItem value="werkloos">Werkloos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="work_contract_type">Contract type</Label>
-          <Input
-            id="work_contract_type"
-            value={formData.work_contract_type}
-            onChange={(e) => handleInputChange('work_contract_type', e.target.value)}
-            placeholder="Fulltime, parttime, etc."
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="employment_status">Status</Label>
+        <Controller
+          name="employment_status"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full-time">Vast contract (full-time)</SelectItem>
+                <SelectItem value="part-time">Tijdelijk contract (part-time)</SelectItem>
+                <SelectItem value="zzp">ZZP</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="werkloos">Werkloos</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       <div className="space-y-2">
@@ -82,13 +81,13 @@ export default function Step2Employment({ formData, handleInputChange }: Step2Em
           <Input
             id="monthly_income"
             type="number"
-            value={formData.monthly_income}
-            onChange={(e) => handleInputChange('monthly_income', parseInt(e.target.value) || 0)}
+            {...register('monthly_income', { valueAsNumber: true })}
             placeholder="4500"
             className="pl-10"
             required
           />
         </div>
+        {errors.monthly_income && <p className="text-red-500 text-xs">{errors.monthly_income.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -98,31 +97,41 @@ export default function Step2Employment({ formData, handleInputChange }: Step2Em
           <Input
             id="extra_income"
             type="number"
-            value={formData.extra_income || ''}
-            onChange={(e) => handleInputChange('extra_income', parseInt(e.target.value) || null)}
+            {...register('extra_income', { 
+              valueAsNumber: true,
+              setValueAs: (value) => value === '' ? 0 : Number(value)
+            })}
             placeholder="1000"
             className="pl-10"
           />
         </div>
+        {errors.extra_income && <p className="text-red-500 text-xs">{errors.extra_income.message}</p>}
       </div>
 
-      {formData.extra_income && (
+      {showExtraIncomeDescription && (
         <div className="space-y-2">
           <Label htmlFor="extra_income_description">Beschrijving extra inkomen</Label>
-          <Input
+          <Textarea
             id="extra_income_description"
-            value={formData.extra_income_description || ''}
-            onChange={(e) => handleInputChange('extra_income_description', e.target.value)}
-            placeholder="Bijv. freelance werk, uitkering, etc."
+            {...register('extra_income_description')}
+            placeholder="Beschrijf hier je extra inkomen, bijvoorbeeld: freelance werk, uitkering, investeringen, etc."
+            rows={3}
           />
+          {errors.extra_income_description && <p className="text-red-500 text-xs">{errors.extra_income_description.message}</p>}
         </div>
       )}
 
       <div className="flex items-center space-x-2">
-        <Checkbox
-          id="work_from_home"
-          checked={formData.work_from_home}
-          onCheckedChange={(checked) => handleInputChange('work_from_home', checked)}
+        <Controller
+          name="work_from_home"
+          control={control}
+          render={({ field }) => (
+            <Checkbox
+              id="work_from_home"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
         />
         <Label htmlFor="work_from_home">Ik werk (deels) vanuit huis</Label>
       </div>

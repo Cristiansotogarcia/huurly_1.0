@@ -112,7 +112,7 @@ export const PaymentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={persistent ? undefined : (open) => onClose(open)}>
-      <Content className="sm:max-w-md" aria-describedby="payment-modal-description">
+      <Content className="max-w-[95vw] sm:max-w-md mx-4 sm:mx-auto" aria-describedby="payment-modal-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-center text-dutch-blue flex-1">

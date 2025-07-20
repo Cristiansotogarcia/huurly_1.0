@@ -137,21 +137,21 @@ const UserManagementModal = ({
       icon={User}
       size="4xl"
     >
-      <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">Profiel</TabsTrigger>
-            <TabsTrigger value="activity">Activiteit</TabsTrigger>
-            <TabsTrigger value="documents">Documenten</TabsTrigger>
-            <TabsTrigger value="actions">Acties</TabsTrigger>
+      <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 text-xs sm:text-sm">
+            <TabsTrigger value="profile" className="px-2 sm:px-4">Profiel</TabsTrigger>
+            <TabsTrigger value="activity" className="px-2 sm:px-4">Activiteit</TabsTrigger>
+            <TabsTrigger value="documents" className="px-2 sm:px-4">Documenten</TabsTrigger>
+            <TabsTrigger value="actions" className="px-2 sm:px-4">Acties</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+          <TabsContent value="profile" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* User Info */}
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <CardTitle className="flex items-center text-base sm:text-lg">
                       <User className="w-4 h-4 mr-2" />
                       Gebruiker Informatie
                     </CardTitle>
@@ -159,12 +159,13 @@ const UserManagementModal = ({
                       variant="outline" 
                       size="sm"
                       onClick={() => setEditMode(!editMode)}
+                      className="w-full sm:w-auto text-xs sm:text-sm"
                     >
                       {editMode ? 'Annuleren' : 'Bewerken'}
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 pt-0">
                   {editMode ? (
                     <div className="space-y-4">
                       <div>
@@ -199,42 +200,42 @@ const UserManagementModal = ({
                           </SelectContent>
                         </Select>
                       </div>
-                      <Button onClick={handleSaveChanges} className="w-full">
+                      <Button onClick={handleSaveChanges} className="w-full text-sm sm:text-base">
                         Wijzigingen Opslaan
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Naam:</span>
-                        <span className="font-medium">{user.name}</span>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Naam:</span>
+                        <span className="font-medium text-sm break-words">{user.name}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">E-mail:</span>
-                        <span className="font-medium">{user.email}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">E-mail:</span>
+                        <span className="font-medium text-sm break-all">{user.email}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Rol:</span>
-                        <Badge className={getUserRoleColor(user.role)}>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Rol:</span>
+                        <Badge className={`${getUserRoleColor(user.role)} text-xs w-fit`}>
                           {user.role}
                         </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Status:</span>
-                        <Badge className={getUserStatusColor(user.status || 'active')}>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Status:</span>
+                        <Badge className={`${getUserStatusColor(user.status || 'active')} text-xs w-fit`}>
                           {user.status === 'active' ? 'Actief' : 
                            user.status === 'suspended' ? 'Geschorst' : 'In behandeling'}
                         </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Geregistreerd:</span>
-                        <span className="font-medium">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Geregistreerd:</span>
+                        <span className="font-medium text-sm">
                           {new Date(user.createdAt || Date.now()).toLocaleDateString('nl-NL')}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Laatste login:</span>
-                        <span className="font-medium">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Laatste login:</span>
+                        <span className="font-medium text-sm">
                           {new Date(user.lastLogin || Date.now()).toLocaleDateString('nl-NL')}
                         </span>
                       </div>
@@ -245,54 +246,54 @@ const UserManagementModal = ({
 
               {/* Account Statistics */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg">
                     <Activity className="w-4 h-4 mr-2" />
                     Account Statistieken
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">12</p>
-                      <p className="text-sm text-gray-600">Totaal Acties</p>
+                <CardContent className="space-y-3 sm:space-y-4 pt-0">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                    <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
+                      <p className="text-lg sm:text-2xl font-bold text-blue-600">12</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Totaal Acties</p>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">8</p>
-                      <p className="text-sm text-gray-600">Succesvol</p>
+                    <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
+                      <p className="text-lg sm:text-2xl font-bold text-green-600">8</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Succesvol</p>
                     </div>
-                    <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <p className="text-2xl font-bold text-orange-600">3</p>
-                      <p className="text-sm text-gray-600">In behandeling</p>
+                    <div className="text-center p-2 sm:p-3 bg-orange-50 rounded-lg">
+                      <p className="text-lg sm:text-2xl font-bold text-orange-600">3</p>
+                      <p className="text-xs sm:text-sm text-gray-600">In behandeling</p>
                     </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <p className="text-2xl font-bold text-red-600">1</p>
-                      <p className="text-sm text-gray-600">Afgewezen</p>
+                    <div className="text-center p-2 sm:p-3 bg-red-50 rounded-lg">
+                      <p className="text-lg sm:text-2xl font-bold text-red-600">1</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Afgewezen</p>
                     </div>
                   </div>
                   
                   {user.role === 'verhuurder' && (
-                    <div className="mt-4 space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Actieve panden:</span>
-                        <span className="font-medium">3</span>
+                    <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Actieve panden:</span>
+                        <span className="font-medium text-sm">3</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Bezichtigingen:</span>
-                        <span className="font-medium">15</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Bezichtigingen:</span>
+                        <span className="font-medium text-sm">15</span>
                       </div>
                     </div>
                   )}
                   
                   {user.role === 'huurder' && (
-                    <div className="mt-4 space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Aanvragen:</span>
-                        <span className="font-medium">7</span>
+                    <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Aanvragen:</span>
+                        <span className="font-medium text-sm">7</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Bezichtigingen:</span>
-                        <span className="font-medium">4</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                        <span className="text-sm text-gray-600">Bezichtigingen:</span>
+                        <span className="font-medium text-sm">4</span>
                       </div>
                     </div>
                   )}
@@ -301,24 +302,24 @@ const UserManagementModal = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-6">
+          <TabsContent value="activity" className="space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center text-base sm:text-lg">
                   <Clock className="w-4 h-4 mr-2" />
                   Recente Activiteit
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-0">
+                <div className="space-y-3 sm:space-y-4">
                   {userActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-blue-600" />
+                    <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 border rounded-lg">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{activity.action}</h4>
-                        <p className="text-sm text-gray-600">{activity.details}</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base">{activity.action}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">{activity.details}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(activity.timestamp).toLocaleString('nl-NL')}
                         </p>
@@ -330,39 +331,39 @@ const UserManagementModal = ({
             </Card>
           </TabsContent>
 
-          <TabsContent value="documents" className="space-y-6">
+          <TabsContent value="documents" className="space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center text-base sm:text-lg">
                   <FileText className="w-4 h-4 mr-2" />
                   Documenten Status
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-6 h-6 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium">Identiteitsbewijs</h4>
-                        <p className="text-sm text-gray-600">Geüpload op 20 jan 2024</p>
+              <CardContent className="pt-0">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-2 sm:p-3 border rounded-lg">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base">Identiteitsbewijs</h4>
+                        <p className="text-xs sm:text-sm text-gray-600">Geüpload op 20 jan 2024</p>
                       </div>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge className="bg-green-100 text-green-800 text-xs w-fit">
                       <CheckCircle className="w-3 h-3 mr-1" />
                       Goedgekeurd
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-6 h-6 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium">Loonstrook</h4>
-                        <p className="text-sm text-gray-600">Geüpload op 19 jan 2024</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-2 sm:p-3 border rounded-lg">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base">Loonstrook</h4>
+                        <p className="text-xs sm:text-sm text-gray-600">Geüpload op 19 jan 2024</p>
                       </div>
                     </div>
-                    <Badge className="bg-orange-100 text-orange-800">
+                    <Badge className="bg-orange-100 text-orange-800 text-xs w-fit">
                       <Clock className="w-3 h-3 mr-1" />
                       In behandeling
                     </Badge>
@@ -372,49 +373,50 @@ const UserManagementModal = ({
             </Card>
           </TabsContent>
 
-          <TabsContent value="actions" className="space-y-6">
+          <TabsContent value="actions" className="space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center text-base sm:text-lg">
                   <Shield className="w-4 h-4 mr-2" />
                   Beheerder Acties
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 pt-0">
                 {user.status === 'active' ? (
                   <div>
-                    <h4 className="font-medium mb-2">Gebruiker Schorsing</h4>
+                    <h4 className="font-medium mb-2 text-sm sm:text-base">Gebruiker Schorsing</h4>
                     {!showSuspensionForm ? (
                       <Button 
                         variant="destructive" 
                         onClick={() => setShowSuspensionForm(true)}
-                        className="w-full"
+                        className="w-full text-sm sm:text-base"
                       >
                         <Ban className="w-4 h-4 mr-2" />
                         Gebruiker Schorsen
                       </Button>
                     ) : (
-                      <div className="space-y-3">
-                        <Label htmlFor="suspension-reason">Reden voor schorsing</Label>
+                      <div className="space-y-2 sm:space-y-3">
+                        <Label htmlFor="suspension-reason" className="text-sm">Reden voor schorsing</Label>
                         <Textarea
                           id="suspension-reason"
                           value={suspensionReason}
                           onChange={(e) => setSuspensionReason(e.target.value)}
                           placeholder="Geef een duidelijke reden voor de schorsing..."
                           rows={3}
+                          className="text-sm"
                         />
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
                           <Button 
                             variant="destructive" 
                             onClick={handleSuspendUser}
-                            className="flex-1"
+                            className="flex-1 text-sm sm:text-base"
                           >
                             Bevestig Schorsing
                           </Button>
                           <Button 
                             variant="outline" 
                             onClick={() => setShowSuspensionForm(false)}
-                            className="flex-1"
+                            className="flex-1 text-sm sm:text-base"
                           >
                             Annuleren
                           </Button>
@@ -424,10 +426,10 @@ const UserManagementModal = ({
                   </div>
                 ) : (
                   <div>
-                    <h4 className="font-medium mb-2">Gebruiker Activeren</h4>
+                    <h4 className="font-medium mb-2 text-sm sm:text-base">Gebruiker Activeren</h4>
                     <Button 
                       onClick={handleActivateUser}
-                      className="w-full bg-green-600 hover:bg-green-700"
+                      className="w-full bg-green-600 hover:bg-green-700 text-sm sm:text-base"
                     >
                       <UserCheck className="w-4 h-4 mr-2" />
                       Gebruiker Activeren
@@ -435,18 +437,18 @@ const UserManagementModal = ({
                   </div>
                 )}
 
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Andere Acties</h4>
+                <div className="border-t pt-3 sm:pt-4">
+                  <h4 className="font-medium mb-2 text-sm sm:text-base">Andere Acties</h4>
                   <div className="space-y-2">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full text-sm sm:text-base">
                       <Mail className="w-4 h-4 mr-2" />
                       E-mail Versturen
                     </Button>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full text-sm sm:text-base">
                       <FileText className="w-4 h-4 mr-2" />
                       Activiteit Rapport
                     </Button>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full text-sm sm:text-base">
                       <AlertTriangle className="w-4 h-4 mr-2" />
                       Waarschuwing Versturen
                     </Button>

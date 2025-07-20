@@ -43,12 +43,12 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
   if (loading) {
     return (
       <Card className={cn("animate-pulse", className)}>
-        <CardContent className="pt-6">
+        <CardContent className="p-3">
           <div className="flex items-center">
-            <div className="h-8 w-8 bg-gray-200 rounded"></div>
-            <div className="ml-4 flex-1">
-              <div className="h-8 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+            <div className="ml-3 flex-1">
+              <div className="h-6 bg-gray-200 rounded mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
             </div>
           </div>
         </CardContent>
@@ -57,15 +57,15 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
   }
 
   return (
-    <Card className={cn("hover:shadow-md transition-shadow duration-200", className)}>
-      <CardContent className="pt-6">
+    <Card className={cn("hover:shadow-md transition-shadow duration-200 bg-white/80 backdrop-blur-sm", className)}>
+      <CardContent className="p-3">
         <div className="flex items-center">
-          <Icon className={cn("h-8 w-8", getColorClasses(color))} />
-          <div className="ml-4 flex-1">
-            <p className="text-2xl font-bold text-gray-900">
+          <Icon className={cn("h-6 w-6", getColorClasses(color))} />
+          <div className="ml-3 flex-1">
+            <p className="text-lg sm:text-xl font-bold text-gray-900">
               {typeof value === 'number' ? value.toLocaleString('nl-NL') : value}
             </p>
-            <p className="text-xs text-gray-500 font-medium">
+            <p className="text-xs sm:text-sm text-gray-500 font-medium">
               {title}
             </p>
             {trend && (

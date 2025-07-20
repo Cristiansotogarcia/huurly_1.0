@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-export const PhotoSection: React.FC = () => {
+export const PhotoSection: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { user } = useAuthStore();
   const { profilePictureUrl, coverPhotoUrl, refresh, isLoading } = useHuurder();
   const { toast } = useToast();
@@ -64,10 +64,9 @@ export const PhotoSection: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative">
       {/* Cover Photo */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Cover Foto</h2>
+      <div className="mb-[-48px]"> {/* Negative margin to pull profile picture up */}
         <CoverPhoto
           userId={user?.id || ''}
           currentImageUrl={getCurrentCoverUrl()}
@@ -75,15 +74,20 @@ export const PhotoSection: React.FC = () => {
         />
       </div>
 
-      {/* Profile Picture */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Profielfoto</h2>
-        <ProfilePicture
-          userId={user?.id || ''}
-          currentImageUrl={profilePictureUrl}
-          onImageUploaded={handleProfilePictureUploaded}
-          size="large"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-end ml-4 sm:ml-8 gap-4">
+        {/* Profile Picture */}
+        <div className="relative z-10 flex-shrink-0">
+          <ProfilePicture
+            userId={user?.id || ''}
+            currentImageUrl={profilePictureUrl}
+            onImageUploaded={handleProfilePictureUploaded}
+            size="large"
+          />
+        </div>
+        {/* Stats */}
+        <div className="pb-2 flex-1 min-w-0">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -40,15 +40,15 @@ export interface BaseModalActionsProps {
 }
 
 const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-  '3xl': 'max-w-3xl',
-  '4xl': 'max-w-4xl',
-  '5xl': 'max-w-5xl',
-  '6xl': 'max-w-6xl'
+  sm: 'max-w-[95vw] sm:max-w-sm',
+  md: 'max-w-[95vw] sm:max-w-md',
+  lg: 'max-w-[95vw] sm:max-w-lg',
+  xl: 'max-w-[95vw] sm:max-w-xl',
+  '2xl': 'max-w-[95vw] sm:max-w-2xl',
+  '3xl': 'max-w-[95vw] sm:max-w-3xl',
+  '4xl': 'max-w-[95vw] sm:max-w-4xl',
+  '5xl': 'max-w-[95vw] sm:max-w-5xl',
+  '6xl': 'max-w-[95vw] sm:max-w-6xl'
 };
 
 export const BaseModal: React.FC<BaseModalProps> = ({
@@ -65,7 +65,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className={`${sizeClasses[size]} ${maxHeight} overflow-y-auto ${className}`}
+        className={`${sizeClasses[size]} ${maxHeight} overflow-y-auto mx-4 sm:mx-auto ${className}`}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center">
@@ -90,12 +90,13 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
   }
 
   return (
-    <div className="flex justify-end pt-4 border-t space-x-2">
+    <div className="flex flex-col sm:flex-row justify-end pt-4 border-t space-y-2 sm:space-y-0 sm:space-x-2">
       {cancelAction && (
         <Button
           variant="outline"
           onClick={cancelAction.onClick}
           disabled={cancelAction.disabled}
+          className="w-full sm:w-auto"
         >
           {cancelAction.label || 'Annuleren'}
         </Button>
@@ -106,7 +107,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={secondaryAction.variant || 'outline'}
           onClick={secondaryAction.onClick}
           disabled={secondaryAction.disabled}
-          className={secondaryAction.className}
+          className={`w-full sm:w-auto ${secondaryAction.className || ''}`}
         >
           {secondaryAction.label}
         </Button>
@@ -117,7 +118,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={primaryAction.variant || 'default'}
           onClick={primaryAction.onClick}
           disabled={primaryAction.disabled || primaryAction.loading}
-          className={primaryAction.className}
+          className={`w-full sm:w-auto ${primaryAction.className || ''}`}
         >
           {primaryAction.loading ? `${primaryAction.label}...` : primaryAction.label}
         </Button>

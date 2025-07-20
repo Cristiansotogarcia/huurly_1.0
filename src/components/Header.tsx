@@ -27,10 +27,10 @@ export const Header = ({ onShowSignup }: HeaderProps) => {
         <div className="flex justify-between items-center h-16">
           <Logo />
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Dialog open={showLogin} onOpenChange={setShowLogin}>
               <DialogTrigger asChild>
-                <Button variant="ghost" className="text-dutch-blue hover:text-dutch-orange hover:bg-gray-50">
+                <Button variant="default" className="bg-dutch-orange hover:bg-orange-600 text-white text-sm sm:text-base px-3 sm:px-4">
                   Inloggen
                 </Button>
               </DialogTrigger>
@@ -38,13 +38,6 @@ export const Header = ({ onShowSignup }: HeaderProps) => {
                 <LoginForm onClose={() => setShowLogin(false)} />
               </DialogContent>
             </Dialog>
-
-            <Button 
-              className="bg-dutch-orange hover:bg-orange-600 text-white"
-              onClick={onShowSignup}
-            >
-              Registreren
-            </Button>
           </div>
         </div>
       </div>

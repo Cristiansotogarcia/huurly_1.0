@@ -6,6 +6,7 @@ import { LucideIcon } from 'lucide-react';
 interface ProfileField {
   label: string;
   value: string | number | undefined;
+  isHidden?: boolean;
 }
 
 export interface ProfileSection {
@@ -50,9 +51,14 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ sections, title, onEd
               <section.icon className={`mr-2 h-5 w-5 ${section.iconColor}`} /> {section.title}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-              {section.fields.map((field) => (
-                <p key={field.label}><strong>{field.label}:</strong> {field.value}</p>
-              ))}
+              {section.fields.map((field) => {
+                if (field.isHidden) return null;
+                const displayValue = (field.value !== null && field.value !== undefined && field.value !== '') ? field.value : 'N.v.t.';
+                if (typeof displayValue === 'object') {
+                  return null;
+                }
+                return <p key={field.label}><strong>{field.label}:</strong> {displayValue}</p>;
+              })}
             </div>
           </div>
         ))}

@@ -76,14 +76,14 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
   return (
     <div className="space-y-4">
       {applications.map((application) => (
-        <div key={application.id} className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-start">
+        <div key={application.id} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
                   {application.property_title}
                 </h3>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium self-start ${
                   getStatusColor(application.status)
                 }`}>
                   {getStatusText(application.status)}
@@ -98,7 +98,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
                 <span className="text-sm">{application.property_location}</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 text-sm text-gray-600">
                 <div>
                   <span className="font-medium">Huurprijs:</span>
                   <span className="ml-1">€{application.monthly_rent.toLocaleString()}/maand</span>
@@ -109,7 +109,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
                     {new Date(application.submitted_at).toLocaleDateString('nl-NL')}
                   </span>
                 </div>
-                <div>
+                <div className="sm:col-span-2 lg:col-span-1">
                   <span className="font-medium">Gewenste datum:</span>
                   <span className="ml-1">
                     {new Date(application.move_in_date).toLocaleDateString('nl-NL')}
@@ -119,11 +119,11 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-4 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4 pt-4 border-t">
             {onViewDetails && (
               <button
                 onClick={() => onViewDetails(application.id)}
-                className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Details
               </button>
@@ -131,7 +131,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
             {onWithdraw && application.status === 'pending' && (
               <button
                 onClick={() => onWithdraw(application.id)}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 Intrekken
               </button>

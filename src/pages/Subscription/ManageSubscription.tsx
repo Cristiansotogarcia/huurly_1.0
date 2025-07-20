@@ -57,19 +57,38 @@ const ManageSubscription = () => {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <Button variant="outline" onClick={() => navigate(-1)}>Terug</Button>
-      <h1 className="text-2xl font-bold">Mijn Abonnement</h1>
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Button variant="outline" onClick={() => navigate(-1)} className="w-fit">Terug</Button>
+        <h1 className="text-xl sm:text-2xl font-bold">Mijn Abonnement</h1>
+      </div>
       {status?.hasActiveSubscription ? (
-        <div className="space-y-2">
-          <p>Je abonnement verloopt op {status.expiresAt}</p>
-          <Button onClick={cancel} disabled={processing}>Abonnement opzeggen</Button>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm sm:text-base">Je abonnement verloopt op {status.expiresAt}</p>
+          </div>
+          <Button 
+            onClick={cancel} 
+            disabled={processing} 
+            variant="destructive"
+            className="w-full sm:w-auto"
+          >
+            {processing ? 'Bezig...' : 'Abonnement opzeggen'}
+          </Button>
         </div>
       ) : (
-        <div className="space-y-2">
-          <p>Je hebt momenteel geen actief abonnement.</p>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm sm:text-base">Je hebt momenteel geen actief abonnement.</p>
+          </div>
           {status?.stripeSubscriptionId && (
-            <Button onClick={renew} disabled={processing}>Abonnement hervatten</Button>
+            <Button 
+              onClick={renew} 
+              disabled={processing}
+              className="w-full sm:w-auto"
+            >
+              {processing ? 'Bezig...' : 'Abonnement hervatten'}
+            </Button>
           )}
         </div>
       )}

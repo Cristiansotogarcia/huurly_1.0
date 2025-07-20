@@ -3,14 +3,17 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { profileSchema, ProfileFormData } from './profileSchema';
 import { useMultiStepForm } from '@/hooks/useMultiStepForm';
-import { Step1_PersonalInfo } from './steps/Step1_PersonalInfo';
-import { Step2_Employment } from './steps/Step2_Employment';
-import { Step3_Housing } from './steps/Step3_Housing';
-import { Step4_Lifestyle } from './steps/Step4_Lifestyle';
-import { Step5_Motivation } from './steps/Step5_Motivation';
+import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
+import Step2Employment from './EnhancedProfileSteps/Step2Employment';
+import Step3Household from './EnhancedProfileSteps/Step3Household';
+import Step4Housing from './EnhancedProfileSteps/Step4Housing';
+import Step5Timing from './EnhancedProfileSteps/Step5Timing';
+import Step6Guarantor from './EnhancedProfileSteps/Step6Guarantor';
+import Step7References from './EnhancedProfileSteps/Step7References';
+import Step8ProfileMotivation from './EnhancedProfileSteps/Step8ProfileMotivation';
 import { ProfileFormStepper } from './ProfileFormStepper';
 import { ProfileFormNavigation } from './ProfileFormNavigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { BaseModal } from './BaseModal';
 import { useToast } from '@/hooks/use-toast';
 
 interface EnhancedProfileCreationModalProps {
@@ -23,16 +26,20 @@ const steps = [
   { id: 'step1', name: 'Persoonlijke Info' },
   { id: 'step2', name: 'Werk & Inkomen' },
   { id: 'step3', name: 'Huidige Woonsituatie' },
-  { id: 'step4', name: 'Levensstijl' },
-  { id: 'step5', name: 'Motivatie' },
+  { id: 'step4', name: 'Woningvoorkeuren' },
+  { id: 'step5', name: 'Borgsteller' },
+  { id: 'step6', name: 'Referenties' },
+  { id: 'step7', name: 'Profiel & Motivatie' },
 ];
 
 const stepComponents = [
-  <Step1_PersonalInfo key="step1" />,
-  <Step2_Employment key="step2" />,
-  <Step3_Housing key="step3" />,
-  <Step4_Lifestyle key="step4" />,
-  <Step5_Motivation key="step5" />,
+  <Step1PersonalInfo key="step1" />,
+  <Step2Employment key="step2" />,
+  <Step3Household key="step3" />,
+  <Step4Housing key="step4" />,
+  <Step6Guarantor key="step5" />,
+  <Step7References key="step6" />,
+  <Step8ProfileMotivation key="step7" />,
 ];
 
 export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete }: EnhancedProfileCreationModalProps) => {
@@ -85,6 +92,19 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       voorkeur_verhuisdatum: '',
       beschikbaarheid_flexibel: false,
       parking_required: false,
+      
+      // Storage preferences
+      storage_kelder: false,
+      storage_zolder: false,
+      storage_berging: false,
+      storage_garage: false,
+      storage_schuur: false,
+      
+      // Timing fields (moved from Step 5)
+      move_in_date_preferred: undefined,
+      move_in_date_earliest: undefined,
+      availability_flexible: false,
+      lease_duration_preference: undefined,
       storage_needs: '',
       
       // Step 4: Lifestyle
@@ -111,14 +131,16 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Maak je profiel compleet</DialogTitle>
-          <DialogDescription>
-            Een volledig profiel vergroot je kansen. Voltooi de stappen hieronder.
-          </DialogDescription>
-        </DialogHeader>
+    <BaseModal 
+      open={isOpen} 
+      onOpenChange={onClose}
+      title="Maak je profiel compleet"
+      size="5xl"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Een volledig profiel vergroot je kansen. Voltooi de stappen hieronder.
+        </p>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
             <ProfileFormStepper currentStep={currentStep} steps={steps} setCurrentStep={goTo} />
@@ -131,7 +153,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
             />
           </form>
         </FormProvider>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 };

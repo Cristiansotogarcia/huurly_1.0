@@ -194,89 +194,98 @@ const getStatusBadge = (isActive: boolean) => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => navigate('/verhuurder-dashboard')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Terug
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
-              <div className="flex items-center space-x-2 mt-1">
-                <MapPin className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-600">{property.address}, {property.city}</span>
-{getStatusBadge(property.isActive)}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" onClick={() => navigate('/verhuurder-dashboard')}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Terug
+                </Button>
+              </div>
+              <div className="flex-1 sm:ml-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{property.title}</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mt-1">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">{property.address}, {property.city}</span>
+                  </div>
+                  {getStatusBadge(property.isActive)}
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex space-x-3">
-            <Button variant="outline">
-              <Edit className="w-4 h-4 mr-2" />
-              Bewerken
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteProperty}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Verwijderen
-            </Button>
+            
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+              <Button variant="outline" className="w-full sm:w-auto">
+                <Edit className="w-4 h-4 mr-2" />
+                Bewerken
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteProperty} className="w-full sm:w-auto">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Verwijderen
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Property Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card>
-            <CardContent className="flex items-center justify-between p-6">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
               <div>
                 <p className="text-sm font-medium text-gray-600">Huurprijs</p>
-                <p className="text-2xl font-bold">{formatPrice(property.rent)}</p>
+                <p className="text-xl sm:text-2xl font-bold">{formatPrice(property.rent)}</p>
                 <p className="text-xs text-gray-500">per maand</p>
               </div>
-              <Euro className="h-8 w-8 text-green-500" />
+              <Euro className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             </CardContent>
           </Card>
 
-
           <Card>
-            <CardContent className="flex items-center justify-between p-6">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
               <div>
                 <p className="text-sm font-medium text-gray-600">Kamers</p>
-                <p className="text-2xl font-bold">{property.bedrooms || 'N/A'}</p>
+                <p className="text-xl sm:text-2xl font-bold">{property.bedrooms || 'N/A'}</p>
                 <p className="text-xs text-gray-500">totaal kamers</p>
               </div>
-              <Bed className="h-8 w-8 text-purple-500" />
+              <Bed className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="flex items-center justify-between p-6">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
               <div>
                 <p className="text-sm font-medium text-gray-600">Aanvragen</p>
-                <p className="text-2xl font-bold">{applications.length}</p>
+                <p className="text-xl sm:text-2xl font-bold">{applications.length}</p>
                 <p className="text-xs text-gray-500">wachtend</p>
               </div>
-              <Users className="h-8 w-8 text-orange-500" />
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">
-              <Home className="w-4 h-4 mr-2" />
-              Overzicht
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">
+              <Home className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Overzicht</span>
+              <span className="sm:hidden">Info</span>
             </TabsTrigger>
-            <TabsTrigger value="applications">
-              <Users className="w-4 h-4 mr-2" />
-              Aanvragen ({applications.length})
+            <TabsTrigger value="applications" className="text-xs sm:text-sm">
+              <Users className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Aanvragen ({applications.length})</span>
+              <span className="sm:hidden">Aanvr. ({applications.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="messages">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Berichten
+            <TabsTrigger value="messages" className="text-xs sm:text-sm">
+              <MessageSquare className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Berichten</span>
+              <span className="sm:hidden">Ber.</span>
             </TabsTrigger>
-            <TabsTrigger value="photos">
-              <Camera className="w-4 h-4 mr-2" />
-              Foto's
+            <TabsTrigger value="photos" className="text-xs sm:text-sm">
+              <Camera className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Foto's</span>
+              <span className="sm:hidden">Foto</span>
             </TabsTrigger>
           </TabsList>
 
@@ -322,16 +331,18 @@ const getStatusBadge = (isActive: boolean) => {
                       </div>
                       
                       {application.status === 'wachtend' && (
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="w-full sm:w-auto"
                             onClick={() => handleApplicationAction(application.id, 'afgewezen')}
                           >
                             Afwijzen
                           </Button>
                           <Button 
                             size="sm"
+                            className="w-full sm:w-auto"
                             onClick={() => handleApplicationAction(application.id, 'geaccepteerd')}
                           >
                             Accepteren

@@ -53,20 +53,21 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Documenten</h3>
-            <p className="text-sm text-gray-600">Beheer je geüploade documenten</p>
+            <p className="text-sm text-gray-600 hidden sm:block">Beheer je geüploade documenten</p>
           </div>
         </div>
-        <Button onClick={onShowDocumentModal} className="flex items-center space-x-2">
+        <Button onClick={onShowDocumentModal} className="flex items-center justify-center space-x-2 w-full sm:w-auto">
           <Upload className="w-4 h-4" />
-          <span>Upload Document</span>
+          <span className="hidden sm:inline">Upload Document</span>
+          <span className="sm:hidden">Upload</span>
         </Button>
       </div>
 
@@ -79,15 +80,15 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
       ) : (
         <div className="space-y-3">
           {userDocuments.map((document, index) => (
-            <div key={document.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div key={document.id || index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
               <div className="flex items-center space-x-3">
                 {getStatusIcon(document.status)}
-                <div>
-                  <p className="font-medium text-gray-900">{getDocumentTypeLabel(document.type)}</p>
-                  <p className="text-sm text-gray-600">{document.bestandsnaam}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">{getDocumentTypeLabel(document.type)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{document.bestandsnaam}</p>
                 </div>
               </div>
-              <span className={`px-2 py-1 text-xs rounded-full ${
+              <span className={`px-2 py-1 text-xs rounded-full self-start sm:self-auto ${
                 document.status === 'goedgekeurd' ? 'bg-green-100 text-green-800' :
                 document.status === 'wachtend' || document.status === 'in_behandeling' ? 'bg-yellow-100 text-yellow-800' :
                 document.status === 'afgewezen' ? 'bg-red-100 text-red-800' :

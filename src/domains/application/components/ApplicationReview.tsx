@@ -82,10 +82,10 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
+          <div className="flex-1">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Huurverzoek van {application.tenant_name}
             </h2>
             <p className="text-sm text-gray-600">
@@ -96,7 +96,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
               })}
             </p>
           </div>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium self-start ${
             application.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
             application.status === 'approved' ? 'bg-green-100 text-green-800' :
             'bg-red-100 text-red-800'
@@ -107,7 +107,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Property Information */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-3">Woning</h3>
@@ -124,7 +124,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
         {/* Tenant Information */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-3">Huurder informatie</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Naam</label>
               <p className="text-gray-900">{application.tenant_name}</p>
@@ -176,7 +176,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
             <div className="space-y-3">
               {application.references.map((reference, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <span className="font-medium">Naam:</span> {reference.name}
                     </div>
@@ -210,13 +210,13 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
         {isLandlord && application.status === 'pending' && (
           <div className="border-t pt-6">
             {!showActions ? (
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => {
                     setActionType('approve');
                     setShowActions(true);
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                   disabled={isLoading}
                 >
                   Goedkeuren
@@ -226,7 +226,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
                     setActionType('reject');
                     setShowActions(true);
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                   disabled={isLoading}
                 >
                   Afwijzen
@@ -236,7 +236,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
                     setActionType('info');
                     setShowActions(true);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isLoading}
                 >
                   Meer info vragen
@@ -291,14 +291,14 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
                   </div>
                 )}
 
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                   <button
                     onClick={handleAction}
                     disabled={isLoading || 
                       (actionType === 'reject' && !reason.trim()) ||
                       (actionType === 'info' && !message.trim())
                     }
-                    className={`px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full sm:w-auto px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 ${
                       actionType === 'approve' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' :
                       actionType === 'reject' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' :
                       'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
@@ -317,7 +317,7 @@ export const ApplicationReview: React.FC<ApplicationReviewProps> = ({
                       setReason('');
                       setMessage('');
                     }}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     disabled={isLoading}
                   >
                     Annuleren
