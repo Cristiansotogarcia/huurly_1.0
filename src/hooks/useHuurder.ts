@@ -218,10 +218,11 @@ export const useHuurder = () => {
         // Financial details
         borgsteller_beschikbaar: profileData.financial_details?.has_guarantor || profileData.borgsteller_beschikbaar || false,
         // Motivation
-        reden_verhuizing: profileData.profile_motivation?.reason_for_moving || profileData.reason_for_moving,
+        reden_verhuizing: profileData.reason_for_moving || profileData.profile_motivation?.reason_for_moving,
         // References
-        referenties_beschikbaar: profileData.references?.has_references || false,
+        referenties_beschikbaar: profileData.references_available || profileData.references?.has_references || false,
         huurgeschiedenis_beschikbaar: profileData.references?.has_rental_history || false,
+        huurervaring_jaren: profileData.rental_history_years || profileData.references?.rental_history_years,
         // Bio and motivation
         bio: profileData.bio || 'Geen biografie opgegeven',
         motivatie: profileData.motivation || profileData.profile_motivation?.motivation || 'Geen motivatie opgegeven',

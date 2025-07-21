@@ -1,5 +1,167 @@
 # Huurly Project Changelog
 
+## Feature: Auto-select Partner Checkbox Based on Marital Status - January 2025
+
+**Change:** Implemented automatic pre-selection of the "Ik heb een partner" checkbox in Step 3 (Household) when the user selects "samenwonend" (cohabiting) or "getrouwd" (married) as their marital status in Step 1 (Personal Info).
+
+**Problem:** Users who indicated they were married or cohabiting in Step 1 had to manually check the "Ik heb een partner" checkbox in Step 3, creating an inconsistent user experience and potential for oversight.
+
+**Solution:** 
+- Added conditional logic in `Step3Household` component to automatically set `has_partner` to `true` when `marital_status` is "samenwonend" or "getrouwd"
+- Used React's `useEffect` hook to watch for changes in marital status and automatically update the partner checkbox
+- Leveraged React Hook Form's `setValue` function to programmatically control the checkbox state
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/EnhancedProfileSteps/Step3Household.tsx`:
+  - Added `useEffect` import from React
+  - Added `setValue` to the destructured `useFormContext` hook
+  - Added `maritalStatus` watch to monitor Step 1 marital status changes
+  - Implemented `useEffect` that automatically sets `has_partner` to `true` when marital status indicates having a partner
+
+**Files Modified:**
+- `src/components/modals/EnhancedProfileSteps/Step3Household.tsx`
+- `changelog.md`
+
+**Result:** Users who select "samenwonend" or "getrouwd" in Step 1 will automatically have the "Ik heb een partner" checkbox pre-selected when they reach Step 3, creating a more intuitive and consistent form experience.
+
+**Key Features:**
+- Automatic checkbox selection based on marital status
+- Real-time updates when marital status changes
+- Maintains existing form validation and functionality
+- Improves user experience by reducing manual input requirements
+
+---
+
+## Fix: Profile Edit Modal Pre-population - January 2025
+
+**Change:** Fixed the "profiel bewerken" (edit profile) functionality to pre-populate the enhanced modal with existing user data instead of showing a blank form.
+
+**Problem:** When users clicked "profiel bewerken" to edit their profile, the `EnhancedProfileCreationModal` would open completely blank, forcing users to re-enter all their information from scratch even if they only wanted to update a single field like income.
+
+**Root Cause:** The `EnhancedProfileCreationModal` was using hardcoded default values (empty strings and default numbers) and was not receiving any existing user data when opened for editing purposes.
+
+**Solution:** 
+- Modified `EnhancedProfileCreationModal` to accept an optional `initialData` prop of type `Partial<ProfileFormData>`
+- Created a `getDefaultValues` function that merges default form values with provided initial data
+- Updated `DashboardModals` to accept a `tenantProfile` prop and map it to the form's data structure
+- Added `getInitialFormData` function to properly transform tenant profile data to form format
+- Updated `HuurderDashboard` to pass the existing `tenantProfile` data to `DashboardModals`
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/EnhancedProfileCreationModal.tsx`:
+  - Added `initialData?: Partial<ProfileFormData>` prop
+  - Replaced hardcoded `defaultValues` with `getDefaultValues(initialData)` function
+  - Form now pre-populates with existing data when available
+- **Modified:** `src/components/modals/DashboardModals.tsx`:
+  - Added `tenantProfile?: TenantProfile | null` to props interface
+  - Created `getInitialFormData` function to map tenant profile to form data structure
+  - Passes mapped data as `initialData` to `EnhancedProfileCreationModal`
+- **Modified:** `src/pages/HuurderDashboard.tsx`:
+  - Added `tenantProfile={tenantProfile}` prop to `DashboardModals` component
+
+**Files Modified:**
+- `src/components/modals/EnhancedProfileCreationModal.tsx`
+- `src/components/modals/DashboardModals.tsx`
+- `src/pages/HuurderDashboard.tsx`
+- `changelog.md`
+
+**Result:** Users can now edit their profile with all existing information pre-populated in the form. They can make targeted changes (like updating income) without having to re-enter all their personal details, housing preferences, and other information.
+
+**Key Features:**
+- All form fields pre-populated with existing user data
+- Maintains existing validation and form flow
+- Seamless editing experience for users
+- Proper data mapping between tenant profile and form structure
+
+---
+
+## UI Enhancement: Validation Error Popup Modal - January 2025
+
+**Change:** Replaced toast notifications with a custom popup modal for validation errors in the multi-step profile creation form.
+
+**Problem:** The previous implementation used toast notifications that slid in from the right side of the screen to display validation errors. Users requested a more prominent popup modal that they can manually close for better visibility and control.
+
+**Solution:** 
+- Created a new `ValidationErrorModal` component using Radix UI Dialog primitives
+- Replaced toast notifications in `ProfileFormNavigation` with the new modal
+- Added visual improvements with alert icon and styled error list
+- Implemented proper state management for modal visibility
+
+**Technical Changes:**
+- **Created:** `src/components/modals/ValidationErrorModal.tsx` - Custom modal component with:
+  - Alert icon and styled header
+  - Bulleted list of missing field names
+  - Red-themed styling to indicate errors
+  - "Begrepen" (Understood) button to close
+- **Modified:** `src/components/modals/ProfileFormNavigation.tsx`:
+  - Removed `useToast` dependency
+  - Added state management for modal visibility and missing fields
+  - Updated validation error handling to show modal instead of toast
+  - Maintained all existing validation logic
+
+**Files Modified:**
+- `src/components/modals/ValidationErrorModal.tsx` (new)
+- `src/components/modals/ProfileFormNavigation.tsx`
+- `changelog.md`
+
+**Result:** Users now see a prominent, centered popup modal when validation fails, providing better visibility of missing required fields. The modal must be manually closed, ensuring users acknowledge the validation errors before proceeding.
+
+**Key Features:**
+- Centered popup with overlay background
+- Clear visual hierarchy with alert icon
+- Bulleted list of specific missing fields in Dutch
+- Manual close action required from user
+- Consistent with existing UI design system
+
+---
+
+## Fix: Vite/React Application Startup Error After Migration Cleanup - January 2025
+
+**Change:** Fixed module resolution error preventing the Vite development server from starting after Next.js migration cleanup.
+
+**Problem:** After discarding the Next.js migration and restoring the repository to its original state, the Vite development server failed to start with error: `Cannot find package '@vitejs/plugin-react-swc' imported from vite.config.ts`. This prevented the application from running in development mode.
+
+**Root Cause:** The git reset and cleanup process removed the `node_modules` directory and some dependencies were not properly reinstalled, specifically the `@vitejs/plugin-react-swc` plugin required by Vite configuration.
+
+**Solution:** 
+- Ran `npm install` to reinstall all dependencies from package.json
+- Verified that all required devDependencies including `@vitejs/plugin-react-swc` were properly installed
+- Confirmed TypeScript compilation passes without errors
+
+**Technical Changes:**
+- Executed `npm install` to restore missing dependencies
+- Verified dev server starts successfully on http://localhost:8080
+- Confirmed TypeScript check passes with exit code 0
+
+**Files Modified:**
+- `node_modules/` (reinstalled)
+- `changelog.md`
+
+**Result:** Vite development server now starts successfully and the application runs without module resolution errors. TypeScript compilation passes cleanly, confirming no code issues remain from the migration attempt.
+
+**Key Learning:** After major git operations like hard reset, always run `npm install` to ensure all dependencies are properly restored.
+
+---
+
+## Cleanup: Next.js Migration Documents Removed - January 2025
+
+**Change:** Removed all Next.js migration-related documentation files from the repository.
+
+**Problem:** After discarding the Next.js migration attempt and restoring the repository to its original Vite-based state, migration documentation files remained in the directory, creating confusion and clutter.
+
+**Solution:** 
+- Identified and removed migration-specific documentation files
+- Kept legitimate database migration files in the supabase folder
+- Committed the cleanup to maintain repository cleanliness
+
+**Files Removed:**
+- `FINAL_MIGRATION_GUIDE.md` - Complete migration guide documentation
+- `MIGRATION_SUMMARY.md` - Cloudflare migration summary
+
+**Result:** Repository is now completely clean of Next.js migration artifacts, maintaining only the original Vite-based codebase and legitimate database migration files.
+
+---
+
 ## TypeScript Error Fixes - January 2025
 
 ### Fix: Missing 'woningtype' Field in Profile Creation
@@ -915,3 +1077,4 @@ Successfully implemented a complete password reset functionality using the lates
 #### Bug Fixes
 - Updated supabase import path in `CoverPhotoUpload.tsx` to resolve module not found error.
 - Added missing 'userId' prop to `ProfilePictureUpload` component in `HuurderDashboard.tsx` to fix TypeScript type error.
+- **Fixed Duplicate Validation Error Display**: Resolved issue where 'Geboortedatum' appeared three times in validation error modal by consolidating multiple Zod validation rules into a single refine function in `stepValidationSchemas.ts`.

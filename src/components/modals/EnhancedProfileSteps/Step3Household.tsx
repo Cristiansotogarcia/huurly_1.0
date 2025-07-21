@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,11 +9,19 @@ import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
 export default function Step3Household() {
-  const { register, control, watch, formState: { errors } } = useFormContext();
+  const { register, control, watch, setValue, formState: { errors } } = useFormContext();
 
   const hasPartner = watch('has_partner');
   const hasChildren = watch('has_children');
   const numberOfChildren = watch('number_of_children') || 0;
+  const maritalStatus = watch('marital_status');
+
+  // Auto-select partner checkbox when marital status indicates having a partner
+  useEffect(() => {
+    if (maritalStatus === 'samenwonend' || maritalStatus === 'getrouwd') {
+      setValue('has_partner', true);
+    }
+  }, [maritalStatus, setValue]);
 
   const calculateHouseholdSize = () => {
     let size = 1; // The user themselves

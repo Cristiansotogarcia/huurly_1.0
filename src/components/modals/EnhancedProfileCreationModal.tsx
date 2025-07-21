@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { profileSchema, ProfileFormData } from './profileSchema';
-import { useMultiStepForm } from '@/hooks/useMultiStepForm';
+import { useValidatedMultiStepForm } from '@/hooks/useValidatedMultiStepForm';
 import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
 import Step2Employment from './EnhancedProfileSteps/Step2Employment';
 import Step3Household from './EnhancedProfileSteps/Step3Household';
@@ -20,6 +20,7 @@ interface EnhancedProfileCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProfileComplete: (data: ProfileFormData) => void;
+  initialData?: Partial<ProfileFormData>;
 }
 
 const steps = [
@@ -27,9 +28,10 @@ const steps = [
   { id: 'step2', name: 'Werk & Inkomen' },
   { id: 'step3', name: 'Huidige Woonsituatie' },
   { id: 'step4', name: 'Woningvoorkeuren' },
-  { id: 'step5', name: 'Borgsteller' },
-  { id: 'step6', name: 'Referenties' },
-  { id: 'step7', name: 'Profiel & Motivatie' },
+  { id: 'step5', name: 'Timing & Beschikbaarheid' },
+  { id: 'step6', name: 'Borgsteller' },
+  { id: 'step7', name: 'Referenties' },
+  { id: 'step8', name: 'Profiel & Motivatie' },
 ];
 
 const stepComponents = [
@@ -37,16 +39,16 @@ const stepComponents = [
   <Step2Employment key="step2" />,
   <Step3Household key="step3" />,
   <Step4Housing key="step4" />,
-  <Step6Guarantor key="step5" />,
-  <Step7References key="step6" />,
-  <Step8ProfileMotivation key="step7" />,
+  <Step5Timing key="step5" />,
+  <Step6Guarantor key="step6" />,
+  <Step7References key="step7" />,
+  <Step8ProfileMotivation key="step8" />,
 ];
 
-export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete }: EnhancedProfileCreationModalProps) => {
+export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileCreationModalProps) => {
   const { toast } = useToast();
-  const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
+  const getDefaultValues = (): ProfileFormData => {
+    const defaults: ProfileFormData = {
       // Step 1: Personal Info
       profilePictureUrl: '',
       first_name: '',
@@ -90,6 +92,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       max_kamers: undefined,
       vroegste_verhuisdatum: '',
       voorkeur_verhuisdatum: '',
+
       beschikbaarheid_flexibel: false,
       parking_required: false,
       
@@ -113,21 +116,54 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       smokes: false,
       smoking_details: '',
       
+      // Step 7: References & History
+      references_available: false,
+      rental_history_years: undefined,
+      reason_for_moving: '',
+      
       // Step 8: Profile & Motivation
       bio: '',
       motivation: '',
-    },
+    };
+
+    // Merge with initial data if provided
+    return initialData ? { ...defaults, ...initialData } : defaults;
+  };
+
+  const methods = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: getDefaultValues(),
   });
 
-  const { currentStep, nextStep, prevStep, isFirstStep, isLastStep, goTo } = useMultiStepForm(steps.length);
+  const { 
+    currentStep, 
+    nextStep, 
+    prevStep, 
+    isFirstStep, 
+    isLastStep, 
+    goTo, 
+    validateCurrentStep,
+    canNavigateToStep 
+  } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
   const onSubmit = (data: ProfileFormData) => {
-    onProfileComplete(data);
-    toast({
-      title: 'Profiel Opgeslagen',
-      description: 'Je profiel is succesvol opgeslagen.',
-    });
-    onClose();
+    console.log('Form submission started', data);
+    try {
+      onProfileComplete(data);
+      console.log('onProfileComplete called successfully');
+      toast({
+        title: 'Profiel Opgeslagen',
+        description: 'Je profiel is succesvol opgeslagen.',
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      toast({
+        title: 'Fout',
+        description: 'Er is een fout opgetreden bij het opslaan van je profiel.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -143,13 +179,19 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
         </p>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-            <ProfileFormStepper currentStep={currentStep} steps={steps} setCurrentStep={goTo} />
+            <ProfileFormStepper 
+              currentStep={currentStep} 
+              steps={steps} 
+              goToStep={goTo}
+              canNavigateToStep={canNavigateToStep}
+            />
             <div className="mt-8">{stepComponents[currentStep]}</div>
             <ProfileFormNavigation
               isFirstStep={isFirstStep}
               isLastStep={isLastStep}
               onBack={prevStep}
               onNext={nextStep}
+              validateCurrentStep={validateCurrentStep}
             />
           </form>
         </FormProvider>

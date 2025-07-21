@@ -388,6 +388,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
+        tenantProfile={tenantProfile}
       />
     </>
   );

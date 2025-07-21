@@ -142,6 +142,11 @@ export const profileSchema = z.object({
   smokes: z.boolean().default(false),
   smoking_details: z.string().optional(),
 
+  // Step 7: References & History
+  references_available: z.boolean().default(false),
+  rental_history_years: z.number().min(0, 'Huurervaring mag niet negatief zijn').max(50, 'Maximaal 50 jaar ervaring').optional(),
+  reason_for_moving: z.string().min(10, 'Reden voor verhuizing moet minimaal 10 karakters lang zijn').max(300, 'Reden mag maximaal 300 karakters lang zijn').optional(),
+
   // Step 8: Profile & Motivation
   profilePictureUrl: z.string().optional(),
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),
