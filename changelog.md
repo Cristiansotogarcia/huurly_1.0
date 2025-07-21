@@ -1,5 +1,391 @@
 # Huurly Project Changelog
 
+## Fix: Step4Housing Component Syntax Error in Profile Creation Modal - January 2025
+
+**Change:** Fixed React component crash in Step4Housing that was causing ErrorBoundary errors when users tried to access Step 4 (Housing preferences) of the enhanced profile creation modal.
+
+**Problem:** The Step4Housing component was throwing a React parsing error due to a duplicate `</SelectTrigger>` closing tag, causing the entire profile creation modal to crash when users reached Step 4. The error was caught by the ErrorBoundary, preventing users from completing their profile setup.
+
+**Root Cause:** There was a duplicate `</SelectTrigger>` closing tag in the property type selection dropdown (around line 58), which caused React to fail parsing the JSX and crash the component during rendering.
+
+**Solution:** 
+- Removed the duplicate `</SelectTrigger>` closing tag from the property type Select component
+- Ensured proper JSX structure for all Select components in Step4Housing
+- Verified no other duplicate closing tags exist in any step components
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`:
+  - Removed duplicate `</SelectTrigger>` tag in property type selection
+  - Maintained all existing functionality and styling
+  - Preserved proper Select component structure
+
+**Files Modified:**
+- `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`
+- `changelog.md`
+
+**Result:** Users can now successfully navigate to and complete Step 4 of the profile creation modal without encountering component crashes. All form fields, dropdowns, and date pickers in the housing preferences section work correctly.
+
+**Key Features:**
+- Fixed component crash in profile creation flow
+- Maintained all existing form functionality
+- Ensured proper JSX syntax throughout the component
+- Preserved user experience in profile setup
+
+---
+
+## Fix: EnhancedDatePicker Component Crash in Profile Creation Modal - January 2025
+
+**Change:** Fixed React component crash in EnhancedDatePicker that was preventing users from completing Step 4 (Housing preferences) of the enhanced profile creation modal.
+
+**Problem:** The EnhancedDatePicker component was throwing a React error at line 30:31, causing the entire profile creation modal to crash when users reached Step 4. The error was caught by the ErrorBoundary, but prevented users from completing their profile setup.
+
+**Root Cause:** The Calendar component from react-day-picker v8 was receiving an invalid `locale` prop. The react-day-picker v8 library doesn't accept a `locale` prop directly on the Calendar component, which caused the component to crash during rendering.
+
+**Solution:** 
+- Removed the `locale={nl}` prop from the Calendar component in EnhancedDatePicker
+- The Dutch locale formatting is still maintained through the `format()` function calls with `{ locale: nl }`
+- Calendar component now renders without errors while preserving Dutch date formatting
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/EnhancedDatePicker.tsx`:
+  - Removed `locale={nl}` prop from the Calendar component
+  - Maintained Dutch date formatting in display through format() function
+  - Preserved all other Calendar component functionality
+
+**Files Modified:**
+- `src/components/modals/EnhancedDatePicker.tsx`
+- `changelog.md`
+
+**Result:** Users can now successfully complete Step 4 of the profile creation modal without encountering component crashes. The date picker functionality works correctly with proper Dutch date formatting preserved in the display.
+
+**Key Features:**
+- Fixed component crash in profile creation flow
+- Maintained Dutch locale formatting for dates
+- Preserved all existing date picker functionality
+- Ensured smooth user experience in profile setup
+
+---
+
+## Fix: Null Access Error in DashboardModals - January 2025
+
+**Change:** Fixed null access error in DashboardModals.tsx that was causing the application to crash when tenantProfile was null.
+
+**Problem:** The application was throwing "Cannot read properties of null (reading 'geboortedatum')" error at line 45 in DashboardModals.tsx when trying to access properties of a null tenantProfile object.
+
+**Root Cause:** The `getInitialFormData` function was directly accessing properties of `tenantProfile` without proper null checking, even though `tenantProfile` could be null when users haven't created a profile yet.
+
+**Solution:** Added optional chaining operators (`?.`) to all `tenantProfile` property accesses in the `getInitialFormData` function to safely handle null/undefined values.
+
+**Technical Changes:**
+- **Modified:** `src/components/HuurderDashboard/DashboardModals.tsx`:
+  - Added optional chaining (`?.`) to all `tenantProfile` property accesses
+  - Ensured safe access to nested properties like `tenantProfile?.maxBudget || tenantProfile?.max_budget`
+  - Maintained existing fallback values for when properties are null/undefined
+
+**Files Modified:**
+- `src/components/HuurderDashboard/DashboardModals.tsx`
+- `changelog.md`
+
+**Result:** The application no longer crashes when users access the dashboard without an existing tenant profile. The profile modal can now safely handle both existing and new user scenarios.
+
+---
+
+## Fix: Profile Overview Data Display Issue - January 2025
+
+**Change:** Fixed the issue where profile data saved through the enhanced profile creation modal was not appearing in the "profiel overzicht" section of the huurdersdashboard.
+
+**Problem:** After users completed and saved their profile using the enhanced profile creation modal, the profile overview in the dashboard remained empty or showed "N.v.t." (not applicable) values instead of displaying the saved information. The data was being saved to the backend but not properly retrieved and displayed in the dashboard.
+
+**Root Cause:** The `handleProfileComplete` function in `useHuurder.ts` was mapping form data to field names that didn't align with the `CreateTenantProfileData` interface and database schema expected by `UserService.createTenantProfile`. This caused a structural mismatch between how data was saved and how the dashboard's `ConsolidatedDashboardService.mapTenantProfile` function expected to read it.
+
+**Solution:** 
+1. **Fixed Data Mapping:** Completely restructured the field mapping in `handleProfileComplete` to use the exact field names expected by the `CreateTenantProfileData` interface
+2. **Corrected Service Call:** Changed from `userService.updateTenantProfile()` to `userService.createTenantProfile()` for proper data handling
+3. **Aligned Field Names:** Ensured all mapped fields match the database schema that `ConsolidatedDashboardService.mapTenantProfile` reads from
+4. **Added Type Safety:** Implemented proper type conversion for numeric fields using `parseFloat()`
+
+**Technical Changes:**
+- **Modified:** `src/hooks/useHuurder.ts`:
+  - Restructured field mapping to use camelCase field names (e.g., `heeftKinderen`, `aantalKinderen`, `burgerlijkeStaat`)
+  - Added proper type conversion for numeric fields (`maandinkomen`, `minBudget`, `maxBudget`)
+  - Removed redundant and conflicting field mappings that caused data inconsistencies
+  - Updated service method call to use `createTenantProfile` instead of `updateTenantProfile`
+  - Ensured all required fields are properly mapped with appropriate fallback values
+
+**Files Modified:**
+- `src/hooks/useHuurder.ts`
+- `changelog.md`
+
+**Result:** Profile data now flows correctly through the entire pipeline: form → service → database → dashboard display. Users can see their complete profile information in the "profiel overzicht" immediately after saving their profile, with all fields properly populated including personal information, work details, housing preferences, and lifestyle information.
+
+**Key Features:**
+- Complete data consistency between profile creation and dashboard display
+- Proper field mapping aligned with database schema
+- Type-safe numeric field handling
+- Immediate profile overview updates after saving
+- Full compatibility with existing dashboard display logic
+
+---
+
+## Enhancement: Pre-fill Name in Profile Modal from Signup Data - January 2025
+
+**Change:** Updated the enhanced profile creation modal to automatically pre-fill the user's first and last name from the data they provided during account registration.
+
+**Problem:** When a new user created an account, their name was not automatically populated in the enhanced profile modal, requiring them to enter it again. This created a disconnected user experience.
+
+**Solution:** 
+- Modified the `getInitialFormData` function in `DashboardModals.tsx` to accept the `user` object.
+- When a new profile is being created (i.e., no existing `tenantProfile`), the function now extracts the first and last name from the `user.name` property.
+- The user's full name is split into first and last names to populate the respective form fields.
+- If an existing profile is being edited, the data from `tenantProfile` continues to be used, preserving any changes the user might have made.
+
+**Technical Changes:**
+- **Modified:** `src/components/HuurderDashboard/DashboardModals.tsx`:
+  - The `getInitialFormData` function now takes an optional `user` object as an argument.
+  - Logic was added to fall back to `user.name` for `first_name` and `last_name` if `tenantProfile` is not present.
+  - The `user` object is now passed to `getInitialFormData` when rendering the `EnhancedProfileCreationModal`.
+
+**Files Modified:**
+- `src/components/HuurderDashboard/DashboardModals.tsx`
+- `changelog.md`
+
+**Result:** New users will now see their first and last names pre-filled when they open the enhanced profile modal for the first time, creating a smoother and more intuitive onboarding experience.
+
+**Key Features:**
+- Seamless data flow from registration to profile creation.
+- Improved user experience by reducing redundant data entry.
+- Maintains the ability to edit and update names in the profile independently.
+
+---
+
+## Bug Fix: Missing minBudget Property TypeScript Error - January 2025
+
+**Change:** Fixed TypeScript compilation error in `useHuurder.ts` where the 'minBudget' property was missing from the `dutchProfileData` object being passed to `createTenantProfile`.
+
+**Problem:** TypeScript error TS2345 occurred because the `dutchProfileData` object was missing the required 'minBudget' property when calling `userService.updateTenantProfile()`. The `CreateTenantProfileData` interface requires both `minBudget` and `maxBudget` properties.
+
+**Root Cause:** The field mapping in `handleProfileComplete` function used `min_budget` instead of `minBudget`, causing a mismatch with the expected interface structure.
+
+**Solution:** 
+- Updated the field mapping to use `minBudget` instead of `min_budget`
+- Added `parseFloat` conversion to ensure proper numeric type handling
+- Updated `maxBudget` to also use `parseFloat` for consistency
+- Ensured both budget fields provide fallback values ('0') to prevent undefined values
+
+**Technical Changes:**
+- **Modified:** `src/hooks/useHuurder.ts`:
+  - Changed `min_budget: profileData.min_budget` to `minBudget: parseFloat(profileData.min_budget || '0')`
+  - Updated `maxBudget: profileData.max_budget` to `maxBudget: parseFloat(profileData.max_budget || '0')`
+  - Ensured proper type conversion and fallback handling for budget fields
+
+**Files Modified:**
+- `src/hooks/useHuurder.ts`
+- `changelog.md`
+
+**Result:** TypeScript compilation now passes without errors. The profile completion functionality works correctly with proper budget field mapping and type safety.
+
+**Key Features:**
+- Fixed TypeScript interface compliance for CreateTenantProfileData
+- Proper numeric type conversion for budget fields
+- Consistent field naming between frontend and backend
+- Maintained fallback values to prevent undefined budget data
+
+---
+
+## Enhancement: Emergency Contact Relationship Dropdown - January 2025
+
+**Change:** Converted the "Relatie noodcontact" (Emergency Contact Relationship) field in Step 6 from a text input to a dropdown with predefined relationship options.
+
+**Problem:** The emergency contact relationship field was a free-text input, which could lead to inconsistent data entry and made it difficult to categorize relationships for potential future features or reporting.
+
+**Solution:** 
+- Replaced the text input with a dropdown component using the same pattern as the guarantor relationship field
+- Added comprehensive relationship options in Dutch that cover common emergency contact relationships
+- Used React Hook Form's Controller component for proper form integration
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/EnhancedProfileSteps/Step6Guarantor.tsx`:
+  - Replaced `Input` component with `Controller` and `Select` components
+  - Added predefined relationship options: Ouder, Partner, Broer/Zus, Familie, Vriend, Buurman/Buurvrouw, Collega, Anders
+  - Maintained existing error handling and validation
+  - Used consistent styling and placeholder text with other dropdown fields
+
+**Files Modified:**
+- `src/components/modals/EnhancedProfileSteps/Step6Guarantor.tsx`
+- `changelog.md`
+
+**Result:** Users can now select emergency contact relationships from a standardized dropdown list, ensuring consistent data entry and better user experience. The dropdown includes common relationship types while still providing an "Anders" (Other) option for flexibility.
+
+**Key Features:**
+- Standardized relationship options in Dutch
+- Consistent UI pattern with other dropdown fields in the form
+- Maintained form validation and error handling
+- Improved data consistency for emergency contact relationships
+- Better user experience with guided selection instead of free text
+
+---
+
+## Bug Fix: Form Validation Issue with LocationSelector - January 2025
+
+**Problem:** Even when users selected cities using the LocationSelector component, clicking "volgende" (next) still triggered a validation error requiring at least one place to be selected.
+
+**Root Cause:** The validation schema in `stepValidationSchemas.ts` expected `preferred_city` to be an array of strings, but the LocationSelector component provides an array of LocationData objects with properties like `name`, `lat`, `lng`, and `radius`.
+
+**Solution:** Updated the `step4Schema` in `stepValidationSchemas.ts` to use the correct `LocationDataSchema` structure instead of expecting an array of strings.
+
+**Technical Changes:**
+- **Modified:** `src/components/modals/stepValidationSchemas.ts`:
+  - Added `LocationDataSchema` definition with optional name, lat, lng, and radius fields
+  - Updated `step4Schema.preferred_city` validation to expect `LocationData[]` instead of `string[]`
+  - Maintained all existing validation error messages and requirements
+
+**Files Modified:**
+- `src/components/modals/stepValidationSchemas.ts`
+- `changelog.md`
+
+**Result:** Form validation now works correctly when users select cities through the LocationSelector component. Users can successfully proceed to the next step after selecting their preferred locations without encountering false validation errors.
+
+**Key Features:**
+- Fixed validation schema mismatch between LocationSelector output and form validation
+- Maintained all existing search functionality and UI behavior
+- Preserved validation error messages and minimum selection requirements
+- Ensured TypeScript type safety throughout the validation process
+
+---
+
+## Enhancement: LocationSelector UI Improvements and Terminology Update - January 2025
+
+**Change:** Cleaned up the LocationSelector component by removing debug elements and updated terminology from "Gewenste steden" to "Gewenste woonplaats" for better user experience.
+
+**Problem:** The LocationSelector component contained development debug elements (test buttons and console logging) that were not needed in production, and the terminology "Gewenste steden" (Desired cities) was less appropriate than "Gewenste woonplaats" (Desired residence location).
+
+**Solution:** 
+- Removed all debug elements including test buttons and query display
+- Cleaned up console logging while maintaining error reporting
+- Updated terminology across both LocationSelector and Step4Housing components
+- Maintained the robust 3-tier search functionality (Nominatim API → Alternative endpoint → Mock data fallback)
+
+**Technical Changes:**
+- **Modified:** `src/components/ui/LocationSelector.tsx`:
+  - Removed debug section with test buttons and query information
+  - Cleaned up console logging (kept essential error logging)
+  - Updated "Geselecteerde locaties" label to "Gewenste woonplaats"
+  - Maintained all search functionality and fallback mechanisms
+- **Modified:** `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`:
+  - Updated FormLabel from "Gewenste steden *" to "Gewenste woonplaats *"
+  - Improved terminology consistency across the housing preferences form
+
+**Files Modified:**
+- `src/components/ui/LocationSelector.tsx`
+- `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`
+- `changelog.md`
+
+**Result:** The LocationSelector component now has a cleaner, production-ready interface with improved Dutch terminology. Users see "Gewenste woonplaats" which better reflects the purpose of selecting desired residence locations rather than just cities.
+
+**Key Features:**
+- Clean, production-ready interface without debug elements
+- Improved Dutch terminology for better user understanding
+- Maintained robust search functionality with multiple fallback mechanisms
+- Consistent labeling across the housing preferences form
+
+---
+
+## Fix: TypeScript Error in LocationSelector Component - January 2025
+
+**Change:** Resolved TypeScript compilation error in `LocationSelector` component related to complex react-hook-form error type handling.
+
+**Problem:** TypeScript error `TS2322` occurred in `Step4Housing.tsx` where the `error` prop type `string | FieldError | Merge<FieldError, FieldErrorsImpl<any>>` was not assignable to the expected `string | FieldError` type in `LocationSelector`.
+
+**Root Cause:** The `LocationSelector` component's `error` prop type definition was too restrictive and didn't account for the complex nested error types that react-hook-form can produce, specifically the `Merge<FieldError, FieldErrorsImpl<any>>` type for nested field validations.
+
+**Solution:** 
+- Updated `LocationSelectorProps` interface to accept the full range of react-hook-form error types
+- Created a safe error message extraction function to handle different error object structures
+- Ensured proper ReactNode compatibility for error display
+
+**Technical Changes:**
+- **Modified:** `src/components/ui/LocationSelector.tsx`:
+  - Updated `error` prop type to `string | FieldError | Merge<FieldError, FieldErrorsImpl<any>>`
+  - Added `getErrorMessage` helper function for safe error message extraction
+  - Replaced inline IIFE with dedicated helper function to ensure proper ReactNode compatibility
+  - Fixed TypeScript error TS2322 by guaranteeing string return type for error display
+  - Maintained backward compatibility with string error messages
+
+**Files Modified:**
+- `src/components/ui/LocationSelector.tsx`
+- `changelog.md`
+
+**Result:** TypeScript compilation now passes without errors. The `LocationSelector` component properly handles all react-hook-form error types while maintaining type safety and proper error message display.
+
+**Key Features:**
+- Full compatibility with react-hook-form error types
+- Safe error message extraction for all error object structures
+- Maintained ReactNode compatibility for JSX rendering
+- Backward compatibility with existing string-based error handling
+
+---
+
+## Feature: LocationSelector Component with OpenStreetMap Integration - January 2025
+
+**Change:** Implemented a sophisticated LocationSelector component that replaces the basic text input for `preferred_city` with OpenStreetMap Nominatim API integration, specifically designed for Dutch cities.
+
+**Problem:** The existing `preferred_city` field was a simple text input expecting comma-separated city names, but the schema validation expected an array structure. Additionally, users needed a better way to select cities with location coordinates and radius preferences for housing searches.
+
+**Solution:** 
+- Created a comprehensive `LocationSelector` component with OpenStreetMap Nominatim API integration
+- Implemented Dutch-specific filtering that shows only Netherlands locations
+- Added automatic removal of ", Nederland" suffix from city names (displays "Amsterdam" instead of "Amsterdam, Nederland")
+- Added support for multiple city selection with visual chips/badges
+- Integrated radius selection (1-50km) for each selected location
+- Implemented debounced search with loading states for optimal performance
+
+**Technical Changes:**
+- **Created:** `src/components/ui/LocationSelector.tsx` - Main component with:
+  - Nominatim API integration with debounced search (300ms delay)
+  - Dutch location filtering (countrycode=nl)
+  - City name cleaning (removes ", Nederland" suffix)
+  - Multiple location selection with chips/badges
+  - Radius slider for each location (1-50km range)
+  - Loading states and error handling
+  - TypeScript interfaces for LocationData and NominatimResult
+- **Modified:** `src/components/modals/steps/Step3_Housing.tsx`:
+  - Replaced text input with LocationSelector component
+  - Updated FormField integration for array data structure
+- **Modified:** `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`:
+  - Replaced text input with LocationSelector component
+  - Updated FormField integration for array data structure
+- **Modified:** `src/lib/validations/profileSchema.ts`:
+  - Updated `preferred_city` from `z.array(z.string())` to `z.array(LocationDataSchema)`
+  - Added `LocationDataSchema` with name, lat, lng, and radius fields
+
+**Files Modified:**
+- `src/components/ui/LocationSelector.tsx` (new)
+- `src/components/modals/steps/Step3_Housing.tsx`
+- `src/components/modals/EnhancedProfileSteps/Step4Housing.tsx`
+- `src/lib/validations/profileSchema.ts`
+- `changelog.md`
+
+**API Integration:**
+- **Endpoint:** `https://nominatim.openstreetmap.org/search`
+- **Parameters:** format=json, countrycode=nl, limit=5, addressdetails=1
+- **Rate Limiting:** Implemented 300ms debounce to respect API usage guidelines
+- **Error Handling:** Graceful fallback for API failures
+
+**Result:** Users can now search and select Dutch cities with an intuitive autocomplete interface. Selected cities are displayed as removable chips with individual radius settings. The component stores structured data (name, coordinates, radius) that aligns with schema validation and enables future geospatial queries.
+
+**Key Features:**
+- OpenStreetMap Nominatim API integration
+- Dutch-only city filtering
+- Clean city names without country suffix
+- Multiple city selection with visual feedback
+- Individual radius settings per location
+- Debounced search with loading indicators
+- TypeScript type safety
+- Schema-compliant data structure
+- Responsive design with existing UI components
+
+---
+
 ## Feature: Auto-select Partner Checkbox Based on Marital Status - January 2025
 
 **Change:** Implemented automatic pre-selection of the "Ik heb een partner" checkbox in Step 3 (Household) when the user selects "samenwonend" (cohabiting) or "getrouwd" (married) as their marital status in Step 1 (Personal Info).

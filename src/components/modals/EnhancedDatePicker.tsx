@@ -91,7 +91,6 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
             setCurrentMonth(date.getMonth());
           }}
           disabled={disabled}
-          locale={nl}
           className="pointer-events-auto"
         />
       </PopoverContent>

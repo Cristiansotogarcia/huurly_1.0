@@ -131,7 +131,27 @@ export default function Step6Guarantor() {
 
         <div className="space-y-2">
           <Label htmlFor="emergency_contact_relationship">Relatie noodcontact</Label>
-          <Input {...register('emergency_contact_relationship')} placeholder="Ouder, partner, vriend, etc." />
+          <Controller
+            name="emergency_contact_relationship"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer relatie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ouder">Ouder</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="broer_zus">Broer/Zus</SelectItem>
+                  <SelectItem value="familie">Familie</SelectItem>
+                  <SelectItem value="vriend">Vriend</SelectItem>
+                  <SelectItem value="buurman">Buurman/Buurvrouw</SelectItem>
+                  <SelectItem value="collega">Collega</SelectItem>
+                  <SelectItem value="anders">Anders</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.emergency_contact_relationship && <p className="text-red-500 text-xs">{`${errors.emergency_contact_relationship.message}`}</p>}
         </div>
       </div>

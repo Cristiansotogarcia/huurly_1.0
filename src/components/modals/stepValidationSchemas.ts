@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+// Location data structure for preferred cities
+const LocationDataSchema = z.object({
+  name: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  radius: z.number().optional()
+});
+
 // Step 1: Personal Info - Required fields
 export const step1Schema = z.object({
   first_name: z.string().min(1, 'Voornaam is verplicht'),
@@ -54,7 +62,7 @@ export const step3Schema = z.object({});
 
 // Step 4: Housing Preferences - Required fields
 export const step4Schema = z.object({
-  preferred_city: z.array(z.string()).min(1, 'Minimaal één voorkeursstad is verplicht'),
+  preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
   max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
 });

@@ -29,46 +29,92 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   setShowPaymentModal,
   onProfileComplete,
   onDocumentUploadComplete,
+  user,
   tenantProfile,
 }) => {
   // Convert tenant profile data to form format for editing
-  const getInitialFormData = (): Partial<ProfileFormData> | undefined => {
-    if (!tenantProfile) return undefined;
+  const getInitialFormData = (user?: any): Partial<ProfileFormData> | undefined => {
+    if (!tenantProfile && !user) return undefined;
+
+    const [firstNameFromUser, lastNameFromUser] = user?.name?.split(' ') || ['', ''];
 
     return {
       // Step 1: Personal Info
-      first_name: tenantProfile.personalInfo?.firstName || tenantProfile.voornaam || '',
-      last_name: tenantProfile.personalInfo?.lastName || tenantProfile.achternaam || '',
-      date_of_birth: tenantProfile.personalInfo?.dateOfBirth || tenantProfile.geboortedatum || '',
-      phone: tenantProfile.personalInfo?.phone || tenantProfile.telefoon || '',
-      nationality: tenantProfile.personalInfo?.nationality || tenantProfile.nationaliteit || 'Nederlandse',
-      marital_status: tenantProfile.personalInfo?.maritalStatus || tenantProfile.burgerlijke_staat || 'single',
-      has_children: (tenantProfile.personalInfo?.numberOfChildren || tenantProfile.aantal_kinderen || 0) > 0,
-      number_of_children: tenantProfile.personalInfo?.numberOfChildren || tenantProfile.aantal_kinderen || 0,
+      first_name: tenantProfile?.voornaam || firstNameFromUser || '',
+      last_name: tenantProfile?.achternaam || lastNameFromUser || '',
+      date_of_birth: tenantProfile?.geboortedatum || '',
+      phone: tenantProfile?.telefoon || '',
+      sex: tenantProfile?.geslacht || '',
+      nationality: tenantProfile?.nationaliteit || 'Nederlandse',
+      marital_status: tenantProfile?.burgerlijke_staat || 'single',
+      has_children: tenantProfile?.heeft_kinderen || false,
+      number_of_children: tenantProfile?.aantal_kinderen || 0,
+      children_ages: tenantProfile?.kinderen_leeftijden || [],
       
       // Step 2: Employment
-      profession: tenantProfile.workAndIncome?.profession || tenantProfile.beroep || '',
-      employer: tenantProfile.workAndIncome?.employer || tenantProfile.werkgever || '',
-      employment_status: tenantProfile.workAndIncome?.employmentStatus || tenantProfile.dienstverband || 'full-time',
-      monthly_income: tenantProfile.workAndIncome?.monthlyIncome || tenantProfile.maandinkomen || 0,
+      profession: tenantProfile?.beroep || '',
+      employer: tenantProfile?.werkgever || '',
+      employment_status: tenantProfile?.dienstverband || 'full-time',
+      work_contract_type: tenantProfile?.contract_type || '',
+      monthly_income: tenantProfile?.maandinkomen || 0,
+      inkomensbewijs_beschikbaar: tenantProfile?.inkomensbewijs_beschikbaar || false,
+      work_from_home: tenantProfile?.thuiswerken || false,
+      extra_income: tenantProfile?.extra_inkomen || 0,
+      extra_income_description: tenantProfile?.extra_inkomen_beschrijving || '',
       
       // Step 3: Household
-      has_partner: tenantProfile.personalInfo?.maritalStatus === 'getrouwd' || tenantProfile.personalInfo?.maritalStatus === 'samenwonend' || 
-                   tenantProfile.burgerlijke_staat === 'getrouwd' || tenantProfile.burgerlijke_staat === 'samenwonend',
+      has_partner: tenantProfile?.heeft_partner || false,
+      partner_name: tenantProfile?.partner_naam || '',
+      partner_profession: tenantProfile?.partner_beroep || '',
+      partner_employment_status: tenantProfile?.partner_dienstverband || '',
+      partner_monthly_income: tenantProfile?.partner_maandinkomen || 0,
+      borgsteller_beschikbaar: tenantProfile?.borgsteller_beschikbaar || false,
+      borgsteller_naam: tenantProfile?.borgsteller_naam || '',
+      borgsteller_relatie: tenantProfile?.borgsteller_relatie || '',
+      borgsteller_telefoon: tenantProfile?.borgsteller_telefoon || '',
+      borgsteller_inkomen: tenantProfile?.borgsteller_inkomen || 0,
       
       // Step 4: Housing Preferences
-      preferred_property_type: tenantProfile.housingPreferences?.propertyType || tenantProfile.woningtype_voorkeur || 'appartement',
-      preferred_bedrooms: tenantProfile.housingPreferences?.bedrooms || tenantProfile.slaapkamers,
-      min_budget: tenantProfile.housingPreferences?.minBudget || tenantProfile.min_budget,
-      max_budget: tenantProfile.housingPreferences?.maxBudget || tenantProfile.max_budget || 1000,
+      preferred_city: tenantProfile?.voorkeurslocaties || [],
+      preferred_property_type: tenantProfile?.woningtype || 'appartement',
+      preferred_bedrooms: tenantProfile?.voorkeurs_slaapkamers || tenantProfile?.slaapkamers,
+      furnished_preference: tenantProfile?.meubilering_voorkeur || '',
+      min_budget: tenantProfile?.min_budget || 0,
+      max_budget: tenantProfile?.maxBudget || tenantProfile?.max_budget || 1000,
+      min_kamers: tenantProfile?.min_kamers || 1,
+      max_kamers: tenantProfile?.max_kamers || 5,
       
-      // Lifestyle
-      hasPets: tenantProfile.lifestyle?.hasPets || tenantProfile.heeftHuisdieren || false,
-      smokes: tenantProfile.lifestyle?.smokes || tenantProfile.rookt || false,
+      // Step 5: Timing
+      vroegste_verhuisdatum: tenantProfile?.vroegste_verhuisdatum || '',
+      voorkeur_verhuisdatum: tenantProfile?.voorkeur_verhuisdatum || '',
+      beschikbaarheid_flexibel: tenantProfile?.beschikbaarheid_flexibel || false,
+      move_in_date_preferred: tenantProfile?.verhuis_datum_voorkeur || '',
+      move_in_date_earliest: tenantProfile?.verhuis_datum_vroegst || '',
+      availability_flexible: tenantProfile?.beschikbaarheid_flexibel_timing || false,
+      lease_duration_preference: tenantProfile?.huurcontract_voorkeur || '',
+      parking_required: tenantProfile?.parkeren_vereist || false,
+      storage_kelder: tenantProfile?.opslag_kelder || false,
+      storage_zolder: tenantProfile?.opslag_zolder || false,
+      storage_berging: tenantProfile?.opslag_berging || false,
+      storage_garage: tenantProfile?.opslag_garage || false,
+      storage_schuur: tenantProfile?.opslag_schuur || false,
+      storage_needs: tenantProfile?.opslag_behoeften || '',
       
-      // Profile & Motivation
-      bio: tenantProfile.profileAndMotivation?.bio || tenantProfile.bio || '',
-      motivation: tenantProfile.profileAndMotivation?.motivation || tenantProfile.motivation || '',
+      // Step 6: Lifestyle
+      hasPets: tenantProfile?.huisdieren || false,
+      pet_details: tenantProfile?.huisdier_details || '',
+      smokes: tenantProfile?.rookt || false,
+      smoking_details: tenantProfile?.rook_details || '',
+      
+      // Step 7: References & History
+      references_available: tenantProfile?.referenties_beschikbaar || false,
+      rental_history_years: tenantProfile?.verhuurgeschiedenis_jaren || 0,
+      reason_for_moving: tenantProfile?.reden_verhuizing || '',
+      
+      // Step 8: Profile & Motivation
+      profilePictureUrl: tenantProfile?.profielfoto_url || '',
+      bio: tenantProfile?.bio || '',
+      motivation: tenantProfile?.motivatie || '',
     };
   };
   return (
@@ -81,7 +127,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
           await onProfileComplete(profileData);
           setShowProfileModal(false);
         }}
-        initialData={getInitialFormData()}
+        initialData={getInitialFormData(user)}
       />
 
       {/* Document Upload Modal */}

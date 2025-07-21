@@ -10,6 +10,7 @@ import EnhancedDatePicker from '../EnhancedDatePicker';
 import { Home, Euro, MapPin, Clock, Calendar, Heart, PawPrint, Cigarette } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
+import LocationSelector from '@/components/ui/LocationSelector';
 
 export default function Step4Housing() {
   const { register, control, formState: { errors }, watch } = useFormContext();
@@ -30,20 +31,24 @@ export default function Step4Housing() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="preferred_city">Gewenste steden *</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="preferred_city"
-              {...register('preferred_city')}
-              placeholder="Amsterdam, Utrecht, Den Haag"
-              className="pl-10"
-            />
-          </div>
-          {errors.preferred_city && <p className="text-red-500 text-xs">{`${errors.preferred_city.message}`}</p>}
-          <p className="text-sm text-gray-500">Meerdere steden scheiden met komma's</p>
-        </div>
+        <FormField
+          control={control}
+          name="preferred_city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gewenste woonplaats *</FormLabel>
+              <FormControl>
+                <LocationSelector
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  placeholder="Zoek naar steden..."
+                  error={errors.preferred_city?.message}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="preferred_property_type">Type woning</Label>
@@ -190,7 +195,7 @@ export default function Step4Housing() {
             render={({ field }) => (
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecteer voorkeur" />
+                  <SelectValue placeholder="Selecteer type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="6_maanden">6 maanden</SelectItem>

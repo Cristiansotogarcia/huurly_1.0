@@ -7,6 +7,7 @@ import { ProfileFormData } from '../profileSchema';
 import { Home, MapPin, Bed, Euro, Calendar } from 'lucide-react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import LocationSelector from '@/components/ui/LocationSelector';
 
 export const Step3_Housing = () => {
   const { control, register, formState: { errors }, watch } = useFormContext<ProfileFormData>();
@@ -27,21 +28,24 @@ export const Step3_Housing = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="preferred_city">Voorkeursstad *</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="preferred_city"
-              {...register('preferred_city')}
-              placeholder="Amsterdam, Rotterdam, Den Haag..."
-              className={`pl-10 ${errors.preferred_city ? 'border-red-500' : ''}`}
-            />
-          </div>
-          {errors.preferred_city && (
-            <p className="text-sm text-red-600">{errors.preferred_city.message}</p>
+        <FormField
+          control={control}
+          name="preferred_city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Voorkeursstad *</FormLabel>
+              <FormControl>
+                <LocationSelector
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  placeholder="Zoek naar steden..."
+                  error={errors.preferred_city?.message}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         <FormField
           control={control}

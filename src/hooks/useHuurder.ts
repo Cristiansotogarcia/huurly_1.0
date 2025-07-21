@@ -168,71 +168,91 @@ export const useHuurder = () => {
     console.log('Raw profileData received:', profileData);
 
     try {
-      // Map form data to Dutch field names expected by the backend
+      // Map form data to match CreateTenantProfileData interface and database schema
       const dutchProfileData = {
-        voornaam: profileData.personal_info?.first_name || profileData.first_name,
-        achternaam: profileData.personal_info?.last_name || profileData.last_name,
-        email: user.email, // Assuming email comes from auth user
-        telefoon: profileData.personal_info?.phone || profileData.phone,
-        geboortedatum: profileData.personal_info?.date_of_birth || profileData.date_of_birth,
-        nationaliteit: profileData.personal_info?.nationality || profileData.nationality,
-        burgerlijke_staat: profileData.personal_info?.marital_status || profileData.marital_status,
-        aantal_kinderen: profileData.personal_info?.num_children || profileData.number_of_children || 0,
-        heeftHuisdieren: profileData.lifestyle?.hasPets || profileData.hasPets || false,
-        rookt: profileData.lifestyle?.smokes || profileData.smokes || false,
-        beroep: profileData.employment?.occupation || profileData.profession || 'Niet opgegeven',
-        werkgever: profileData.employment?.employer || profileData.employer,
-        // Required field: maandinkomen
-        maandinkomen: parseFloat(profileData.employment?.income || profileData.monthly_income || '0'),
-        dienstverband: profileData.employment?.employment_status || profileData.employment_status,
-        type_huishouden: profileData.household?.household_type || profileData.household_type,
-        aantal_volwassenen: profileData.household?.num_adults || profileData.num_adults || 1,
-        aantal_kinderen_huishouden: profileData.household?.num_children_household || profileData.number_of_children || 0,
-        woningtype_voorkeur: profileData.housing_preferences?.property_type || profileData.preferred_property_type,
-        // Required field: woningtype
-        woningtype: profileData.housing_preferences?.property_type || profileData.preferred_property_type || 'appartement',
-        // Required field: slaapkamers
-        slaapkamers: parseInt(profileData.housing_preferences?.num_bedrooms || profileData.preferred_bedrooms || '1'),
-        badkamers_voorkeur: profileData.housing_preferences?.num_bathrooms || profileData.num_bathrooms,
-        buitenruimte_voorkeur: profileData.housing_preferences?.outdoor_space || profileData.outdoor_space,
-        // Required field: maxBudget
-        maxBudget: parseFloat(profileData.housing_preferences?.max_rent || profileData.max_budget || '0'),
-        // Required field: minBudget
-        minBudget: parseFloat(profileData.housing_preferences?.min_rent || profileData.min_budget || '0'),
-        beschikbaar_vanaf: profileData.housing_preferences?.available_from || profileData.vroegste_verhuisdatum,
-        // Required field: stad
-        stad: Array.isArray(profileData.housing_preferences?.preferred_city) && profileData.housing_preferences?.preferred_city.length > 0 
-          ? profileData.housing_preferences.preferred_city[0] 
-          : Array.isArray(profileData.preferred_city) && profileData.preferred_city.length > 0
-            ? profileData.preferred_city[0]
-            : profileData.housing_preferences?.preferred_city || profileData.preferred_city || 'Amsterdam',
-        gewenste_steden: Array.isArray(profileData.housing_preferences?.preferred_city) 
-          ? profileData.housing_preferences.preferred_city 
-          : Array.isArray(profileData.preferred_city)
-            ? profileData.preferred_city
-            : profileData.housing_preferences?.preferred_city || profileData.preferred_city
-              ? [profileData.housing_preferences?.preferred_city || profileData.preferred_city]
-              : [],
-        // Storage preferences
-        opslag_voorkeur: profileData.housing_preferences?.storage_preferences || profileData.storage_needs || 'Geen',
-        // Financial details
-        borgsteller_beschikbaar: profileData.financial_details?.has_guarantor || profileData.borgsteller_beschikbaar || false,
-        // Motivation
-        reden_verhuizing: profileData.reason_for_moving || profileData.profile_motivation?.reason_for_moving,
-        // References
-        referenties_beschikbaar: profileData.references_available || profileData.references?.has_references || false,
-        huurgeschiedenis_beschikbaar: profileData.references?.has_rental_history || false,
-        huurervaring_jaren: profileData.rental_history_years || profileData.references?.rental_history_years,
-        // Bio and motivation
-        bio: profileData.bio || 'Geen biografie opgegeven',
-        motivatie: profileData.motivation || profileData.profile_motivation?.motivation || 'Geen motivatie opgegeven',
-        // Profile picture
-        profielfotoUrl: profileData.profilePictureUrl,
+        // Required basic fields
+        voornaam: profileData.first_name,
+        achternaam: profileData.last_name,
+        telefoon: profileData.phone,
+        geboortedatum: profileData.date_of_birth,
+        beroep: profileData.profession,
+        maandinkomen: parseFloat(profileData.monthly_income || '0'),
+        bio: profileData.bio || '',
+        stad: profileData.preferred_city?.[0]?.name || profileData.preferred_city?.[0] || 'Amsterdam',
+        minBudget: parseFloat(profileData.min_budget || '0'),
+        maxBudget: parseFloat(profileData.max_budget || '0'),
+        slaapkamers: profileData.preferred_bedrooms || 1,
+        woningtype: profileData.preferred_property_type || 'appartement',
+        motivatie: profileData.motivation || '',
+        
+        // Optional personal information
+        nationaliteit: profileData.nationality,
+        geslacht: profileData.sex,
+        burgerlijkeStaat: profileData.marital_status,
+        
+        // Children information
+        heeftKinderen: profileData.has_children || false,
+        aantalKinderen: profileData.number_of_children || 0,
+        leeftijdenKinderen: profileData.children_ages || [],
+        
+        // Partner information
+        heeftPartner: profileData.has_partner || false,
+        naamPartner: profileData.partner_name,
+        beroepPartner: profileData.partner_profession,
+        maandinkomenPartner: profileData.partner_monthly_income ? parseFloat(profileData.partner_monthly_income) : undefined,
+        werkstatusPartner: profileData.partner_employment_status,
+        
+        // Employment details
+        werkgever: profileData.employer,
+        werkstatus: profileData.employment_status,
+        typeArbeidscontract: profileData.work_contract_type,
+        
+        // Guarantor information
+        garantstellerBeschikbaar: profileData.borgsteller_beschikbaar || false,
+        naamGarantsteller: profileData.borgsteller_naam,
+        telefoonGarantsteller: profileData.borgsteller_telefoon,
+        inkomenGarantsteller: profileData.borgsteller_inkomen ? parseFloat(profileData.borgsteller_inkomen) : undefined,
+        relatieGarantsteller: profileData.borgsteller_relatie,
+        inkomensbewijsBeschikbaar: profileData.inkomensbewijs_beschikbaar || false,
+        
+        // Housing preferences
+        voorkeurswijken: Array.isArray(profileData.preferred_city) ? profileData.preferred_city : [profileData.preferred_city].filter(Boolean),
+        maxReistijd: profileData.max_commute_time || 30,
+        vervoersvoorkeur: profileData.transport_preference || 'openbaar_vervoer',
+        voorkeurMeubilering: profileData.furnished_preference || 'geen_voorkeur',
+        gewensteVoorzieningen: profileData.desired_amenities || [],
+        
+        // Timing preferences
+        voorkeurVerhuisdatum: profileData.move_in_date_preferred,
+        vroegsteVerhuisdatum: profileData.move_in_date_earliest,
+        flexibeleBeschikbaarheid: profileData.availability_flexible || false,
+        
+        // Lifestyle
+        heeftHuisdieren: profileData.hasPets || false,
+        detailsHuisdieren: profileData.pet_details,
+        rookt: profileData.smokes || false,
+        detailsRoken: profileData.smoking_details,
+        
+        // Additional enhanced profile fields
+        min_kamers: profileData.min_kamers || profileData.preferred_bedrooms || 1,
+        max_kamers: profileData.max_kamers || (profileData.preferred_bedrooms ? profileData.preferred_bedrooms + 1 : 3),
+        parkeren_vereist: profileData.parking_required || false,
+        opslag_kelder: profileData.storage_kelder || false,
+        opslag_zolder: profileData.storage_zolder || false,
+        opslag_berging: profileData.storage_berging || false,
+        opslag_garage: profileData.storage_garage || false,
+        opslag_schuur: profileData.storage_schuur || false,
+        verhuurgeschiedenis_jaren: profileData.rental_history_years,
+        reden_verhuizing: profileData.reason_for_moving,
+        referenties_beschikbaar: profileData.references_available || false,
+        extra_inkomen: profileData.extra_income ? parseFloat(profileData.extra_income) : undefined,
+        extra_inkomen_beschrijving: profileData.extra_income_description,
+        profielfotoUrl: profileData.profilePictureUrl
       };
 
       console.log('Mapped dutchProfileData:', dutchProfileData);
 
-      await userService.updateTenantProfile(dutchProfileData);
+      await userService.createTenantProfile(dutchProfileData);
 
       toast({
         title: 'Succes',

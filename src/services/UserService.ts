@@ -80,6 +80,57 @@ export interface CreateTenantProfileData {
   detailsRoken?: string;
   profielfotoUrl?: string;
   coverFotoUrl?: string;
+  // Additional fields from enhanced profile form
+  burgerlijke_staat?: string;
+  dienstverband?: string;
+  thuiswerken?: boolean;
+  borgsteller_beschikbaar?: boolean;
+  borgsteller_naam?: string;
+  borgsteller_relatie?: string;
+  borgsteller_telefoon?: string;
+  borgsteller_inkomen?: number;
+  voorkeurslocaties?: Array<{
+    name: string;
+    lat?: number;
+    lng?: number;
+    radius?: number;
+  }>;
+  min_kamers?: number;
+  max_kamers?: number;
+  meubilering_voorkeur?: string;
+  vroegste_verhuisdatum?: string;
+  voorkeur_verhuisdatum?: string;
+  beschikbaarheid_flexibel?: boolean;
+  parkeren_vereist?: boolean;
+  opslag_kelder?: boolean;
+  opslag_zolder?: boolean;
+  opslag_berging?: boolean;
+  opslag_garage?: boolean;
+  opslag_schuur?: boolean;
+  verhuurgeschiedenis_jaren?: number;
+  reden_verhuizing?: string;
+  referenties_beschikbaar?: boolean;
+  heeft_kinderen?: boolean;
+  aantal_kinderen?: number;
+  kinderen_leeftijden?: number[];
+  heeft_partner?: boolean;
+  partner_naam?: string;
+  partner_beroep?: string;
+  partner_dienstverband?: string;
+  partner_maandinkomen?: number;
+  extra_inkomen?: number;
+  extra_inkomen_beschrijving?: string;
+  contract_type?: string;
+  huisdieren?: boolean;
+  huisdier_details?: string;
+  rookt_details?: string;
+  min_budget?: number;
+  voorkeurs_slaapkamers?: number;
+  verhuis_datum_voorkeur?: Date;
+  verhuis_datum_vroegst?: Date;
+  beschikbaarheid_flexibel_timing?: boolean;
+  huurcontract_voorkeur?: string;
+  opslag_behoeften?: string;
 }
 
 export interface UserFilters {
@@ -307,40 +358,89 @@ export class UserService extends DatabaseService {
           beschrijving: sanitizedData.bio,
           locatie_voorkeur: [sanitizedData.stad],
           max_huur: sanitizedData.maxBudget,
-          min_kamers: sanitizedData.slaapkamers || 1,
-          max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : 3,
+          min_kamers: sanitizedData.slaapkamers || sanitizedData.min_kamers || 1,
+          max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : sanitizedData.max_kamers || 3,
           
           // Family information
-          partner: sanitizedData.heeftPartner || false,
-          kinderen: sanitizedData.aantalKinderen || 0,
+          partner: sanitizedData.heeft_partner || false,
+          kinderen: sanitizedData.aantal_kinderen || 0,
           roken: sanitizedData.rookt || false,
-          huisdieren: sanitizedData.heeftHuisdieren || false,
+          huisdieren: sanitizedData.huisdieren || false,
           
           // Guarantor information
-          borgsteller_beschikbaar: sanitizedData.garantstellerBeschikbaar || false,
-          borgsteller_naam: sanitizedData.naamGarantsteller || null,
-          borgsteller_telefoon: sanitizedData.telefoonGarantsteller || null,
-          borgsteller_inkomen: sanitizedData.inkomenGarantsteller || null,
-          borgsteller_relatie: sanitizedData.relatieGarantsteller || null,
-          inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijsBeschikbaar || false,
+          borgsteller_beschikbaar: sanitizedData.borgsteller_beschikbaar || false,
+          borgsteller_naam: sanitizedData.borgsteller_naam || null,
+          borgsteller_telefoon: sanitizedData.borgsteller_telefoon || null,
+          borgsteller_inkomen: sanitizedData.borgsteller_inkomen || null,
+          borgsteller_relatie: sanitizedData.borgsteller_relatie || null,
+          inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijs_beschikbaar || false,
           
           // Timing information
-          voorkeur_verhuisdatum: sanitizedData.voorkeurVerhuisdatum ? new Date(sanitizedData.voorkeurVerhuisdatum) : null,
-          vroegste_verhuisdatum: sanitizedData.vroegsteVerhuisdatum ? new Date(sanitizedData.vroegsteVerhuisdatum) : null,
-          beschikbaarheid_flexibel: sanitizedData.flexibeleBeschikbaarheid || false,
+          voorkeur_verhuisdatum: sanitizedData.voorkeur_verhuisdatum ? new Date(sanitizedData.voorkeur_verhuisdatum) : 
+                                sanitizedData.verhuis_datum_voorkeur || null,
+          vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? new Date(sanitizedData.vroegste_verhuisdatum) : 
+                                sanitizedData.verhuis_datum_vroegst || null,
+          beschikbaarheid_flexibel: sanitizedData.beschikbaarheid_flexibel || sanitizedData.beschikbaarheid_flexibel_timing || false,
           
           // Preferences stored in JSON
           woningvoorkeur: {
             type: sanitizedData.woningtype || 'appartement',
-            meubilering: sanitizeFurnishedPreference(sanitizedData.voorkeurMeubilering),
+            meubilering: sanitizedData.meubilering_voorkeur || 'geen_voorkeur',
             voorzieningen: sanitizedData.gewensteVoorzieningen || [],
             wijken: sanitizedData.voorkeurswijken || [],
             maxReistijd: sanitizedData.maxReistijd || 30,
-            vervoer: sanitizedData.vervoersvoorkeur || 'openbaar_vervoer'
+            vervoer: sanitizedData.vervoersvoorkeur || 'openbaar_vervoer',
+            slaapkamers_voorkeur: sanitizedData.voorkeurs_slaapkamers,
+            parkeren: sanitizedData.parkeren_vereist || false,
+            opslag: {
+              kelder: sanitizedData.opslag_kelder || false,
+              zolder: sanitizedData.opslag_zolder || false,
+              berging: sanitizedData.opslag_berging || false,
+              garage: sanitizedData.opslag_garage || false,
+              schuur: sanitizedData.opslag_schuur || false,
+              behoeften: sanitizedData.opslag_behoeften
+            },
+            huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur
           },
           
-          profielfoto_url: sanitizedData.profielfotoUrl || null,
+          // Additional profile information
+          nationaliteit: sanitizedData.nationaliteit,
+          geslacht: sanitizedData.geslacht,
+          burgerlijke_staat: sanitizedData.burgerlijke_staat,
+          werkgever: sanitizedData.werkgever,
+          dienstverband: sanitizedData.dienstverband,
+          thuiswerken: sanitizedData.thuiswerken || false,
+          extra_inkomen: sanitizedData.extra_inkomen,
+          extra_inkomen_beschrijving: sanitizedData.extra_inkomen_beschrijving,
+          contract_type: sanitizedData.contract_type,
+          
+          // Partner information
+          partner_naam: sanitizedData.partner_naam,
+          partner_beroep: sanitizedData.partner_beroep,
+          partner_dienstverband: sanitizedData.partner_dienstverband,
+          partner_inkomen: sanitizedData.partner_maandinkomen,
+          
+          // Children information
+          kinderen_leeftijden: sanitizedData.kinderen_leeftijden,
+          
+          // Lifestyle details
+          huisdier_details: sanitizedData.huisdier_details,
+          rook_details: sanitizedData.rook_details,
+          
+          // References and history
+          verhuurgeschiedenis_jaren: sanitizedData.verhuurgeschiedenis_jaren,
+          reden_verhuizing: sanitizedData.reden_verhuizing,
+          referenties_beschikbaar: sanitizedData.referenties_beschikbaar || false,
+          
+          // Budget preferences
+          min_budget: sanitizedData.min_budget,
+          
+          // Profile media
+          profielfoto_url: sanitizedData.profielfoto_url || null,
           cover_foto: sanitizedData.coverFotoUrl || null,
+          
+          // Motivation
+          motivatie: sanitizedData.motivatie,
         };
 
         // Calculate age from birth date

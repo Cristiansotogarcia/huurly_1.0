@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nominatim API Test</title>
+</head>
+<body>
+    <h1>Nominatim API Test</h1>
+    <input type="text" id="searchInput" placeholder="Type a city name..." />
+    <button onclick="testSearch()">Search</button>
+    <div id="results"></div>
+    <div id="error"></div>
+
+    <script>
+        async function testSearch() {
+            const query = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('error');
+            
+            resultsDiv.innerHTML = 'Loading...';
+            errorDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&limit=5&q=${encodeURIComponent(query)}&addressdetails=1`
+                );
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const results = await response.json();
+                console.log('API Response:', results);
+                
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = 'No results found';
+                } else {
+                    resultsDiv.innerHTML = '<h3>Results:</h3>' + 
+                        results.map(result => 
+                            `<div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
+                                <strong>${result.display_name}</strong><br>
+                                Lat: ${result.lat}, Lon: ${result.lon}<br>
+                                Place ID: ${result.place_id}
+                            </div>`
+                        ).join('');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+                resultsDiv.innerHTML = '';
+            }
+        }
+        
+        // Test with Amsterdam on page load
+        window.onload = function() {
+            document.getElementById('searchInput').value = 'Amsterdam';
+            testSearch();
+        };
+    </script>
+</body>
+</html>
