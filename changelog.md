@@ -1,5 +1,32 @@
 # Huurly Project Changelog
 
+## Fix: Stripe Webhook API Version Mismatch - January 2025
+
+**Change:** Updated Stripe webhook function to use the correct API version to match Stripe's webhook configuration.
+
+**Problem:** The webhook function was configured to use Stripe API version 2023-10-16, but Stripe was actually sending webhook events with API version 2020-08-27. This version mismatch could cause compatibility issues and unexpected behavior when processing webhook events.
+
+**Root Cause:** The API version specified in the webhook function initialization didn't match the API version configured in the Stripe Dashboard for the webhook endpoint.
+
+**Solution:** 
+- Updated the Stripe client initialization in the webhook function to use API version 2020-08-27
+- Redeployed the webhook function to apply the change
+- Ensured compatibility between webhook events and function processing logic
+
+**Technical Changes:**
+- **Modified:** `supabase/functions/stripe-webhook/index.ts`:
+  - Changed `apiVersion: "2023-10-16"` to `apiVersion: "2020-08-27"`
+  - Maintained all existing webhook event handling logic
+  - Preserved signature verification and error handling
+
+**Files Modified:**
+- `supabase/functions/stripe-webhook/index.ts`
+- `changelog.md`
+
+**Result:** The webhook function now uses the correct API version, ensuring full compatibility with Stripe's webhook events and eliminating potential processing issues caused by version mismatches.
+
+---
+
 ## Fix: Stripe Webhook Authentication Issue - January 2025
 
 **Change:** Identified and documented the root cause of Stripe webhook 401 Unauthorized errors preventing successful payment processing.

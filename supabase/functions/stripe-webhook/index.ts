@@ -29,7 +29,7 @@ const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 const stripe = new Stripe(stripeSecretKey, { 
-  apiVersion: "2023-10-16"
+  apiVersion: "2020-08-27"
 });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
