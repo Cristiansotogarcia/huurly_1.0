@@ -25,6 +25,7 @@ export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
 }) => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = () => {
     const validationPassed = onNext();
@@ -48,22 +49,41 @@ export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
       <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-6">
         <div className="order-2 sm:order-1">
           {!isFirstStep && (
-            <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onBack} 
+              className="w-full sm:w-auto"
+              disabled={isSubmitting}
+            >
               Terug
             </Button>
           )}
         </div>
         <div className="order-1 sm:order-2">
           {!isLastStep ? (
-            <Button type="button" onClick={handleNext} className="w-full sm:w-auto">
+            <Button 
+              type="button" 
+              onClick={handleNext} 
+              className="w-full sm:w-auto"
+              disabled={isSubmitting}
+            >
               Volgende
             </Button>
           ) : (
             <Button 
               type="submit" 
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+              disabled={isSubmitting}
             >
-              Profiel Opslaan
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Opslaan...
+                </>
+              ) : (
+                'Profiel Opslaan'
+              )}
             </Button>
           )}
         </div>

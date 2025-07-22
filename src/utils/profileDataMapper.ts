@@ -51,8 +51,8 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     max_kamers: data.max_kamers,
     voorkeur_slaapkamers: data.preferred_bedrooms,
     voorkeur_meubilering: data.furnished_preference,
-    voorkeur_verhuisdatum: data.move_in_date_preferred?.toISOString(),
-    vroegste_verhuisdatum: data.move_in_date_earliest?.toISOString(),
+    voorkeur_verhuisdatum: data.move_in_date_preferred ? convertDateFormat(data.move_in_date_preferred) : undefined,
+    vroegste_verhuisdatum: data.move_in_date_earliest ? convertDateFormat(data.move_in_date_earliest) : undefined,
     beschikbaarheid_flexibel: data.availability_flexible,
     huurcontract_voorkeur: data.lease_duration_preference,
     

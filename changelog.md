@@ -1,5 +1,34 @@
 # Huurly Project Changelog
 
+## Fix: Stripe Payment Webhook Race Condition - January 2025
+
+**Change:** Implemented a backend retry mechanism to handle a race condition between the Stripe webhook processing and the frontend's payment status check.
+
+**Problem:** The frontend would occasionally display a "Betaling mislukt" (Payment failed) message even when the payment was successful in Stripe. This was caused by the frontend checking the subscription status before the Stripe webhook had finished updating the database.
+
+**Root Cause:** A race condition existed where the client-side `handlePaymentSuccess` function would query the database for the subscription status immediately after payment, but the webhook's asynchronous processing hadn't yet marked the subscription as 'actief'.
+
+**Solution:** 
+- Modified the `handlePaymentSuccess` method in `PaymentWebhookService.ts` to include a retry loop with exponential backoff.
+- The service now attempts to verify the subscription status up to 5 times over approximately 62 seconds.
+- This makes the backend resilient to webhook processing delays, ensuring the frontend receives the correct status.
+
+**Technical Changes:**
+- **Modified:** `src/services/payment/PaymentWebhookService.ts`:
+  - Refactored `handlePaymentSuccess` to poll the database for the 'actief' status.
+  - Introduced a loop with `MAX_RETRIES` and exponential backoff to handle delays.
+  - Ensured the function returns a proper `DatabaseResponse` in all scenarios (success, failure, and retry attempts).
+
+**Files Modified:**
+- `src/services/payment/PaymentWebhookService.ts`
+- `PAYMENT_FLOW_FIX.md`
+- `changelog.md`
+
+**Result:** The frontend now reliably displays the correct payment status, eliminating false negatives caused by the webhook race condition. The user experience during the payment process is now more consistent and reliable.
+
+---
+
+
 ## Fix: Step4Housing Component Syntax Error in Profile Creation Modal - January 2025
 
 **Change:** Fixed React component crash in Step4Housing that was causing ErrorBoundary errors when users tried to access Step 4 (Housing preferences) of the enhanced profile creation modal.

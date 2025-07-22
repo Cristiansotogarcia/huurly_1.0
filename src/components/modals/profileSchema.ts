@@ -75,8 +75,8 @@ export const profileSchema = z.object({
   max_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
   
   // Timing fields (consolidated from Step 5)
-  move_in_date_preferred: z.date().optional(),
-  move_in_date_earliest: z.date().optional(),
+  move_in_date_preferred: z.string().optional(),
+  move_in_date_earliest: z.string().optional(),
   availability_flexible: z.boolean().default(false),
   lease_duration_preference: z.enum(['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel']).optional(),
   

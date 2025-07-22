@@ -1,7 +1,30 @@
 import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient} from "@supabase/supabase-js";
-import { corsHeaders } from '../_shared/cors.ts';
+
+// Enhanced CORS headers with proper origin handling
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://huurly-1-0.vercel.app',
+    'https://huurly.nl',
+    'https://www.huurly.nl'
+  ];
+  
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://huurly.nl',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+    'Content-Type': 'application/json'
+  };
+};
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
@@ -69,10 +92,13 @@ const resolveCustomer = async (stripe: InstanceType<typeof Stripe>, email: strin
 
 serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
+  const headers = getCorsHeaders(origin);
+  
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders(origin),
+      headers,
     });
   }
 
@@ -86,7 +112,7 @@ serve(async (req) => {
     const { priceId, successUrl, cancelUrl, userId, userEmail } = body;
 
     if (!priceId) {
-      return new Response(JSON.stringify({ error: "Prijs ID is vereist" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Prijs ID is vereist" }), { status: 400, headers });
     }
 
     // Parallelize user lookup and customer resolution preparation
@@ -95,7 +121,7 @@ serve(async (req) => {
     const userIdToUse = user?.id || userId;
 
     if (!emailToUse) {
-      return new Response(JSON.stringify({ error: "Gebruiker email is vereist" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Gebruiker email is vereist" }), { status: 400, headers });
     }
 
     const customer = await resolveCustomer(stripe, emailToUse, userIdToUse);
@@ -120,7 +146,7 @@ serve(async (req) => {
 
     logStep("SESSION_CREATED", { sessionId: session.id });
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
-      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+      headers,
       status: 200,
     });
   } catch (error) {
@@ -128,7 +154,7 @@ serve(async (req) => {
     logStep("ERROR", { message: errorMessage });
     console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: "Er is een fout opgetreden bij het verwerken van de betaling" }), {
-      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+      headers,
       status: 500,
     });
   }

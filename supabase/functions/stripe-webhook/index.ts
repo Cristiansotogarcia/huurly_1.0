@@ -22,7 +22,29 @@ const mapStripeStatusToDutch = (stripeStatus: string ): string => {
   return statusMap[stripeStatus] || 'wachtend';
 };
 
-import { corsHeaders } from '../_shared/cors.ts';
+// Enhanced CORS headers with proper origin handling
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://huurly-1-0.vercel.app',
+    'https://huurly.nl',
+    'https://www.huurly.nl'
+  ];
+  
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://huurly.nl',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+    'Content-Type': 'application/json'
+  };
+};
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -47,8 +69,10 @@ type ExtendedSession = Stripe.Checkout.Session & {
 
 serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
+  const headers = getCorsHeaders(origin);
+  
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders(origin) });
+    return new Response(null, { headers });
   }
 
   try {
@@ -57,23 +81,22 @@ serve(async (req) => {
 
     if (!signature) {
       console.error("Missing Stripe signature header");
-      return new Response("Missing signature header", { status: 400 });
+      return new Response("Missing signature header", { status: 400, headers });
     }
 
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (!webhookSecret) {
       console.error("Missing Stripe webhook secret");
-      return new Response("Server configuration error", { status: 500 });
+      return new Response("Server configuration error", { status: 500, headers });
     }
 
     let event;
     try {
-      // Corrected: Use await constructEventAsync for asynchronous context
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       console.log("✅ Verified Stripe event:", event.type);
     } catch (err: any) {
       console.error("❌ Webhook signature verification failed:", err.message);
-      return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+      return new Response(`Webhook Error: ${err.message}`, { status: 400, headers });
     }
 
     // === CHECKOUT SESSION COMPLETED ===
@@ -91,17 +114,16 @@ serve(async (req) => {
 
       if (!userId) {
         console.error("❌ User ID not found in session metadata");
-        return new Response("Missing user ID", { status: 400 });
+        return new Response("Missing user ID", { status: 400, headers });
       }
 
       if (!session.subscription) {
         console.error("❌ No subscription ID in session");
-        return new Response("Missing subscription ID", { status: 400 });
+        return new Response("Missing subscription ID", { status: 400, headers });
       }
 
       // ✅ Haal Stripe subscription details op
       console.log("🔍 Retrieving subscription from Stripe:", session.subscription);
-      // @ts-ignore - Stripe types
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
       
       console.log("📊 Stripe subscription details:", {
@@ -111,28 +133,12 @@ serve(async (req) => {
       });
 
       // For checkout.session.completed, use current_period_start and current_period_end
-      // from the retrieved subscription object.
       const startDate = subscription.current_period_start;
-      let endDate = subscription.current_period_end;
-
-      // Fallback for endDate if not directly available (e.g., for trial subscriptions without explicit end_date yet)
-      if (endDate === undefined && subscription.items.data[0]?.plan) {
-        const plan = subscription.items.data[0].plan;
-        if (plan.interval && plan.interval_count) {
-          const start = new Date(startDate * 1000);
-          let end = new Date(start);
-          if (plan.interval === 'month') {
-            end.setMonth(start.getMonth() + plan.interval_count);
-          } else if (plan.interval === 'year') {
-            end.setFullYear(start.getFullYear() + plan.interval_count);
-          }
-          endDate = Math.floor(end.getTime() / 1000); // Convert back to Unix timestamp
-        }
-      }
+      const endDate = subscription.current_period_end;
 
       if (startDate === undefined || endDate === undefined) {
         console.error("❌ Missing subscription period data in Stripe subscription object");
-        return new Response("Missing subscription period data", { status: 500 });
+        return new Response("Missing subscription period data", { status: 500, headers });
       }
 
       // ✅ Voeg abonnement toe of update bestaande
@@ -156,7 +162,7 @@ serve(async (req) => {
 
       if (error) {
         console.error("❌ Failed to insert abonnement:", error);
-        return new Response(`Database error: ${error.message}`, { status: 500 });
+        return new Response(`Database error: ${error.message}`, { status: 500, headers });
       } else {
         console.log("✅ Successfully upserted subscription for user:", userId);
       }
@@ -208,15 +214,8 @@ serve(async (req) => {
     ) {
       const subscription = event.data.object as Stripe.Subscription;
 
-      // For subscription updates, current_period_start and current_period_end are usually reliable.
       const startDate = subscription.current_period_start;
       const endDate = subscription.current_period_end;
-
-      if (startDate === undefined || endDate === undefined) {
-        console.error("❌ Missing subscription period data for update");
-        // Depending on your logic, you might want to return an error response here
-        // or handle this case differently if these fields are not always present
-      }
 
       const updateData: { status: string; start_datum?: string; eind_datum?: string } = {
         status: mapStripeStatusToDutch(subscription.status),
@@ -248,11 +247,11 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+      headers,
       status: 200,
     });
   } catch (error: any) {
     console.error("❌ Webhook error:", error);
-    return new Response(`Webhook Error: ${error.message}`, { status: 400 });
+    return new Response(`Webhook Error: ${error.message}`, { status: 400, headers });
   }
 });

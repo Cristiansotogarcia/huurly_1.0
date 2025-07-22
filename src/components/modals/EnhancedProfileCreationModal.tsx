@@ -145,20 +145,37 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
   const onSubmit = async (data: ProfileFormData) => {
-    console.log('Form submission started', data);
+    console.log('🚀 Form submission started', data);
+    console.log('📋 Form validation status:', methods.formState.isValid);
+    console.log('📋 Form errors:', methods.formState.errors);
+    
+    // Debug: Check if we're on the last step
+    console.log('📍 Current step:', currentStep);
+    console.log('📍 Total steps:', steps.length);
+    console.log('📍 Is last step:', isLastStep);
+    
     try {
-      await onProfileComplete(data);
-      console.log('onProfileComplete called successfully');
+      console.log('🔄 Calling onProfileComplete with data:', data);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: Profiel opslaan duurt te lang')), 30000)
+      );
+      
+      const savePromise = onProfileComplete(data);
+      await Promise.race([savePromise, timeoutPromise]);
+      
+      console.log('✅ onProfileComplete called successfully');
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
       });
       onClose();
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error('❌ Error in form submission:', error);
       toast({
         title: 'Fout',
-        description: 'Er is een fout opgetreden bij het opslaan van je profiel.',
+        description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
       });
     }
@@ -191,6 +208,34 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
             />
+            
+            {/* Debug button for testing - remove after fixing */}
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800 mb-2">🐛 Debug Mode Active</p>
+              <div className="flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    console.log('🧪 Debug: Current form values:', methods.getValues());
+                    console.log('🧪 Debug: Form errors:', methods.formState.errors);
+                    console.log('🧪 Debug: Is valid:', methods.formState.isValid);
+                  }}
+                  className="px-3 py-1 bg-yellow-500 text-white text-xs rounded"
+                >
+                  Log Form State
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    console.log('🧪 Debug: Force submit triggered');
+                    methods.handleSubmit(onSubmit)();
+                  }}
+                  className="px-3 py-1 bg-red-500 text-white text-xs rounded"
+                >
+                  Force Submit
+                </button>
+              </div>
+            </div>
           </form>
         </FormProvider>
       </div>

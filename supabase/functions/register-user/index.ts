@@ -1,11 +1,32 @@
 import { serve } from 'http/server'
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors.ts'
+
+// Enhanced CORS headers with proper origin handling
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://huurly-1-0.vercel.app',
+    'https://huurly.nl'
+  ];
+  
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://huurly.nl',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+    'Content-Type': 'application/json'
+  };
+};
 
 serve(async (req) => {
-  // Get origin from request headers
   const origin = req.headers.get('origin')
-  const headers = corsHeaders(origin)
+  const headers = getCorsHeaders(origin)
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -132,7 +153,7 @@ serve(async (req) => {
     console.log('User registration completed successfully')
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...headers, 'Content-Type': 'application/json' },
+      headers,
       status: 200,
     })
   } catch (error) {
@@ -141,7 +162,7 @@ serve(async (req) => {
       error: error.message || 'Registration failed',
       details: error 
     }), {
-      headers: { ...headers, 'Content-Type': 'application/json' },
+      headers,
       status: 400,
     })
   }

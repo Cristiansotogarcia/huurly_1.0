@@ -175,7 +175,7 @@ export const Step3_Housing = () => {
       <div className="grid md:grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="vroegste_verhuisdatum"
+          name="move_in_date_earliest"
           render={({ field }) => {
             const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               let value = e.target.value;
@@ -213,7 +213,7 @@ export const Step3_Housing = () => {
         />
         <FormField
           control={control}
-          name="voorkeur_verhuisdatum"
+          name="move_in_date_preferred"
           render={({ field }) => {
             const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               let value = e.target.value;
@@ -252,12 +252,12 @@ export const Step3_Housing = () => {
       </div>
       <FormField
         control={control}
-        name="beschikbaarheid_flexibel"
+        name="availability_flexible"
         render={({ field }) => (
           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
             <FormControl>
               <Checkbox
-                checked={field.value}
+                checked={field.value as boolean}
                 onCheckedChange={field.onChange}
               />
             </FormControl>

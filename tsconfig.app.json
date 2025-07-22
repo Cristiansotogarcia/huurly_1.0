@@ -5,6 +5,9 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "maxNodeModuleJsDepth": 0,
+    "types": ["vite/client", "node"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -14,7 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting relaxed */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -22,9 +25,7 @@
     "noFallthroughCasesInSwitch": false,
 
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"]
 }
