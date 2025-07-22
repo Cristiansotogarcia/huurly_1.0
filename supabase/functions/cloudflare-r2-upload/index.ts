@@ -100,12 +100,26 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Parse the multipart form data first to determine bucket
+    const formData = await req.formData();
+    const folder = formData.get('folder') as string || 'general';
+    
     // Get Cloudflare R2 credentials from environment
     const accountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
     const accessKeyId = Deno.env.get('CLOUDFLARE_R2_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CLOUDFLARE_R2_SECRET_KEY');
-    const bucketName = Deno.env.get('CLOUDFLARE_R2_BUCKET');
-    const endpoint = Deno.env.get('CLOUDFLARE_R2_ENDPOINT');
+    
+    // Determine bucket and endpoint based on folder type
+    let bucketName: string;
+    let endpoint: string;
+    
+    if (folder === 'images' || folder === 'beelden') {
+      bucketName = Deno.env.get('CLOUDFLARE_R2_IMAGES_BUCKET') || Deno.env.get('CLOUDFLARE_R2_BUCKET') || 'beelden';
+      endpoint = Deno.env.get('CLOUDFLARE_R2_IMAGES_ENDPOINT') || Deno.env.get('CLOUDFLARE_R2_ENDPOINT') || '';
+    } else {
+      bucketName = Deno.env.get('CLOUDFLARE_R2_DOCUMENTS_BUCKET') || Deno.env.get('CLOUDFLARE_R2_BUCKET') || 'documents';
+      endpoint = Deno.env.get('CLOUDFLARE_R2_DOCUMENTS_ENDPOINT') || Deno.env.get('CLOUDFLARE_R2_ENDPOINT') || '';
+    }
 
     if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !endpoint) {
       console.error('Missing environment variables:', {
@@ -124,11 +138,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Parse the multipart form data
-    const formData = await req.formData();
+    // Get file and userId from already parsed formData
     const file = formData.get('file') as File;
     const userId = formData.get('userId') as string;
-    const folder = formData.get('folder') as string || 'general';
 
     if (!file) {
       return new Response(

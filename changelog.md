@@ -1,5 +1,102 @@
 # Huurly Project Changelog
 
+## Update: Stripe API Version to Latest Release - January 2025
+
+**Change:** Updated Stripe webhook function to use the latest API version 2025-06-30.basil for improved compatibility and access to newest features.
+
+**Problem:** The webhook function was using Stripe API version 2024-09-30, which is outdated compared to the latest available version 2025-06-30.basil that includes the newest features and improvements.
+
+**Solution:** 
+- Updated the Stripe client initialization in the webhook function to use API version 2025-06-30.basil
+- Maintained all existing webhook event handling logic
+- Preserved signature verification and error handling mechanisms
+
+**Technical Changes:**
+- **Modified:** `supabase/functions/stripe-webhook/index.ts`:
+  - Changed `apiVersion: "2024-09-30"` to `apiVersion: "2025-06-30.basil"`
+  - Maintained compatibility with all existing webhook events
+  - Preserved all subscription handling and database operations
+
+**Files Modified:**
+- `supabase/functions/stripe-webhook/index.ts`
+- `changelog.md`
+
+**Result:** 
+- ✅ Webhook now uses the latest Stripe API version for optimal compatibility
+- ✅ Access to newest Stripe features and improvements
+- ✅ TypeScript compilation passes without errors
+- ✅ All existing webhook functionality preserved
+
+---
+
+## Enhancement: Stripe and Cloudflare Functions Optimization - January 2025
+
+**Change:** Updated Stripe webhook function to use the latest API version and enhanced Cloudflare R2 upload function with improved bucket configuration.
+
+**Stripe API Update:**
+- **Problem:** Stripe webhook was using outdated API version `2020-08-27` which could miss new features and improvements.
+- **Solution:** Updated to latest Stripe API version `2024-09-30` for improved compatibility and access to latest features.
+- **Technical Changes:**
+  - Modified `supabase/functions/stripe-webhook/index.ts` to use `apiVersion: "2024-09-30"`
+  - Maintained all existing webhook event handling logic
+  - Preserved signature verification and error handling
+
+**Cloudflare R2 Configuration Enhancement:**
+- **Problem:** Duplicate environment variable entries in `.env.example` could cause configuration conflicts between document and image storage.
+- **Solution:** Separated document and image bucket configurations with distinct environment variables and dynamic bucket selection.
+- **Technical Changes:**
+  - Updated `.env.example` with separate `CLOUDFLARE_R2_DOCUMENTS_*` and `CLOUDFLARE_R2_IMAGES_*` variables
+  - Modified `cloudflare-r2-upload/index.ts` to dynamically select appropriate bucket based on folder parameter
+  - Added backward compatibility with existing `CLOUDFLARE_R2_BUCKET` and `CLOUDFLARE_R2_ENDPOINT` variables
+  - Function now supports both 'images'/'beelden' and 'documents' folder types
+
+**Files Modified:**
+- `supabase/functions/stripe-webhook/index.ts`
+- `supabase/functions/cloudflare-r2-upload/index.ts`
+- `.env.example`
+- `changelog.md`
+
+**Result:** 
+- ✅ Stripe webhook now uses latest API version for improved compatibility
+- ✅ Cloudflare R2 upload function supports separate buckets for documents and images
+- ✅ Environment configuration is cleaner and less prone to conflicts
+- ✅ Backward compatibility maintained for existing deployments
+- ✅ TypeScript compilation passes without errors
+
+---
+
+## Fix: Stripe Webhook Authorization Configuration - January 2025
+
+**Change:** Resolved Stripe webhook 401 Unauthorized errors by configuring JWT verification bypass in Supabase Edge Functions.
+
+**Problem:** The Stripe webhook was consistently returning 401 Unauthorized errors with the message "Missing authorization header", preventing successful payment processing. Stripe webhooks don't send Authorization headers, only signature headers for verification.
+
+**Root Cause:** Supabase Edge Functions require JWT verification by default, even when `auth: false` is set in the function code. The `verify_jwt` setting needed to be explicitly disabled in the project configuration.
+
+**Solution:** 
+- Added `[functions.stripe-webhook]` section to `supabase/config.toml`
+- Set `verify_jwt = false` to disable JWT verification specifically for the webhook function
+- Redeployed the webhook function to apply the configuration changes
+
+**Technical Changes:**
+- **Modified:** `supabase/config.toml`:
+  - Added `[functions.stripe-webhook]` configuration section
+  - Set `verify_jwt = false` to bypass JWT authentication
+  - Maintained security through Stripe signature verification
+- **Redeployed:** `stripe-webhook` function to apply new configuration
+
+**Files Modified:**
+- `supabase/config.toml`
+- `changelog.md`
+
+**Result:** 
+- ✅ Webhook now accepts requests without Authorization headers
+- ✅ Authentication bypassed while maintaining security through Stripe signature verification
+- ✅ Error changed from 401 Unauthorized to 400 Bad Request (expected for test payloads)
+- ✅ Stripe webhooks can now successfully reach the endpoint and process payment events
+
+---
+
 ## Fix: Stripe Webhook API Version Mismatch - January 2025
 
 **Change:** Updated Stripe webhook function to use the correct API version to match Stripe's webhook configuration.

@@ -1,4 +1,4 @@
-import { serve } from "http/server";
+// Using Deno.serve with auth: false configuration
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders } from '../_shared/cors.ts';
@@ -29,7 +29,7 @@ const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 const stripe = new Stripe(stripeSecretKey, { 
-  apiVersion: "2020-08-27"
+  apiVersion: "2025-06-30.basil"
 });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -44,7 +44,7 @@ type ExtendedSession = Stripe.Checkout.Session & {
   currency: string | null;
 };
 
-serve(async (req) => {
+Deno.serve({ auth: false }, async (req) => {
   const origin = req.headers.get("Origin") || "";
   const responseHeaders = {
     ...corsHeaders,
