@@ -7,7 +7,6 @@ import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
 import Step2Employment from './EnhancedProfileSteps/Step2Employment';
 import Step3Household from './EnhancedProfileSteps/Step3Household';
 import Step4Housing from './EnhancedProfileSteps/Step4Housing';
-import Step5Timing from './EnhancedProfileSteps/Step5Timing';
 import Step6Guarantor from './EnhancedProfileSteps/Step6Guarantor';
 import Step7References from './EnhancedProfileSteps/Step7References';
 import Step8ProfileMotivation from './EnhancedProfileSteps/Step8ProfileMotivation';
@@ -28,10 +27,9 @@ const steps = [
   { id: 'step2', name: 'Werk & Inkomen' },
   { id: 'step3', name: 'Huidige Woonsituatie' },
   { id: 'step4', name: 'Woningvoorkeuren' },
-  { id: 'step5', name: 'Timing & Beschikbaarheid' },
-  { id: 'step6', name: 'Borgsteller' },
-  { id: 'step7', name: 'Referenties' },
-  { id: 'step8', name: 'Profiel & Motivatie' },
+  { id: 'step5', name: 'Borgsteller' },
+  { id: 'step6', name: 'Referenties' },
+  { id: 'step7', name: 'Profiel & Motivatie' },
 ];
 
 const stepComponents = [
@@ -39,10 +37,9 @@ const stepComponents = [
   <Step2Employment key="step2" />,
   <Step3Household key="step3" />,
   <Step4Housing key="step4" />,
-  <Step5Timing key="step5" />,
-  <Step6Guarantor key="step6" />,
-  <Step7References key="step7" />,
-  <Step8ProfileMotivation key="step8" />,
+  <Step6Guarantor key="step5" />,
+  <Step7References key="step6" />,
+  <Step8ProfileMotivation key="step7" />,
 ];
 
 export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileCreationModalProps) => {
@@ -81,7 +78,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       partner_employment_status: '',
       partner_monthly_income: undefined,
       
-      // Step 4: Housing Preferences
+      // Step 4: Housing Preferences (consolidated with Step 5)
       preferred_city: [],
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
@@ -90,11 +87,12 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       max_budget: 1000,
       min_kamers: undefined,
       max_kamers: undefined,
-      vroegste_verhuisdatum: '',
-      voorkeur_verhuisdatum: '',
-
-      beschikbaarheid_flexibel: false,
-      parking_required: false,
+      
+      // Timing fields (moved from Step 5 to Step 4)
+      move_in_date_preferred: undefined,
+      move_in_date_earliest: undefined,
+      availability_flexible: false,
+      lease_duration_preference: undefined,
       
       // Storage preferences
       storage_kelder: false,
@@ -103,25 +101,25 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       storage_garage: false,
       storage_schuur: false,
       
-      // Timing fields (moved from Step 5)
-      move_in_date_preferred: undefined,
-      move_in_date_earliest: undefined,
-      availability_flexible: false,
-      lease_duration_preference: undefined,
-      storage_needs: '',
-      
-      // Step 4: Lifestyle
+      // Step 4: Lifestyle (moved from Step 6)
       hasPets: false,
       pet_details: '',
       smokes: false,
       smoking_details: '',
       
-      // Step 7: References & History
+      // Step 5: Guarantor
+      borgsteller_beschikbaar: false,
+      borgsteller_naam: '',
+      borgsteller_relatie: '',
+      borgsteller_telefoon: '',
+      borgsteller_inkomen: undefined,
+      
+      // Step 6: References & History
       references_available: false,
       rental_history_years: undefined,
       reason_for_moving: '',
       
-      // Step 8: Profile & Motivation
+      // Step 7: Profile & Motivation
       bio: '',
       motivation: '',
     };
@@ -146,10 +144,10 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
     canNavigateToStep 
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
-  const onSubmit = (data: ProfileFormData) => {
+  const onSubmit = async (data: ProfileFormData) => {
     console.log('Form submission started', data);
     try {
-      onProfileComplete(data);
+      await onProfileComplete(data);
       console.log('onProfileComplete called successfully');
       toast({
         title: 'Profiel Opgeslagen',

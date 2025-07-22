@@ -63,13 +63,8 @@ export const profileSchema = z.object({
   partner_profession: z.string().optional(),
   partner_employment_status: z.string().optional(),
   partner_monthly_income: z.number().min(0, 'Partner inkomen mag niet negatief zijn').optional(),
-  borgsteller_beschikbaar: z.boolean().default(false),
-  borgsteller_naam: z.string().optional(),
-  borgsteller_relatie: z.string().optional(),
-  borgsteller_telefoon: z.string().optional(),
-  borgsteller_inkomen: z.number().min(0).optional(),
-
-  // Step 4: Housing Preferences
+  
+  // Step 4: Housing Preferences (consolidated with Step 5 & 6)
   preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
   preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer').optional(),
@@ -78,84 +73,39 @@ export const profileSchema = z.object({
   max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
   min_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
   max_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
-  vroegste_verhuisdatum: z.string()
-    .optional()
-    .refine((dateStr) => {
-      if (!dateStr || dateStr === '') return true; // Optional field
-      
-      // Check format
-      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        return false;
-      }
-      
-      const [day, month, year] = dateStr.split('/').map(Number);
-      const date = new Date(year, month - 1, day);
-      
-      // Check if the date is valid
-      if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
-        return false;
-      }
-      
-      // Check if date is not too far in the past (before 2020)
-      if (year < 2020) {
-        return false;
-      }
-      
-      return true;
-    }, 'Ongeldige datum - gebruik dd/mm/jjjj formaat'),
-  voorkeur_verhuisdatum: z.string()
-    .optional()
-    .refine((dateStr) => {
-      if (!dateStr || dateStr === '') return true; // Optional field
-      
-      // Check format
-      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        return false;
-      }
-      
-      const [day, month, year] = dateStr.split('/').map(Number);
-      const date = new Date(year, month - 1, day);
-      
-      // Check if the date is valid
-      if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
-        return false;
-      }
-      
-      // Check if date is not too far in the past (before 2020)
-      if (year < 2020) {
-        return false;
-      }
-      
-      return true;
-    }, 'Ongeldige datum - gebruik dd/mm/jjjj formaat'),
-  beschikbaarheid_flexibel: z.boolean().default(false),
-  parking_required: z.boolean().default(false),
-  // Storage preferences as checkboxes
+  
+  // Timing fields (consolidated from Step 5)
+  move_in_date_preferred: z.date().optional(),
+  move_in_date_earliest: z.date().optional(),
+  availability_flexible: z.boolean().default(false),
+  lease_duration_preference: z.enum(['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel']).optional(),
+  
+  // Storage preferences
   storage_kelder: z.boolean().default(false),
   storage_zolder: z.boolean().default(false),
   storage_berging: z.boolean().default(false),
   storage_garage: z.boolean().default(false),
   storage_schuur: z.boolean().default(false),
   
-  // Timing fields moved from Step 5
-  move_in_date_preferred: z.date().optional(),
-  move_in_date_earliest: z.date().optional(),
-  availability_flexible: z.boolean().default(false),
-  lease_duration_preference: z.enum(['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel']).optional(),
-  storage_needs: z.string().optional(),
-
-  // Step 4: Lifestyle (separate component)
+  // Lifestyle (consolidated from Step 6)
   hasPets: z.boolean().default(false),
   pet_details: z.string().optional(),
   smokes: z.boolean().default(false),
   smoking_details: z.string().optional(),
-
-  // Step 7: References & History
+  
+  // Guarantor information
+  borgsteller_beschikbaar: z.boolean().default(false),
+  borgsteller_naam: z.string().optional(),
+  borgsteller_relatie: z.string().optional(),
+  borgsteller_telefoon: z.string().optional(),
+  borgsteller_inkomen: z.number().min(0).optional(),
+  
+  // References & History
   references_available: z.boolean().default(false),
   rental_history_years: z.number().min(0, 'Huurervaring mag niet negatief zijn').max(50, 'Maximaal 50 jaar ervaring').optional(),
   reason_for_moving: z.string().min(10, 'Reden voor verhuizing moet minimaal 10 karakters lang zijn').max(300, 'Reden mag maximaal 300 karakters lang zijn').optional(),
-
-  // Step 8: Profile & Motivation
+  
+  // Profile & Motivation
   profilePictureUrl: z.string().optional(),
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),
   motivation: z.string().min(50, 'Motivatie moet minimaal 50 karakters lang zijn').max(500, 'Motivatie mag maximaal 500 karakters lang zijn'),

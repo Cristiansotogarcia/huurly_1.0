@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EnhancedProfileCreationModal } from '@/components/modals/EnhancedProfileCreationModal';
 import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
@@ -74,7 +73,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       borgsteller_telefoon: tenantProfile?.borgsteller_telefoon || '',
       borgsteller_inkomen: tenantProfile?.borgsteller_inkomen || 0,
       
-      // Step 4: Housing Preferences
+      // Step 4: Housing Preferences (consolidated)
       preferred_city: tenantProfile?.voorkeurslocaties || [],
       preferred_property_type: tenantProfile?.woningtype || 'appartement',
       preferred_bedrooms: tenantProfile?.voorkeurs_slaapkamers || tenantProfile?.slaapkamers,
@@ -84,34 +83,29 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       min_kamers: tenantProfile?.min_kamers || 1,
       max_kamers: tenantProfile?.max_kamers || 5,
       
-      // Step 5: Timing
-      vroegste_verhuisdatum: tenantProfile?.vroegste_verhuisdatum || '',
-      voorkeur_verhuisdatum: tenantProfile?.voorkeur_verhuisdatum || '',
-      beschikbaarheid_flexibel: tenantProfile?.beschikbaarheid_flexibel || false,
-      move_in_date_preferred: tenantProfile?.verhuis_datum_voorkeur || '',
-      move_in_date_earliest: tenantProfile?.verhuis_datum_vroegst || '',
-      availability_flexible: tenantProfile?.beschikbaarheid_flexibel_timing || false,
+      // Timing & Storage (consolidated)
+      move_in_date_preferred: tenantProfile?.verhuis_datum_voorkeur || tenantProfile?.voorkeur_verhuisdatum || undefined,
+      move_in_date_earliest: tenantProfile?.verhuis_datum_vroegst || tenantProfile?.vroegste_verhuisdatum || undefined,
+      availability_flexible: tenantProfile?.beschikbaarheid_flexibel_timing || tenantProfile?.beschikbaarheid_flexibel || false,
       lease_duration_preference: tenantProfile?.huurcontract_voorkeur || '',
-      parking_required: tenantProfile?.parkeren_vereist || false,
       storage_kelder: tenantProfile?.opslag_kelder || false,
       storage_zolder: tenantProfile?.opslag_zolder || false,
       storage_berging: tenantProfile?.opslag_berging || false,
       storage_garage: tenantProfile?.opslag_garage || false,
       storage_schuur: tenantProfile?.opslag_schuur || false,
-      storage_needs: tenantProfile?.opslag_behoeften || '',
       
-      // Step 6: Lifestyle
+      // Lifestyle (consolidated)
       hasPets: tenantProfile?.huisdieren || false,
       pet_details: tenantProfile?.huisdier_details || '',
       smokes: tenantProfile?.rookt || false,
       smoking_details: tenantProfile?.rook_details || '',
       
-      // Step 7: References & History
+      // References & History
       references_available: tenantProfile?.referenties_beschikbaar || false,
       rental_history_years: tenantProfile?.verhuurgeschiedenis_jaren || 0,
       reason_for_moving: tenantProfile?.reden_verhuizing || '',
       
-      // Step 8: Profile & Motivation
+      // Profile & Motivation
       profilePictureUrl: tenantProfile?.profielfoto_url || '',
       bio: tenantProfile?.bio || '',
       motivation: tenantProfile?.motivatie || '',
