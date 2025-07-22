@@ -1,6 +1,7 @@
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { profileSchema, ProfileFormData } from './profileSchema';
 import { useValidatedMultiStepForm } from '@/hooks/useValidatedMultiStepForm';
 import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
@@ -154,6 +155,24 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
     console.log('📍 Total steps:', steps.length);
     console.log('📍 Is last step:', isLastStep);
     
+    // Validate entire form before submission
+    try {
+      console.log('🔍 Validating entire form...');
+      const validationResult = profileSchema.parse(data);
+      console.log('✅ Full form validation passed');
+    } catch (validationError) {
+      console.error('❌ Full form validation failed:', validationError);
+      if (validationError instanceof z.ZodError) {
+        const errorMessages = validationError.errors.map(err => err.message).join(', ');
+        toast({
+          title: 'Validatie Fout',
+          description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
+          variant: 'destructive',
+        });
+        return; // Stop submission
+      }
+    }
+
     try {
       console.log('🔄 Calling onProfileComplete with data:', data);
       

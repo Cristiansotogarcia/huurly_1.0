@@ -1,6 +1,7 @@
 import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { corsHeaders } from '../_shared/cors.ts';
 
 // Zorg dat deze function geen Supabase-auth vereist
 export const config = {
@@ -20,30 +21,6 @@ const mapStripeStatusToDutch = (stripeStatus: string ): string => {
   };
   
   return statusMap[stripeStatus] || 'wachtend';
-};
-
-// Enhanced CORS headers with proper origin handling
-const getCorsHeaders = (origin: string | null) => {
-  const allowedOrigins = [
-    'http://localhost:8080',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://huurly-1-0.vercel.app',
-    'https://huurly.nl',
-    'https://www.huurly.nl'
-  ];
-  
-  const isAllowed = origin && allowedOrigins.includes(origin);
-  
-  return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://huurly.nl',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-    'Content-Type': 'application/json'
-  };
 };
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -69,10 +46,13 @@ type ExtendedSession = Stripe.Checkout.Session & {
 
 serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
-  const headers = getCorsHeaders(origin);
+  const responseHeaders = {
+    ...corsHeaders,
+    "Content-Type": "application/json"
+  };
   
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers });
+    return new Response(null, { headers: responseHeaders });
   }
 
   try {
@@ -81,13 +61,13 @@ serve(async (req) => {
 
     if (!signature) {
       console.error("Missing Stripe signature header");
-      return new Response("Missing signature header", { status: 400, headers });
+      return new Response("Missing signature header", { status: 400, headers: responseHeaders });
     }
 
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (!webhookSecret) {
       console.error("Missing Stripe webhook secret");
-      return new Response("Server configuration error", { status: 500, headers });
+      return new Response("Server configuration error", { status: 500, headers: responseHeaders });
     }
 
     let event;
@@ -96,7 +76,7 @@ serve(async (req) => {
       console.log("✅ Verified Stripe event:", event.type);
     } catch (err: any) {
       console.error("❌ Webhook signature verification failed:", err.message);
-      return new Response(`Webhook Error: ${err.message}`, { status: 400, headers });
+      return new Response(`Webhook Error: ${err.message}`, { status: 400, headers: responseHeaders });
     }
 
     // === CHECKOUT SESSION COMPLETED ===
@@ -114,12 +94,12 @@ serve(async (req) => {
 
       if (!userId) {
         console.error("❌ User ID not found in session metadata");
-        return new Response("Missing user ID", { status: 400, headers });
+        return new Response("Missing user ID", { status: 400, headers: responseHeaders });
       }
 
       if (!session.subscription) {
         console.error("❌ No subscription ID in session");
-        return new Response("Missing subscription ID", { status: 400, headers });
+        return new Response("Missing subscription ID", { status: 400, headers: responseHeaders });
       }
 
       // ✅ Haal Stripe subscription details op
@@ -138,7 +118,7 @@ serve(async (req) => {
 
       if (startDate === undefined || endDate === undefined) {
         console.error("❌ Missing subscription period data in Stripe subscription object");
-        return new Response("Missing subscription period data", { status: 500, headers });
+        return new Response("Missing subscription period data", { status: 500, headers: responseHeaders });
       }
 
       // ✅ Voeg abonnement toe of update bestaande
@@ -162,7 +142,7 @@ serve(async (req) => {
 
       if (error) {
         console.error("❌ Failed to insert abonnement:", error);
-        return new Response(`Database error: ${error.message}`, { status: 500, headers });
+        return new Response(`Database error: ${error.message}`, { status: 500, headers: responseHeaders });
       } else {
         console.log("✅ Successfully upserted subscription for user:", userId);
       }
@@ -247,11 +227,11 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers,
+      headers: responseHeaders,
       status: 200,
     });
   } catch (error: any) {
     console.error("❌ Webhook error:", error);
-    return new Response(`Webhook Error: ${error.message}`, { status: 400, headers });
+    return new Response(`Webhook Error: ${error.message}`, { status: 400, headers: responseHeaders });
   }
 });

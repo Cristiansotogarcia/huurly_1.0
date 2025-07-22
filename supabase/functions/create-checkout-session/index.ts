@@ -1,30 +1,7 @@
 import { serve } from "http/server";
 import Stripe from "stripe";
 import { createClient} from "@supabase/supabase-js";
-
-// Enhanced CORS headers with proper origin handling
-const getCorsHeaders = (origin: string | null) => {
-  const allowedOrigins = [
-    'http://localhost:8080',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://huurly-1-0.vercel.app',
-    'https://huurly.nl',
-    'https://www.huurly.nl'
-  ];
-  
-  const isAllowed = origin && allowedOrigins.includes(origin);
-  
-  return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://huurly.nl',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-    'Content-Type': 'application/json'
-  };
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
@@ -46,19 +23,15 @@ if (missingVars.length > 0) {
   throw new Error(`Ontbrekende omgevingsvariabelen: ${missingVars.join(", ")}`);
 }
 
-if (!stripeSecretKey.startsWith("sk_")) {
-  throw new Error("Ongeldig Stripe secret key formaat");
-}
-
-// Initialize Stripe client once
+// Initialize clients once
 const stripe = new Stripe(stripeSecretKey, { 
   apiVersion: "2023-10-16"
 });
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false },
+});
 
-const getUser = async (req: Request) => {
-  const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
-    auth: { persistSession: false },
-  });
+const getUser = async (req: Request, supabase: ReturnType<typeof createClient>) => {
   const authHeader = req.headers.get("Authorization");
   if (authHeader) {
     const { data, error } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
@@ -92,36 +65,33 @@ const resolveCustomer = async (stripe: InstanceType<typeof Stripe>, email: strin
 
 serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
-  const headers = getCorsHeaders(origin);
+  const responseHeaders = {
+    ...corsHeaders,
+    "Content-Type": "application/json"
+  };
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers,
+      headers: responseHeaders,
     });
   }
 
   try {
-    // Create Supabase client for this request
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
-      auth: { persistSession: false },
-    });
-
     const body = await req.json();
     const { priceId, successUrl, cancelUrl, userId, userEmail } = body;
 
     if (!priceId) {
-      return new Response(JSON.stringify({ error: "Prijs ID is vereist" }), { status: 400, headers });
+      return new Response(JSON.stringify({ error: "Prijs ID is vereist" }), { status: 400, headers: responseHeaders });
     }
 
     // Parallelize user lookup and customer resolution preparation
-    const user = await getUser(req);
+    const user = await getUser(req, supabase);
     const emailToUse = user?.email || userEmail;
     const userIdToUse = user?.id || userId;
 
     if (!emailToUse) {
-      return new Response(JSON.stringify({ error: "Gebruiker email is vereist" }), { status: 400, headers });
+      return new Response(JSON.stringify({ error: "Gebruiker email is vereist" }), { status: 400, headers: responseHeaders });
     }
 
     const customer = await resolveCustomer(stripe, emailToUse, userIdToUse);
@@ -146,7 +116,7 @@ serve(async (req) => {
 
     logStep("SESSION_CREATED", { sessionId: session.id });
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
-      headers,
+      headers: responseHeaders,
       status: 200,
     });
   } catch (error) {
@@ -154,7 +124,7 @@ serve(async (req) => {
     logStep("ERROR", { message: errorMessage });
     console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: "Er is een fout opgetreden bij het verwerken van de betaling" }), {
-      headers,
+      headers: responseHeaders,
       status: 500,
     });
   }
