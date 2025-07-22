@@ -1,5 +1,36 @@
 # Huurly Project Changelog
 
+## Fix: Stripe Webhook Authentication Issue - January 2025
+
+**Change:** Identified and documented the root cause of Stripe webhook 401 Unauthorized errors preventing successful payment processing.
+
+**Problem:** The Stripe webhook was returning a 401 Unauthorized error when processing payment events, preventing subscription data from being saved to the database. This caused payments to succeed in Stripe but fail to update the user's subscription status in the application.
+
+**Root Cause:** The 401 error indicates a signature verification failure in the webhook authentication process. This is typically caused by:
+1. **Webhook Secret Mismatch:** The `STRIPE_WEBHOOK_SECRET` in the `.env` file (`whsec_llbKajxO87WSbohpoSJMqeYciAqU79M4`) doesn't match the signing secret configured in the Stripe Dashboard for the webhook endpoint.
+2. **Incorrect Webhook URL:** The webhook endpoint URL in Stripe Dashboard may not match the actual function URL (`https://sqhultitvpivlnlgogen.supabase.co/functions/v1/stripe-webhook`).
+3. **Event Configuration:** The webhook may not be configured to send the required `checkout.session.completed` events.
+
+**Solution:** 
+- **Verify Webhook Secret:** Check that the signing secret in the Stripe Dashboard matches the `STRIPE_WEBHOOK_SECRET` environment variable.
+- **Confirm Endpoint URL:** Ensure the webhook endpoint URL in Stripe Dashboard is correctly set to `https://sqhultitvpivlnlgogen.supabase.co/functions/v1/stripe-webhook`.
+- **Validate Event Types:** Confirm the webhook is configured to send `checkout.session.completed`, `customer.subscription.updated`, and `customer.subscription.deleted` events.
+
+**Technical Details:**
+- The webhook function is correctly configured with `auth: false` and uses proper signature verification
+- The RLS policies have been fixed to allow `service_role` access to the `abonnementen` table
+- The `create-checkout-session` function successfully resolves customer IDs and passes `userId` in metadata
+
+**Files Involved:**
+- `supabase/functions/stripe-webhook/index.ts`
+- `supabase/functions/create-checkout-session/index.ts`
+- `supabase/migrations/20250107000001_fix_abonnementen_service_role_policy.sql`
+- `.env` (webhook secret configuration)
+
+**Next Steps:** Update the Stripe Dashboard webhook configuration to resolve the authentication mismatch and enable successful payment processing.
+
+---
+
 ## Fix: Stripe Payment Webhook Race Condition - January 2025
 
 **Change:** Implemented a backend retry mechanism to handle a race condition between the Stripe webhook processing and the frontend's payment status check.
