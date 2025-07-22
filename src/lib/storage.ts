@@ -112,7 +112,8 @@ export class StorageService {
         })
       );
 
-      const publicUrl = `${R2_PUBLIC_BASE}/${filePath}`;
+      // Generate public URL using custom domain logic
+      const publicUrl = this.getPublicUrl(filePath);
 
       return {
         url: publicUrl,
@@ -184,7 +185,8 @@ export class StorageService {
         })
       );
 
-      const publicUrl = `${R2_PUBLIC_BASE}/${filePath}`;
+      // Generate public URL using custom domain logic
+      const publicUrl = this.getPublicUrl(filePath);
 
       return {
         url: publicUrl,
@@ -287,10 +289,18 @@ export class StorageService {
    * Get public URL for file
    */
   getPublicUrl(filePath: string): string {
-    if (!isR2ConfigValid || !R2_PUBLIC_BASE) {
+    if (!isR2ConfigValid) {
       return '';
     }
-    return `${R2_PUBLIC_BASE}/${filePath}`;
+    
+    // Check if this is an image file (Profile, Cover, or in beelden bucket)
+    if (filePath.includes('Profile') || filePath.includes('Cover') || filePath.includes('beelden')) {
+      // Use custom domain for images
+      return `https://beelden.huurly.nl/${filePath}`;
+    }
+    
+    // For documents, use the documents custom domain
+    return `https://documents.huurly.nl/${filePath}`;
   }
 
   /**

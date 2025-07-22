@@ -205,10 +205,14 @@ export class SignedUrlStorageService {
       return `https://imagedelivery.net/${accountId}/${filePath}/public`;
     }
     
-    // For documents, use the custom domain
-    const endpoint = 'https://5c65d8c11ba2e5ee7face692ed22ad1c.eu.r2.cloudflarestorage.com';
-    const bucket = 'documents';
-    return `${endpoint}/${bucket}/${filePath}`;
+    // Check if this is an image file (Profile, Cover, or in beelden bucket)
+    if (filePath.includes('Profile') || filePath.includes('Cover') || filePath.includes('beelden')) {
+      // Use custom domain for images
+      return `https://beelden.huurly.nl/${filePath}`;
+    }
+    
+    // For documents, use the documents custom domain
+    return `https://documents.huurly.nl/${filePath}`;
   }
 
   /**

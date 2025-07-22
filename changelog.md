@@ -1,5 +1,49 @@
 # Huurly Project Changelog
 
+## Fix: Cloudflare R2 Custom Domain Implementation - January 2025
+
+**Change:** Updated Cloudflare R2 URL generation to use custom domains (beelden.huurly.nl for images, documents.huurly.nl for documents) instead of the default R2 storage domain.
+
+**Problem:** The application was generating URLs using the old Cloudflare R2 storage domain format `https://5c65d8c11ba2e5ee7face692ed22ad1c.r2.cloudflarestorage.com/beelden/...` instead of the configured custom domain `https://beelden.huurly.nl/...`. This resulted in inconsistent URL formats and missed the benefits of custom domain branding.
+
+**Root Cause:** The storage services were using the `R2_PUBLIC_BASE` configuration which was constructed from the old R2 endpoint format, and the `getPublicUrl` methods in both storage services were not implementing the custom domain logic.
+
+**Solution:** 
+- Updated `getPublicUrl` methods in both `storage.ts` and `storage-signed.ts` to use custom domains
+- Implemented logic to detect image files (Profile, Cover, beelden) and route them to `beelden.huurly.nl`
+- Route document files to `documents.huurly.nl`
+- Updated upload methods to use the new custom domain logic
+- Updated `.env.example` to reflect the new custom domain configuration
+
+**Technical Changes:**
+- **Modified:** `src/lib/storage.ts`:
+  - Updated `getPublicUrl()` method to use custom domain logic instead of `R2_PUBLIC_BASE`
+  - Modified `uploadFile()` and `uploadDocument()` methods to use `this.getPublicUrl(filePath)`
+  - Added logic to differentiate between image and document files
+- **Modified:** `src/lib/storage-signed.ts`:
+  - Updated `getPublicUrl()` method to use custom domains
+  - Added logic to route image files to `beelden.huurly.nl`
+  - Added logic to route document files to `documents.huurly.nl`
+- **Modified:** `.env.example`:
+  - Updated `CLOUDFLARE_R2_DOCUMENTS_ENDPOINT` to use `https://documents.huurly.nl`
+  - Updated `CLOUDFLARE_R2_IMAGES_ENDPOINT` to use `https://beelden.huurly.nl`
+  - Added comments explaining the custom domain usage
+
+**Files Modified:**
+- `src/lib/storage.ts`
+- `src/lib/storage-signed.ts`
+- `.env.example`
+- `changelog.md`
+
+**Result:** 
+- ✅ All image URLs now use the custom domain format: `https://beelden.huurly.nl/Profile/...`
+- ✅ All document URLs now use the custom domain format: `https://documents.huurly.nl/...`
+- ✅ Consistent URL generation across both storage services
+- ✅ TypeScript compilation passes without errors
+- ✅ Better branding and performance through custom domains
+
+---
+
 ## Update: Stripe API Version to Latest Release - January 2025
 
 **Change:** Updated Stripe webhook function to use the latest API version 2025-06-30.basil for improved compatibility and access to newest features.
