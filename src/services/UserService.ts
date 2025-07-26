@@ -6,6 +6,7 @@ import { Tables, TablesInsert, TablesUpdate } from '../integrations/supabase/typ
 import { useAuthStore } from '../store/authStore.ts';
 import { logger } from '../lib/logger.ts';
 import { roleMapper } from '../lib/auth/roleMapper.ts';
+import { convertToISODate } from '../utils/dateUtils.ts';
 
 // Authentication error class
 export class AuthenticationError extends Error {
@@ -79,6 +80,7 @@ export interface CreateTenantProfileData {
   rookt?: boolean;
   detailsRoken?: string;
   profielfotoUrl?: string;
+  profiel_foto?: string;
   coverFotoUrl?: string;
   // Additional fields from enhanced profile form
   burgerlijke_staat?: string;
@@ -353,19 +355,38 @@ export class UserService extends DatabaseService {
         // 3. Prepare tenant profile data using actual database column names
         const tenantProfileData: any = {
           id: currentUserId,
+          
+          // Personal information - FIXED: Added missing mappings and date conversion
+          voornaam: sanitizedData.voornaam,
+          achternaam: sanitizedData.achternaam,
+          geboortedatum: sanitizedData.geboortedatum ? convertToISODate(sanitizedData.geboortedatum) : null,
+          geslacht: sanitizedData.geslacht,
+          burgerlijke_staat: sanitizedData.burgerlijke_staat || sanitizedData.burgerlijkeStaat,
+          nationaliteit: sanitizedData.nationaliteit,
+          
+          // Employment information - FIXED: Added missing mappings
           beroep: sanitizedData.beroep,
-          inkomen: sanitizedData.maandinkomen,
+          werkgever: sanitizedData.werkgever,
+          dienstverband: sanitizedData.dienstverband || sanitizedData.typeArbeidscontract,
+          
+          // Financial information
+          inkomen: sanitizedData.maandinkomen || sanitizedData.inkomen,
+          
+          // Profile information
           beschrijving: sanitizedData.bio,
           locatie_voorkeur: [sanitizedData.stad],
           max_huur: sanitizedData.maxBudget,
           min_kamers: sanitizedData.slaapkamers || sanitizedData.min_kamers || 1,
           max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : sanitizedData.max_kamers || 3,
           
-          // Family information
-          partner: sanitizedData.heeft_partner || false,
-          kinderen: sanitizedData.aantal_kinderen || 0,
+          // Family information - FIXED: Added missing mappings
+          heeft_kinderen: sanitizedData.heeftKinderen || sanitizedData.heeft_kinderen || false,
+          aantal_kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0,
+          kinderen_leeftijden: sanitizedData.leeftijdenKinderen || sanitizedData.kinderen_leeftijden || [],
+          partner: sanitizedData.heeftPartner || sanitizedData.heeft_partner || false,
+          kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0, // Legacy field
           roken: sanitizedData.rookt || false,
-          huisdieren: sanitizedData.huisdieren || false,
+          huisdieren: sanitizedData.heeftHuisdieren || sanitizedData.huisdieren || false,
           
           // Guarantor information
           borgsteller_beschikbaar: sanitizedData.borgsteller_beschikbaar || false,
@@ -375,11 +396,11 @@ export class UserService extends DatabaseService {
           borgsteller_relatie: sanitizedData.borgsteller_relatie || null,
           inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijs_beschikbaar || false,
           
-          // Timing information
-          voorkeur_verhuisdatum: sanitizedData.voorkeur_verhuisdatum ? new Date(sanitizedData.voorkeur_verhuisdatum) : 
-                                sanitizedData.verhuis_datum_voorkeur || null,
-          vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? new Date(sanitizedData.vroegste_verhuisdatum) : 
-                                sanitizedData.verhuis_datum_vroegst || null,
+          // Timing information - FIXED: Added date conversion
+          voorkeur_verhuisdatum: sanitizedData.voorkeur_verhuisdatum ? convertToISODate(sanitizedData.voorkeur_verhuisdatum) : 
+                                sanitizedData.verhuis_datum_voorkeur ? convertToISODate(sanitizedData.verhuis_datum_voorkeur) : null,
+          vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? convertToISODate(sanitizedData.vroegste_verhuisdatum) : 
+                                sanitizedData.verhuis_datum_vroegst ? convertToISODate(sanitizedData.verhuis_datum_vroegst) : null,
           beschikbaarheid_flexibel: sanitizedData.beschikbaarheid_flexibel || sanitizedData.beschikbaarheid_flexibel_timing || false,
           
           // Preferences stored in JSON
@@ -404,11 +425,6 @@ export class UserService extends DatabaseService {
           },
           
           // Additional profile information
-          nationaliteit: sanitizedData.nationaliteit,
-          geslacht: sanitizedData.geslacht,
-          burgerlijke_staat: sanitizedData.burgerlijke_staat,
-          werkgever: sanitizedData.werkgever,
-          dienstverband: sanitizedData.dienstverband,
           thuiswerken: sanitizedData.thuiswerken || false,
           extra_inkomen: sanitizedData.extra_inkomen,
           extra_inkomen_beschrijving: sanitizedData.extra_inkomen_beschrijving,
@@ -419,9 +435,6 @@ export class UserService extends DatabaseService {
           partner_beroep: sanitizedData.partner_beroep,
           partner_dienstverband: sanitizedData.partner_dienstverband,
           partner_inkomen: sanitizedData.partner_maandinkomen,
-          
-          // Children information
-          kinderen_leeftijden: sanitizedData.kinderen_leeftijden,
           
           // Lifestyle details
           huisdier_details: sanitizedData.huisdier_details,
@@ -435,9 +448,9 @@ export class UserService extends DatabaseService {
           // Budget preferences
           min_budget: sanitizedData.min_budget,
           
-          // Profile media
-          profielfoto_url: sanitizedData.profielfoto_url || null,
-          cover_foto: sanitizedData.coverFotoUrl || null,
+          // Profile media - FIXED: Corrected field name
+          profiel_foto: sanitizedData.profielfotoUrl || sanitizedData.profiel_foto || null,
+          cover_foto: sanitizedData.coverFotoUrl || sanitizedData.cover_foto || null,
           
           // Motivation
           motivatie: sanitizedData.motivatie,

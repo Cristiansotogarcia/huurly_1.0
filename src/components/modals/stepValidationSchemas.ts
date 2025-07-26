@@ -67,22 +67,19 @@ export const step4Schema = z.object({
   max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
 });
 
-// Step 5: Timing - No required fields
+// Step 5: Guarantor - No required fields (consolidated from old step 6)
 export const step5Schema = z.object({});
 
-// Step 6: Guarantor - No required fields
+// Step 6: References - No required fields (consolidated from old step 7)
 export const step6Schema = z.object({});
 
-// Step 7: References - No required fields
-export const step7Schema = z.object({});
-
-// Step 8: Profile & Motivation - Required fields
-export const step8Schema = z.object({
+// Step 7: Profile & Motivation - Required fields (consolidated from old step 8)
+export const step7Schema = z.object({
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),
   motivation: z.string().min(50, 'Motivatie moet minimaal 50 karakters lang zijn').max(500, 'Motivatie mag maximaal 500 karakters lang zijn'),
 });
 
-// Array of all step schemas for easy access
+// Array of all step schemas for easy access - now aligned with 7-step UI
 export const stepSchemas = [
   step1Schema,
   step2Schema,
@@ -91,7 +88,6 @@ export const stepSchemas = [
   step5Schema,
   step6Schema,
   step7Schema,
-  step8Schema,
 ];
 
 // Helper function to get field labels in Dutch

@@ -12,28 +12,29 @@ interface ProfileFormNavigationProps {
   isFirstStep: boolean;
   isLastStep: boolean;
   onBack: () => void;
-  onNext: () => boolean; // Now returns boolean for validation result
+  onNext: () => boolean; // returns boolean for validation result
   validateCurrentStep: () => ValidationError[];
+  isSubmitting?: boolean;
+  onSubmit?: () => void;
 }
 
-export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({ 
-  isFirstStep, 
-  isLastStep, 
-  onBack, 
-  onNext, 
-  validateCurrentStep 
+export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
+  isFirstStep,
+  isLastStep,
+  onBack,
+  onNext,
+  validateCurrentStep,
+  isSubmitting = false,
+  onSubmit,
 }) => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = () => {
     const validationPassed = onNext();
-    
     if (!validationPassed) {
       const errors = validateCurrentStep();
-      const fieldLabels = errors.map(error => error.label);
-      setMissingFields(fieldLabels);
+      setMissingFields(errors.map((e) => e.label));
       setShowValidationModal(true);
     }
   };
@@ -45,14 +46,14 @@ export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
         onClose={() => setShowValidationModal(false)}
         missingFields={missingFields}
       />
-      
+
       <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-6">
         <div className="order-2 sm:order-1">
           {!isFirstStep && (
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onBack} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBack}
               className="w-full sm:w-auto"
               disabled={isSubmitting}
             >
@@ -60,25 +61,27 @@ export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
             </Button>
           )}
         </div>
+
         <div className="order-1 sm:order-2">
           {!isLastStep ? (
-            <Button 
-              type="button" 
-              onClick={handleNext} 
+            <Button
+              type="button"
+              onClick={handleNext}
               className="w-full sm:w-auto"
               disabled={isSubmitting}
             >
               Volgende
             </Button>
           ) : (
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
+              onClick={onSubmit}
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Opslaan...
                 </>
               ) : (

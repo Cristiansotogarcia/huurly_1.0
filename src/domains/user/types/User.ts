@@ -13,6 +13,7 @@ export interface User {
   subscription: UserSubscription;
   verification: UserVerification;
   preferences: UserPreferences;
+  profilePictureUrl?: string;
   created_at: string;
   updated_at: string;
   last_login_at?: string;

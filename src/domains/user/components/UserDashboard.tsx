@@ -27,9 +27,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            {user.profile.avatar_url ? (
+            {user.profilePictureUrl ? (
               <img
-                src={user.profile.avatar_url}
+                src={user.profilePictureUrl}
                 alt="Profielfoto"
                 className="w-12 h-12 rounded-full object-cover"
               />

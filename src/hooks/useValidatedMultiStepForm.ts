@@ -30,9 +30,8 @@ export function useValidatedMultiStepForm(
   const [currentStep, setCurrentStep] = useState(0);
 
   const validateStep = (stepIndex: number, formData: Partial<ProfileFormData>): ValidationError[] => {
-    // Map UI step index to correct schema index
-    const schemaIndex = stepIndex === 6 ? 7 : stepIndex; // Step 7 (UI) -> Schema 8 (Profile & Motivation)
-    const schema = stepSchemas[schemaIndex];
+    // Direct mapping - stepSchemas now aligned with UI steps
+    const schema = stepSchemas[stepIndex];
     if (!schema) return [];
 
     try {

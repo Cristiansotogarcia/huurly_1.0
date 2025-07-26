@@ -15,7 +15,10 @@ export default function Step1PersonalInfo() {
 
   const profilePictureUrl = watch('profilePictureUrl');
 
+  console.log('🖼️ Step1PersonalInfo: Current profilePictureUrl from form:', profilePictureUrl);
+
   const handleProfilePictureUpload = (url: string) => {
+    console.log('📤 Step1PersonalInfo: New profile picture uploaded:', url);
     setValue('profilePictureUrl', url);
   };
 

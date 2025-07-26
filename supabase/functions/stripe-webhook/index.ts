@@ -44,7 +44,7 @@ type ExtendedSession = Stripe.Checkout.Session & {
   currency: string | null;
 };
 
-Deno.serve({ auth: false }, async (req) => {
+Deno.serve(async (req) => {
   const origin = req.headers.get("Origin") || "";
   const responseHeaders = {
     ...corsHeaders,

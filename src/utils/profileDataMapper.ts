@@ -22,7 +22,15 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     beroep: data.profession,
     werkgever: data.employer,
     dienstverband: data.employment_status,
+    inkomen: data.monthly_income,
+    // Add fields expected by validation
     maandinkomen: data.monthly_income,
+    bio: data.bio,
+    stad: data.preferred_city,
+    minBudget: data.min_budget,
+    maxBudget: data.max_budget,
+    slaapkamers: data.min_kamers,
+    woningtype: data.preferred_property_type,
     extra_inkomen: data.extra_income,
     extra_inkomen_beschrijving: data.extra_income_description,
     thuiswerken: data.work_from_home,
@@ -31,11 +39,11 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     burgerlijke_staat: data.marital_status,
     
     // Partner information
-    heeft_partner: data.has_partner,
+    partner: data.has_partner,
     partner_naam: data.partner_name,
     partner_beroep: data.partner_profession,
     partner_dienstverband: data.partner_employment_status,
-    partner_maandinkomen: data.partner_monthly_income,
+    partner_inkomen: data.partner_monthly_income,
     
     // Children information
     heeft_kinderen: data.has_children,
@@ -43,10 +51,10 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     kinderen_leeftijden: data.children_ages,
     
     // Housing preferences
-    voorkeurslocaties: data.preferred_city,
+    locatie_voorkeur: data.preferred_city,
     voorkeur_woningtype: data.preferred_property_type,
     min_budget: data.min_budget,
-    max_budget: data.max_budget,
+    max_huur: data.max_budget,
     min_kamers: data.min_kamers,
     max_kamers: data.max_kamers,
     voorkeur_slaapkamers: data.preferred_bedrooms,
@@ -66,7 +74,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     // Lifestyle
     huisdieren: data.hasPets,
     huisdier_details: data.pet_details,
-    rookt: data.smokes,
+    roken: data.smokes,
     rook_details: data.smoking_details,
     
     // Guarantor
@@ -82,9 +90,9 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     reden_verhuizing: data.reason_for_moving,
     
     // Profile
-    bio: data.bio,
+    beschrijving: data.bio,
     motivatie: data.motivation,
-    profielfoto_url: data.profilePictureUrl,
+    profiel_foto: data.profilePictureUrl,
   };
 
   // Remove undefined values

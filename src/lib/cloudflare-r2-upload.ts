@@ -18,6 +18,41 @@ export class CloudflareR2UploadService {
   private readonly ALLOWED_TYPES         = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
   private readonly ALLOWED_DOC_TYPES     = ['pdf', 'doc', 'docx', 'txt', 'xlsx']; // add / remove as needed
 
+  /**
+   * Convert R2 URL to custom domain URL
+   */
+  private getPublicUrl(filePath: string): string {
+    // Check if this is an image file (Profile, Cover, or in beelden bucket)
+    if (filePath.includes('Profile') || filePath.includes('Cover') || filePath.includes('beelden')) {
+      // Use custom domain for images
+      return `https://beelden.huurly.nl/${filePath}`;
+    }
+    
+    // For documents, use the documents custom domain
+    return `https://documents.huurly.nl/${filePath}`;
+  }
+
+  /**
+   * Extract file path from R2 URL
+   */
+  private extractFilePathFromUrl(url: string): string {
+    // Extract path from URLs like:
+    // https://5c65d8c11ba2e5ee7face692ed22ad1c.r2.cloudflarestorage.com/beelden/Profile/...
+    const match = url.match(/\/beelden\/(.+)$/) || url.match(/\/documents\/(.+)$/);
+    if (match) {
+      return match[1]; // Return the path after /beelden/ or /documents/
+    }
+    
+    // Fallback: try to extract everything after the last bucket name
+    const bucketMatch = url.match(/\/(beelden|documents)\/(.+)$/);
+    if (bucketMatch) {
+      return bucketMatch[2];
+    }
+    
+    // If no bucket found, return the path as-is
+    return url.split('/').slice(-2).join('/'); // Take last 2 parts (folder/filename)
+  }
+
   /* ------------------------------------------------------------------ */
   validateFile(
     file: File,
@@ -100,9 +135,13 @@ export class CloudflareR2UploadService {
     const result = await this.uploadViaEdge(file, userId, 'Profile');
     if (!result.success || !result.url) return result;
 
+    // Convert R2 URL to custom domain URL
+    const filePath = this.extractFilePathFromUrl(result.url);
+    const customDomainUrl = this.getPublicUrl(filePath);
+    
     const { error } = await supabase
       .from('huurders')
-      .update({ profiel_foto: result.url })
+      .update({ profiel_foto: customDomainUrl })
       .eq('id', userId);
     if (error) {
       console.error('Error updating profiel_foto:', error);
@@ -119,9 +158,13 @@ export class CloudflareR2UploadService {
     const result = await this.uploadViaEdge(file, userId, 'Cover');
     if (!result.success || !result.url) return result;
 
+    // Convert R2 URL to custom domain URL
+    const filePath = this.extractFilePathFromUrl(result.url);
+    const customDomainUrl = this.getPublicUrl(filePath);
+    
     const { error } = await supabase
       .from('huurders')
-      .update({ cover_foto: result.url })
+      .update({ cover_foto: customDomainUrl })
       .eq('id', userId);
     if (error) {
       console.error('Error updating cover_foto:', error);

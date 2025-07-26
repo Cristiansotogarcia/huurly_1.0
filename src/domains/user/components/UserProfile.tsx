@@ -33,9 +33,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         {/* Avatar */}
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-            {user.profile.avatar_url ? (
+            {user.profilePictureUrl ? (
               <img
-                src={user.profile.avatar_url}
+                src={user.profilePictureUrl}
                 alt="Profielfoto"
                 className="w-16 h-16 rounded-full object-cover"
               />

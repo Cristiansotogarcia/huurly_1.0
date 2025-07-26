@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,6 +45,7 @@ const stepComponents = [
 
 export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileCreationModalProps) => {
   const { toast } = useToast();
+  const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
       // Step 1: Personal Info
@@ -145,15 +146,28 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
     canNavigateToStep 
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
+  // Reset form when initialData changes (e.g., switching between create/edit modes)
+  useEffect(() => {
+    const newValues = getDefaultValues();
+    console.log('🔄 EnhancedProfileCreationModal: Resetting form with values:', newValues);
+    console.log('🖼️ Profile picture URL from initialData:', initialData?.profilePictureUrl);
+    console.log('🖼️ Profile picture URL in newValues:', newValues.profilePictureUrl);
+    methods.reset(newValues);
+  }, [initialData]);
+
   const onSubmit = async (data: ProfileFormData) => {
     console.log('🚀 Form submission started', data);
     console.log('📋 Form validation status:', methods.formState.isValid);
     console.log('📋 Form errors:', methods.formState.errors);
     
     // Debug: Check if we're on the last step
-    console.log('📍 Current step:', currentStep);
+    console.log('📍 Current step (0-indexed):', currentStep);
+    console.log('📍 Current step (1-indexed):', currentStep + 1);
     console.log('📍 Total steps:', steps.length);
+    console.log('📍 Is last step calculation:', currentStep, '===', steps.length - 1, '=', currentStep === steps.length - 1);
     console.log('📍 Is last step:', isLastStep);
+    console.log('📍 Steps array:', steps);
+    console.log('📍 Step components length:', stepComponents.length);
     
     // Validate entire form before submission
     try {
@@ -172,6 +186,10 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
         return; // Stop submission
       }
     }
+
+    // Set manual loading state for async operation
+    setIsManuallySubmitting(true);
+    console.log('🔄 Manual loading state set to true');
 
     try {
       console.log('🔄 Calling onProfileComplete with data:', data);
@@ -197,6 +215,10 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
       });
+    } finally {
+      // Always reset manual loading state
+      setIsManuallySubmitting(false);
+      console.log('🔄 Manual loading state set to false');
     }
   };
 
@@ -212,7 +234,35 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
           Een volledig profiel vergroot je kansen. Voltooi de stappen hieronder.
         </p>
         <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+          <form 
+            onSubmit={(e) => {
+              console.log('🔥 Form onSubmit triggered!', e);
+              console.log('🔥 Form target:', e.target);
+              console.log('🔥 Form current target:', e.currentTarget);
+              console.log('🔥 Form validation state:', {
+                isValid: methods.formState.isValid,
+                errors: methods.formState.errors,
+                isDirty: methods.formState.isDirty,
+                isSubmitting: methods.formState.isSubmitting
+              });
+              console.log('🔥 Current form values:', methods.getValues());
+              
+              // Add explicit validation check
+              const formData = methods.getValues();
+              console.log('🔥 About to call handleSubmit with onSubmit function');
+              
+              methods.handleSubmit(
+                (data) => {
+                  console.log('🔥 handleSubmit SUCCESS callback called with data:', data);
+                  onSubmit(data);
+                },
+                (errors) => {
+                  console.log('🔥 handleSubmit ERROR callback called with errors:', errors);
+                }
+              )(e);
+            }} 
+            className="space-y-6"
+          >
             <ProfileFormStepper 
               currentStep={currentStep} 
               steps={steps} 
@@ -226,6 +276,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
               onBack={prevStep}
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
+              isSubmitting={methods.formState.isSubmitting || isManuallySubmitting}
             />
             
             {/* Debug button for testing - remove after fixing */}
