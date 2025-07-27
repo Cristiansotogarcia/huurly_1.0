@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, User } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 
-export default function Step8ProfileMotivation() {
+export default function Step7ProfileMotivation() {
   const { register, watch, formState: { errors } } = useFormContext();
   const bio = watch('bio', '');
   const motivation = watch('motivation', '');

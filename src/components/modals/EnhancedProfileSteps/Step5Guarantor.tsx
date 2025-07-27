@@ -8,7 +8,7 @@ import { Shield, Euro, Phone, User } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-export default function Step6Guarantor() {
+export default function Step5Guarantor() {
   const { control, register, watch, formState: { errors } } = useFormContext();
   const guarantorAvailable = watch('guarantor_available');
 

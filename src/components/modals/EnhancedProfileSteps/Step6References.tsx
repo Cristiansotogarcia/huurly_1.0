@@ -8,7 +8,7 @@ import { FileText, Clock } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-export default function Step7References() {
+export default function Step6References() {
   const { control, register, formState: { errors } } = useFormContext();
 
   return (

@@ -8,9 +8,9 @@ import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
 import Step2Employment from './EnhancedProfileSteps/Step2Employment';
 import Step3Household from './EnhancedProfileSteps/Step3Household';
 import Step4Housing from './EnhancedProfileSteps/Step4Housing';
-import Step6Guarantor from './EnhancedProfileSteps/Step6Guarantor';
-import Step7References from './EnhancedProfileSteps/Step7References';
-import Step8ProfileMotivation from './EnhancedProfileSteps/Step8ProfileMotivation';
+import Step5Guarantor from './EnhancedProfileSteps/Step5Guarantor';
+import Step6References from './EnhancedProfileSteps/Step6References';
+import Step7ProfileMotivation from './EnhancedProfileSteps/Step7ProfileMotivation';
 import { ProfileFormStepper } from './ProfileFormStepper';
 import { ProfileFormNavigation } from './ProfileFormNavigation';
 import { BaseModal } from './BaseModal';
@@ -38,9 +38,9 @@ const stepComponents = [
   <Step2Employment key="step2" />,
   <Step3Household key="step3" />,
   <Step4Housing key="step4" />,
-  <Step6Guarantor key="step5" />,
-  <Step7References key="step6" />,
-  <Step8ProfileMotivation key="step7" />,
+  <Step5Guarantor key="step5" />,
+  <Step6References key="step6" />,
+  <Step7ProfileMotivation key="step7" />,
 ];
 
 export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileCreationModalProps) => {
@@ -69,6 +69,7 @@ export const EnhancedProfileCreationModal = ({ isOpen, onClose, onProfileComplet
       employment_status: 'full-time',
       work_contract_type: '',
       monthly_income: 0,
+      inkomensbewijs_beschikbaar: false,
       work_from_home: false,
       extra_income: undefined,
       extra_income_description: '',
