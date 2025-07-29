@@ -64,6 +64,9 @@ export class AuthService {
       }
 
       if (authData.user) {
+        // Wait a moment to ensure user is fully committed to auth.users table
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Use backend function to create user profile
         const { error: profileError } = await supabase.functions.invoke('register-user', {
           body: {

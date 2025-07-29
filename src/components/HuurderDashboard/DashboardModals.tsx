@@ -1,5 +1,5 @@
 import React from 'react';
-import { EnhancedProfileCreationModal } from '@/components/modals/EnhancedProfileCreationModal';
+import { EnhancedProfileUpdateModal } from '@/components/modals/EnhancedProfileUpdateModal';
 import DocumentUploadModal from '@/components/modals/DocumentUploadModal';
 import { PaymentModal } from '@/components/PaymentModal';
 import { ProfileFormData } from '@/components/modals/profileSchema';
@@ -121,7 +121,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   return (
     <>
       {/* Profile Creation Modal */}
-      <EnhancedProfileCreationModal
+      <EnhancedProfileUpdateModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         onProfileComplete={onProfileComplete}

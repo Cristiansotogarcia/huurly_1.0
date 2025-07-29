@@ -10,7 +10,7 @@ import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/f
 
 export default function Step5Guarantor() {
   const { control, register, watch, formState: { errors } } = useFormContext();
-  const guarantorAvailable = watch('guarantor_available');
+  const guarantorAvailable = watch('borgsteller_beschikbaar');
 
   return (
     <div className="space-y-6">
@@ -27,7 +27,7 @@ export default function Step5Guarantor() {
       <div className="space-y-4">
         <FormField
           control={control}
-          name="guarantor_available"
+          name="borgsteller_beschikbaar"
           render={({ field }) => (
             <FormItem className="flex flex-row items-start space-x-3 space-y-0">
               <FormControl>
@@ -44,38 +44,38 @@ export default function Step5Guarantor() {
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="guarantor_name">Naam garantsteller</Label>
+                <Label htmlFor="borgsteller_naam">Naam garantsteller</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input {...register('guarantor_name')} placeholder="Volledige naam" className="pl-10" />
+                  <Input {...register('borgsteller_naam')} placeholder="Volledige naam" className="pl-10" />
                 </div>
-                {errors.guarantor_name && <p className="text-red-500 text-xs">{`${errors.guarantor_name.message}`}</p>}
+                {errors.borgsteller_naam && <p className="text-red-500 text-xs">{`${errors.borgsteller_naam.message}`}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="guarantor_phone">Telefoon garantsteller</Label>
+                <Label htmlFor="borgsteller_telefoon">Telefoon garantsteller</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input {...register('guarantor_phone')} placeholder="+31 6 12345678" className="pl-10" />
+                  <Input {...register('borgsteller_telefoon')} placeholder="+31 6 12345678" className="pl-10" />
                 </div>
-                {errors.guarantor_phone && <p className="text-red-500 text-xs">{`${errors.guarantor_phone.message}`}</p>}
+                {errors.borgsteller_telefoon && <p className="text-red-500 text-xs">{`${errors.borgsteller_telefoon.message}`}</p>}
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="guarantor_income">Inkomen garantsteller</Label>
+                <Label htmlFor="borgsteller_inkomen">Inkomen garantsteller</Label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input {...register('guarantor_income', { valueAsNumber: true })} type="number" placeholder="5000" className="pl-10" />
+                  <Input {...register('borgsteller_inkomen', { valueAsNumber: true })} type="number" placeholder="5000" className="pl-10" />
                 </div>
-                {errors.guarantor_income && <p className="text-red-500 text-xs">{`${errors.guarantor_income.message}`}</p>}
+                {errors.borgsteller_inkomen && <p className="text-red-500 text-xs">{`${errors.borgsteller_inkomen.message}`}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="guarantor_relationship">Relatie tot garantsteller</Label>
+                <Label htmlFor="borgsteller_relatie">Relatie tot garantsteller</Label>
                 <Controller
-                  name="guarantor_relationship"
+                  name="borgsteller_relatie"
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -92,7 +92,7 @@ export default function Step5Guarantor() {
                     </Select>
                   )}
                 />
-                {errors.guarantor_relationship && <p className="text-red-500 text-xs">{`${errors.guarantor_relationship.message}`}</p>}
+                {errors.borgsteller_relatie && <p className="text-red-500 text-xs">{`${errors.borgsteller_relatie.message}`}</p>}
               </div>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function Step5Guarantor() {
       <div className="space-y-4">
         <FormField
           control={control}
-          name="income_proof_available"
+          name="inkomensbewijs_beschikbaar"
           render={({ field }) => (
             <FormItem className="flex flex-row items-start space-x-3 space-y-0">
               <FormControl>
@@ -116,45 +116,7 @@ export default function Step5Guarantor() {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="emergency_contact_name">Noodcontact naam</Label>
-        <Input {...register('emergency_contact_name')} placeholder="Naam van noodcontact" />
-        {errors.emergency_contact_name && <p className="text-red-500 text-xs">{`${errors.emergency_contact_name.message}`}</p>}
-      </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="emergency_contact_phone">Noodcontact telefoon</Label>
-          <Input {...register('emergency_contact_phone')} placeholder="+31 6 12345678" />
-          {errors.emergency_contact_phone && <p className="text-red-500 text-xs">{`${errors.emergency_contact_phone.message}`}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="emergency_contact_relationship">Relatie noodcontact</Label>
-          <Controller
-            name="emergency_contact_relationship"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer relatie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ouder">Ouder</SelectItem>
-                  <SelectItem value="partner">Partner</SelectItem>
-                  <SelectItem value="broer_zus">Broer/Zus</SelectItem>
-                  <SelectItem value="familie">Familie</SelectItem>
-                  <SelectItem value="vriend">Vriend</SelectItem>
-                  <SelectItem value="buurman">Buurman/Buurvrouw</SelectItem>
-                  <SelectItem value="collega">Collega</SelectItem>
-                  <SelectItem value="anders">Anders</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.emergency_contact_relationship && <p className="text-red-500 text-xs">{`${errors.emergency_contact_relationship.message}`}</p>}
-        </div>
-      </div>
     </div>
   );
 }

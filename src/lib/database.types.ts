@@ -256,8 +256,10 @@ export type Database = {
       huurders: {
         Row: {
           aangemaakt_op: string
+          aantal_kinderen: number | null
           abonnement_start: string | null
           abonnement_verloopt: string | null
+          achternaam: string | null
           beroep: string | null
           beschikbaarheid_flexibel: boolean | null
           beschrijving: string | null
@@ -267,27 +269,60 @@ export type Database = {
           borgsteller_naam: string | null
           borgsteller_relatie: string | null
           borgsteller_telefoon: string | null
+          burgerlijke_staat: string | null
+          cover_foto: string | null
+          dienstverband: string | null
+          extra_inkomen: number | null
+          extra_inkomen_beschrijving: string | null
+          geboortedatum: string | null
+          geslacht: string | null
+          heeft_kinderen: boolean | null
+          huisdier_details: string | null
           huisdieren: boolean | null
+          huurcontract_voorkeur: string | null
           id: string
           inkomen: number | null
           inkomensbewijs_beschikbaar: boolean | null
-          kinderen: number | null
+          kinderen_leeftijden: number[] | null
           leeftijd: number | null
           locatie_voorkeur: string[] | null
           max_huur: number | null
           max_kamers: number | null
+          min_budget: number | null
           min_kamers: number | null
+          motivatie: string | null
+          nationaliteit: string | null
+          opslag_berging: boolean | null
+          opslag_garage: boolean | null
+          opslag_kelder: boolean | null
+          opslag_schuur: boolean | null
+          opslag_zolder: boolean | null
           partner: boolean | null
-          profielfoto_url: string | null
+          partner_beroep: string | null
+          partner_dienstverband: string | null
+          partner_inkomen: number | null
+          partner_naam: string | null
+          profiel_foto: string | null
+          referenties_beschikbaar: boolean | null
           roken: boolean | null
+          rook_details: string | null
+          telefoon: string | null
+          verhuurgeschiedenis_jaren: number | null
+          voorkeur_meubilering: string | null
+          voorkeur_slaapkamers: number | null
           voorkeur_verhuisdatum: string | null
+          voorkeur_woningtype: string | null
+          voornaam: string | null
           vroegste_verhuisdatum: string | null
+          werkgever: string | null
           woningvoorkeur: Json | null
         }
         Insert: {
           aangemaakt_op?: string
+          aantal_kinderen?: number | null
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
+          achternaam?: string | null
           beroep?: string | null
           beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
@@ -297,27 +332,60 @@ export type Database = {
           borgsteller_naam?: string | null
           borgsteller_relatie?: string | null
           borgsteller_telefoon?: string | null
+          burgerlijke_staat?: string | null
+          cover_foto?: string | null
+          dienstverband?: string | null
+          extra_inkomen?: number | null
+          extra_inkomen_beschrijving?: string | null
+          geboortedatum?: string | null
+          geslacht?: string | null
+          heeft_kinderen?: boolean | null
+          huisdier_details?: string | null
           huisdieren?: boolean | null
+          huurcontract_voorkeur?: string | null
           id: string
           inkomen?: number | null
           inkomensbewijs_beschikbaar?: boolean | null
-          kinderen?: number | null
+          kinderen_leeftijden?: number[] | null
           leeftijd?: number | null
           locatie_voorkeur?: string[] | null
           max_huur?: number | null
           max_kamers?: number | null
+          min_budget?: number | null
           min_kamers?: number | null
+          motivatie?: string | null
+          nationaliteit?: string | null
+          opslag_berging?: boolean | null
+          opslag_garage?: boolean | null
+          opslag_kelder?: boolean | null
+          opslag_schuur?: boolean | null
+          opslag_zolder?: boolean | null
           partner?: boolean | null
-          profielfoto_url?: string | null
+          partner_beroep?: string | null
+          partner_dienstverband?: string | null
+          partner_inkomen?: number | null
+          partner_naam?: string | null
+          profiel_foto?: string | null
+          referenties_beschikbaar?: boolean | null
           roken?: boolean | null
+          rook_details?: string | null
+          telefoon?: string | null
+          verhuurgeschiedenis_jaren?: number | null
+          voorkeur_meubilering?: string | null
+          voorkeur_slaapkamers?: number | null
           voorkeur_verhuisdatum?: string | null
+          voorkeur_woningtype?: string | null
+          voornaam?: string | null
           vroegste_verhuisdatum?: string | null
+          werkgever?: string | null
           woningvoorkeur?: Json | null
         }
         Update: {
           aangemaakt_op?: string
+          aantal_kinderen?: number | null
           abonnement_start?: string | null
           abonnement_verloopt?: string | null
+          achternaam?: string | null
           beroep?: string | null
           beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
@@ -327,21 +395,52 @@ export type Database = {
           borgsteller_naam?: string | null
           borgsteller_relatie?: string | null
           borgsteller_telefoon?: string | null
+          burgerlijke_staat?: string | null
+          cover_foto?: string | null
+          dienstverband?: string | null
+          extra_inkomen?: number | null
+          extra_inkomen_beschrijving?: string | null
+          geboortedatum?: string | null
+          geslacht?: string | null
+          heeft_kinderen?: boolean | null
+          huisdier_details?: string | null
           huisdieren?: boolean | null
+          huurcontract_voorkeur?: string | null
           id?: string
           inkomen?: number | null
           inkomensbewijs_beschikbaar?: boolean | null
-          kinderen?: number | null
+          kinderen_leeftijden?: number[] | null
           leeftijd?: number | null
           locatie_voorkeur?: string[] | null
           max_huur?: number | null
           max_kamers?: number | null
+          min_budget?: number | null
           min_kamers?: number | null
+          motivatie?: string | null
+          nationaliteit?: string | null
+          opslag_berging?: boolean | null
+          opslag_garage?: boolean | null
+          opslag_kelder?: boolean | null
+          opslag_schuur?: boolean | null
+          opslag_zolder?: boolean | null
           partner?: boolean | null
-          profielfoto_url?: string | null
+          partner_beroep?: string | null
+          partner_dienstverband?: string | null
+          partner_inkomen?: number | null
+          partner_naam?: string | null
+          profiel_foto?: string | null
+          referenties_beschikbaar?: boolean | null
           roken?: boolean | null
+          rook_details?: string | null
+          telefoon?: string | null
+          verhuurgeschiedenis_jaren?: number | null
+          voorkeur_meubilering?: string | null
+          voorkeur_slaapkamers?: number | null
           voorkeur_verhuisdatum?: string | null
+          voorkeur_woningtype?: string | null
+          voornaam?: string | null
           vroegste_verhuisdatum?: string | null
+          werkgever?: string | null
           woningvoorkeur?: Json | null
         }
         Relationships: [

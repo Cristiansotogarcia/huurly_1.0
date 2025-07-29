@@ -426,21 +426,27 @@ const DocumentUploadModal = ({ open, onOpenChange, onUploadComplete }: DocumentU
                             }}
                             className="hidden"
                             id={`file-upload-${docType.type}`}
+                            ref={(input) => {
+                              if (input) {
+                                (input as any).docType = docType.type;
+                              }
+                            }}
                           />
-                          <label htmlFor={`file-upload-${docType.type}`}>
-                            <Button 
-                              variant={hasUploaded ? "outline" : "default"} 
-                              size="sm" 
-                              className="cursor-pointer w-full"
-                              disabled={hasUploadedInSession}
-                              asChild
-                            >
-                              <span>
-                                <Upload className="w-4 h-4 mr-2" />
-                                {hasExistingDocument ? 'Vervangen' : hasUploadedInSession ? 'Geüpload' : 'Upload'}
-                              </span>
-                            </Button>
-                          </label>
+                          <Button 
+                            variant={hasUploaded ? "outline" : "default"} 
+                            size="sm" 
+                            className="w-full"
+                            disabled={hasUploadedInSession}
+                            onClick={() => {
+                              const input = document.getElementById(`file-upload-${docType.type}`) as HTMLInputElement;
+                              if (input && !hasUploadedInSession) {
+                                input.click();
+                              }
+                            }}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {hasExistingDocument ? 'Vervangen' : hasUploadedInSession ? 'Geüpload' : 'Upload'}
+                          </Button>
                         </div>
                       </div>
                     </div>

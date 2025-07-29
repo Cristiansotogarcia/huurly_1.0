@@ -48,7 +48,7 @@ export const profileSchema = z.object({
 
   // Step 2: Employment
   profession: z.string().min(1, 'Beroep is verplicht'),
-  employer: z.string().min(1, 'Werkgever is verplicht'),
+  employer: z.string().optional(),
   employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
   work_contract_type: z.string().optional(),
   monthly_income: z.number().min(0, 'Inkomen mag niet negatief zijn'),

@@ -329,21 +329,7 @@ export class UserService extends DatabaseService {
       }
 
       return this.executeQuery(async () => {
-        // 1. Update basic profile in gebruikers table
-        const { error: profileError } = await supabase
-          .from('gebruikers')
-          .update({
-            naam: `${sanitizedData.voornaam} ${sanitizedData.achternaam}`,
-            telefoon: sanitizedData.telefoon,
-            profiel_compleet: true,
-          })
-          .eq('id', currentUserId);
-
-        if (profileError) {
-          throw this.handleDatabaseError(profileError);
-        }
-
-        // 2. Check if tenant profile already exists
+        // 1. Check if tenant profile already exists
         const { data: existingProfile } = await supabase
           .from('huurders')
           .select('id')
@@ -352,13 +338,14 @@ export class UserService extends DatabaseService {
 
         logger.info("Existing tenant profile check:", existingProfile);
 
-        // 3. Prepare tenant profile data using actual database column names
+        // 2. Prepare tenant profile data using actual database column names
         const tenantProfileData: any = {
           id: currentUserId,
           
           // Personal information - FIXED: Added missing mappings and date conversion
           voornaam: sanitizedData.voornaam,
           achternaam: sanitizedData.achternaam,
+          telefoon: sanitizedData.telefoon, // FIXED: Added missing telefoon field
           geboortedatum: sanitizedData.geboortedatum ? convertToISODate(sanitizedData.geboortedatum) : null,
           geslacht: sanitizedData.geslacht,
           burgerlijke_staat: sanitizedData.burgerlijke_staat || sanitizedData.burgerlijkeStaat,
@@ -384,7 +371,6 @@ export class UserService extends DatabaseService {
           aantal_kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0,
           kinderen_leeftijden: sanitizedData.leeftijdenKinderen || sanitizedData.kinderen_leeftijden || [],
           partner: sanitizedData.heeftPartner || sanitizedData.heeft_partner || false,
-          kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0, // Legacy field
           roken: sanitizedData.rookt || false,
           huisdieren: sanitizedData.heeftHuisdieren || sanitizedData.huisdieren || false,
           

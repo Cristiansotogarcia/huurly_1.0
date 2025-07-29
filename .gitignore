@@ -33,3 +33,7 @@ supabase/.temp/
 
 # Docs
 docs/*
+
+# Test files
+testsprite_tests/
+temp-files/

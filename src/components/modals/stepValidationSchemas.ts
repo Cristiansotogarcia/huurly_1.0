@@ -52,9 +52,9 @@ export const step1Schema = z.object({
 // Step 2: Employment - Required fields
 export const step2Schema = z.object({
   profession: z.string().min(1, 'Beroep is verplicht'),
-  employer: z.string().min(1, 'Werkgever is verplicht'),
+  employer: z.string().optional(), // Made optional to match UI
   employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
-  monthly_income: z.number().min(0, 'Inkomen mag niet negatief zijn'),
+  monthly_income: z.number().min(1, 'Maandinkomen is verplicht en moet groter dan 0 zijn'),
 });
 
 // Step 3: Household - No required fields
