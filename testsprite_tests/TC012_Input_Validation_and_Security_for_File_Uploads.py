@@ -45,13 +45,29 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' (login) button to proceed to login page.
+        # Click on 'Profiel aanmaken' button to start profile creation flow and reach document upload step.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[2]/section/div/div/div/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Input admin email and password, then click 'Inloggen' button to login.
+        # Fill in first name and last name fields with valid data and click 'Volgende' to proceed to next step.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('TestFirstName')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('TestLastName')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[3]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Fill in email and password fields with valid data and click 'Registreren' to complete registration and proceed.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
@@ -63,18 +79,13 @@ async def run_test():
         
 
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div[3]/form/button').nth(0)
-        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        elem = frame.locator('xpath=html/body/div[3]/form/div[3]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
         
 
-        # Dismiss cookie consent banner by clicking 'Accepteren' button to proceed with testing document upload features.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div[3]/form/div[4]/button[2]').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
-        
-
-        # Scroll down the tenant dashboard page to reveal more elements, especially those related to document upload features.
-        await page.mouse.wheel(0, window.innerHeight)
         
 
         assert False, 'Test plan execution failed: generic failure assertion.'

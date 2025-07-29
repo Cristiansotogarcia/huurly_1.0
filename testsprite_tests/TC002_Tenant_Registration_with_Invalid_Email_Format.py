@@ -45,13 +45,13 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Profiel aanmaken' button to open the signup form.
+        # Click on 'Profiel aanmaken' button to open the multi-step signup form.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/section/div/div/div/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Fill 'Voornaam' and 'Achternaam' fields and click 'Volgende' to proceed to the next step.
+        # Fill in 'Voornaam' and 'Achternaam' fields with valid data and click 'Volgende' to proceed to step 2 where email input is expected.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('TestFirstName')
@@ -67,7 +67,7 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Enter an invalid email format in the email field, fill valid passwords, and attempt to submit the form.
+        # Enter an invalid email format in the email field, fill password and confirm password fields correctly, then attempt to submit the form.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('invalid-email-format')
@@ -75,12 +75,12 @@ async def run_test():
 
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('ValidPass1@')
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
         
 
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div[3]/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('ValidPass1@')
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
         
 
         frame = context.pages[-1]
@@ -88,13 +88,13 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Assert that the form shows a validation error message for the invalid email format and blocks progression.
-        error_locator = frame.locator('xpath=html/body/div[3]/form//div[contains(@class, "error") or contains(text(), "ongeldig") or contains(text(), "invalid")]')
-        await page.wait_for_timeout(1000)  # wait a moment for error to appear
-        assert await error_locator.is_visible(), "Expected validation error message for invalid email format is not visible."
-        # Optionally, assert that the form did not proceed to the next step by checking the presence of the email input still
-        email_input = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
-        assert await email_input.is_visible(), "Email input should still be visible indicating form did not proceed."
+        # Assert that the form shows a validation error message for invalid email format
+        error_locator = frame.locator('xpath=//div[contains(text(), "E-mailadres is ongeldig") or contains(text(), "ongeldig e-mailadres")]')
+        await page.wait_for_timeout(2000)  # wait for error message to appear
+        assert await error_locator.is_visible(), "Expected validation error message for invalid email format is not visible"
+        # Assert that the form does not proceed to the next step by checking the presence of the 'Registreren' button
+        register_button = frame.locator('xpath=//button[contains(text(), "Registreren")]')
+        assert await register_button.is_visible(), "Register button should still be visible, indicating form did not proceed"
         await asyncio.sleep(5)
     
     finally:

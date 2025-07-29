@@ -4,19 +4,5 @@
   "scope": "codebase",
   "localEndpoint": "http://localhost:8080",
   "loginUser": "sotocrioyo@gmail.com",
-  "loginPassword": "Admin1290@@",
-  "executionArgs": {
-    "projectName": "Huurly_1.0",
-    "projectPath": "c:\\Huurly_1.0",
-    "testIds": [
-      "TC003",
-      "TC004",
-      "TC005"
-    ],
-    "additionalInstruction": "Re-testing after fixing export name mismatches in step components that were causing 500 errors",
-    "envs": {
-      "API_KEY": "sk-user-HpfPVm8I03ncl1UiuXvx7KdqJI5oqQSK1OTAlKren1ucNV7ukRdG2_BKh4h94MRJ8G9-aTvLnS1_DFhAJxFn-MmNCcBtUPCeddWaTjKM7-Z82ePIyNPVtOtVA2gnQOOpN-E"
-    }
-  },
-  "proxy": "http://05e03fb0-c44e-4f7c-987b-ddbaf6cd2658:Hkb3VRVbYzXaycuItxLjNjQ5c87azqwc@tun.testsprite.com:8080"
+  "loginPassword": "Admin1290@@"
 }

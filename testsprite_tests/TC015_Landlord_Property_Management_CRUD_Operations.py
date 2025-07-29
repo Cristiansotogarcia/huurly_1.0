@@ -45,13 +45,13 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' button to start login as landlord.
+        # Click on the 'Inloggen' button to start login as landlord.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Input landlord email and password, then click login.
+        # Input landlord email and password, then click 'Inloggen' to log in.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
@@ -67,17 +67,103 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Find and click navigation element to switch to landlord dashboard or property management interface.
-        await page.mouse.wheel(0, window.innerHeight)
-        
-
+        # Navigate to the landlord property management interface from the current dashboard.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[4]/div/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Generic failing assertion since expected result is unknown
-        assert False, 'Test plan execution failed: generic failure assertion'
+        # Close the document upload modal and search for a logout option or user menu to log out from tenant account.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Locate and click logout or user menu to log out from tenant account.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button[2]').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click on 'Inloggen' button to start login as landlord.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Input landlord email and password, then click 'Inloggen' to log in.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Locate and click logout or user menu to log out from tenant account to retry landlord login.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button[2]').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click on 'Inloggen' button to open login modal for landlord credentials input.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Input landlord email and password, then click 'Inloggen' to log in as landlord.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Look for any user menu, profile switcher, or logout option to switch from tenant to landlord account.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button[2]').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click on 'Inloggen' button to open login modal for landlord credentials input.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Input landlord email and password, then click 'Inloggen' to log in as landlord.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        assert False, 'Test plan execution failed: generic failure assertion.'
         await asyncio.sleep(5)
     
     finally:

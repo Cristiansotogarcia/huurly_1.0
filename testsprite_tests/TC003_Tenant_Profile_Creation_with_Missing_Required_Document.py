@@ -45,13 +45,13 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' button to login as tenant.
+        # Click on 'Inloggen' button to start login process.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Input tenant email and password and submit login form.
+        # Fill email and password fields with provided tenant credentials and submit login form.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
@@ -67,14 +67,59 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Navigate to profile creation modal from tenant dashboard.
+        # Click on 'Profiel Aanmaken' button to open profile creation modal.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div/ol/li/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click on 'Profiel bewerken' button (index 10) to open profile creation modal.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[2]/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Fill all required fields in step 1 and navigate through steps 2 to 7, skipping document upload, then attempt to submit the profile.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[3]/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Jayshuah')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[3]/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Soto Garcia')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[4]/div/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('15/03/1990')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[4]/div[2]/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('+31 6 12345678')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[5]/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Scroll down or search for the 'Volgende' button to proceed to step 2 and continue filling the form.
+        await page.mouse.wheel(0, window.innerHeight)
+        
+
+        await page.mouse.wheel(0, window.innerHeight)
+        
+
+        # Click 'Volgende' button to proceed to step 2 (Werk & Inkomen) and continue filling required fields except document upload.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div[3]/div/button[2]').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
         # Generic failing assertion since expected result is unknown and test plan execution failed.
-        assert False, 'Test failed: Tenant profile creation should be blocked due to missing required verification documents.'
+        assert False, 'Test failed: Profile creation should not complete without required verification documents.'
         await asyncio.sleep(5)
     
     finally:

@@ -51,15 +51,15 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Fill in 'Voornaam' and 'Achternaam' fields with valid data and click 'Volgende' to proceed to role selection.
+        # Fill in 'Voornaam' and 'Achternaam' fields with valid data and click 'Volgende' to proceed to next step.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('TestFirstName')
+        await page.wait_for_timeout(3000); await elem.fill('Soto')
         
 
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('TestLastName')
+        await page.wait_for_timeout(3000); await elem.fill('Crioyo')
         
 
         frame = context.pages[-1]
@@ -67,20 +67,20 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Fill in email, password, confirm password fields with valid data and click 'Registreren' to submit.
+        # Fill in email, password, confirm password fields with valid data and click 'Registreren' to submit registration.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('tenantuser@example.com')
+        await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
         
 
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('TenantPass1!')
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
         
 
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div[3]/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('TenantPass1!')
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
         
 
         frame = context.pages[-1]
@@ -88,11 +88,7 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Assert that the registration completion message or tenant profile creation confirmation is visible
-        frame = context.pages[-1]
-        completion_message = frame.locator("text=Bedankt voor je registratie")
-        await completion_message.wait_for(state='visible', timeout=10000)
-        assert await completion_message.is_visible(), "Registration completion message is not visible"
+        assert False, 'Test plan execution failed: registration process did not complete successfully.'
         await asyncio.sleep(5)
     
     finally:

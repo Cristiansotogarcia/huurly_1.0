@@ -45,7 +45,7 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' button to start login as landlord.
+        # Click on the 'Inloggen' button to start login process as landlord.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
@@ -67,18 +67,69 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Accept cookies to proceed and then locate tenant search functionality.
+        # Navigate to 'Woningen zoeken' (Search Properties) or equivalent to find tenants to invite.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[4]/div/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Navigate to landlord dashboard or find navigation element to access tenant search and invitation functionality.
-        await page.goto('http://localhost:8080/verhuurder-dashboard', timeout=10000)
+        # Close the document upload modal and look for alternative navigation options to reach tenant or property search page.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Final assertion to indicate test failure due to unknown expected result
-        assert False, 'Test failed: Expected result unknown, generic failure assertion.'
+        # Look for alternative navigation options to reach tenant or property search page to invite tenant for viewing.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button[2]').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click on 'Inloggen' button to try logging in again and attempt navigation to tenant or property search page.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Input landlord email and password, then click login button to attempt login again.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Admin1290@@')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/form/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Log out from tenant account to return to login page.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[3]/div/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Try to find an alternative logout option or profile menu to log out from tenant account.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[2]/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Close profile editing modal and look for any other logout or profile menu options to log out from tenant account.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Scroll down to look for any logout or profile menu options to log out from tenant account.
+        await page.mouse.wheel(0, window.innerHeight)
+        
+
+        assert False, 'Test plan execution failed: generic failure assertion.'
         await asyncio.sleep(5)
     
     finally:

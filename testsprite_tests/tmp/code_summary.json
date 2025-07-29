@@ -1,312 +1,161 @@
 {
-  "project_name": "Huurly",
-  "description": "A comprehensive rental platform connecting landlords and tenants in the Dutch market with multi-role system, property management, application system, payment integration, and real-time notifications.",
-  "tech_stack": {
-    "frontend": {
-      "framework": "React",
-      "language": "TypeScript",
-      "build_tool": "Vite",
-      "styling": "Tailwind CSS",
-      "ui_library": "Radix UI + shadcn/ui",
-      "state_management": "Zustand",
-      "routing": "React Router",
-      "forms": "React Hook Form",
-      "queries": "TanStack Query"
+  "tech_stack": [
+    "TypeScript",
+    "React",
+    "Vite",
+    "TailwindCSS",
+    "Supabase",
+    "PostgreSQL",
+    "Stripe",
+    "React Hook Form",
+    "Zod",
+    "React Query",
+    "Zustand",
+    "Radix UI",
+    "Cloudflare R2",
+    "AWS S3"
+  ],
+  "features": [
+    {
+      "name": "Enhanced Profile Creation Modal",
+      "description": "Multi-step profile creation wizard with 7 steps for tenant registration including personal info, employment, household, housing preferences, guarantor info, references, and motivation",
+      "files": [
+        "src/components/modals/EnhancedProfileCreationModal.tsx",
+        "src/components/modals/ProfileFormNavigation.tsx",
+        "src/components/modals/ProfileFormStepper.tsx",
+        "src/components/modals/EnhancedProfileSteps",
+        "src/components/modals/profileSchema.ts",
+        "src/components/modals/stepValidationSchemas.ts"
+      ]
     },
-    "backend": {
-      "database": "Supabase (PostgreSQL)",
-      "authentication": "Supabase Auth",
-      "real_time": "Supabase Realtime",
-      "storage": "Cloudflare R2 + Supabase Storage",
-      "payments": "Stripe",
-      "deployment": "Vercel"
+    {
+      "name": "User Authentication",
+      "description": "Complete authentication system with login, signup, password reset, and email verification",
+      "files": [
+        "src/components/auth/LoginForm.tsx",
+        "src/components/auth/SignupForm.tsx",
+        "src/components/auth/MultiStepSignupModal.tsx",
+        "src/components/auth/ResetPasswordForm.tsx",
+        "src/components/auth/ProtectedRoute.tsx",
+        "src/hooks/useAuth.ts",
+        "src/store/authStore.ts",
+        "src/lib/auth.ts"
+      ]
+    },
+    {
+      "name": "Dashboard System",
+      "description": "Role-based dashboards for tenants (huurders), landlords (verhuurders), property managers (beheerders), and reviewers (beoordelaars)",
+      "files": [
+        "src/pages/HuurderDashboard.tsx",
+        "src/pages/VerhuurderDashboard.tsx",
+        "src/pages/BeheerderDashboard.tsx",
+        "src/pages/BeoordelaarDashboard.tsx",
+        "src/components/dashboard/DashboardContent.tsx",
+        "src/components/dashboard/DashboardHeader.tsx",
+        "src/components/HuurderDashboard",
+        "src/services/DashboardService.ts",
+        "src/services/ConsolidatedDashboardService.ts"
+      ]
+    },
+    {
+      "name": "Property Management",
+      "description": "Property listing, search, detail views, and management functionality",
+      "files": [
+        "src/pages/PropertySearch.tsx",
+        "src/pages/PropertyDetail.tsx",
+        "src/pages/PropertyManagement.tsx",
+        "src/components/modals/PropertyModal.tsx",
+        "src/components/modals/PropertySearchModal.tsx",
+        "src/services/PropertyService.ts"
+      ]
+    },
+    {
+      "name": "Payment Integration",
+      "description": "Stripe payment processing for subscriptions and transactions",
+      "files": [
+        "src/components/PaymentModal.tsx",
+        "src/pages/PaymentSuccess.tsx",
+        "src/components/modals/PaymentSuccessModal.tsx",
+        "src/services/PaymentService.ts",
+        "src/services/OptimizedSubscriptionService.ts",
+        "src/lib/stripe.ts",
+        "src/lib/stripe-config.ts",
+        "src/pages/Subscription/ManageSubscription.tsx"
+      ]
+    },
+    {
+      "name": "Document Management",
+      "description": "Document upload, review, and management system with file validation",
+      "files": [
+        "src/components/modals/DocumentUploadModal.tsx",
+        "src/components/modals/DocumentReviewModal.tsx",
+        "src/components/standard/DocumentsSection.tsx",
+        "src/components/standard/DocumentQueue.tsx",
+        "src/services/DocumentService.ts",
+        "src/components/ui/file-upload.tsx"
+      ]
+    },
+    {
+      "name": "User Management",
+      "description": "Admin user management with role assignment and user operations",
+      "files": [
+        "src/components/modals/UserManagementModal.tsx",
+        "src/components/standard/UserManagement.tsx",
+        "src/pages/admin/UserManagement.tsx",
+        "src/services/UserService.ts",
+        "src/hooks/useRoleActions.ts"
+      ]
+    },
+    {
+      "name": "Matching System",
+      "description": "Property-tenant matching algorithm and recommendations",
+      "files": [
+        "src/services/MatchingService.ts",
+        "src/lib/matching.ts",
+        "src/pages/ZoekHuurders.tsx"
+      ]
+    },
+    {
+      "name": "Messaging System",
+      "description": "Internal messaging between users with notifications",
+      "files": [
+        "src/services/MessageService.ts",
+        "src/services/NotificationService.ts"
+      ]
+    },
+    {
+      "name": "File Storage",
+      "description": "Cloud file storage integration with Cloudflare R2 and AWS S3",
+      "files": [
+        "src/lib/cloudflare-r2-upload.ts",
+        "src/lib/direct-upload.ts",
+        "src/lib/storage.ts",
+        "src/lib/storage-signed.ts",
+        "src/lib/storageAccess.ts",
+        "src/hooks/useImageUpload.ts"
+      ]
+    },
+    {
+      "name": "Profile Management",
+      "description": "User profile creation, editing, and photo management",
+      "files": [
+        "src/components/ProfilePicture.tsx",
+        "src/components/ProfilePictureUpload.tsx",
+        "src/components/dashboard/ProfilePhotoSection.tsx",
+        "src/components/standard/ProfileOverview.tsx",
+        "src/hooks/useHuurder.ts",
+        "src/hooks/useHuurderActions.ts",
+        "src/utils/profileDataMapper.ts"
+      ]
+    },
+    {
+      "name": "Issue Reporting",
+      "description": "Bug reporting and issue management system",
+      "files": [
+        "src/pages/IssueReporting.tsx",
+        "src/components/modals/IssueReportModal.tsx",
+        "src/components/modals/IssueManagementModal.tsx"
+      ]
     }
-  },
-  "key_features": [
-    "Multi-role system (huurder, verhuurder, beheerder, beoordelaar)",
-    "Property search and management",
-    "Application system with status tracking",
-    "Document verification and management",
-    "Subscription-based pricing with Stripe integration",
-    "Real-time notifications",
-    "Profile management with image optimization",
-    "Admin dashboard with user management",
-    "Mobile-responsive design",
-    "Multi-language support (Dutch primary)"
-  ],
-  "components": {
-    "pages": [
-      {
-        "name": "Index",
-        "path": "src/pages/Index.tsx",
-        "description": "Main landing page with hero, features, and signup modals",
-        "key_features": ["Hero section", "Multi-step signup", "Email verification", "Payment success handling"]
-      },
-      {
-        "name": "HuurderDashboard",
-        "path": "src/pages/HuurderDashboard.tsx",
-        "description": "Tenant dashboard with stats, applications, and profile management",
-        "key_features": ["Dashboard stats", "Application tracking", "Document management", "Profile overview"]
-      },
-      {
-        "name": "VerhuurderDashboard",
-        "path": "src/pages/VerhuurderDashboard.tsx",
-        "description": "Landlord dashboard for property and application management",
-        "key_features": ["Property management", "Application review", "Statistics overview"]
-      },
-      {
-        "name": "BeheerderDashboard",
-        "path": "src/pages/BeheerderDashboard.tsx",
-        "description": "Admin dashboard for user and system management",
-        "key_features": ["User management", "System statistics", "Audit logs"]
-      },
-      {
-        "name": "BeoordelaarDashboard",
-        "path": "src/pages/BeoordelaarDashboard.tsx",
-        "description": "Reviewer dashboard for document verification",
-        "key_features": ["Document queue", "Review modal", "Verification workflow"]
-      },
-      {
-        "name": "PropertyManagement",
-        "path": "src/pages/PropertyManagement.tsx",
-        "description": "Property management interface for landlords",
-        "key_features": ["Property listing", "Property modal", "CRUD operations"]
-      }
-    ],
-    "modals": [
-      {
-        "name": "MultiStepSignupModal",
-        "path": "src/components/modals/MultiStepSignupModal.tsx",
-        "description": "Multi-step user registration with role selection and validation",
-        "key_features": ["Role selection", "Form validation", "Password strength", "Email verification"]
-      },
-      {
-        "name": "EnhancedProfileCreationModal",
-        "path": "src/components/modals/EnhancedProfileCreationModal.tsx",
-        "description": "7-step profile creation with comprehensive validation",
-        "key_features": ["Multi-step form", "Image upload", "Document upload", "Profile validation"]
-      },
-      {
-        "name": "BaseModal",
-        "path": "src/components/modals/BaseModal.tsx",
-        "description": "Reusable modal component with consistent styling and behavior",
-        "key_features": ["Modal state management", "Accessibility", "Animation support"]
-      }
-    ],
-    "auth": [
-      {
-        "name": "withAuth",
-        "path": "src/components/auth/withAuth.tsx",
-        "description": "HOC for authentication and role-based access control",
-        "key_features": ["Authentication check", "Role validation", "Loading states", "Access denied handling"]
-      }
-    ],
-    "ui": [
-      {
-        "name": "DashboardHeader",
-        "path": "src/components/ui/DashboardHeader.tsx",
-        "description": "Consistent header component for dashboard pages",
-        "key_features": ["Navigation", "User menu", "Notifications"]
-      },
-      {
-        "name": "LoadingState",
-        "path": "src/components/ui/LoadingState.tsx",
-        "description": "Reusable loading component with consistent styling",
-        "key_features": ["Loading spinner", "Loading text", "Skeleton states"]
-      }
-    ]
-  },
-  "services": [
-    {
-      "name": "SearchService",
-      "path": "src/services/SearchService.ts",
-      "description": "Handles property search with filtering, pagination, and sorting",
-      "key_methods": ["searchProperties", "applyFilters", "applySorting"]
-    },
-    {
-      "name": "ApplicationService",
-      "path": "src/services/ApplicationService.ts",
-      "description": "Manages rental applications with CRUD operations and notifications",
-      "key_methods": ["createApplication", "getApplications", "updateApplicationStatus", "getApplicationStats"]
-    },
-    {
-      "name": "PropertyService",
-      "path": "src/services/PropertyService.ts",
-      "description": "Property management with search, filtering, and CRUD operations",
-      "key_methods": ["searchProperties", "createProperty", "updateProperty", "deleteProperty"]
-    },
-    {
-      "name": "PaymentWebhookService",
-      "path": "src/services/payment/PaymentWebhookService.ts",
-      "description": "Handles Stripe payment webhooks and subscription activation",
-      "key_methods": ["handlePaymentSuccess", "createAuditLog"]
-    },
-    {
-      "name": "StatisticsService",
-      "path": "src/services/StatisticsService.ts",
-      "description": "Provides dashboard statistics for properties and users",
-      "key_methods": ["getPropertyStatistics", "getUserStatistics"]
-    },
-    {
-      "name": "BaseService",
-      "path": "src/services/BaseService.ts",
-      "description": "Base service class with common functionality and error handling",
-      "key_methods": ["executeServiceOperation", "handleDatabaseError"]
-    }
-  ],
-  "hooks": [
-    {
-      "name": "useAuth",
-      "path": "src/hooks/useAuth.ts",
-      "description": "Authentication state and actions management",
-      "key_features": ["Login/logout", "User state", "Role management", "Session handling"]
-    },
-    {
-      "name": "useModalManager",
-      "path": "src/hooks/useModalManager.ts",
-      "description": "Centralized modal state management with logging and callbacks",
-      "key_features": ["Modal state", "Open/close actions", "Bulk operations", "Event callbacks"]
-    },
-    {
-      "name": "useRoleActions",
-      "path": "src/hooks/useRoleActions.ts",
-      "description": "Generic hook factory for role-based actions and navigation",
-      "key_features": ["Role-specific actions", "Navigation helpers", "Modal management", "Logout handling"]
-    },
-    {
-      "name": "useHuurder",
-      "path": "src/hooks/useHuurder.ts",
-      "description": "Tenant-specific dashboard data and actions",
-      "key_features": ["Dashboard stats", "Profile management", "Document handling", "Subscription status"]
-    },
-    {
-      "name": "useVerhuurderDashboard",
-      "path": "src/hooks/useVerhuurderDashboard.ts",
-      "description": "Landlord dashboard data management",
-      "key_features": ["Property stats", "Application tracking", "Revenue analytics"]
-    },
-    {
-      "name": "useBeheerderDashboard",
-      "path": "src/hooks/useBeheerderDashboard.ts",
-      "description": "Admin dashboard data and user management",
-      "key_features": ["User statistics", "System metrics", "User management"]
-    },
-    {
-      "name": "useHuurderActions",
-      "path": "src/hooks/useHuurderActions.ts",
-      "description": "Tenant-specific navigation and actions",
-      "key_features": ["Application navigation", "Document management", "Profile actions"]
-    },
-    {
-      "name": "useVerhuurderActions",
-      "path": "src/hooks/useVerhuurderActions.ts",
-      "description": "Landlord-specific property and application actions",
-      "key_features": ["Property management", "Application review", "Property CRUD"]
-    },
-    {
-      "name": "useBeheerderActions",
-      "path": "src/hooks/useBeheerderActions.ts",
-      "description": "Admin-specific system management actions",
-      "key_features": ["User management", "System administration"]
-    }
-  ],
-  "utilities": [
-    {
-      "name": "ErrorHandler",
-      "path": "src/lib/errors.ts",
-      "description": "Comprehensive error handling with Dutch error messages",
-      "key_features": ["Error normalization", "Database error handling", "User-friendly messages", "Error logging"]
-    },
-    {
-      "name": "ValidationUtils",
-      "path": "src/utils/validationUtils.ts",
-      "description": "Shared validation utilities with Dutch error messages",
-      "key_features": ["Email validation", "Phone validation", "Postal code validation", "Password validation", "File validation"]
-    },
-    {
-      "name": "DatabaseService",
-      "path": "src/lib/database.ts",
-      "description": "Base database service with query execution and error handling",
-      "key_features": ["Query execution", "Pagination", "Sorting", "Permission checking", "Audit logging"]
-    },
-    {
-      "name": "Logger",
-      "path": "src/lib/logger.ts",
-      "description": "Enhanced logging utilities for debugging and monitoring",
-      "key_features": ["Console logging", "Error tracking", "Debug information"]
-    },
-    {
-      "name": "RoleUtils",
-      "path": "src/utils/roleUtils.ts",
-      "description": "Role-based access control utilities",
-      "key_features": ["Role checking", "Permission validation", "Route protection"]
-    },
-    {
-      "name": "JWTUtils",
-      "path": "src/lib/auth/jwtUtils.ts",
-      "description": "JWT token handling and role extraction",
-      "key_features": ["Role extraction", "Token validation", "Permission checking"]
-    },
-    {
-      "name": "LogoutUtils",
-      "path": "src/lib/auth/logout.ts",
-      "description": "Comprehensive logout handling with storage cleanup",
-      "key_features": ["Session cleanup", "Storage clearing", "Cookie removal"]
-    }
-  ],
-  "types": [
-    {
-      "name": "User Types",
-      "path": "src/types/index.ts",
-      "description": "Core user and authentication types",
-      "key_types": ["User", "UserRole", "TenantProfile", "Subscription"]
-    },
-    {
-      "name": "Document Types",
-      "path": "src/types/documents.ts",
-      "description": "Document management and validation types",
-      "key_types": ["DocumentType", "DocumentStatus", "DocumentValidation"]
-    },
-    {
-      "name": "Application Types",
-      "path": "src/domains/application/types/Application.ts",
-      "description": "Application management and filtering types",
-      "key_types": ["Application", "ApplicationStatus", "ApplicationSearchFilters"]
-    }
-  ],
-  "architecture_patterns": [
-    "Domain-driven design with feature-based organization",
-    "Service layer pattern for business logic",
-    "Custom hooks pattern for state management",
-    "HOC pattern for authentication and authorization",
-    "Modal management pattern with centralized state",
-    "Error boundary pattern for error handling",
-    "Repository pattern for data access"
-  ],
-  "testing_considerations": {
-    "critical_user_flows": [
-      "User registration and email verification",
-      "Profile creation and document upload",
-      "Property search and filtering",
-      "Application submission and tracking",
-      "Payment processing and subscription activation",
-      "Document verification workflow",
-      "Role-based dashboard access",
-      "Admin user management"
-    ],
-    "key_integrations": [
-      "Supabase authentication",
-      "Stripe payment processing",
-      "Cloudflare R2 storage",
-      "Email verification system",
-      "Real-time notifications"
-    ],
-    "security_features": [
-      "Role-based access control",
-      "JWT token validation",
-      "Input validation and sanitization",
-      "File upload security",
-      "Database permission checks"
-    ]
-  }
+  ]
 }

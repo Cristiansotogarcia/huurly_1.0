@@ -44,6 +44,16 @@ serve(async (req) => {
 
     console.log('Registering user:', { id, email, firstName, lastName, role })
 
+    // Verify user exists in auth.users table first
+    const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(id)
+    
+    if (authUserError || !authUser.user) {
+      console.error('User not found in auth.users:', authUserError)
+      throw new Error(`User with ID ${id} not found in authentication system`)
+    }
+
+    console.log('User verified in auth system:', authUser.user.id)
+
     // Cache timestamp for consistency and performance
     const timestamp = new Date().toISOString()
     const fullName = `${firstName} ${lastName}`
@@ -145,6 +155,25 @@ serve(async (req) => {
         throw beoordelaarError
       }
       console.log('Beoordelaar created successfully for user:', id)
+    } else if (role === 'admin' || role === 'beheerder') {
+      // Handle both 'admin' (from roleMapper) and 'beheerder' (direct) roles
+      console.log('Creating beheerder record for user:', id)
+      const { error: beheerderError } = await supabase.from('beheerders').upsert(
+        {
+          id,
+          aangemaakt_op: timestamp,
+          bijgewerkt_op: timestamp,
+        },
+        {
+          onConflict: 'id',
+        }
+      )
+
+      if (beheerderError) {
+        console.error('Error creating beheerder:', beheerderError)
+        throw beheerderError
+      }
+      console.log('Beheerder created successfully for user:', id)
     }
 
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema

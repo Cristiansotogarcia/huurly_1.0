@@ -45,7 +45,7 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' button to start login process.
+        # Click the 'Inloggen' button to proceed to login.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
@@ -67,24 +67,26 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Accept cookies to clear popup and then navigate to notification settings to update preferences.
+        # Accept cookies to proceed and then trigger an event that should generate a notification for this user role.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div/ol/li').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Try to scroll down to reveal more UI elements or menus that might lead to notification settings or notification center.
-        await page.mouse.wheel(0, window.innerHeight)
-        
-
-        # Dismiss the error overlay if possible or reload the page to see if the error persists or clears.
+        # Click on 'Documenten beheren' button to check if document approval or upload can trigger notifications.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=div/pre[4]/a[8]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[2]/div/button[2]').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Final generic failing assertion since expected result is unknown
-        assert False, 'Test plan execution failed: generic failure assertion.'
+        # Upload an 'Identiteitsbewijs' document to trigger a notification event.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/div/div/div/div/div/div[2]/label/span').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Final generic failing assertion since the test plan execution failed and expected result is unknown
+        assert False, 'Test plan execution failed: generic failure assertion'
         await asyncio.sleep(5)
     
     finally:

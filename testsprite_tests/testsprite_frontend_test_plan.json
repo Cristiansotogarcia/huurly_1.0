@@ -1,416 +1,483 @@
 [
   {
     "id": "TC001",
-    "title": "Tenant Registration with Valid Data",
-    "description": "Verify that a tenant can successfully complete the multi-step registration including role selection, form validation, email verification, and final submission.",
+    "title": "Tenant Multi-step Profile Creation Success",
+    "description": "Verify that a tenant can successfully complete the multi-step profile creation wizard with valid input on all 7 steps and submit the profile.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the multi-step signup form."
+        "description": "Start tenant profile creation wizard."
       },
       {
         "type": "action",
-        "description": "Select 'Tenant' role."
+        "description": "Fill personal information step with valid data."
       },
       {
         "type": "action",
-        "description": "Fill out all required fields in each step with valid data including password and email."
+        "description": "Proceed to employment details step and enter valid employment data."
       },
       {
         "type": "action",
-        "description": "Upload required documents for verification."
+        "description": "Complete household details step with accurate data."
       },
       {
         "type": "action",
-        "description": "Submit registration and verify email by clicking the link sent."
+        "description": "Fill housing preferences and guarantor information steps with valid entries."
+      },
+      {
+        "type": "action",
+        "description": "Enter references and motivation details in final steps."
+      },
+      {
+        "type": "action",
+        "description": "Submit the profile creation wizard."
       },
       {
         "type": "assertion",
-        "description": "Confirm registration completion and tenant profile creation."
+        "description": "Verify that profile is saved successfully and tenant is redirected to their dashboard."
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "Tenant Registration with Invalid Email Format",
-    "description": "Verify that registration fails gracefully when an invalid email format is entered during signup.",
+    "title": "Tenant Profile Creation Validation Errors",
+    "description": "Ensure proper validation prevents progression when invalid or missing data is entered in required fields during profile creation.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Open the multi-step signup form and select 'Tenant'."
+        "description": "Open tenant profile creation wizard."
       },
       {
         "type": "action",
-        "description": "Enter an invalid email address format in the email field."
-      },
-      {
-        "type": "action",
-        "description": "Fill the rest of the required fields correctly."
-      },
-      {
-        "type": "action",
-        "description": "Attempt to proceed to the next step or submit the form."
+        "description": "Leave required personal information fields empty and attempt to proceed."
       },
       {
         "type": "assertion",
-        "description": "Verify the form shows a proper validation error message and blocks progression."
+        "description": "Verify validation errors are displayed and navigation to next step is blocked."
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid data formats (e.g. invalid phone number, email) in subsequent steps."
+      },
+      {
+        "type": "assertion",
+        "description": "Check form shows appropriate validation error messages."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to upload unsupported file types in document upload step."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upload is rejected with clear error message."
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Tenant Profile Creation with Missing Required Document",
-    "description": "Verify that the tenant profile creation process does not complete if required verification documents are missing.",
-    "category": "error handling",
+    "title": "User Registration and Email Verification Flow",
+    "description": "Verify tenant and landlord registration includes email verification and password strength enforcement.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Tenant and navigate to profile creation modal."
+        "description": "Navigate to user registration page."
       },
       {
         "type": "action",
-        "description": "Fill all profile fields except upload of required document."
+        "description": "Enter valid registration details with strong password."
       },
       {
         "type": "action",
-        "description": "Attempt to submit the profile creation form."
+        "description": "Submit registration form."
       },
       {
         "type": "assertion",
-        "description": "Verify the process is blocked and a clear validation error is shown regarding missing documents."
+        "description": "Check registration is successful and verification email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Attempt login before verification and verify access is denied."
+      },
+      {
+        "type": "action",
+        "description": "Click email verification link and verify email status updates."
+      },
+      {
+        "type": "action",
+        "description": "Login with verified account successfully."
+      },
+      {
+        "type": "action",
+        "description": "Attempt registration with weak password and verify rejection with error message."
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "Landlord Advanced Tenant Search with Filters",
-    "description": "Verify that landlord can successfully use advanced search filters to find tenants and results respect filters and sort order.",
+    "title": "User Login and Password Reset",
+    "description": "Test that users can login with correct credentials and perform password reset with email confirmation flow.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Landlord and navigate to the tenant search interface."
+        "description": "Navigate to login page."
       },
       {
         "type": "action",
-        "description": "Apply various combinations of filters such as location, profile details, and verification status."
-      },
-      {
-        "type": "action",
-        "description": "Apply different sort orders on the results."
+        "description": "Enter valid credentials and login."
       },
       {
         "type": "assertion",
-        "description": "Verify the search results are filtered correctly, sorted as selected, and tenant profiles display expected data."
+        "description": "Verify user is redirected to the role-specific dashboard."
+      },
+      {
+        "type": "action",
+        "description": "Logout and navigate to password reset page."
+      },
+      {
+        "type": "action",
+        "description": "Request password reset with registered email."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm password reset email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Complete password reset using the link with a new strong password."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password is updated and user can login with new password."
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Landlord Sends Invitation to Tenant Successfully",
-    "description": "Verify landlord can invite a tenant for property viewing from search results and tenant receives notification.",
-    "category": "functional",
+    "title": "Role-Based Dashboard Access Control",
+    "description": "Ensure that tenants, landlords, reviewers, and admin users can only access their respective dashboards and features.",
+    "category": "security",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Landlord and search for tenants."
-      },
-      {
-        "type": "action",
-        "description": "Select a tenant and send a viewing invitation."
+        "description": "Login as tenant and attempt to access landlord, reviewer, and admin dashboards."
       },
       {
         "type": "assertion",
-        "description": "Verify the invitation is recorded in system and tenant user receives real-time notification."
+        "description": "Verify access is denied with proper authorization error or redirect."
+      },
+      {
+        "type": "action",
+        "description": "Login as landlord and try to access tenant, reviewer, and admin dashboards."
+      },
+      {
+        "type": "assertion",
+        "description": "Access is prevented with error or redirect."
+      },
+      {
+        "type": "action",
+        "description": "Repeat for reviewer and admin roles attempting unauthorized dashboards."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure only authorized dashboards and features are accessible."
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Document Verification Workflow by Reviewer",
-    "description": "Verify that reviewers can view tenant uploaded documents, approve or reject them, which triggers appropriate notifications and GDPR-compliant deletion of documents after processing.",
+    "title": "Property Search and View Verified Tenants",
+    "description": "Validate landlords can perform filtered searches for verified tenants and view detailed tenant profiles.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Reviewer and open document review dashboard."
+        "description": "Login as landlord and navigate to tenant search interface."
       },
       {
         "type": "action",
-        "description": "Access tenant's uploaded documents queue."
-      },
-      {
-        "type": "action",
-        "description": "Approve a valid document."
+        "description": "Apply various filters (e.g., employment status, household size) and perform search."
       },
       {
         "type": "assertion",
-        "description": "Check that the tenant is notified of approval and the document is deleted from storage as per GDPR."
+        "description": "Verify search results contain only verified tenant profiles matching filters."
       },
       {
         "type": "action",
-        "description": "Reject an invalid document."
+        "description": "Select a tenant profile for detailed view."
       },
       {
         "type": "assertion",
-        "description": "Verify tenant is notified of rejection and document is deleted promptly."
+        "description": "Verify all profile details are correctly displayed with verified status."
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Subscription Payment Processing via Stripe",
-    "description": "Verify that tenants subscribing via Stripe have payment processed, subscription status updated, and dashboard reflects active status.",
-    "category": "integration",
+    "title": "Document Upload Validation and GDPR-Compliant Deletion",
+    "description": "Test document uploads enforce file type and size restrictions, are stored securely, reviewed, and deleted according to GDPR after rejection or upon user request.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Tenant and navigate to subscription payment."
-      },
-      {
-        "type": "action",
-        "description": "Complete Stripe payment flow with valid payment details."
+        "description": "Tenant uploads verification documents with accepted file types and sizes."
       },
       {
         "type": "assertion",
-        "description": "Verify payment webhook is handled, subscription status updates to active, and tenant dashboard shows updated subscription info."
+        "description": "Documents upload successfully and stored in secure Cloudflare R2 storage with signed URLs."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to upload disallowed file types or files exceeding size limits."
+      },
+      {
+        "type": "assertion",
+        "description": "Uploads are rejected with clear error messages."
+      },
+      {
+        "type": "action",
+        "description": "Reviewer approves or rejects uploaded documents."
+      },
+      {
+        "type": "assertion",
+        "description": "Upon rejection, document is deleted from storage and user is notified via in-app and email notification."
+      },
+      {
+        "type": "action",
+        "description": "Tenant requests document deletion as a data subject right."
+      },
+      {
+        "type": "assertion",
+        "description": "Documents are removed securely and audit logs are updated for GDPR compliance."
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Role-Based Access Control Enforcement",
-    "description": "Test that users with specific roles cannot access unauthorized dashboards or actions, ensuring proper access control is enforced.",
-    "category": "security",
+    "title": "Stripe Payment and Subscription Management",
+    "description": "Verify successful subscription payment processing via Stripe and management of subscription status including cancellation and renewal.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Tenant and attempt to access Admin dashboard URL directly."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify access is denied and user is redirected or shown an access denied message."
+        "description": "Tenant initiates subscription via payment modal."
       },
       {
         "type": "action",
-        "description": "Login as Landlord and attempt to perform reviewer-only actions."
+        "description": "Complete payment using valid Stripe test card."
       },
       {
         "type": "assertion",
-        "description": "Verify action is blocked and an appropriate error is shown."
+        "description": "Verify subscription is active, status is updated correctly in tenant dashboard."
+      },
+      {
+        "type": "action",
+        "description": "Tenant views subscription status and attempts to cancel subscription."
+      },
+      {
+        "type": "assertion",
+        "description": "Cancellation is processed, subscription status updates, and relevant notifications are sent."
+      },
+      {
+        "type": "action",
+        "description": "Attempt payment with invalid card data."
+      },
+      {
+        "type": "assertion",
+        "description": "Payment is declined with appropriate error message."
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Admin Dashboard User Management",
-    "description": "Verify that Admin can manage user accounts including viewing, editing roles, and disabling users correctly.",
+    "title": "Messaging Between Users with Notifications",
+    "description": "Test the internal messaging system enables secure communication and triggers in-app and email notifications when messages are sent.",
     "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login as Admin and open user management section."
-      },
-      {
-        "type": "action",
-        "description": "Search for users by role and status."
-      },
-      {
-        "type": "action",
-        "description": "Edit a user's role and save changes."
+        "description": "Tenant sends message to landlord via messaging interface."
       },
       {
         "type": "assertion",
-        "description": "Verify that changes are persisted and reflected in user role assignments."
-      },
-      {
-        "type": "action",
-        "description": "Disable a user account."
+        "description": "Message is delivered and visible in both users' message inboxes."
       },
       {
         "type": "assertion",
-        "description": "Ensure the user is unable to login afterwards."
+        "description": "Landlord receives in-app notification and email alert about new message."
+      },
+      {
+        "type": "action",
+        "description": "Landlord replies to tenant's message."
+      },
+      {
+        "type": "assertion",
+        "description": "Tenant receives reply with corresponding notifications."
       }
     ]
   },
   {
     "id": "TC010",
-    "title": "Mobile Responsiveness and Localization",
-    "description": "Verify that the platform UI renders correctly on various mobile device screen sizes and that all interface text and error messages appear fully localized in Dutch.",
-    "category": "ui",
-    "priority": "Medium",
+    "title": "Admin User Management and Role Assignment",
+    "description": "Verify admin can create, edit, assign roles, and delete users with restrictions based on role permissions.",
+    "category": "functional",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Access the platform using mobile viewport sizes on multiple devices."
+        "description": "Admin logs into admin dashboard and opens user management interface."
+      },
+      {
+        "type": "action",
+        "description": "Create a new user with tenant role."
       },
       {
         "type": "assertion",
-        "description": "Verify layout adapts correctly with no visual glitches or unusable UI elements."
+        "description": "User is created and visible in user list with correct role."
+      },
+      {
+        "type": "action",
+        "description": "Edit user role from tenant to landlord."
       },
       {
         "type": "assertion",
-        "description": "Check all visible text, labels, and error messages are in Dutch."
+        "description": "Role change is saved and reflected correctly."
+      },
+      {
+        "type": "action",
+        "description": "Delete user account."
+      },
+      {
+        "type": "assertion",
+        "description": "User is removed and cannot log in."
       }
     ]
   },
   {
     "id": "TC011",
-    "title": "Real-time Notifications Delivery and Preferences",
-    "description": "Verify that all user roles receive relevant real-time notifications and that users can adjust notification preferences which take effect immediately.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Trigger events that should generate notifications for each role (e.g., invitation sent, document approved)."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify real-time notifications appear in the UI notification center."
-      },
-      {
-        "type": "action",
-        "description": "Update user notification preferences and disable certain notification types."
-      },
-      {
-        "type": "action",
-        "description": "Trigger those notification events again."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm disabled notifications no longer appear for the user."
-      }
-    ]
-  },
-  {
-    "id": "TC012",
-    "title": "Input Validation and Security for File Uploads",
-    "description": "Verify that document upload features accept only allowed file types and sizes, handle invalid files gracefully, and sanitize inputs to prevent security vulnerabilities.",
-    "category": "security",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Attempt to upload various file types including allowed formats and disallowed ones like executables."
-      },
-      {
-        "type": "assertion",
-        "description": "Ensure disallowed files are rejected with clear error messages."
-      },
-      {
-        "type": "action",
-        "description": "Attempt to upload files exceeding size limits."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify uploads are blocked and relevant validation errors are shown."
-      },
-      {
-        "type": "action",
-        "description": "Inspect uploaded file metadata and payload for sanitization."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm inputs are sanitized to prevent injection or other security risks."
-      }
-    ]
-  },
-  {
-    "id": "TC013",
-    "title": "Performance Under Load",
-    "description": "Verify that the platform can handle 10,000 concurrent users without performance degradation and meets load time thresholds as specified.",
+    "title": "Performance Testing of APIs and Page Load Times",
+    "description": "Ensure all critical API endpoints respond under 500ms for 95% of requests and all pages load within 3 seconds in production environment.",
     "category": "performance",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Simulate 10,000 concurrent users performing typical workflows (login, search, profile update) using load testing tools."
+        "description": "Execute load test on primary API endpoints such as authentication, profile creation, property search."
       },
       {
         "type": "assertion",
-        "description": "Monitor response times and error rates ensuring they meet performance criteria."
+        "description": "Measure response times ensuring 95% are below 500ms."
+      },
+      {
+        "type": "action",
+        "description": "Load key pages including dashboards, search results, and profile views."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page load times are under 3 seconds."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Localization Verification for Dutch Language",
+    "description": "Confirm that all application interfaces, messages, and notifications are fully localized in Dutch language.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate through all user-facing pages including registration, profile wizard, dashboards, and notifications."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all text is presented in correct Dutch translations without English fallback."
+      },
+      {
+        "type": "action",
+        "description": "Trigger system messages and error alerts."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm all messages are properly localized."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Automated GDPR Compliance Checks",
+    "description": "Verify that automated document deletion, audit logging, and data subject right requests are handled as per GDPR requirements.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Submit document for review and then reject it."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm document is deleted automatically and deletion is logged."
+      },
+      {
+        "type": "action",
+        "description": "Submit a data subject right request for data deletion."
+      },
+      {
+        "type": "assertion",
+        "description": "Check personal data is removed securely and audit records updated."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access deleted documents or data."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify data is no longer accessible."
       }
     ]
   },
   {
     "id": "TC014",
-    "title": "JWT Token Validation and Secure Session Management",
-    "description": "Verify that authentication uses valid JWT tokens, sessions expire appropriately, and invalid or tampered tokens are rejected.",
+    "title": "Secure File Storage and Signed URL Access",
+    "description": "Test that uploaded files are securely stored in Cloudflare R2 and AWS S3 with access only via signed URLs to ensure data protection.",
     "category": "security",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login to receive JWT token and access protected resources."
+        "description": "Upload a verification document file."
       },
       {
         "type": "assertion",
-        "description": "Verify access is granted with valid token."
+        "description": "Confirm the file is stored in Cloudflare R2 storage."
       },
       {
         "type": "action",
-        "description": "Manually tamper the JWT token or use expired token and attempt access."
+        "description": "Access the file URL without a signed URL token."
       },
       {
         "type": "assertion",
-        "description": "Verify access is denied and user is redirected to login."
+        "description": "Verify access is denied."
       },
       {
         "type": "action",
-        "description": "Logout to confirm session state is cleared and tokens are invalidated."
+        "description": "Access the file using a valid signed URL."
       },
       {
         "type": "assertion",
-        "description": "Ensure protected pages cannot be accessed after logout."
-      }
-    ]
-  },
-  {
-    "id": "TC015",
-    "title": "Landlord Property Management CRUD Operations",
-    "description": "Verify that landlords can create, read, update, and delete property listings successfully with real-time updates reflected.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Login as Landlord and navigate to property management interface."
-      },
-      {
-        "type": "action",
-        "description": "Create a new property listing with all required details."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify new property appears correctly in property list."
-      },
-      {
-        "type": "action",
-        "description": "Update details of an existing property."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm updated details save and display correctly."
-      },
-      {
-        "type": "action",
-        "description": "Delete a property listing."
-      },
-      {
-        "type": "assertion",
-        "description": "Ensure property is removed from list and database."
+        "description": "Confirm file downloads successfully."
       }
     ]
   }

@@ -45,13 +45,13 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Start by clicking the 'Inloggen' (Login) button to simulate user login workflow.
+        # Click on 'Inloggen' button to start login workflow for load testing simulation.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Input email and password for the admin user and click the login button to simulate login.
+        # Fill in email and password fields with provided credentials and click the login button.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div[3]/form/div/input').nth(0)
         await page.wait_for_timeout(3000); await elem.fill('sotocrioyo@gmail.com')
@@ -67,13 +67,52 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Accept cookies to clear the banner and proceed with tenant dashboard interactions.
+        # Click on 'Profiel bewerken' button to start editing profile for testing multi-step form filling and file upload.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[2]/div/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Final generic failing assertion since the test plan execution failed and expected result is unknown
+        # Test file upload by clicking 'Vervangen' button to replace profile photo, then fill in missing required fields including 'Geboortedatum' and proceed to next step.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[2]/div/div/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Fill in the required 'Geboortedatum' field with a valid date, correct the 'Achternaam' field error, then click 'Volgende' to proceed to the next step.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[4]/div/div/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('15/03/1990')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div/div/div[3]/div[2]/input').nth(0)
+        await page.wait_for_timeout(3000); await elem.fill('Garcia')
+        
+
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div[2]/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click the 'Begrepen' button on the validation popup to close it, then click the 'Volgende' button to proceed to the next step of the profile creation flow.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[5]/div[3]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Click the 'Volgende' button to proceed to step 2 (Werk & Inkomen) of the profile creation flow.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div[3]/div[2]/form/div[2]/div[2]/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
+        # Manually interact with the visible phone number input field by clicking on it, clearing its content using keyboard actions, then input a valid phone number '+31 6 12345678'. After that, close the validation popup by clicking 'Begrepen' and click 'Volgende' to proceed to the next step.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/div/div[2]/div/div/div[4]/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
         assert False, 'Test plan execution failed: performance criteria not met or unknown expected result.'
         await asyncio.sleep(5)
     

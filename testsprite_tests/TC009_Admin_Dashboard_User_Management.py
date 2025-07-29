@@ -45,7 +45,7 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click on 'Inloggen' button to login as Admin.
+        # Click on the 'Inloggen' (Login) button to start admin login.
         frame = context.pages[-1]
         elem = frame.locator('xpath=html/body/div/div[2]/header/div/div/div[2]/button').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
@@ -67,13 +67,17 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Navigate to the admin user management section from the current page.
+        # Navigate to user management section from the dashboard.
+        await page.mouse.wheel(0, window.innerHeight)
+        
+
+        # Logout and login again to ensure admin dashboard is accessed or find a way to switch to admin dashboard.
         frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div/div[4]/div/div/button[2]').nth(0)
+        elem = frame.locator('xpath=html/body/div/div[3]/div/div/button[2]').nth(0)
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # Generic failing assertion since expected result is unknown
+        # Final generic failing assertion since expected result is unknown
         assert False, 'Test plan execution failed: generic failure assertion'
         await asyncio.sleep(5)
     
