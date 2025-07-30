@@ -228,20 +228,6 @@ export default function Step4Housing() {
           )}
         />
 
-        <FormField
-          control={control}
-          name="beschikbaarheid_flexibel"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <Label>Flexibele verhuisdatum</Label>
-              </div>
-            </FormItem>
-          )}
-        />
 
         <FormField
           control={control}
