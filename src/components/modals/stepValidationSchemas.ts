@@ -58,7 +58,9 @@ export const step2Schema = z.object({
 });
 
 // Step 3: Household - No required fields
-export const step3Schema = z.object({});
+export const step3Schema = z.object({
+  // No validation required for this step
+});
 
 // Step 4: Housing Preferences - Required fields
 export const step4Schema = z.object({
@@ -69,10 +71,14 @@ export const step4Schema = z.object({
 });
 
 // Step 5: Guarantor - No required fields (consolidated from old step 6)
-export const step5Schema = z.object({});
+export const step5Schema = z.object({
+  // No validation required for this step
+});
 
 // Step 6: References - No required fields (consolidated from old step 7)
-export const step6Schema = z.object({});
+export const step6Schema = z.object({
+  // No validation required for this step
+});
 
 // Step 7: Profile & Motivation - Required fields (consolidated from old step 8)
 export const step7Schema = z.object({

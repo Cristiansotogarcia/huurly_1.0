@@ -114,7 +114,9 @@ export class CloudflareR2UploadService {
       });
 
       let payload: any = null;
-      try { payload = await res.json(); } catch {}
+      try { payload = await res.json(); } catch {
+        // Ignore JSON parsing errors - payload will remain null
+      }
       if (!res.ok || !payload?.success) {
         const msg = payload?.error || `Upload function error: ${res.status}`;
         throw new Error(msg);

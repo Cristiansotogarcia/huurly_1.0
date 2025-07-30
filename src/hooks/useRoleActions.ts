@@ -158,13 +158,14 @@ export const useRoleActions = (config: RoleActionsConfig): BaseRoleActions & Rec
  * Specific hook for tenant actions
  */
 export const useTenantActions = () => {
+  const navigate = useNavigate();
+  
   return useRoleActions({
     role: 'huurder',
     defaultModals: ['settings', 'search', 'helpSupport', 'issueReport'],
     customActions: {
       onStartSearch: () => {
         logger.log('Starting property search');
-        const navigate = useNavigate();
         navigate('/property-search');
       },
     },

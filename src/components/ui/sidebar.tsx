@@ -86,7 +86,9 @@ const SidebarProvider = React.forwardRef<
           if (localStorage.getItem("cookie_consent") === "accepted") {
             document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
           }
-        } catch {}
+        } catch {
+          // Ignore cookie setting errors in environments where localStorage/cookies are not available
+        }
       },
       [setOpenProp, open]
     )
