@@ -22,6 +22,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     beroep: data.profession,
     werkgever: data.employer,
     dienstverband: data.employment_status,
+    contract_type: data.work_contract_type,
     inkomen: data.monthly_income,
     // Add fields expected by validation
     maandinkomen: data.monthly_income,
@@ -34,6 +35,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     extra_inkomen: data.extra_income,
     extra_inkomen_beschrijving: data.extra_income_description,
     thuiswerken: data.work_from_home,
+    inkomensbewijs_beschikbaar: data.inkomensbewijs_beschikbaar,
     nationaliteit: data.nationality,
     geslacht: data.sex,
     burgerlijke_staat: data.marital_status,
@@ -63,6 +65,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     vroegste_verhuisdatum: data.move_in_date_earliest ? convertDateFormat(data.move_in_date_earliest) : undefined,
     beschikbaarheid_flexibel: data.availability_flexible,
     huurcontract_voorkeur: data.lease_duration_preference,
+    parkeren_vereist: data.parking_required,
     
     // Storage preferences
     opslag_kelder: data.storage_kelder,

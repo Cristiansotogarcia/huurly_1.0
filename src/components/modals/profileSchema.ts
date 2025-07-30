@@ -79,7 +79,9 @@ export const profileSchema = z.object({
   move_in_date_earliest: z.string().optional(),
   availability_flexible: z.boolean().default(false),
   lease_duration_preference: z.enum(['6_maanden', '1_jaar', '2_jaar', 'langer', 'flexibel']).optional(),
-  
+
+  parking_required: z.boolean().default(false),
+
   // Storage preferences
   storage_kelder: z.boolean().default(false),
   storage_zolder: z.boolean().default(false),

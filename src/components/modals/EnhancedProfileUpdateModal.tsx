@@ -96,7 +96,8 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
       move_in_date_earliest: undefined,
       availability_flexible: false,
       lease_duration_preference: undefined,
-      
+      parking_required: false,
+
       // Storage preferences
       storage_kelder: false,
       storage_zolder: false,
