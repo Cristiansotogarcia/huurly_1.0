@@ -56,8 +56,11 @@ export interface TenantProfile {
   partnerProfession?: string;
   partnerEmploymentStatus?: string;
   partnerMonthlyIncome?: number;
+  extraIncome?: number;
+  extraIncomeDescription?: string;
   hasChildren?: boolean;
   numberOfChildren?: number;
+  childrenAges?: number[];
   householdSize?: number;
   
   // Profile Content
@@ -84,6 +87,11 @@ export interface TenantProfile {
   moveInDateEarliest?: string;
   availabilityFlexible?: boolean;
   reasonForMoving?: string;
+  storageKelder?: boolean;
+  storageZolder?: boolean;
+  storageBerging?: boolean;
+  storageGarage?: boolean;
+  storageSchuur?: boolean;
   
   // Guarantor Information
   guarantorAvailable?: boolean;
