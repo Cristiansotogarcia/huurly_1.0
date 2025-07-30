@@ -10,7 +10,7 @@ import { StatsGrid } from '@/components/standard/StatsGrid';
 import { DocumentsSection } from '@/components/standard/DocumentsSection';
 import ProfileOverview, { ProfileSection } from '@/components/standard/ProfileOverview';
 import { ProfilePhotoSection } from '@/components/dashboard/ProfilePhotoSection';
-import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart } from 'lucide-react';
+import { Eye, Calendar, FileText, CheckCircle, User as UserIcon, Briefcase, Home, Heart, Shield, Users } from 'lucide-react';
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -118,6 +118,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         { label: 'Partner beroep', value: tenantProfile.partnerProfession },
         { label: 'Partner dienstverband', value: tenantProfile.partnerEmploymentStatus },
         { label: 'Partner inkomen', value: tenantProfile.partnerMonthlyIncome },
+        { label: 'Aantal huisgenoten', value: tenantProfile.numberOfHousemates },
+        { label: 'Huidige woonsituatie', value: tenantProfile.currentLivingSituation },
         { label: 'Kinderen', value: tenantProfile.numberOfChildren },
         { label: 'Leeftijden kinderen', value: tenantProfile.childrenAges?.join(', ') },
         { label: 'Huisdieren', value: tenantProfile.hasPets ? 'Ja' : 'Nee' },
@@ -141,10 +143,12 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         { label: 'Thuiswerken', value: tenantProfile.workAndIncome?.workFromHome ? 'Ja' : 'Nee' },
         { label: 'Inkomensbewijs beschikbaar', value: tenantProfile.incomeProofAvailable ? 'Ja' : 'Nee' },
         { label: 'Borgsteller beschikbaar', value: tenantProfile.guarantorAvailable ? 'Ja' : 'Nee' },
-        { label: 'Borgsteller Naam', value: tenantProfile.guarantorName },
-        { label: 'Borgsteller Relatie', value: tenantProfile.guarantorRelationship },
-        { label: 'Borgsteller Telefoon', value: tenantProfile.guarantorPhone },
-        { label: 'Borgsteller Inkomen', value: tenantProfile.guarantorIncome },
+        { label: 'Borgsteller Naam', value: tenantProfile.guarantorDetails?.name || tenantProfile.guarantorName },
+        { label: 'Borgsteller Relatie', value: tenantProfile.guarantorDetails?.relationship || tenantProfile.guarantorRelationship },
+        { label: 'Borgsteller Telefoon', value: tenantProfile.guarantorDetails?.phone || tenantProfile.guarantorPhone },
+        { label: 'Borgsteller E-mail', value: tenantProfile.guarantorDetails?.email },
+        { label: 'Borgsteller Adres', value: tenantProfile.guarantorDetails?.address },
+        { label: 'Borgsteller Inkomen', value: tenantProfile.guarantorDetails?.income || tenantProfile.guarantorIncome },
       ],
     },
     {
@@ -159,12 +163,40 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
         { label: 'Vroegste Verhuisdatum', value: tenantProfile.earliestMoveDate },
         { label: 'Voorkeur Verhuisdatum', value: tenantProfile.preferredMoveDate },
         { label: 'Beschikbaarheid Flexibel', value: tenantProfile.availabilityFlexible ? 'Ja' : 'Nee' },
-        { label: 'Woningvoorkeur', value: formatHousingPreferences(tenantProfile.housingPreferences) },
+        { label: 'Woningtype', value: tenantProfile.housingPreferences?.propertyType },
+        { label: 'Gemeubileerd voorkeur', value: tenantProfile.housingPreferences?.furnishedPreference },
+        { label: 'Parkeren vereist', value: tenantProfile.housingPreferences?.parkingRequired ? 'Ja' : 'Nee' },
+        { label: 'Opslag nodig', value: tenantProfile.housingPreferences?.storageNeeds ? 'Ja' : 'Nee' },
+        { label: 'Huurcontract voorkeur', value: tenantProfile.housingPreferences?.leaseDurationPreference },
+        { label: 'Reden verhuizing', value: tenantProfile.housingPreferences?.reasonForMoving },
         { label: 'Opslag kelder', value: tenantProfile.storageKelder ? 'Ja' : 'Nee' },
         { label: 'Opslag zolder', value: tenantProfile.storageZolder ? 'Ja' : 'Nee' },
         { label: 'Opslag berging', value: tenantProfile.storageBerging ? 'Ja' : 'Nee' },
         { label: 'Opslag garage', value: tenantProfile.storageGarage ? 'Ja' : 'Nee' },
         { label: 'Opslag schuur', value: tenantProfile.storageSchuur ? 'Ja' : 'Nee' },
+      ],
+    },
+    {
+      title: 'Borgsteller',
+      icon: Shield,
+      iconColor: 'text-orange-600',
+      fields: [
+        { label: 'Borgsteller beschikbaar', value: tenantProfile.guarantorAvailable ? 'Ja' : 'Nee' },
+        { label: 'Borgsteller Naam', value: tenantProfile.guarantorDetails?.name || tenantProfile.guarantorName },
+        { label: 'Borgsteller Relatie', value: tenantProfile.guarantorDetails?.relationship || tenantProfile.guarantorRelationship },
+        { label: 'Borgsteller Telefoon', value: tenantProfile.guarantorDetails?.phone || tenantProfile.guarantorPhone },
+        { label: 'Borgsteller E-mail', value: tenantProfile.guarantorDetails?.email },
+        { label: 'Borgsteller Adres', value: tenantProfile.guarantorDetails?.address },
+        { label: 'Borgsteller Inkomen', value: tenantProfile.guarantorDetails?.income || tenantProfile.guarantorIncome },
+      ],
+    },
+    {
+      title: 'Referenties & Geschiedenis',
+      icon: Users,
+      iconColor: 'text-indigo-600',
+      fields: [
+        { label: 'Referenties beschikbaar', value: tenantProfile.referencesAvailable ? 'Ja' : 'Nee' },
+        { label: 'Huurverleden (jaren)', value: tenantProfile.rentalHistoryYears },
       ],
     },
     {
@@ -174,9 +206,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({ user: authUser }) =
       fields: [
         { label: 'Beschrijving', value: tenantProfile.description || 'N.v.t.' },
         { label: 'Motivatie', value: tenantProfile.lifestyleAndMotivation?.motivation || 'N.v.t.' },
-        { label: 'Referenties beschikbaar', value: tenantProfile.referencesAvailable ? 'Ja' : 'Nee' },
-        { label: 'Huurverleden (jaren)', value: tenantProfile.rentalHistoryYears },
-        { label: 'Reden verhuizing', value: tenantProfile.reasonForMoving },
       ],
     },
   ] : [];

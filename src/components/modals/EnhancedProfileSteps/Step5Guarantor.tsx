@@ -42,16 +42,16 @@ export default function Step5Guarantor() {
 
         {guarantorAvailable && (
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="borgsteller_naam">Naam garantsteller</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input {...register('borgsteller_naam')} placeholder="Volledige naam" className="pl-10" />
-                </div>
-                {errors.borgsteller_naam && <p className="text-red-500 text-xs">{`${errors.borgsteller_naam.message}`}</p>}
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_naam">Naam garantsteller</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input {...register('borgsteller_naam')} placeholder="Volledige naam" className="pl-10" />
               </div>
+              {errors.borgsteller_naam && <p className="text-red-500 text-xs">{`${errors.borgsteller_naam.message}`}</p>}
+            </div>
 
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="borgsteller_telefoon">Telefoon garantsteller</Label>
                 <div className="relative">
@@ -60,6 +60,18 @@ export default function Step5Guarantor() {
                 </div>
                 {errors.borgsteller_telefoon && <p className="text-red-500 text-xs">{`${errors.borgsteller_telefoon.message}`}</p>}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="borgsteller_email">E-mail garantsteller</Label>
+                <Input {...register('borgsteller_email')} type="email" placeholder="email@voorbeeld.nl" />
+                {errors.borgsteller_email && <p className="text-red-500 text-xs">{`${errors.borgsteller_email.message}`}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_adres">Adres garantsteller</Label>
+              <Input {...register('borgsteller_adres')} placeholder="Straatnaam 123, 1234 AB Plaats" />
+              {errors.borgsteller_adres && <p className="text-red-500 text-xs">{`${errors.borgsteller_adres.message}`}</p>}
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">

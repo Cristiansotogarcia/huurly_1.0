@@ -172,6 +172,21 @@ function sanitizeFurnishedPreference(value: any): "gemeubileerd" | "ongemeubilee
 
 export class UserService extends DatabaseService {
   /**
+   * Helper method to calculate age from birth date
+   */
+  private calculateAge(birthDate: string | Date): number {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age;
+  }
+  /**
    * Validate authentication and refresh session if needed
    */
   private async validateAuthentication(): Promise<void> {
@@ -307,6 +322,8 @@ export class UserService extends DatabaseService {
       }
 
       const sanitizedData = this.sanitizeInput(data);
+      
+
 
       const validation = this.validateRequiredFields(sanitizedData, [
         'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 
@@ -366,12 +383,18 @@ export class UserService extends DatabaseService {
           min_kamers: sanitizedData.slaapkamers || sanitizedData.min_kamers || 1,
           max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : sanitizedData.max_kamers || 3,
           
+          // Calculate age from birth date
+          leeftijd: sanitizedData.geboortedatum ? this.calculateAge(sanitizedData.geboortedatum) : null,
+          
           // Family information - FIXED: Added missing mappings
           heeft_kinderen: sanitizedData.heeftKinderen || sanitizedData.heeft_kinderen || false,
           aantal_kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0,
           kinderen_leeftijden: sanitizedData.leeftijdenKinderen || sanitizedData.kinderen_leeftijden || [],
+          aantal_huisgenoten: sanitizedData.aantalHuisgenoten || sanitizedData.aantal_huisgenoten || 0,
+          huidige_woonsituatie: sanitizedData.huidigeWoonsituatie || sanitizedData.huidige_woonsituatie || null,
           partner: sanitizedData.heeftPartner || sanitizedData.heeft_partner || false,
-          roken: sanitizedData.rookt || false,
+          partner_maandinkomen: sanitizedData.partner_inkomen || sanitizedData.partner_monthly_income || null,
+          roken: sanitizedData.roken || sanitizedData.smokes || false,
           huisdieren: sanitizedData.heeftHuisdieren || sanitizedData.huisdieren || false,
           
           // Guarantor information
@@ -380,6 +403,7 @@ export class UserService extends DatabaseService {
           borgsteller_telefoon: sanitizedData.borgsteller_telefoon || null,
           borgsteller_inkomen: sanitizedData.borgsteller_inkomen || null,
           borgsteller_relatie: sanitizedData.borgsteller_relatie || null,
+          borgsteller_details: sanitizedData.borgstellerDetails || sanitizedData.borgsteller_details || null,
           inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijs_beschikbaar || false,
           
           // Timing information - FIXED: Added date conversion
@@ -388,6 +412,10 @@ export class UserService extends DatabaseService {
           vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? convertToISODate(sanitizedData.vroegste_verhuisdatum) : 
                                 sanitizedData.verhuis_datum_vroegst ? convertToISODate(sanitizedData.verhuis_datum_vroegst) : null,
           beschikbaarheid_flexibel: sanitizedData.beschikbaarheid_flexibel || sanitizedData.beschikbaarheid_flexibel_timing || false,
+          
+          // Direct field mappings for dashboard display
+          huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur || sanitizedData.huurcontractVoorkeur || sanitizedData.lease_duration_preference || null,
+          reden_verhuizing: sanitizedData.reden_verhuizing || sanitizedData.redenVerhuizing || sanitizedData.reason_for_moving || null,
           
           // Preferences stored in JSON
           woningvoorkeur: {
@@ -424,11 +452,10 @@ export class UserService extends DatabaseService {
           
           // Lifestyle details
           huisdier_details: sanitizedData.huisdier_details,
-          rook_details: sanitizedData.rook_details,
+          rook_details: sanitizedData.smoking_details,
           
           // References and history
           verhuurgeschiedenis_jaren: sanitizedData.verhuurgeschiedenis_jaren,
-          reden_verhuizing: sanitizedData.reden_verhuizing,
           referenties_beschikbaar: sanitizedData.referenties_beschikbaar || false,
           
           // Budget preferences
@@ -444,14 +471,7 @@ export class UserService extends DatabaseService {
 
         // Calculate age from birth date
         if (sanitizedData.geboortedatum) {
-          const birthDate = new Date(sanitizedData.geboortedatum);
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          tenantProfileData.leeftijd = age;
+          tenantProfileData.leeftijd = this.calculateAge(sanitizedData.geboortedatum);
         }
 
         let tenantProfile;

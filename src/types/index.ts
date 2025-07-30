@@ -62,6 +62,8 @@ export interface TenantProfile {
   numberOfChildren?: number;
   childrenAges?: number[];
   householdSize?: number;
+  numberOfHousemates?: number;
+  currentLivingSituation?: string;
   
   // Profile Content
   bio: string;
@@ -100,6 +102,14 @@ export interface TenantProfile {
   guarantorPhone?: string;
   guarantorIncome?: number;
   incomeProofAvailable?: boolean;
+  guarantorDetails?: {
+    name?: string;
+    relationship?: string;
+    phone?: string;
+    income?: number;
+    email?: string;
+    address?: string;
+  };
   
   // Emergency Contact
   emergencyContactName?: string;

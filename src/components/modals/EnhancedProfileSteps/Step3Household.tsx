@@ -208,6 +208,54 @@ export default function Step3Household() {
           Totaal aantal personen in huishouden: <span className="font-semibold">{calculateHouseholdSize()}</span>
         </p>
       </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="number_of_housemates">Aantal huisgenoten</Label>
+          <Input
+            id="number_of_housemates"
+            type="number"
+            min="0"
+            max="10"
+            {...register('number_of_housemates', { valueAsNumber: true })}
+            placeholder="Bijvoorbeeld: 2"
+          />
+          {errors.number_of_housemates && <p className="text-red-500 text-xs">{`${errors.number_of_housemates.message}`}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="current_living_situation">Huidige woonsituatie</Label>
+          <Controller
+            name="current_living_situation"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer je huidige woonsituatie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="alleen">Alleenstaand</SelectItem>
+                  <SelectItem value="partner">Met partner</SelectItem>
+                  <SelectItem value="ouders">Bij ouders</SelectItem>
+                  <SelectItem value="vrienden">Met vrienden</SelectItem>
+                  <SelectItem value="studentenhuis">Studentenhuis</SelectItem>
+                  <SelectItem value="andere">Andere</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.current_living_situation && <p className="text-red-500 text-xs">{`${errors.current_living_situation.message}`}</p>}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <Label className="text-lg font-semibold">Geschat huishoudgrootte</Label>
+          <div className="text-2xl font-bold text-purple-600 mt-2">
+            {calculateHouseholdSize()} personen
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

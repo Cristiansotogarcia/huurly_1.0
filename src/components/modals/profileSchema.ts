@@ -45,6 +45,10 @@ export const profileSchema = z.object({
   has_children: z.boolean().default(false),
   number_of_children: z.number().min(0).max(10).optional(),
   children_ages: z.array(z.number().min(0).max(25)).optional(),
+  
+  // Household composition
+  number_of_housemates: z.number().min(0).max(10).optional(),
+  current_living_situation: z.enum(['studentenkamer', 'huurwoning', 'koopwoning', 'bij_familie', 'bij_vrienden', 'tijdelijk', 'anders']).optional(),
 
   // Step 2: Employment
   profession: z.string().min(1, 'Beroep is verplicht'),
