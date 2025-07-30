@@ -58,12 +58,12 @@ export function convertFromISODate(dateString: string): string {
     return '';
   }
   
-  // Format as DD-MM-YYYY
+  // Format as DD/MM/YYYY
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
-  
-  return `${day}-${month}-${year}`;
+
+  return `${day}/${month}/${year}`;
 }
 
 /**
