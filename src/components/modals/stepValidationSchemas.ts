@@ -64,6 +64,7 @@ export const step3Schema = z.object({});
 export const step4Schema = z.object({
   preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
+  min_budget: z.number().min(1, 'Minimum budget is verplicht'),
   max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
 });
 
@@ -106,6 +107,7 @@ export const getFieldLabel = (fieldName: string): string => {
     monthly_income: 'Maandinkomen',
     preferred_city: 'Voorkeursstad',
     preferred_property_type: 'Woningtype',
+    min_budget: 'Minimum budget',
     max_budget: 'Maximaal budget',
     bio: 'Bio',
     motivation: 'Motivatie',

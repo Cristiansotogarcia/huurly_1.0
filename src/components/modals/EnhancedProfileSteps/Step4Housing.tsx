@@ -104,13 +104,13 @@ export default function Step4Housing() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="min_budget">Minimum budget</Label>
+          <Label htmlFor="min_budget">Minimum budget *</Label>
           <div className="relative">
             <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               id="min_budget"
               type="number"
-              {...register('min_budget', { valueAsNumber: true })}
+              {...register('min_budget', { valueAsNumber: true, required: true })}
               placeholder="1200"
               className="pl-10"
             />
