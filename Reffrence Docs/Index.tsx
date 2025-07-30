@@ -31,10 +31,6 @@ const Index = () => {
 
   useEffect(() => {
     // Debug: Log all URL parts to understand the structure
-    console.log('Homepage - Full URL:', window.location.href);
-    console.log('Homepage - Hash:', window.location.hash);
-    console.log('Homepage - Search:', window.location.search);
-    console.log('Homepage - Pathname:', window.location.pathname);
     
     // Check for password recovery token in hash or search params
     const hash = window.location.hash;
@@ -42,7 +38,6 @@ const Index = () => {
     
     // If we have a recovery token, redirect to password reset page and don't do any other redirects
     if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
-      console.log('Recovery token detected, redirecting to /wachtwoord-herstellen');
       navigate('/wachtwoord-herstellen');
       return;
     }
@@ -50,7 +45,6 @@ const Index = () => {
     // Check for email verification success - only handle once
     if ((hash.includes('type=signup') || searchParams.get('type') === 'signup')) {
       if (!hasHandledEmailVerification.current) {
-        console.log('Email verification success detected');
         hasHandledEmailVerification.current = true;
         handleEmailVerificationSuccess();
         // Clean up URL
@@ -73,7 +67,6 @@ const Index = () => {
     const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
     
     if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current) {
-      console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
         case 'huurder':
           navigate('/huurder-dashboard');
@@ -119,7 +112,6 @@ const Index = () => {
           setShowEmailVerificationSuccessModal(false);
           // Navigate to dashboard based on user role
           if (user && isAuthenticated) {
-            console.log('Navigating to dashboard for user role:', user.role);
             switch (user.role) {
               case 'huurder':
                 navigate('/huurder-dashboard');
@@ -134,10 +126,8 @@ const Index = () => {
                 navigate('/beheerder-dashboard');
                 break;
               default:
-                console.log('Unknown user role, staying on homepage');
             }
           } else {
-            console.log('User not authenticated when trying to go to dashboard');
             // If user is not authenticated yet, wait a bit and try again
             setTimeout(() => {
               window.location.reload();

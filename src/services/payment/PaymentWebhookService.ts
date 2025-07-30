@@ -7,7 +7,6 @@ import { PaymentRecord } from './PaymentRecordService';
 
 export class PaymentWebhookService extends DatabaseService {
   async handlePaymentSuccess(sessionId: string): Promise<DatabaseResponse<PaymentRecord>> {
-    console.log(`[PaymentWebhookService] Handling payment success for session: ${sessionId}`);
     const MAX_RETRIES = 5;
     const INITIAL_DELAY = 2000; // 2 seconds
 
@@ -26,7 +25,6 @@ export class PaymentWebhookService extends DatabaseService {
 
         if (existingSubscription) {
           if (existingSubscription.status === 'actief') {
-            console.log(`[PaymentWebhookService] Payment already processed for session: ${sessionId}`);
             return { data: existingSubscription, error: null };
           } else {
             // Update existing record to active
@@ -45,7 +43,6 @@ export class PaymentWebhookService extends DatabaseService {
               throw ErrorHandler.handleDatabaseError(error);
             }
 
-            console.log('[PaymentWebhookService] Subscription successfully updated to active:', data);
             await this.createAuditLog('PAYMENT_SUCCESS', 'abonnementen', data.id, null, data);
 
             // Create success notification
@@ -67,14 +64,12 @@ export class PaymentWebhookService extends DatabaseService {
 
       // Check if we found and processed the subscription
       if (result.success && result.data) {
-        console.log(`[PaymentWebhookService] Successfully handled payment for session ${sessionId} on attempt ${i + 1}`);
         return result;
       }
 
       // If not found, wait and retry
       if (i < MAX_RETRIES - 1) {
         const delay = INITIAL_DELAY * Math.pow(2, i);
-        console.log(`[PaymentWebhookService] Attempt ${i + 1} failed. No subscription found yet. Retrying in ${delay}ms...`);
         await new Promise(res => setTimeout(res, delay));
       }
     }

@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
     let event;
     try {
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-      console.log("✅ Verified Stripe event:", event.type);
     } catch (err: any) {
       console.error("❌ Webhook signature verification failed:", err.message);
       return new Response(`Webhook Error: ${err.message}`, { status: 400, headers: responseHeaders });
@@ -81,11 +80,9 @@ Deno.serve(async (req) => {
 
     // === CHECKOUT SESSION COMPLETED ===
     if (event.type === "checkout.session.completed") {
-      console.log("🎯 Processing checkout.session.completed event");
       const session = event.data.object as ExtendedSession;
       const userId = session.metadata?.user_id;
 
-      console.log("📋 Session details:", {
         sessionId: session.id,
         userId: userId,
         subscriptionId: session.subscription,
@@ -103,10 +100,8 @@ Deno.serve(async (req) => {
       }
 
       // ✅ Haal Stripe subscription details op
-      console.log("🔍 Retrieving subscription from Stripe:", session.subscription);
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
       
-      console.log("📊 Stripe subscription details:", {
         id: subscription.id,
         status: subscription.status,
         mappedStatus: mapStripeStatusToDutch(subscription.status)
@@ -134,7 +129,6 @@ Deno.serve(async (req) => {
         currency: session.currency,
       };
       
-      console.log("💾 Upserting subscription data:", subscriptionData);
       
       const { error } = await supabase
         .from("abonnementen")
@@ -144,7 +138,6 @@ Deno.serve(async (req) => {
         console.error("❌ Failed to insert abonnement:", error);
         return new Response(`Database error: ${error.message}`, { status: 500, headers: responseHeaders });
       } else {
-        console.log("✅ Successfully upserted subscription for user:", userId);
       }
 
       // ✅ Notificatie maken
@@ -219,7 +212,6 @@ Deno.serve(async (req) => {
           error,
         });
       } else {
-        console.log("✅ Subscription status updated:", {
           subscriptionId: subscription.id,
           status: subscription.status,
         });

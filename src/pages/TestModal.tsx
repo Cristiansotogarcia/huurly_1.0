@@ -7,7 +7,6 @@ const TestModal: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleProfileSuccess = () => {
-    console.log('Profile updated successfully!');
   };
 
   return (

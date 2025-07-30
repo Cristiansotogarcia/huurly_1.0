@@ -15,28 +15,23 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🔄 Running subscription maintenance tasks...");
 
     // Check for expiring subscriptions and send notifications
-    console.log("📅 Checking for expiring subscriptions...");
     const { error: expiringError } = await supabase.rpc('check_expiring_subscriptions');
     
     if (expiringError) {
       console.error("❌ Error checking expiring subscriptions:", expiringError);
       throw expiringError;
     } else {
-      console.log("✅ Successfully checked expiring subscriptions");
     }
 
     // Expire overdue subscriptions
-    console.log("⏰ Expiring overdue subscriptions...");
     const { error: expireError } = await supabase.rpc('expire_subscriptions');
     
     if (expireError) {
       console.error("❌ Error expiring subscriptions:", expireError);
       throw expireError;
     } else {
-      console.log("✅ Successfully expired overdue subscriptions");
     }
 
     // Get statistics
@@ -53,7 +48,6 @@ serve(async (req) => {
         return acc;
       }, {} as Record<string, number>);
       
-      console.log("📊 Subscription stats:", statusCount);
     }
 
     return new Response(

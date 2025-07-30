@@ -20,7 +20,6 @@ const AuthConfirm = () => {
       const type = searchParams.get('type');
       const next = searchParams.get('next') || '/';
 
-      console.log('AuthConfirm: Processing auth confirmation', {
         token_hash: token_hash ? `${token_hash.substring(0, 10)}...` : null,
         type,
         next
@@ -72,7 +71,6 @@ const AuthConfirm = () => {
           return;
         }
 
-        console.log('AuthConfirm: Token verification successful', {
           hasSession: !!data.session,
           hasUser: !!data.user,
           type
@@ -98,7 +96,6 @@ const AuthConfirm = () => {
         }
 
         // For any other type, redirect to the next URL or dashboard
-        console.log('AuthConfirm: Redirecting to next URL:', next);
         navigate(next);
 
       } catch (error) {
