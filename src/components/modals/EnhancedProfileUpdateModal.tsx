@@ -151,33 +151,15 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
   // Reset form when initialData changes (e.g., switching between create/edit modes)
   useEffect(() => {
     const newValues = getDefaultValues();
-    console.log('🔄 EnhancedProfileUpdateModal: Resetting form with values:', newValues);
-    console.log('🖼️ Profile picture URL from initialData:', initialData?.profilePictureUrl);
-    console.log('🖼️ Profile picture URL in newValues:', newValues.profilePictureUrl);
     methods.reset(newValues);
   }, [initialData]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    console.log('🚀 Form submission started', data);
-    console.log('📋 Form validation status:', methods.formState.isValid);
-    console.log('📋 Form errors:', methods.formState.errors);
-    
-    // Debug: Check if we're on the last step
-    console.log('📍 Current step (0-indexed):', currentStep);
-    console.log('📍 Current step (1-indexed):', currentStep + 1);
-    console.log('📍 Total steps:', steps.length);
-    console.log('📍 Is last step calculation:', currentStep, '===', steps.length - 1, '=', currentStep === steps.length - 1);
-    console.log('📍 Is last step:', isLastStep);
-    console.log('📍 Steps array:', steps);
-    console.log('📍 Step components length:', stepComponents.length);
     
     // Validate entire form before submission
     try {
-      console.log('🔍 Validating entire form...');
       const validationResult = profileSchema.parse(data);
-      console.log('✅ Full form validation passed');
     } catch (validationError) {
-      console.error('❌ Full form validation failed:', validationError);
       if (validationError instanceof z.ZodError) {
         const errorMessages = validationError.errors.map(err => err.message).join(', ');
         toast({
@@ -191,10 +173,8 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
 
     // Set manual loading state for async operation
     setIsManuallySubmitting(true);
-    console.log('🔄 Manual loading state set to true');
 
     try {
-      console.log('🔄 Calling onProfileComplete with data:', data);
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -203,15 +183,12 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
       
       const savePromise = onProfileComplete(data);
       await Promise.race([savePromise, timeoutPromise]);
-      
-      console.log('✅ onProfileComplete called successfully');
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
       });
       onClose();
     } catch (error) {
-      console.error('❌ Error in form submission:', error);
       toast({
         title: 'Fout',
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
@@ -220,7 +197,6 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
     } finally {
       // Always reset manual loading state
       setIsManuallySubmitting(false);
-      console.log('🔄 Manual loading state set to false');
     }
   };
 
@@ -237,32 +213,7 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
         </p>
         <FormProvider {...methods}>
           <form 
-            onSubmit={(e) => {
-              console.log('🔥 Form onSubmit triggered!', e);
-              console.log('🔥 Form target:', e.target);
-              console.log('🔥 Form current target:', e.currentTarget);
-              console.log('🔥 Form validation state:', {
-                isValid: methods.formState.isValid,
-                errors: methods.formState.errors,
-                isDirty: methods.formState.isDirty,
-                isSubmitting: methods.formState.isSubmitting
-              });
-              console.log('🔥 Current form values:', methods.getValues());
-              
-              // Add explicit validation check
-              const formData = methods.getValues();
-              console.log('🔥 About to call handleSubmit with onSubmit function');
-              
-              methods.handleSubmit(
-                (data) => {
-                  console.log('🔥 handleSubmit SUCCESS callback called with data:', data);
-                  onSubmit(data);
-                },
-                (errors) => {
-                  console.log('🔥 handleSubmit ERROR callback called with errors:', errors);
-                }
-              )(e);
-            }} 
+            onSubmit={methods.handleSubmit(onSubmit)} 
             className="space-y-6"
           >
             <ProfileFormStepper 
@@ -280,34 +231,7 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
               validateCurrentStep={validateCurrentStep}
               isSubmitting={methods.formState.isSubmitting || isManuallySubmitting}
             />
-            
-            {/* Debug button for testing - remove after fixing */}
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 mb-2">🐛 Debug Mode Active</p>
-              <div className="flex gap-2">
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    console.log('🧪 Debug: Current form values:', methods.getValues());
-                    console.log('🧪 Debug: Form errors:', methods.formState.errors);
-                    console.log('🧪 Debug: Is valid:', methods.formState.isValid);
-                  }}
-                  className="px-3 py-1 bg-yellow-500 text-white text-xs rounded"
-                >
-                  Log Form State
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    console.log('🧪 Debug: Force submit triggered');
-                    methods.handleSubmit(onSubmit)();
-                  }}
-                  className="px-3 py-1 bg-red-500 text-white text-xs rounded"
-                >
-                  Force Submit
-                </button>
-              </div>
-            </div>
+
           </form>
         </FormProvider>
       </div>
