@@ -43,6 +43,18 @@ export class ConsolidatedDashboardService extends DatabaseService {
       profilePicture: rawTenant.profiel_foto || undefined,
       coverPhoto: rawTenant.cover_foto || undefined,
       isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
+      // Expose commonly used flat fields for components expecting them
+      preferredLocations: Array.isArray(rawTenant.locatie_voorkeur)
+        ? rawTenant.locatie_voorkeur
+        : rawTenant.locatie_voorkeur
+          ? [rawTenant.locatie_voorkeur]
+          : [],
+      maxRent: rawTenant.max_huur || 0,
+      minRooms: rawTenant.min_kamers || undefined,
+      maxRooms: rawTenant.max_kamers || undefined,
+      earliestMoveDate: rawTenant.vroegste_verhuisdatum || undefined,
+      preferredMoveDate: rawTenant.voorkeur_verhuisdatum || undefined,
+      description: rawTenant.beschrijving || '',
       preferences: {
         minBudget: rawTenant.min_huur || 0,
         maxBudget: rawTenant.max_huur || 0,
