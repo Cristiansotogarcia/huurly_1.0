@@ -166,11 +166,9 @@ export const useHuurder = () => {
       return;
     }
 
-    console.log('🔥 Raw profileData received:', profileData);
 
     try {
       const mappedData = mapProfileFormToDutch(profileData);
-      console.log('🔥 Mapped data for API:', mappedData);
       
       // Check if required fields are present in mapped data
       const requiredFields = ['voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'];
@@ -180,9 +178,7 @@ export const useHuurder = () => {
         console.error('🔥 Available fields in mapped data:', Object.keys(mappedData));
       }
       
-      console.log('🔥 Calling userService.createTenantProfile...');
       const result = await userService.createTenantProfile(mappedData);
-      console.log('🔥 API call result:', result);
 
       toast({
         title: 'Succes',

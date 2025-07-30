@@ -36,7 +36,6 @@ const Index = () => {
     // Check for email verification success - only handle once
     if ((hash.includes('type=signup') || searchParams.get('type') === 'signup')) {
       if (!hasHandledEmailVerification.current) {
-        console.log('Email verification success detected');
         hasHandledEmailVerification.current = true;
         handleEmailVerificationSuccess();
         // Clean up URL
@@ -59,7 +58,6 @@ const Index = () => {
     const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
     
     if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current) {
-      console.log('User authenticated, redirecting to dashboard:', user.role);
       switch (user.role) {
         case 'huurder':
           navigate('/huurder-dashboard');
@@ -105,7 +103,6 @@ const Index = () => {
           setShowEmailVerificationSuccessModal(false);
           // Navigate to dashboard based on user role
           if (user && isAuthenticated) {
-            console.log('Navigating to dashboard for user role:', user.role);
             switch (user.role) {
               case 'huurder':
                 navigate('/huurder-dashboard');
@@ -120,10 +117,8 @@ const Index = () => {
                 navigate('/beheerder-dashboard');
                 break;
               default:
-                console.log('Unknown user role, staying on homepage');
             }
           } else {
-            console.log('User not authenticated when trying to go to dashboard');
             // If user is not authenticated yet, wait a bit and try again
             setTimeout(() => {
               window.location.reload();

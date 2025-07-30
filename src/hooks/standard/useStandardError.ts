@@ -100,7 +100,6 @@ export function useStandardError(customMessages: Partial<ErrorMessages> = {}) {
     // Log to external service (implement as needed)
     if (logToService) {
       // Example: logErrorToService(errorObj, type);
-      console.log('Error would be logged to service:', { error: errorObj, type });
     }
     
     return { error: errorObj, type };

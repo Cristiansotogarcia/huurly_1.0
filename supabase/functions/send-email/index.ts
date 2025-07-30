@@ -115,7 +115,6 @@ serve(async (req) => {
         `
         break
       default:
-        console.log('Unsupported email type:', emailType)
         return new Response('Unsupported email type', { headers, status: 400 })
     }
 

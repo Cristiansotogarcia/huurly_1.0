@@ -129,10 +129,6 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
 
   const getImageUrl = () => {
     const result = previewUrl || currentImageUrl || null;
-    console.log('🖼️ ProfilePictureUpload: getImageUrl() called');
-    console.log('🖼️ ProfilePictureUpload: previewUrl:', previewUrl);
-    console.log('🖼️ ProfilePictureUpload: currentImageUrl:', currentImageUrl);
-    console.log('🖼️ ProfilePictureUpload: returning:', result);
     return result;
   };
 

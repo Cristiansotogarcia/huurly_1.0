@@ -5,7 +5,6 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
-  console.log(`[CREATE-CHECKOUT-SESSION] ${step}${detailsStr}`);
 };
 
 // Cache environment variables and initialize clients once

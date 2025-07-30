@@ -36,8 +36,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   const getInitialFormData = (user?: any): Partial<ProfileFormData> | undefined => {
     if (!tenantProfile && !user) return undefined;
 
-    console.log('🔍 DashboardModals: tenantProfile data:', tenantProfile);
-    console.log('🖼️ DashboardModals: tenantProfile.profiel_foto:', tenantProfile?.profiel_foto);
 
     // Properly handle multi-word last names like "Soto Garcia"
     const nameParts = user?.name?.split(' ') || [''];

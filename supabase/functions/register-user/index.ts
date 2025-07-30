@@ -42,7 +42,6 @@ serve(async (req) => {
 
     const { id, email, firstName, lastName, role } = await req.json()
 
-    console.log('Registering user:', { id, email, firstName, lastName, role })
 
     // Verify user exists in auth.users table first
     const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(id)
@@ -52,7 +51,6 @@ serve(async (req) => {
       throw new Error(`User with ID ${id} not found in authentication system`)
     }
 
-    console.log('User verified in auth system:', authUser.user.id)
 
     // Cache timestamp for consistency and performance
     const timestamp = new Date().toISOString()
@@ -84,11 +82,9 @@ serve(async (req) => {
       throw new Error('Failed to create user record')
     }
 
-    console.log('User created successfully:', userData[0])
 
     // Create role-specific record with optimized approach
     if (role === 'huurder') {
-      console.log('Creating huurder record for user:', id)
       const { data: huurderData, error: huurderError } = await supabase.from('huurders').upsert(
         {
           id,
@@ -116,7 +112,6 @@ serve(async (req) => {
         throw new Error('Failed to create huurder record')
       }
 
-      console.log('Huurder created successfully:', huurderData[0])
     } else if (role === 'verhuurder') {
       // Optimized: Remove .select() for non-critical verification
       const { error: verhuurderError } = await supabase.from('verhuurders').upsert(
@@ -136,7 +131,6 @@ serve(async (req) => {
         console.error('Error creating verhuurder:', verhuurderError)
         throw verhuurderError
       }
-      console.log('Verhuurder created successfully for user:', id)
     } else if (role === 'beoordelaar') {
       // Optimized: Remove .select() for non-critical verification
       const { error: beoordelaarError } = await supabase.from('beoordelaars').upsert(
@@ -154,10 +148,8 @@ serve(async (req) => {
         console.error('Error creating beoordelaar:', beoordelaarError)
         throw beoordelaarError
       }
-      console.log('Beoordelaar created successfully for user:', id)
     } else if (role === 'admin' || role === 'beheerder') {
       // Handle both 'admin' (from roleMapper) and 'beheerder' (direct) roles
-      console.log('Creating beheerder record for user:', id)
       const { error: beheerderError } = await supabase.from('beheerders').upsert(
         {
           id,
@@ -173,13 +165,11 @@ serve(async (req) => {
         console.error('Error creating beheerder:', beheerderError)
         throw beheerderError
       }
-      console.log('Beheerder created successfully for user:', id)
     }
 
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema
     // Role information is already stored in the gebruikers table via the 'rol' column
 
-    console.log('User registration completed successfully')
 
     return new Response(JSON.stringify({ success: true }), {
       headers,

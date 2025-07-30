@@ -21,7 +21,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 async function setupAdminUser(email: string) {
   try {
-    console.log(`Setting up admin user for: ${email}`);
     
     // First, check if user exists in auth.users
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
@@ -35,14 +34,11 @@ async function setupAdminUser(email: string) {
     
     if (!authUser) {
       console.error(`No authenticated user found with email: ${email}`);
-      console.log('Available users:');
       authUsers.users.forEach(user => {
-        console.log(`- ${user.email} (${user.id})`);
       });
       return;
     }
     
-    console.log(`Found auth user: ${authUser.id}`);
     
     // Check if user exists in gebruikers table
     const { data: existingUser, error: fetchError } = await supabase
@@ -58,7 +54,6 @@ async function setupAdminUser(email: string) {
     
     if (existingUser) {
       // User exists, update their role to admin
-      console.log(`Updating existing user role to admin...`);
       const { error: updateError } = await supabase
         .from('gebruikers')
         .update({ 
@@ -72,10 +67,8 @@ async function setupAdminUser(email: string) {
         return;
       }
       
-      console.log(`✅ Successfully updated ${email} to admin role`);
     } else {
       // User doesn't exist in gebruikers table, create them as admin
-      console.log(`Creating new admin user record...`);
       const { error: insertError } = await supabase
         .from('gebruikers')
         .insert({
@@ -93,7 +86,6 @@ async function setupAdminUser(email: string) {
         return;
       }
       
-      console.log(`✅ Successfully created ${email} as admin user`);
     }
     
     // Verify the change
@@ -108,14 +100,6 @@ async function setupAdminUser(email: string) {
       return;
     }
     
-    console.log('\n📋 User details:');
-    console.log(`ID: ${updatedUser.id}`);
-    console.log(`Email: ${updatedUser.email}`);
-    console.log(`Name: ${updatedUser.naam}`);
-    console.log(`Role: ${updatedUser.rol}`);
-    console.log(`Profile Complete: ${updatedUser.profiel_compleet}`);
-    console.log(`Created: ${updatedUser.aangemaakt_op}`);
-    console.log(`Updated: ${updatedUser.bijgewerkt_op}`);
     
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -127,16 +111,12 @@ const targetEmail = process.argv[2];
 
 if (!targetEmail) {
   console.error('Please provide an email address as a command-line argument.');
-  console.log('Usage: bun scripts/setup-admin-user.ts <email>');
   process.exit(1);
 }
 
-console.log('🚀 Admin User Setup Script');
-console.log('============================\n');
 
 setupAdminUser(targetEmail)
   .then(() => {
-    console.log('\n✨ Script completed');
     process.exit(0);
   })
   .catch((error) => {

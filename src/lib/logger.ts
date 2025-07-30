@@ -1,20 +1,18 @@
-
 import pino from 'pino';
 
 const logger = pino({
   level: 'info',
   browser: {
-    asObject: true
-  }
+    asObject: true,
+  },
 });
 
-// Enhanced logger with additional methods
 export const enhancedLogger = {
-  log: (...args: any[]) => console.log(...args),
-  error: (...args: any[]) => console.error(...args),
-  warn: (...args: any[]) => console.warn(...args),
-  info: (...args: any[]) => console.info(...args),
-  debug: (...args: any[]) => console.debug(...args),
+  log: (...args: any[]) => logger.info(...args),
+  error: (...args: any[]) => logger.error(...args),
+  warn: (...args: any[]) => logger.warn(...args),
+  info: (...args: any[]) => logger.info(...args),
+  debug: (...args: any[]) => logger.debug(...args),
 };
 
 export { logger };
