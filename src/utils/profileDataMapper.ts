@@ -63,6 +63,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     vroegste_verhuisdatum: data.move_in_date_earliest ? convertDateFormat(data.move_in_date_earliest) : undefined,
     beschikbaarheid_flexibel: data.availability_flexible,
     huurcontract_voorkeur: data.lease_duration_preference,
+    parkeren_vereist: data.parking_required,
     
     // Storage preferences
     opslag_kelder: data.storage_kelder,

@@ -94,6 +94,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       move_in_date_preferred: tenantProfile?.voorkeur_verhuisdatum ? convertFromISODate(tenantProfile.voorkeur_verhuisdatum) : undefined,
       move_in_date_earliest: tenantProfile?.vroegste_verhuisdatum ? convertFromISODate(tenantProfile.vroegste_verhuisdatum) : undefined,
       availability_flexible: tenantProfile?.beschikbaarheid_flexibel_timing || tenantProfile?.beschikbaarheid_flexibel || false,
+      parking_required: tenantProfile?.woningvoorkeur?.parkeren || false,
       lease_duration_preference: tenantProfile?.huurcontract_voorkeur || undefined,
       storage_kelder: tenantProfile?.opslag_kelder || false,
       storage_zolder: tenantProfile?.opslag_zolder || false,
