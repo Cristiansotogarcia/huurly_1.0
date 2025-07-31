@@ -11,7 +11,7 @@ export const Logo = ({ className }: LogoProps) => {
       <img
         src="/huurly-logo.svg"
         alt="Huurly"
-        className="h-6 w-auto sm:h-8"
+        className="h-4 w-auto sm:h-6 md:h-8"
         onError={(e) => {
           // Fallback to text if SVG fails to load
           const target = e.target as HTMLImageElement;
@@ -19,13 +19,13 @@ export const Logo = ({ className }: LogoProps) => {
           const parent = target.parentElement;
           if (parent && !parent.querySelector('.logo-text')) {
             const textLogo = document.createElement('span');
-            textLogo.className = 'logo-text text-xl sm:text-2xl font-bold text-dutch-blue';
+            textLogo.className = 'logo-text text-sm sm:text-xl md:text-2xl font-bold text-dutch-blue';
             textLogo.textContent = 'Huurly';
             parent.appendChild(textLogo);
           }
         }}
       />
-      <span className="ml-2 text-xl sm:text-2xl font-bold text-dutch-blue">Huurly</span>
+      <span className="ml-1 sm:ml-2 text-sm sm:text-xl md:text-2xl font-bold text-dutch-blue">Huurly</span>
     </div>
   );
 };

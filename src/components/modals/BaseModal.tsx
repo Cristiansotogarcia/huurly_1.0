@@ -40,15 +40,15 @@ export interface BaseModalActionsProps {
 }
 
 const sizeClasses = {
-  sm: 'max-w-[95vw] sm:max-w-sm',
-  md: 'max-w-[95vw] sm:max-w-md',
-  lg: 'max-w-[95vw] sm:max-w-lg',
-  xl: 'max-w-[95vw] sm:max-w-xl',
-  '2xl': 'max-w-[95vw] sm:max-w-2xl',
-  '3xl': 'max-w-[95vw] sm:max-w-3xl',
-  '4xl': 'max-w-[95vw] sm:max-w-4xl',
-  '5xl': 'max-w-[95vw] sm:max-w-5xl',
-  '6xl': 'max-w-[95vw] sm:max-w-6xl'
+  sm: 'max-w-[90vw] sm:max-w-sm',
+  md: 'max-w-[90vw] sm:max-w-md',
+  lg: 'max-w-[90vw] sm:max-w-lg',
+  xl: 'max-w-[90vw] sm:max-w-xl md:max-w-xl',
+  '2xl': 'max-w-[90vw] sm:max-w-lg md:max-w-2xl',
+  '3xl': 'max-w-[90vw] sm:max-w-xl md:max-w-3xl',
+  '4xl': 'max-w-[90vw] sm:max-w-2xl md:max-w-4xl',
+  '5xl': 'max-w-[90vw] sm:max-w-2xl md:max-w-5xl',
+  '6xl': 'max-w-[90vw] sm:max-w-3xl md:max-w-6xl'
 };
 
 export const BaseModal: React.FC<BaseModalProps> = ({
@@ -58,18 +58,18 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   icon: Icon,
   children,
   size = 'md',
-  maxHeight = 'max-h-[90vh]',
+  maxHeight = 'max-h-[80vh]',
   showCloseButton = true,
   className = ''
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className={`${sizeClasses[size]} ${maxHeight} overflow-y-auto mx-4 sm:mx-auto ${className}`}
+        className={`${sizeClasses[size]} ${maxHeight} overflow-y-auto mx-2 sm:mx-auto ${className} p-3 sm:p-6`}
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            {Icon && <Icon className="w-5 h-5 mr-2" />}
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="flex items-center text-base sm:text-lg">
+            {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
             {title}
           </DialogTitle>
         </DialogHeader>
@@ -90,13 +90,13 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row justify-end pt-4 border-t space-y-2 sm:space-y-0 sm:space-x-2">
+    <div className="flex flex-col sm:flex-row justify-end pt-3 sm:pt-4 border-t space-y-2 sm:space-y-0 sm:space-x-2">
       {cancelAction && (
         <Button
           variant="outline"
           onClick={cancelAction.onClick}
           disabled={cancelAction.disabled}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2"
         >
           {cancelAction.label || 'Annuleren'}
         </Button>
@@ -107,7 +107,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={secondaryAction.variant || 'outline'}
           onClick={secondaryAction.onClick}
           disabled={secondaryAction.disabled}
-          className={`w-full sm:w-auto ${secondaryAction.className || ''}`}
+          className={`w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2 ${secondaryAction.className || ''}`}
         >
           {secondaryAction.label}
         </Button>
@@ -118,7 +118,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={primaryAction.variant || 'default'}
           onClick={primaryAction.onClick}
           disabled={primaryAction.disabled || primaryAction.loading}
-          className={`w-full sm:w-auto ${primaryAction.className || ''}`}
+          className={`w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2 ${primaryAction.className || ''}`}
         >
           {primaryAction.loading ? `${primaryAction.label}...` : primaryAction.label}
         </Button>
