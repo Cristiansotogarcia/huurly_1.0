@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface BaseModalProps {
   open: boolean;
@@ -62,18 +63,29 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   showCloseButton = true,
   className = ''
 }) => {
+  const isMobile = useIsMobile();
+  
+  // On mobile, use full screen; on desktop, use responsive sizing
+  const mobileClasses = isMobile 
+    ? 'w-full h-full max-w-none max-h-none m-0 rounded-none'
+    : `${sizeClasses[size]} ${maxHeight} mx-2 sm:mx-auto`;
+  
+  const contentPadding = isMobile ? 'p-4' : 'p-3 sm:p-6';
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className={`${sizeClasses[size]} ${maxHeight} overflow-y-auto mx-2 sm:mx-auto ${className} p-3 sm:p-6`}
+        className={`${mobileClasses} overflow-y-auto ${className} ${contentPadding}`}
       >
-        <DialogHeader className="pb-2 sm:pb-4">
-          <DialogTitle className="flex items-center text-base sm:text-lg">
-            {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+        <DialogHeader className={isMobile ? "pb-4 border-b" : "pb-2 sm:pb-4"}>
+          <DialogTitle className={`flex items-center ${isMobile ? 'text-lg' : 'text-base sm:text-lg'}`}>
+            {Icon && <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4 sm:w-5 sm:h-5'} mr-2`} />}
             {title}
           </DialogTitle>
         </DialogHeader>
-        {children}
+        <div className={isMobile ? "flex-1 overflow-y-auto" : ""}>
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -85,18 +97,20 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
   cancelAction,
   customActions
 }) => {
+  const isMobile = useIsMobile();
+  
   if (customActions) {
-    return <div className="flex justify-end pt-4 border-t space-x-2">{customActions}</div>;
+    return <div className={`flex justify-end ${isMobile ? 'pt-4 border-t' : 'pt-4 border-t'} space-x-2`}>{customActions}</div>;
   }
 
   return (
-    <div className="flex flex-col sm:flex-row justify-end pt-3 sm:pt-4 border-t space-y-2 sm:space-y-0 sm:space-x-2">
+    <div className={`flex ${isMobile ? 'flex-col-reverse' : 'flex-col sm:flex-row'} justify-end ${isMobile ? 'pt-4 border-t bg-white sticky bottom-0' : 'pt-3 sm:pt-4 border-t'} ${isMobile ? 'space-y-reverse space-y-3' : 'space-y-2 sm:space-y-0 sm:space-x-2'}`}>
       {cancelAction && (
         <Button
           variant="outline"
           onClick={cancelAction.onClick}
           disabled={cancelAction.disabled}
-          className="w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2"
+          className={`${isMobile ? 'w-full py-3 text-base' : 'w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2'}`}
         >
           {cancelAction.label || 'Annuleren'}
         </Button>
@@ -107,7 +121,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={secondaryAction.variant || 'outline'}
           onClick={secondaryAction.onClick}
           disabled={secondaryAction.disabled}
-          className={`w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2 ${secondaryAction.className || ''}`}
+          className={`${isMobile ? 'w-full py-3 text-base' : 'w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2'} ${secondaryAction.className || ''}`}
         >
           {secondaryAction.label}
         </Button>
@@ -118,7 +132,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
           variant={primaryAction.variant || 'default'}
           onClick={primaryAction.onClick}
           disabled={primaryAction.disabled || primaryAction.loading}
-          className={`w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2 ${primaryAction.className || ''}`}
+          className={`${isMobile ? 'w-full py-3 text-base' : 'w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2'} ${primaryAction.className || ''}`}
         >
           {primaryAction.loading ? `${primaryAction.label}...` : primaryAction.label}
         </Button>
