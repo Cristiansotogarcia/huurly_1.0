@@ -62,11 +62,11 @@ export function StandardModal({
 }: StandardModalProps) {
   // Size classes mapping
   const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    full: 'max-w-full',
+    sm: 'max-w-[95vw] sm:max-w-sm',
+    md: 'max-w-[95vw] sm:max-w-md',
+    lg: 'max-w-[95vw] sm:max-w-lg',
+    xl: 'max-w-[95vw] sm:max-w-xl',
+    full: 'max-w-[95vw] sm:max-w-full',
   };
   
   return (
