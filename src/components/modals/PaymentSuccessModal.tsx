@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
 
@@ -17,13 +11,7 @@ interface PaymentSuccessModalProps {
   subscriptionType?: string;
 }
 
-export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
-  isOpen,
-  onClose,
-  onGoToDashboard,
-  userName,
-  subscriptionType = 'Premium',
-}) => {
+export default function PaymentSuccessModal({ isOpen, onClose, onGoToDashboard, userName, subscriptionType = 'Premium' }: PaymentSuccessModalProps) {
   const [canClose, setCanClose] = useState(false);
 
   // Prevent modal from closing too quickly
@@ -51,23 +39,22 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-6 w-6 text-green-600" />
-          </div>
-          <DialogTitle className="text-xl font-semibold">
-            Betaling succesvol!
-          </DialogTitle>
-          <DialogDescription className="text-gray-600">
-            {userName ? (
-              <>Bedankt {userName}! Je {subscriptionType} abonnement is nu actief.</>
-            ) : (
-              <>Bedankt! Je {subscriptionType} abonnement is nu actief.</>
-            )}
-          </DialogDescription>
-        </DialogHeader>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Betaling gelukt!"
+      size="md"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={handleClose} variant="outline">
+            Sluiten
+          </Button>
+          <Button onClick={handleGoToDashboard} variant="default">
+            Naar Dashboard
+          </Button>
+        </div>
+      }
+    >
         
         <div className="space-y-4">
           <div className="rounded-lg bg-green-50 p-4">
@@ -97,30 +84,10 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
             </div>
           </div>
           
-          <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
-              onClick={handleClose}
-              className="flex-1"
-              disabled={!canClose}
-            >
-              Sluiten
-            </Button>
-            <Button 
-              onClick={handleGoToDashboard}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={!canClose}
-            >
-              Naar Dashboard
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-          
           <p className="text-xs text-gray-500 text-center">
             Welkom bij Huurly Premium! Veel succes met het vinden van je nieuwe thuis.
           </p>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+      </UnifiedModal>
+    );
+  };

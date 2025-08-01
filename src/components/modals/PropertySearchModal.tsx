@@ -14,7 +14,7 @@ interface PropertySearchModalProps {
   onClose: () => void;
 }
 
-export const PropertySearchModal = ({ isOpen, onClose }: PropertySearchModalProps) => {
+export default function PropertySearchModal({ isOpen, onClose }: PropertySearchModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);

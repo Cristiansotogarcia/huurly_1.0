@@ -8,7 +8,7 @@ import DataTable, { Column, Action } from '@/components/standard/DataTable';
 import { withAuth } from '@/hocs/withAuth';
 import { User } from '@/types';
 import { Property } from '@/types';
-import { PropertyModal } from '@/components/modals/PropertyModal';
+import PropertyModal from '@/components/modals/PropertyModal';
 
 interface VerhuurderDashboardProps {
   user: User;

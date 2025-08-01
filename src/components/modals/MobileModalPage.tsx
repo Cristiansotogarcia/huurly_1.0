@@ -17,7 +17,7 @@ export interface MobileModalPageProps {
  * Mobile-optimized full-page wrapper for modal content
  * Provides the same interface as BaseModal but as a dedicated page
  */
-export const MobileModalPage: React.FC<MobileModalPageProps> = ({
+const MobileModalPage: React.FC<MobileModalPageProps> = ({
   title,
   children,
   onClose,
@@ -96,3 +96,5 @@ export const useMobileModalPage = (modalName: string) => {
     closeModal
   };
 };
+
+export default MobileModalPage;

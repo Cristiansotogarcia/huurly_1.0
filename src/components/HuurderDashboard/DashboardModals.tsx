@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { EnhancedProfileUpdateModal } from "@/components/modals/EnhancedProfileUpdateModal";
+import EnhancedProfileUpdateModal from "@/components/modals/EnhancedProfileUpdateModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
-import { PaymentModal } from "@/components/PaymentModal";
+import PaymentModal from "@/components/PaymentModal";
 import { ProfileFormData } from "@/components/modals/profileSchema";
 import { convertFromISODate } from "@/utils/dateUtils";
 import { useModalRouter } from "@/hooks/useModalRouter";

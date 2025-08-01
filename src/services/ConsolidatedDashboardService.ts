@@ -45,7 +45,13 @@ export class ConsolidatedDashboardService extends DatabaseService {
       isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
       // Expose commonly used flat fields for components expecting them
       preferredLocations: Array.isArray(rawTenant.locatie_voorkeur)
-        ? rawTenant.locatie_voorkeur
+        ? rawTenant.locatie_voorkeur.map((location: any) => {
+            if (typeof location === 'object' && location !== null) {
+              // Extract location name from various possible properties
+              return location.name || location.display_name || location.formatted_address || location.place_name || location;
+            }
+            return location;
+          })
         : rawTenant.locatie_voorkeur
           ? [rawTenant.locatie_voorkeur]
           : [],

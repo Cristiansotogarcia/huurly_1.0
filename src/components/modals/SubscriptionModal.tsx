@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UnifiedModal from '@/components/modals/UnifiedModal';
 import { Button } from '@/components/ui/button';
 import { getStripe, SUBSCRIPTION_PLANS } from '@/lib/stripe-config';
 import { Elements, useStripe } from '@stripe/react-stripe-js';
@@ -84,17 +84,29 @@ const CheckoutForm = ({ onClose, onSuccess }: { onSuccess: () => void; onClose: 
   );
 };
 
-export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, onSuccess }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Neem een abonnement</DialogTitle>
-        </DialogHeader>
-        <Elements stripe={stripePromise}>
-          <CheckoutForm onSuccess={onSuccess} onClose={onClose} />
-        </Elements>
-      </DialogContent>
-    </Dialog>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Neem een abonnement"
+      size="md"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={onClose} variant="outline">
+            Annuleren
+          </Button>
+          <Button type="submit" form="subscription-form" variant="default">
+            Doorgaan naar Betaling
+          </Button>
+        </div>
+      }
+    >
+      <Elements stripe={stripePromise}>
+        <CheckoutForm onSuccess={onSuccess} onClose={onClose} />
+      </Elements>
+    </UnifiedModal>
   );
 };
+
+export default SubscriptionModal;

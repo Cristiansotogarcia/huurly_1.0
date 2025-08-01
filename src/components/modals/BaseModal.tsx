@@ -1,5 +1,11 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -82,6 +88,9 @@ export const BaseModal: React.FC<BaseModalProps> = ({
             {Icon && <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4 sm:w-5 sm:h-5'} mr-2`} />}
             {title}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {title}
+          </DialogDescription>
         </DialogHeader>
         <div className={isMobile ? "flex-1 overflow-y-auto" : ""}>
           {children}

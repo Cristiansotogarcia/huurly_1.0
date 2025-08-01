@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UnifiedModal from './UnifiedModal';
 
 // Simplified schema for the Profile Modal
 const profileModalSchema = z.object({
@@ -62,7 +62,7 @@ interface ProfileModalProps {
   onSuccess?: () => void;
 }
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModalProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,14 +189,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Vul je profiel in</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Vul je informatie in zodat andere gebruikers je kunnen vinden
-          </p>
-        </DialogHeader>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Profiel bewerken"
+      size="lg"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={onClose} variant="outline">
+            Annuleren
+          </Button>
+          <Button type="submit" form="profile-form" variant="default">
+            Profiel Opslaan
+          </Button>
+        </div>
+      }
+    >
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Profile Picture */}
@@ -497,22 +505,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
             )}
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Annuleren
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Opslaan...' : 'Profiel Opslaan'}
-            </Button>
-          </div>
+          {/* Form content - submit buttons are handled by UnifiedModal actions */}
         </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+      </UnifiedModal>
+    );
+  };

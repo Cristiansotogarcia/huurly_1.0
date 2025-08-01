@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ interface PropertyModalProps {
   onSave: () => void;
 }
 
-export const PropertyModal: React.FC<PropertyModalProps> = ({
+const PropertyModal: React.FC<PropertyModalProps> = ({
   isOpen,
   onClose,
   property,
@@ -124,13 +124,22 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {property ? 'Woning Bewerken' : 'Nieuwe Woning Toevoegen'}
-          </DialogTitle>
-        </DialogHeader>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title={property ? "Eigendom bewerken" : "Nieuwe eigendom toevoegen"}
+      size="xl"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={onClose} variant="outline">
+            Annuleren
+          </Button>
+          <Button onClick={handleSubmit} variant="default" disabled={loading}>
+            {property ? "Bijwerken" : "Toevoegen"}
+          </Button>
+        </div>
+      }
+    >
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -313,16 +322,9 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({
           </div>
 
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Annuleren
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Bezig...' : property ? 'Bijwerken' : 'Toevoegen'}
-            </Button>
-          </div>
         </form>
-      </DialogContent>
-    </Dialog>
-  );
+      </UnifiedModal>
+    );
 };
+
+export default PropertyModal;

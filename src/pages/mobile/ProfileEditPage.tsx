@@ -12,9 +12,9 @@ import Step4Housing from '@/components/modals/EnhancedProfileSteps/Step4Housing'
 import Step5Guarantor from '@/components/modals/EnhancedProfileSteps/Step5Guarantor';
 import Step6References from '@/components/modals/EnhancedProfileSteps/Step6References';
 import Step7ProfileMotivation from '@/components/modals/EnhancedProfileSteps/Step7ProfileMotivation';
-import { ProfileFormStepper } from '@/components/modals/ProfileFormStepper';
-import { ProfileFormNavigation } from '@/components/modals/ProfileFormNavigation';
-import { MobileModalPage } from '@/components/modals/MobileModalPage';
+import ProfileFormStepper from '@/components/modals/ProfileFormStepper';
+import ProfileFormNavigation from '@/components/modals/ProfileFormNavigation';
+import MobileModalPage, { useMobileModalPage } from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

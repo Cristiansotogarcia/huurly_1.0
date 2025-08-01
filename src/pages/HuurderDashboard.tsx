@@ -163,7 +163,12 @@ const buildProfileSections = (
       fields: [
         {
           label: "Gewenste Locatie",
-          value: tenantProfile.preferredLocations?.join(", "),
+          value: tenantProfile.preferredLocations && tenantProfile.preferredLocations.length > 0
+            ? tenantProfile.preferredLocations
+                .map((location: any) => typeof location === 'object' && location?.name ? location.name : location)
+                .filter((name: any) => name && typeof name === 'string' && name.trim() !== '')
+                .join(', ')
+            : 'Geen voorkeur opgegeven',
         },
         { label: "Budget", value: tenantProfile.maxRent },
         { label: "Min Kamers", value: tenantProfile.minRooms },

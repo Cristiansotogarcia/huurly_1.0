@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ interface CreateUserFormData {
   telefoon: string;
 }
 
-export const CreateUserModal: React.FC<CreateUserModalProps> = ({
+const CreateUserModal: React.FC<CreateUserModalProps> = ({
   isOpen,
   onClose,
   onUserCreated,
@@ -178,14 +178,22 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <UserPlus className="w-5 h-5 mr-2" />
-            Nieuwe Gebruiker Aanmaken
-          </DialogTitle>
-        </DialogHeader>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Nieuwe gebruiker aanmaken"
+      size="lg"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={onClose} variant="outline">
+            Annuleren
+          </Button>
+          <Button onClick={handleSubmit} variant="default" disabled={loading}>
+            Gebruiker aanmaken
+          </Button>
+        </div>
+      }
+    >
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -375,7 +383,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </UnifiedModal>
   );
 };
+
+export default CreateUserModal;

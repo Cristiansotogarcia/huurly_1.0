@@ -22,7 +22,7 @@ interface HelpSupportModalProps {
   onClose: () => void;
 }
 
-export const HelpSupportModal = ({ isOpen, onClose }: HelpSupportModalProps) => {
+export default function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [contactForm, setContactForm] = useState({

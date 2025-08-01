@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProfileModal } from '@/components/modals/ProfileModal';
+import ProfileModal from '@/components/modals/ProfileModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 

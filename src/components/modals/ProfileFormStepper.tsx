@@ -8,7 +8,7 @@ interface ProfileFormStepperProps {
   canNavigateToStep: (step: number) => boolean;
 }
 
-export const ProfileFormStepper: React.FC<ProfileFormStepperProps> = ({ steps, currentStep, goToStep, canNavigateToStep }) => {
+const ProfileFormStepper: React.FC<ProfileFormStepperProps> = ({ steps, currentStep, goToStep, canNavigateToStep }) => {
   return (
     <nav aria-label="Progress">
       <ol role="list" className="space-y-4 md:flex md:space-x-8 md:space-y-0">
@@ -53,3 +53,5 @@ export const ProfileFormStepper: React.FC<ProfileFormStepperProps> = ({ steps, c
     </nav>
   );
 };
+
+export default ProfileFormStepper;

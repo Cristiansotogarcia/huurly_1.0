@@ -11,9 +11,9 @@ import Step4Housing from './EnhancedProfileSteps/Step4Housing';
 import Step5Guarantor from './EnhancedProfileSteps/Step5Guarantor';
 import Step6References from './EnhancedProfileSteps/Step6References';
 import Step7ProfileMotivation from './EnhancedProfileSteps/Step7ProfileMotivation';
-import { ProfileFormStepper } from './ProfileFormStepper';
-import { ProfileFormNavigation } from './ProfileFormNavigation';
-import { BaseModal } from './BaseModal';
+import ProfileFormStepper from './ProfileFormStepper';
+import ProfileFormNavigation from './ProfileFormNavigation';
+import BaseModal from './BaseModal';
 import { useToast } from '@/hooks/use-toast';
 
 interface EnhancedProfileUpdateModalProps {
@@ -43,7 +43,7 @@ const stepComponents = [
   <Step7ProfileMotivation key="step7" />,
 ];
 
-export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
+const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
   const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
   const getDefaultValues = (): ProfileFormData => {
@@ -238,3 +238,5 @@ export const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete,
     </BaseModal>
   );
 };
+
+export default EnhancedProfileUpdateModal;

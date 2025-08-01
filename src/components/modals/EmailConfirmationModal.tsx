@@ -15,7 +15,7 @@ interface EmailConfirmationModalProps {
   email: string;
 }
 
-export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
+const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
   isOpen,
   onClose,
   email,
@@ -66,3 +66,5 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
     </Dialog>
   );
 };
+
+export default EmailConfirmationModal;

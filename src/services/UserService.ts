@@ -480,6 +480,7 @@ export class UserService extends DatabaseService {
         if (existingProfile) {
           // Update existing profile
           logger.info("Updating existing tenant profile for user:", currentUserId);
+          console.log("DEBUG: tenantProfileData being sent to Supabase:", JSON.stringify(tenantProfileData, null, 2));
           isUpdate = true;
           
           const { data, error: tenantError } = await supabase

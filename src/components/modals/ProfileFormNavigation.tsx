@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ValidationErrorModal } from './ValidationErrorModal';
+import ValidationErrorModal from './ValidationErrorModal';
 
 interface ValidationError {
   field: string;
@@ -17,7 +17,7 @@ interface ProfileFormNavigationProps {
   isSubmitting?: boolean;
 }
 
-export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
+const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
   isFirstStep,
   isLastStep,
   onBack,
@@ -91,3 +91,5 @@ export const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
     </>
   );
 };
+
+export default ProfileFormNavigation;

@@ -1,13 +1,12 @@
 
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
-import { SUBSCRIPTION_PLANS, formatPrice, getStripe } from "@/lib/stripe-config";
+import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe-config";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
@@ -23,7 +22,7 @@ interface PaymentModalProps {
   persistent?: boolean;
 }
 
-export const PaymentModal = ({
+const PaymentModal = ({
   isOpen,
   onClose,
   persistent = false,
@@ -190,3 +189,5 @@ export const PaymentModal = ({
     </Dialog>
   );
 };
+
+export default PaymentModal;

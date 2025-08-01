@@ -57,7 +57,14 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ sections, title, onEd
                 if (typeof displayValue === 'object') {
                   return null;
                 }
-                return <p key={field.label}><strong>{field.label}:</strong> {displayValue}</p>;
+                return (
+                  <p key={field.label} className="break-words">
+                    <strong>{field.label}:</strong>{' '}
+                    <span className="break-all">
+                      {displayValue}
+                    </span>
+                  </p>
+                );
               })}
             </div>
           </div>

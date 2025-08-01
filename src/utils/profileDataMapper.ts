@@ -26,7 +26,9 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     // Add fields expected by validation
     maandinkomen: data.monthly_income,
     bio: data.bio,
-    stad: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 ? data.preferred_city[0].name : data.preferred_city,
+    stad: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 
+      ? (data.preferred_city[0]?.name || data.preferred_city[0]) 
+      : (typeof data.preferred_city === 'string' ? data.preferred_city : ''),
     minBudget: data.min_budget,
     maxBudget: data.max_budget,
     slaapkamers: data.min_kamers,
@@ -51,7 +53,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     kinderen_leeftijden: data.children_ages,
     
     // Housing preferences
-    locatie_voorkeur: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 ? data.preferred_city.map(city => city.name) : [data.preferred_city],
+    locatie_voorkeur: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 ? data.preferred_city.map(location => location.name || location) : [data.preferred_city],
     voorkeur_woningtype: data.preferred_property_type,
     min_budget: data.min_budget,
     max_huur: data.max_budget,

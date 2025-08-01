@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/standard/DataTable';
-import { CreateUserModal } from '@/components/modals/CreateUserModal';
+import CreateUserModal from '@/components/modals/CreateUserModal';
 import { useToast } from '@/hooks/use-toast';
 import { UserService, userService } from '@/services/UserService';
 import { Users, UserPlus, Search, Filter, Download, RotateCcw, Mail } from 'lucide-react';

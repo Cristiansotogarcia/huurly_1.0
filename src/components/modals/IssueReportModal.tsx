@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UnifiedModal from '@/components/modals/UnifiedModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,7 @@ interface IssueReportModalProps {
   onClose: () => void;
 }
 
-export const IssueReportModal = ({ isOpen, onClose }: IssueReportModalProps) => {
+export default function IssueReportModal({ isOpen, onClose }: IssueReportModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
@@ -103,149 +103,151 @@ export const IssueReportModal = ({ isOpen, onClose }: IssueReportModalProps) => 
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <span>Probleem melden</span>
-          </DialogTitle>
-        </DialogHeader>
+    <UnifiedModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title={
+        <div className="flex items-center space-x-2">
+          <AlertTriangle className="w-5 h-5 text-orange-500" />
+          <span>Probleem melden</span>
+        </div>
+      }
+      size="lg"
+      footer={
+        <div className="flex justify-end space-x-2">
+          <Button onClick={onClose} variant="outline">
+            Annuleren
+          </Button>
+          <Button onClick={handleSubmit} variant="default" disabled={loading}>
+            {loading ? 'Bezig met melden...' : 'Probleem melden'}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>Tip:</strong> Beschrijf je probleem zo gedetailleerd mogelijk. 
+            Hoe meer informatie je geeft, hoe sneller we het kunnen oplossen.
+          </p>
+        </div>
 
-        <div className="space-y-6">
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <strong>Tip:</strong> Beschrijf je probleem zo gedetailleerd mogelijk. 
-              Hoe meer informatie je geeft, hoe sneller we het kunnen oplossen.
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Categorie *</Label>
+            <Select 
+              value={issueData.category} 
+              onValueChange={(value) => setIssueData({ ...issueData, category: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer de categorie van je probleem" />
+              </SelectTrigger>
+              <SelectContent>
+                {issueCategories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    <div className="flex items-center space-x-2">
+                      <category.icon className="w-4 h-4" />
+                      <span>{category.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="priority">Prioriteit</Label>
+            <Select 
+              value={issueData.priority} 
+              onValueChange={(value) => setIssueData({ ...issueData, priority: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Laag - Kan wachten</SelectItem>
+                <SelectItem value="normal">Normaal - Standaard</SelectItem>
+                <SelectItem value="high">Hoog - Belangrijk</SelectItem>
+                <SelectItem value="urgent">Urgent - Blokkerend</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subject">Onderwerp *</Label>
+            <Input
+              id="subject"
+              value={issueData.subject}
+              onChange={(e) => setIssueData({ ...issueData, subject: e.target.value })}
+              placeholder="Korte beschrijving van het probleem"
+              maxLength={100}
+            />
+            <p className="text-xs text-gray-500">{issueData.subject.length}/100 karakters</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Gedetailleerde beschrijving *</Label>
+            <Textarea
+              id="description"
+              value={issueData.description}
+              onChange={(e) => setIssueData({ ...issueData, description: e.target.value })}
+              placeholder="Beschrijf wat er gebeurde, wat je verwachtte en wat er fout ging..."
+              rows={4}
+              maxLength={1000}
+            />
+            <p className="text-xs text-gray-500">{issueData.description.length}/1000 karakters</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="steps">Stappen om te reproduceren</Label>
+            <Textarea
+              id="steps"
+              value={issueData.steps}
+              onChange={(e) => setIssueData({ ...issueData, steps: e.target.value })}
+              placeholder="1. Ga naar pagina X&#10;2. Klik op knop Y&#10;3. Zie fout Z"
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500">
+              Optioneel - Help ons het probleem na te bootsen
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Categorie *</Label>
-              <Select 
-                value={issueData.category} 
-                onValueChange={(value) => setIssueData({ ...issueData, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer de categorie van je probleem" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issueCategories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      <div className="flex items-center space-x-2">
-                        <category.icon className="w-4 h-4" />
-                        <span>{category.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">Prioriteit</Label>
-              <Select 
-                value={issueData.priority} 
-                onValueChange={(value) => setIssueData({ ...issueData, priority: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Laag - Kan wachten</SelectItem>
-                  <SelectItem value="normal">Normaal - Standaard</SelectItem>
-                  <SelectItem value="high">Hoog - Belangrijk</SelectItem>
-                  <SelectItem value="urgent">Urgent - Blokkerend</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subject">Onderwerp *</Label>
+              <Label htmlFor="browser">Browser informatie</Label>
               <Input
-                id="subject"
-                value={issueData.subject}
-                onChange={(e) => setIssueData({ ...issueData, subject: e.target.value })}
-                placeholder="Korte beschrijving van het probleem"
-                maxLength={100}
+                id="browser"
+                value={issueData.browser}
+                onChange={(e) => setIssueData({ ...issueData, browser: e.target.value })}
+                placeholder="Automatisch gedetecteerd"
+                readOnly
               />
-              <p className="text-xs text-gray-500">{issueData.subject.length}/100 karakters</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Gedetailleerde beschrijving *</Label>
-              <Textarea
-                id="description"
-                value={issueData.description}
-                onChange={(e) => setIssueData({ ...issueData, description: e.target.value })}
-                placeholder="Beschrijf wat er gebeurde, wat je verwachtte en wat er fout ging..."
-                rows={4}
-                maxLength={1000}
+              <Label htmlFor="device">Apparaat informatie</Label>
+              <Input
+                id="device"
+                value={issueData.device}
+                onChange={(e) => setIssueData({ ...issueData, device: e.target.value })}
+                placeholder="Automatisch gedetecteerd"
+                readOnly
               />
-              <p className="text-xs text-gray-500">{issueData.description.length}/1000 karakters</p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="steps">Stappen om te reproduceren</Label>
-              <Textarea
-                id="steps"
-                value={issueData.steps}
-                onChange={(e) => setIssueData({ ...issueData, steps: e.target.value })}
-                placeholder="1. Ga naar pagina X&#10;2. Klik op knop Y&#10;3. Zie fout Z"
-                rows={3}
-                maxLength={500}
-              />
-              <p className="text-xs text-gray-500">
-                Optioneel - Help ons het probleem na te bootsen
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="browser">Browser informatie</Label>
-                <Input
-                  id="browser"
-                  value={issueData.browser}
-                  onChange={(e) => setIssueData({ ...issueData, browser: e.target.value })}
-                  placeholder="Automatisch gedetecteerd"
-                  readOnly
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="device">Apparaat informatie</Label>
-                <Input
-                  id="device"
-                  value={issueData.device}
-                  onChange={(e) => setIssueData({ ...issueData, device: e.target.value })}
-                  placeholder="Automatisch gedetecteerd"
-                  readOnly
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex space-x-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Annuleren
-            </Button>
-            <Button onClick={handleSubmit} disabled={loading} className="flex-1">
-              {loading ? 'Bezig met melden...' : 'Probleem melden'}
-            </Button>
-          </div>
-
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Wat gebeurt er hierna?</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Je ontvangt een bevestiging per e-mail</li>
-              <li>• Ons team beoordeelt je melding binnen 1 werkdag</li>
-              <li>• Bij urgente problemen nemen we binnen 4 uur contact op</li>
-              <li>• Je wordt op de hoogte gehouden van de voortgang</li>
-            </ul>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-2">Wat gebeurt er hierna?</h4>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• Je ontvangt een bevestiging per e-mail</li>
+            <li>• Ons team beoordeelt je melding binnen 1 werkdag</li>
+            <li>• Bij urgente problemen nemen we binnen 4 uur contact op</li>
+            <li>• Je wordt op de hoogte gehouden van de voortgang</li>
+          </ul>
+        </div>
+      </div>
+    </UnifiedModal>
   );
 };
