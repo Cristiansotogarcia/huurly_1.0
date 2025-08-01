@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useHuurder } from "@/hooks/useHuurder";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
 import { useAuthStore } from "@/store/authStore";
-import { useProfileWarnings } from "@/hooks/useProfileWarnings";
+// import { useProfileWarnings } from "@/hooks/useProfileWarnings";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
 import { StatsGrid } from "@/components/standard/StatsGrid";
@@ -406,14 +406,14 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
   const isSubscribed = subscription && subscription.status === "active";
 
   // Use the new profile warnings hook
-  const { checkAndShowWarnings } = useProfileWarnings();
+  // const { checkAndShowWarnings } = useProfileWarnings();
 
   // Show warnings on dashboard load
-  useEffect(() => {
-    if (!isLoading && hasInitialDataLoaded) {
-      checkAndShowWarnings();
-    }
-  }, [isLoading, hasInitialDataLoaded, checkAndShowWarnings]);
+  // useEffect(() => {
+  //   if (!isLoading && hasInitialDataLoaded) {
+  //     checkAndShowWarnings();
+  //   }
+  // }, [isLoading, hasInitialDataLoaded, checkAndShowWarnings]);
 
   // Track when initial data has been loaded to prevent modal flash
   useEffect(() => {

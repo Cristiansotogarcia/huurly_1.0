@@ -66,7 +66,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Index />} />
-            <Route path="/dashboard" element={<ProtectedRoute roles={['huurder', 'verhuurder', 'beoordelaar', 'beheerder']}><Index /></ProtectedRoute>} />
             <Route 
               path="/huurder-dashboard" 
               element={

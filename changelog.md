@@ -1,5 +1,16 @@
 # Huurly Project Changelog
 
+## [Unreleased]
+
+### Fixed
+- Removed 'documenten ontbreken' toast message that appeared at sign-in
+  - **Problem**: Users were seeing an unwanted "Documenten ontbreken" (Documents missing) toast notification every time they signed in to the dashboard
+  - **Root Cause**: The `useProfileWarnings` hook was automatically checking for missing documents and showing toast warnings on dashboard load
+  - **Solution**: Commented out the `useProfileWarnings` hook usage in `HuurderDashboard.tsx` to prevent automatic document warnings
+  - **Files Modified**: 
+    - `src/pages/HuurderDashboard.tsx`: Commented out `useProfileWarnings` import and `checkAndShowWarnings` functionality
+  - **Result**: Users no longer see the unwanted documents missing toast at sign-in
+
 ## ✅ IMPLEMENTED: Route-Based Modal System for Mobile - January 2025
 
 **Change:** Implemented route-based modal system that converts modals to dedicated pages on mobile devices while maintaining traditional modal behavior on desktop.
@@ -368,6 +379,47 @@ smokingDetails: rawTenant.rook_details || undefined,
 - ❌ Database persistence testing incomplete due to blocking issue
 
 **Result:** TestSprite testing successfully identified a critical blocking issue in the profile creation flow that requires immediate developer attention to restore user onboarding functionality.
+
+## ✅ RESOLVED: 404 Error After Login - January 2025
+
+**Change:** Fixed 404 error that occurred when users logged in from the huurders dashboard, requiring manual navigation back to access the dashboard.
+
+**Problem:**
+- Users experienced 404 errors after successful login when accessing from the huurders dashboard
+- Required manual back button navigation or typing homepage URL to access dashboard
+- Poor user experience and confusion during authentication flow
+
+**Root Cause:**
+- `AuthConfirm.tsx` was redirecting to generic `/dashboard` route after email verification
+- The `/dashboard` route in `App.tsx` was incorrectly configured to redirect back to `Index` component instead of role-specific dashboards
+- This created a circular redirect that resulted in 404 errors
+
+**Solution:**
+1. **Updated AuthConfirm.tsx:**
+   - Added `useAuth` hook and `getDefaultDashboardRoute` utility import
+   - Modified email verification flow to redirect to role-specific dashboard routes
+   - Added timeout to ensure user data is available before redirect
+   - Implemented fallback to homepage if user role is unavailable
+
+2. **Updated App.tsx:**
+   - Removed problematic generic `/dashboard` route that caused circular redirects
+   - Maintained existing role-specific dashboard routes (`/huurder-dashboard`, `/verhuurder-dashboard`, etc.)
+
+**Files Modified:**
+- `src/pages/AuthConfirm.tsx` - Fixed redirect logic to use role-specific dashboards
+- `src/App.tsx` - Removed problematic generic dashboard route
+
+**Technical Details:**
+- Uses `getDefaultDashboardRoute()` utility function to map user roles to correct dashboard paths
+- Maintains proper role-based access control through existing `ProtectedRoute` components
+- Preserves all existing authentication and authorization logic
+
+**Testing:**
+- TypeScript compilation successful
+- Development server running without errors
+- Login flow now redirects properly to role-specific dashboards
+
+**Result:** Users can now log in successfully without encountering 404 errors, and are automatically redirected to their appropriate role-specific dashboard.
 
 ## ✅ RESOLVED: TestSprite Critical Issues - Step 2 Validation & Document Upload Button - January 2025
 

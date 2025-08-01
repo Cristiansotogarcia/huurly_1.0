@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { getDefaultDashboardRoute } from '@/utils/roleUtils';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -13,6 +15,7 @@ const AuthConfirm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleAuthConfirmation = async () => {
@@ -80,12 +83,22 @@ const AuthConfirm = () => {
 
         // Handle different confirmation types
         if (type === 'email') {
-          // For email verification, show success and redirect to dashboard
+          // For email verification, show success and redirect to role-specific dashboard
           toast({
             title: 'E-mail geverifieerd',
             description: 'Je e-mailadres is succesvol geverifieerd.',
           });
-          navigate('/dashboard');
+          
+          // Wait a moment for user data to be available, then redirect to role-specific dashboard
+          setTimeout(() => {
+            if (user?.role) {
+              const dashboardRoute = getDefaultDashboardRoute(user.role);
+              navigate(dashboardRoute);
+            } else {
+              // Fallback to home page if user role is not available
+              navigate('/');
+            }
+          }, 500);
           return;
         } else if (type === 'invite') {
           // For invitations, redirect to the specified next URL or dashboard
