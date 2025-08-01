@@ -35,6 +35,9 @@ const IssueReporting = lazy(() => import('./pages/IssueReporting'));
 const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 const TestModal = lazy(() => import('./pages/TestModal'));
 
+// Mobile modal pages
+const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -173,6 +176,15 @@ const App = () => (
             <Route
               path="/testmodal"
               element={<TestModal />}
+            />
+            {/* Mobile modal routes */}
+            <Route
+              path="/mobile/profile-edit"
+              element={
+                <ProtectedRoute roles={['huurder']}>
+                  <ProfileEditPage />
+                </ProtectedRoute>
+              }
             />
             {/* Catch-all route for 404s */}
             <Route path="*" element={

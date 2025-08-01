@@ -8,11 +8,11 @@ const logger = pino({
 });
 
 export const enhancedLogger = {
-  log: (...args: any[]) => logger.info(...args),
-  error: (...args: any[]) => logger.error(...args),
-  warn: (...args: any[]) => logger.warn(...args),
-  info: (...args: any[]) => logger.info(...args),
-  debug: (...args: any[]) => logger.debug(...args),
+  log: (...args: Parameters<typeof logger.info>) => logger.info(...args),
+  error: (...args: Parameters<typeof logger.error>) => logger.error(...args),
+  warn: (...args: Parameters<typeof logger.warn>) => logger.warn(...args),
+  info: (...args: Parameters<typeof logger.info>) => logger.info(...args),
+  debug: (...args: Parameters<typeof logger.debug>) => logger.debug(...args),
 };
 
 export { logger };

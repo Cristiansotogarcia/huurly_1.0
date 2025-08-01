@@ -4,6 +4,7 @@ import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
 import { PaymentModal } from "@/components/PaymentModal";
 import { ProfileFormData } from "@/components/modals/profileSchema";
 import { convertFromISODate } from "@/utils/dateUtils";
+import { useModalRouter } from "@/hooks/useModalRouter";
 
 interface DashboardModalsProps {
   showProfileModal: boolean;
@@ -150,15 +151,35 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
     () => getInitialFormData(tenantProfile, user),
     [tenantProfile, user],
   );
+  
+  const { openModal, isMobile } = useModalRouter();
+  
+  // Handle profile modal opening with route-based approach
+  React.useEffect(() => {
+    if (showProfileModal) {
+      const shouldShowDesktopModal = openModal('profileEdit', {
+        initialData,
+        returnPath: '/huurder-dashboard'
+      });
+      
+      if (!shouldShowDesktopModal) {
+        // On mobile, we navigated to a page, so close the modal state
+        setShowProfileModal(false);
+      }
+    }
+  }, [showProfileModal, openModal, initialData, setShowProfileModal]);
+  
   return (
     <>
-      {/* Profile Creation Modal */}
-      <EnhancedProfileUpdateModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        onProfileComplete={onProfileComplete}
-        initialData={initialData}
-      />
+      {/* Profile Creation Modal - Only shown on desktop */}
+      {!isMobile && (
+        <EnhancedProfileUpdateModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onProfileComplete={onProfileComplete}
+          initialData={initialData}
+        />
+      )}
 
       {/* Document Upload Modal */}
       <DocumentUploadModal
