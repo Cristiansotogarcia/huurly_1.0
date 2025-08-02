@@ -37,3 +37,5 @@ docs/*
 # Test files
 testsprite_tests/
 temp-files/
+# TypeScript build output
+tsc_output.txt
