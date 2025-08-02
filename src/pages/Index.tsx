@@ -77,7 +77,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Header onShowSignup={() => setShowSignup(true)} />
+      <Header />
       <Hero onShowSignup={() => setShowSignup(true)} />
       <Features />
       <CTA />
