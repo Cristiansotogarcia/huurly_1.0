@@ -10,7 +10,6 @@ interface DashboardModalsProps {
   showProfileModal: boolean;
   showDocumentModal: boolean;
   showPaymentModal: boolean;
-  hasProfile: boolean;
   setShowProfileModal: (show: boolean) => void;
   setShowDocumentModal: (show: boolean) => void;
   setShowPaymentModal: (show: boolean) => void;
@@ -138,7 +137,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   showProfileModal,
   showDocumentModal,
   showPaymentModal,
-  hasProfile,
   setShowProfileModal,
   setShowDocumentModal,
   setShowPaymentModal,
@@ -157,8 +155,10 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   // Handle profile modal opening with route-based approach
   React.useEffect(() => {
     if (showProfileModal) {
+      console.log('🔥 DashboardModals - showProfileModal changed to true, initialData:', initialData);
       const shouldShowDesktopModal = openModal('profileEdit', {
         initialData,
+        onProfileComplete, // Pass the callback
         returnPath: '/huurder-dashboard'
       });
       
@@ -167,7 +167,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         setShowProfileModal(false);
       }
     }
-  }, [showProfileModal, openModal, initialData, setShowProfileModal]);
+  }, [showProfileModal, openModal, initialData, onProfileComplete, setShowProfileModal]);
   
   return (
     <>

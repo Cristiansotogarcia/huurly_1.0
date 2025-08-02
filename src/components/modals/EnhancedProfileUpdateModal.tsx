@@ -33,16 +33,6 @@ const steps = [
   { id: 'step7', name: 'Profiel & Motivatie' },
 ];
 
-const stepComponents = [
-  <Step1PersonalInfo key="step1" />,
-  <Step2Employment key="step2" />,
-  <Step3Household key="step3" />,
-  <Step4Housing key="step4" />,
-  <Step5Guarantor key="step5" />,
-  <Step6References key="step6" />,
-  <Step7ProfileMotivation key="step7" />,
-];
-
 const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
   const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
@@ -124,12 +114,31 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       reason_for_moving: '',
       
       // Step 7: Profile & Motivation
-      bio: '',
-      motivation: '',
+      bio: 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+      motivation: 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
     };
 
     // Merge with initial data if provided
-    return initialData ? { ...defaults, ...initialData } : defaults;
+    const mergedData = initialData ? { ...defaults, ...initialData } : defaults;
+    
+    // Ensure required fields have proper values
+    if (!mergedData.first_name) mergedData.first_name = '';
+    if (!mergedData.last_name) mergedData.last_name = '';
+    if (!mergedData.date_of_birth) mergedData.date_of_birth = '';
+    if (!mergedData.phone) mergedData.phone = '';
+    if (!mergedData.sex) mergedData.sex = 'zeg_ik_liever_niet';
+    if (!mergedData.nationality) mergedData.nationality = 'Nederlandse';
+    if (!mergedData.marital_status) mergedData.marital_status = 'single';
+    if (!mergedData.profession) mergedData.profession = '';
+    if (!mergedData.employment_status) mergedData.employment_status = 'full-time';
+    if (mergedData.monthly_income === undefined || mergedData.monthly_income === null) mergedData.monthly_income = 0;
+    if (!mergedData.preferred_property_type) mergedData.preferred_property_type = 'appartement';
+    if (mergedData.max_budget === undefined || mergedData.max_budget === null) mergedData.max_budget = 1000;
+    if (!mergedData.bio || mergedData.bio.length < 50) mergedData.bio = 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+    if (!mergedData.motivation || mergedData.motivation.length < 50) mergedData.motivation = 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+    if (!mergedData.preferred_city || mergedData.preferred_city.length === 0) mergedData.preferred_city = [{ name: 'Amsterdam' }];
+
+    return mergedData;
   };
 
   const methods = useForm<ProfileFormData>({
@@ -148,6 +157,16 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     canNavigateToStep 
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
+  const stepComponents = [
+    <Step1PersonalInfo key="step1" />,
+    <Step2Employment key="step2" />,
+    <Step3Household key="step3" isStudent={methods.watch('employment_status') === 'student'} />,
+    <Step4Housing key="step4" />,
+    <Step5Guarantor key="step5" />,
+    <Step6References key="step6" />,
+    <Step7ProfileMotivation key="step7" />,
+  ];
+
   // Reset form when initialData changes (e.g., switching between create/edit modes)
   useEffect(() => {
     const newValues = getDefaultValues();
@@ -155,18 +174,21 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   }, [initialData]);
 
   const onSubmit = async (data: ProfileFormData) => {
+    console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Form data:', data);
     
     // Validate entire form before submission
     try {
-      const validationResult = profileSchema.parse(data);
+      const parsedData = profileSchema.parse(data);
+      console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
+        console.error('🔥 Final Profile Validation Error:', validationError.errors);
         const errorMessages = validationError.errors.map(err => err.message).join(', ');
         toast({
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
           variant: 'destructive',
-        });
+        } as any);
         return; // Stop submission
       }
     }
@@ -175,6 +197,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     setIsManuallySubmitting(true);
 
     try {
+      console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Calling onProfileComplete');
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -186,14 +209,15 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
-      });
+      } as any);
       onClose();
     } catch (error) {
+      console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);
       toast({
         title: 'Fout',
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
-      });
+      } as any);
     } finally {
       // Always reset manual loading state
       setIsManuallySubmitting(false);

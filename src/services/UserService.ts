@@ -1,8 +1,8 @@
 
 import { supabase } from '../integrations/supabase/client.ts';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
-import { User, UserRole } from '../types/index.ts';
-import { Tables, TablesInsert, TablesUpdate } from '../integrations/supabase/types.ts';
+import { UserRole } from '../types/index.ts';
+import { Tables } from '../integrations/supabase/types.ts';
 import { useAuthStore } from '../store/authStore.ts';
 import { logger } from '../lib/logger.ts';
 import { roleMapper } from '../lib/auth/roleMapper.ts';
@@ -155,20 +155,6 @@ export interface TenantSearchFilters {
   preferredDistricts?: string[];
 }
 
-// Updated utility function for sanitizing furnishedPreference with Dutch values
-function sanitizeFurnishedPreference(value: any): "gemeubileerd" | "ongemeubileerd" | "geen_voorkeur" {
-  if (value === "gemeubileerd" || value === "ongemeubileerd" || value === "geen_voorkeur") {
-    return value;
-  }
-  // Convert English values to Dutch values
-  if (value === "furnished") return "gemeubileerd";
-  if (value === "unfurnished") return "ongemeubileerd";
-  if (value === "no_preference") return "geen_voorkeur";
-  
-  // Log whenever a value needs sanitizing
-  logger.warn("UserService: Invalid furnishedPreference value detected, converting to 'geen_voorkeur'. Provided value:", value);
-  return "geen_voorkeur";
-}
 
 export class UserService extends DatabaseService {
   /**
@@ -323,24 +309,31 @@ export class UserService extends DatabaseService {
 
       const sanitizedData = this.sanitizeInput(data);
       
-
+      console.log('🔥 UserService.createTenantProfile - Received data:', sanitizedData);
 
       const validation = this.validateRequiredFields(sanitizedData, [
         'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 
         'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'
       ]);
+      
+      console.log('🔥 UserService.createTenantProfile - Validation result:', validation);
+      
       if (!validation.isValid) {
+        const error = new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`);
+        console.error('🔥 UserService.createTenantProfile - Validation failed:', error.message);
         return {
           data: null,
-          error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+          error: error,
           success: false,
         };
       }
 
       if (!this.isValidPhoneNumber(sanitizedData.telefoon)) {
+        const error = new Error('Ongeldig telefoonnummer');
+        console.error('🔥 UserService.createTenantProfile - Phone validation failed:', error.message);
         return {
           data: null,
-          error: new Error('Ongeldig telefoonnummer'),
+          error: error,
           success: false,
         };
       }
@@ -354,6 +347,7 @@ export class UserService extends DatabaseService {
           .maybeSingle();
 
         logger.info("Existing tenant profile check:", existingProfile);
+        console.log('🔥 UserService.createTenantProfile - Existing profile:', existingProfile);
 
         // 2. Prepare tenant profile data using actual database column names
         const tenantProfileData: any = {
@@ -466,8 +460,10 @@ export class UserService extends DatabaseService {
           cover_foto: sanitizedData.coverFotoUrl || sanitizedData.cover_foto || null,
           
           // Motivation
-          motivatie: sanitizedData.motivatie,
+          motivatie: sanitizedData.motivation,
         };
+
+        console.log('🔥 UserService.createTenantProfile - Prepared tenantProfileData:', JSON.stringify(tenantProfileData, null, 2));
 
         // Calculate age from birth date
         if (sanitizedData.geboortedatum) {
@@ -491,12 +487,15 @@ export class UserService extends DatabaseService {
             .single();
 
           if (tenantError) {
+            console.error('🔥 UserService.createTenantProfile - Update error:', tenantError);
             throw this.handleDatabaseError(tenantError);
           }
           tenantProfile = data;
+          console.log('🔥 UserService.createTenantProfile - Update successful:', tenantProfile);
         } else {
           // Create new profile
           logger.info("Creating new tenant profile for user:", currentUserId);
+          console.log("DEBUG: tenantProfileData being inserted:", JSON.stringify(tenantProfileData, null, 2));
           
           const { data, error: tenantError } = await supabase
             .from('huurders')
@@ -505,9 +504,11 @@ export class UserService extends DatabaseService {
             .single();
 
           if (tenantError) {
+            console.error('🔥 UserService.createTenantProfile - Insert error:', tenantError);
             throw this.handleDatabaseError(tenantError);
           }
           tenantProfile = data;
+          console.log('🔥 UserService.createTenantProfile - Insert successful:', tenantProfile);
         }
 
         await this.createAuditLog(

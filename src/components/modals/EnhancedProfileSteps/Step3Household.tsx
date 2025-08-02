@@ -1,14 +1,18 @@
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Users, Baby, Euro } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 
-export default function Step3Household() {
+interface Step3HouseholdProps {
+  isStudent: boolean;
+}
+
+export default function Step3Household({ isStudent }: Step3HouseholdProps) {
   const { register, control, watch, setValue, formState: { errors } } = useFormContext();
 
   const hasPartner = watch('has_partner');
@@ -191,7 +195,7 @@ export default function Step3Household() {
                         className="mt-1"
                         placeholder="Leeftijd"
                       />
-                      {errors.children_ages?.[index] && <p className="text-red-500 text-xs">{`${errors.children_ages[index].message}`}</p>}
+                      {(errors.children_ages as any)?.[index] && <p className="text-red-500 text-xs">{`${(errors.children_ages as any)?.[index]?.message}`}</p>}
                     </div>
                   ))}
                 </div>
@@ -223,29 +227,32 @@ export default function Step3Household() {
           {errors.number_of_housemates && <p className="text-red-500 text-xs">{`${errors.number_of_housemates.message}`}</p>}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="current_living_situation">Huidige woonsituatie</Label>
-          <Controller
-            name="current_living_situation"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer je huidige woonsituatie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="alleen">Alleenstaand</SelectItem>
-                  <SelectItem value="partner">Met partner</SelectItem>
-                  <SelectItem value="ouders">Bij ouders</SelectItem>
-                  <SelectItem value="vrienden">Met vrienden</SelectItem>
-                  <SelectItem value="studentenhuis">Studentenhuis</SelectItem>
-                  <SelectItem value="andere">Andere</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.current_living_situation && <p className="text-red-500 text-xs">{`${errors.current_living_situation.message}`}</p>}
-        </div>
+        {isStudent && (
+          <div className="space-y-2">
+            <Label htmlFor="current_living_situation">Huidige woonsituatie</Label>
+            <Controller
+              name="current_living_situation"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer je huidige woonsituatie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="studentenkamer">Studentenkamer</SelectItem>
+                    <SelectItem value="huurwoning">Huurwoning</SelectItem>
+                    <SelectItem value="koopwoning">Koopwoning</SelectItem>
+                    <SelectItem value="bij_familie">Bij familie</SelectItem>
+                    <SelectItem value="bij_vrienden">Bij vrienden</SelectItem>
+                    <SelectItem value="tijdelijk">Tijdelijk</SelectItem>
+                    <SelectItem value="anders">Anders</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.current_living_situation && <p className="text-red-500 text-xs">{`${errors.current_living_situation.message}`}</p>}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

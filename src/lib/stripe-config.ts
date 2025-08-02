@@ -63,7 +63,7 @@ export const getStripe = (): Promise<Stripe | null> => {
       });
       
       // In development, show more detailed error
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) { // Use import.meta.env.DEV
         console.error('❌ Stripe Configuration Failed:', validation);
       }
       
@@ -150,8 +150,31 @@ export const SUBSCRIPTION_STATUS = {
 export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS];
 export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[keyof typeof SUBSCRIPTION_STATUS];
 
+// Stripe webhook event types we handle
+export const STRIPE_WEBHOOK_EVENTS = {
+  CHECKOUT_SESSION_COMPLETED: 'checkout.session.completed',
+  INVOICE_PAYMENT_SUCCEEDED: 'invoice.payment_succeeded',
+  INVOICE_PAYMENT_FAILED: 'invoice.payment_failed',
+  CUSTOMER_SUBSCRIPTION_CREATED: 'customer.subscription.created',
+  CUSTOMER_SUBSCRIPTION_UPDATED: 'customer.subscription.updated',
+  CUSTOMER_SUBSCRIPTION_DELETED: 'customer.subscription.deleted',
+} as const;
+
+// Get plan by role and tier
+// Note: 'basic' maps to 'free' for verhuurder, 'premium' maps to 'halfyearly' for huurder for now.
+// This can be expanded if more tiers are introduced.
+export const getSubscriptionPlan = (role: 'huurder' | 'verhuurder', tier: 'basic' | 'premium') => {
+  if (role === 'huurder' && tier === 'premium') {
+    return SUBSCRIPTION_PLANS.huurder.halfyearly;
+  }
+  if (role === 'verhuurder' && tier === 'basic') {
+    return SUBSCRIPTION_PLANS.verhuurder.free;
+  }
+  return null;
+};
+
 // Log configuration in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) { // Use import.meta.env.DEV
   const validation = validateConfig();
   if (validation.isValid) {
     logger.info('✅ Stripe configuration is valid', {

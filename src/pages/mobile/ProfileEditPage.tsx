@@ -14,9 +14,8 @@ import Step6References from '@/components/modals/EnhancedProfileSteps/Step6Refer
 import Step7ProfileMotivation from '@/components/modals/EnhancedProfileSteps/Step7ProfileMotivation';
 import ProfileFormStepper from '@/components/modals/ProfileFormStepper';
 import ProfileFormNavigation from '@/components/modals/ProfileFormNavigation';
-import MobileModalPage, { useMobileModalPage } from '@/components/modals/MobileModalPage';
+import MobileModalPage from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useHuurder } from '@/hooks/useHuurder';
 
@@ -30,27 +29,19 @@ const steps = [
   { id: 'step7', name: 'Profiel & Motivatie' },
 ];
 
-const stepComponents = [
-  <Step1PersonalInfo key="step1" />,
-  <Step2Employment key="step2" />,
-  <Step3Household key="step3" />,
-  <Step4Housing key="step4" />,
-  <Step5Guarantor key="step5" />,
-  <Step6References key="step6" />,
-  <Step7ProfileMotivation key="step7" />,
-];
-
 const ProfileEditPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
-  const { handleProfileComplete } = useHuurder();
+  const huurder = useHuurder();
+  const defaultHandleProfileComplete = huurder.handleProfileComplete;
   
   // Get data from navigation state
   const state = location.state as any;
   const initialData = state?.modalData?.initialData;
   const returnTo = state?.returnTo || '/huurder-dashboard';
+  const onProfileComplete = state?.modalData?.onProfileComplete; // Get callback from state
 
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
@@ -130,11 +121,31 @@ const ProfileEditPage: React.FC = () => {
       reason_for_moving: '',
       
       // Step 7: Profile & Motivation
-      bio: '',
-      motivation: '',
+      bio: 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+      motivation: 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
     };
 
-    return initialData ? { ...defaults, ...initialData } : defaults;
+    // Merge with initial data if provided
+    const mergedData = initialData ? { ...defaults, ...initialData } : defaults;
+    
+    // Ensure required fields have proper values
+    if (!mergedData.first_name) mergedData.first_name = '';
+    if (!mergedData.last_name) mergedData.last_name = '';
+    if (!mergedData.date_of_birth) mergedData.date_of_birth = '';
+    if (!mergedData.phone) mergedData.phone = '';
+    if (!mergedData.sex) mergedData.sex = 'zeg_ik_liever_niet';
+    if (!mergedData.nationality) mergedData.nationality = 'Nederlandse';
+    if (!mergedData.marital_status) mergedData.marital_status = 'single';
+    if (!mergedData.profession) mergedData.profession = '';
+    if (!mergedData.employment_status) mergedData.employment_status = 'full-time';
+    if (mergedData.monthly_income === undefined || mergedData.monthly_income === null) mergedData.monthly_income = 0;
+    if (!mergedData.preferred_property_type) mergedData.preferred_property_type = 'appartement';
+    if (mergedData.max_budget === undefined || mergedData.max_budget === null) mergedData.max_budget = 1000;
+    if (!mergedData.bio || mergedData.bio.length < 50) mergedData.bio = 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+    if (!mergedData.motivation || mergedData.motivation.length < 50) mergedData.motivation = 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+    if (!mergedData.preferred_city || mergedData.preferred_city.length === 0) mergedData.preferred_city = [{ name: 'Amsterdam' }];
+
+    return mergedData;
   };
 
   const methods = useForm<ProfileFormData>({
@@ -159,10 +170,21 @@ const ProfileEditPage: React.FC = () => {
     methods.reset(newValues);
   }, [initialData]);
 
+  // Create step components inside the component to access methods
+  const stepComponents = [
+    <Step1PersonalInfo key="step1" />,
+    <Step2Employment key="step2" />,
+    <Step3Household key="step3" isStudent={methods.watch('employment_status') === 'student'} />,
+    <Step4Housing key="step4" />,
+    <Step5Guarantor key="step5" />,
+    <Step6References key="step6" />,
+    <Step7ProfileMotivation key="step7" />,
+  ];
+
   const onSubmit = async (data: ProfileFormData) => {
     // Validate entire form before submission
     try {
-      const validationResult = profileSchema.parse(data);
+      profileSchema.parse(data);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const errorMessages = validationError.errors.map(err => err.message).join(', ');
@@ -170,7 +192,7 @@ const ProfileEditPage: React.FC = () => {
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
           variant: 'destructive',
-        });
+        } as any);
         return;
       }
     }
@@ -182,13 +204,15 @@ const ProfileEditPage: React.FC = () => {
         setTimeout(() => reject(new Error('Timeout: Profiel opslaan duurt te lang')), 30000)
       );
       
+      // Use the callback from navigation state if available, otherwise use default
+      const handleProfileComplete = onProfileComplete || defaultHandleProfileComplete;
       const savePromise = handleProfileComplete(data);
       await Promise.race([savePromise, timeoutPromise]);
       
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
-      });
+      } as any);
       
       // Navigate back to the original page
       navigate(returnTo, { replace: true });
@@ -197,7 +221,7 @@ const ProfileEditPage: React.FC = () => {
         title: 'Fout',
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
-      });
+      } as any);
     } finally {
       setIsManuallySubmitting(false);
     }

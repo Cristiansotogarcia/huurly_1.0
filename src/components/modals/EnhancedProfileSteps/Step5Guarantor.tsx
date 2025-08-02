@@ -1,12 +1,10 @@
-
-import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Euro, Phone, User } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 
 export default function Step5Guarantor() {
   const { control, register, watch, formState: { errors } } = useFormContext();
@@ -62,20 +60,6 @@ export default function Step5Guarantor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="borgsteller_email">E-mail garantsteller</Label>
-                <Input {...register('borgsteller_email')} type="email" placeholder="email@voorbeeld.nl" />
-                {errors.borgsteller_email && <p className="text-red-500 text-xs">{`${errors.borgsteller_email.message}`}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="borgsteller_adres">Adres garantsteller</Label>
-              <Input {...register('borgsteller_adres')} placeholder="Straatnaam 123, 1234 AB Plaats" />
-              {errors.borgsteller_adres && <p className="text-red-500 text-xs">{`${errors.borgsteller_adres.message}`}</p>}
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
                 <Label htmlFor="borgsteller_inkomen">Inkomen garantsteller</Label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -83,29 +67,29 @@ export default function Step5Guarantor() {
                 </div>
                 {errors.borgsteller_inkomen && <p className="text-red-500 text-xs">{`${errors.borgsteller_inkomen.message}`}</p>}
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="borgsteller_relatie">Relatie tot garantsteller</Label>
-                <Controller
-                  name="borgsteller_relatie"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecteer relatie" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ouder">Ouder</SelectItem>
-                        <SelectItem value="familie">Familie</SelectItem>
-                        <SelectItem value="vriend">Vriend</SelectItem>
-                        <SelectItem value="werkgever">Werkgever</SelectItem>
-                        <SelectItem value="anders">Anders</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.borgsteller_relatie && <p className="text-red-500 text-xs">{`${errors.borgsteller_relatie.message}`}</p>}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="borgsteller_relatie">Relatie tot garantsteller</Label>
+              <Controller
+                name="borgsteller_relatie"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecteer relatie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ouder">Ouder</SelectItem>
+                      <SelectItem value="familie">Familie</SelectItem>
+                      <SelectItem value="vriend">Vriend</SelectItem>
+                      <SelectItem value="werkgever">Werkgever</SelectItem>
+                      <SelectItem value="anders">Anders</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.borgsteller_relatie && <p className="text-red-500 text-xs">{`${errors.borgsteller_relatie.message}`}</p>}
             </div>
           </div>
         )}
@@ -127,8 +111,6 @@ export default function Step5Guarantor() {
           )}
         />
       </div>
-
-
     </div>
   );
 }

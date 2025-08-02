@@ -1,7 +1,7 @@
 import { supabase } from '../integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '../lib/database';
 import { logger } from '../lib/logger';
-import { TenantProfile, Subscription, TenantDashboardData } from '../types';
+import { TenantProfile, TenantDashboardData } from '../types';
 import { Document } from './DocumentService';
 import { optimizedSubscriptionService } from './OptimizedSubscriptionService';
 
@@ -45,15 +45,19 @@ export class ConsolidatedDashboardService extends DatabaseService {
       isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
       // Expose commonly used flat fields for components expecting them
       preferredLocations: Array.isArray(rawTenant.locatie_voorkeur)
-        ? rawTenant.locatie_voorkeur.map((location: any) => {
-            if (typeof location === 'object' && location !== null) {
-              // Extract location name from various possible properties
-              return location.name || location.display_name || location.formatted_address || location.place_name || location;
+        ? rawTenant.locatie_voorkeur.map((locationString: string) => {
+            try {
+              // Attempt to parse the string as a JSON object (LocationData)
+              const parsedLocation = JSON.parse(locationString);
+              // Ensure it has a name, otherwise fall back to the string itself
+              return parsedLocation.name ? parsedLocation : { name: locationString };
+            } catch (error) {
+              // If parsing fails, it's likely a plain string (old data or fallback)
+              return { name: locationString };
             }
-            return location;
           })
-        : rawTenant.locatie_voorkeur
-          ? [rawTenant.locatie_voorkeur]
+        : rawTenant.locatie_voorkeur // Handle single string case if not an array
+          ? [{ name: rawTenant.locatie_voorkeur }]
           : [],
       maxRent: rawTenant.max_huur || 0,
       minRooms: rawTenant.min_kamers || undefined,
@@ -207,9 +211,28 @@ export class ConsolidatedDashboardService extends DatabaseService {
         // Process results
         const stats = { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 };
 
-        const documents = documentsResult.status === 'fulfilled' && documentsResult.value.data
+        const rawDocuments = documentsResult.status === 'fulfilled' && documentsResult.value.data
           ? documentsResult.value.data
           : [];
+        
+        // Type guard to filter documents with a non-null huurder_id
+        const isDocumentWithHuurder = (doc: any): doc is any & { huurder_id: string } =>
+          doc.huurder_id !== null;
+
+        const documents: Document[] = rawDocuments
+          .filter(isDocumentWithHuurder)
+          .map(doc => ({
+            id: doc.id,
+            huurder_id: doc.huurder_id, // Now correctly typed as string
+            beoordelaar_id: doc.beoordelaar_id ?? undefined,
+            bestandsnaam: doc.bestandsnaam,
+            bestand_url: doc.bestand_url,
+            beoordeling_notitie: doc.beoordeling_notitie ?? undefined,
+            type: doc.type,
+            status: doc.status,
+            aangemaakt_op: doc.aangemaakt_op,
+            bijgewerkt_op: doc.bijgewerkt_op,
+          }));
 
         const rawTenant = profileResult.status === 'fulfilled' && profileResult.value.data
           ? profileResult.value.data

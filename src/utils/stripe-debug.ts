@@ -35,7 +35,7 @@ export const getStripeDebugInfo = async (): Promise<StripeDebugInfo> => {
       priceId: STRIPE_CONFIG.huurderPriceId || null,
     },
     environment: {
-      mode: process.env.NODE_ENV || 'unknown',
+      mode: import.meta.env.MODE || 'unknown', // Use import.meta.env.MODE
       origin: window.location.origin,
       protocol: window.location.protocol,
     },
@@ -89,7 +89,7 @@ export const logStripeDebugInfo = async (): Promise<void> => {
 };
 
 // Auto-log debug info in development mode
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) { // Use import.meta.env.DEV
   // Delay to ensure all modules are loaded
   setTimeout(() => {
     logStripeDebugInfo().catch(console.error);

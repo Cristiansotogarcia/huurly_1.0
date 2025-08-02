@@ -2,16 +2,16 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
+// import { componentTagger } from "lovable-tagger"; // Consider removing if Lovable.dev is not used
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    middlewareMode: false,
+    // middlewareMode: false, // Default is false, can be removed
     fs: {
-      strict: false,
+      strict: true, // Best practice for security and performance
     },
   },
   preview: {
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
+    // mode === 'development' && componentTagger(), // Consider removing if Lovable.dev is not used
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -33,12 +33,14 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           react: ["react", "react-dom"],
           supabase: ["@supabase/supabase-js"],
+          // Add other large libraries here for better caching
         },
       },
     },
   },
   define: {
-    global: 'globalThis',
-    'process.env': {},
+    global: 'globalThis', // Necessary polyfill for browser environments
+    // 'process.env': {}, // REMOVED: Vite handles process.env.NODE_ENV by default.
+                         // This line was breaking access to process.env.NODE_ENV in client code.
   },
 }));

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useHuurder } from "@/hooks/useHuurder";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
 import { useAuthStore } from "@/store/authStore";
-// import { useProfileWarnings } from "@/hooks/useProfileWarnings";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
 import { StatsGrid } from "@/components/standard/StatsGrid";
@@ -29,6 +28,15 @@ import ProfileActions from "@/components/HuurderDashboard/ProfileActions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from "@/hocs/withAuth";
 import { User } from "@/types";
+import {
+  mapEmploymentStatusLabel,
+  mapContractTypeLabel,
+  mapPropertyTypeLabel,
+  mapFurnishedPreferenceLabel,
+  mapLeaseDurationPreferenceLabel,
+  mapSexLabel,
+  mapMaritalStatusLabel,
+} from "@/utils/labelMappers";
 
 interface HuurderDashboardProps {
   user: User;
@@ -53,14 +61,14 @@ const buildProfileSections = (
           label: "Geboortedatum",
           value: tenantProfile.personalInfo?.dateOfBirth,
         },
-        { label: "Geslacht", value: tenantProfile.personalInfo?.sex },
+        { label: "Geslacht", value: mapSexLabel(tenantProfile.personalInfo?.sex) },
         {
           label: "Nationaliteit",
           value: tenantProfile.personalInfo?.nationality,
         },
         {
           label: "Burgerlijke staat",
-          value: tenantProfile.personalInfo?.maritalStatus,
+          value: mapMaritalStatusLabel(tenantProfile.personalInfo?.maritalStatus),
         },
         { label: "Leeftijd", value: tenantProfile.age },
         { label: "Partner", value: tenantProfile.hasPartner ? "Ja" : "Nee" },
@@ -99,11 +107,11 @@ const buildProfileSections = (
         { label: "Werkgever", value: tenantProfile.workAndIncome?.employer },
         {
           label: "Dienstverband",
-          value: tenantProfile.workAndIncome?.employmentStatus,
+          value: mapEmploymentStatusLabel(tenantProfile.workAndIncome?.employmentStatus),
         },
         {
           label: "Contract type",
-          value: tenantProfile.workAndIncome?.contractType,
+          value: mapContractTypeLabel(tenantProfile.workAndIncome?.contractType),
         },
         { label: "Maandelijks Inkomen", value: tenantProfile.income },
         { label: "Extra inkomen", value: tenantProfile.extraIncome },
@@ -165,7 +173,12 @@ const buildProfileSections = (
           label: "Gewenste Locatie",
           value: tenantProfile.preferredLocations && tenantProfile.preferredLocations.length > 0
             ? tenantProfile.preferredLocations
-                .map((location: any) => typeof location === 'object' && location?.name ? location.name : location)
+                .map((location: any) => {
+                  if (location && location.name) {
+                    return location.radius ? `${location.name} (${location.radius}km)` : location.name;
+                  }
+                  return null; // Filter out invalid entries
+                })
                 .filter((name: any) => name && typeof name === 'string' && name.trim() !== '')
                 .join(', ')
             : 'Geen voorkeur opgegeven',
@@ -187,11 +200,11 @@ const buildProfileSections = (
         },
         {
           label: "Woningtype",
-          value: tenantProfile.housingPreferences?.propertyType,
+          value: mapPropertyTypeLabel(tenantProfile.housingPreferences?.propertyType),
         },
         {
           label: "Gemeubileerd voorkeur",
-          value: tenantProfile.housingPreferences?.furnishedPreference,
+          value: mapFurnishedPreferenceLabel(tenantProfile.housingPreferences?.furnishedPreference),
         },
         {
           label: "Parkeren vereist",
@@ -205,7 +218,7 @@ const buildProfileSections = (
         },
         {
           label: "Huurcontract voorkeur",
-          value: tenantProfile.housingPreferences?.leaseDurationPreference,
+          value: mapLeaseDurationPreferenceLabel(tenantProfile.housingPreferences?.leaseDurationPreference),
         },
         {
           label: "Reden verhuizing",
@@ -336,24 +349,18 @@ const buildStats = (stats: any, isLoadingStats: boolean) => [
   },
 ];
 
-const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
-  user: authUser,
-}) => {
+const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const {
     user,
-    hasProfile,
     userDocuments,
     isLoading,
     stats,
     isLoadingStats,
     profilePictureUrl,
     tenantProfile,
-    isLookingForPlace,
-    isUpdatingStatus,
     subscription,
     refresh,
     getSubscriptionEndDate,
-    toggleLookingStatus,
     handleProfileComplete,
     handleDocumentUploadComplete,
   } = useHuurder();
@@ -362,9 +369,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
   const {
     handleSettings,
     handleLogout,
-    onStartSearch,
-    handleReportIssue,
-    handleHelpSupport,
   } = useHuurderActions();
   const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
 
@@ -374,28 +378,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const { toast } = useToast();
 
-  // Define profile sections for the ProfileOverview component
-  const [isProfileComplete, setIsProfileComplete] = useState(true);
-  const [missingDocuments, setMissingDocuments] = useState(false);
-
-  useEffect(() => {
-    const checkCompleteness = () => {
-      if (!tenantProfile) return;
-      const requiredFields = [
-        "profession",
-        "income",
-        "age",
-        "preferredLocations",
-        "maxRent",
-      ];
-      const isComplete = requiredFields.every(
-        (field) => tenantProfile[field] != null,
-      );
-      setIsProfileComplete(isComplete);
-      setMissingDocuments(userDocuments.length < 3);
-    };
-    checkCompleteness();
-  }, [tenantProfile, userDocuments]);
 
   const profileSections = useMemo(
     () => buildProfileSections(tenantProfile, user),
@@ -409,16 +391,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
   );
 
   const isSubscribed = subscription && subscription.status === "active";
-
-  // Use the new profile warnings hook
-  // const { checkAndShowWarnings } = useProfileWarnings();
-
-  // Show warnings on dashboard load
-  // useEffect(() => {
-  //   if (!isLoading && hasInitialDataLoaded) {
-  //     checkAndShowWarnings();
-  //   }
-  // }, [isLoading, hasInitialDataLoaded, checkAndShowWarnings]);
 
   // Track when initial data has been loaded to prevent modal flash
   useEffect(() => {
@@ -529,13 +501,13 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
                 tenantProfile?.personalInfo?.fullName ||
                 user.user_metadata?.full_name ||
                 user.email,
-              role: user.user_metadata?.role || "huurder",
-              email: user.email,
-              isActive: true,
+              role: (user.user_metadata?.role ?? undefined) || "huurder",
+              email: user.email || "",
+              isActive: true as boolean,
               createdAt: user.createdAt,
-              hasPayment: isSubscribed,
+              hasPayment: isSubscribed ?? undefined,
               subscriptionEndDate: getSubscriptionEndDate(),
-              profilePictureUrl: profilePictureUrl,
+              profilePictureUrl: profilePictureUrl ?? undefined,
             }}
             onSettings={handleSettings}
             onLogout={handleLogout}
@@ -583,7 +555,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = ({
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
         showPaymentModal={showPaymentModal}
-        hasProfile={!!tenantProfile}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
         setShowPaymentModal={setShowPaymentModal}

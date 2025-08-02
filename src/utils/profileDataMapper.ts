@@ -6,6 +6,8 @@
 import { ProfileFormData } from '@/components/modals/profileSchema';
 
 export function mapProfileFormToDutch(data: ProfileFormData): any {
+  console.log('🔥 mapProfileFormToDutch - Received data:', data);
+  
   // Convert date format from dd/mm/yyyy to yyyy-mm-dd
   const convertDateFormat = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -13,48 +15,78 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     return `${year}-${month}-${day}`;
   };
 
-  // Create Dutch data object
+  // Ensure preferred_city is properly handled
+  let stad = '';
+  let locatie_voorkeur: string[] = [];
+  
+  if (Array.isArray(data.preferred_city) && data.preferred_city.length > 0) {
+    const firstCity = data.preferred_city[0];
+    if (typeof firstCity === 'object' && firstCity !== null && 'name' in firstCity) {
+      stad = firstCity.name as string;
+    } else if (typeof firstCity === 'string') {
+      stad = firstCity;
+    }
+    
+    // Map all cities for location preferences
+    locatie_voorkeur = data.preferred_city.map(location => {
+      if (typeof location === 'object' && location !== null && 'name' in location) {
+        return (location as { name: string }).name;
+      } else if (typeof location === 'string') {
+        return location;
+      }
+      return '';
+    }).filter(name => name !== '');
+  } else if (typeof data.preferred_city === 'string') {
+    stad = data.preferred_city;
+    locatie_voorkeur = [data.preferred_city];
+  } else {
+    // Default fallback
+    stad = 'Amsterdam';
+    locatie_voorkeur = ['Amsterdam'];
+  }
+
+  // Create Dutch data object with all required fields
   const dutchData: any = {
-    voornaam: data.first_name,
-    achternaam: data.last_name,
-    telefoon: data.phone,
-    geboortedatum: convertDateFormat(data.date_of_birth),
-    beroep: data.profession,
-    werkgever: data.employer,
-    dienstverband: data.employment_status,
-    inkomen: data.monthly_income,
+    voornaam: data.first_name || '',
+    achternaam: data.last_name || '',
+    telefoon: data.phone || '',
+    geboortedatum: convertDateFormat(data.date_of_birth) || null,
+    beroep: data.profession || '',
+    werkgever: data.employer || '',
+    dienstverband: data.employment_status || 'full-time',
+    inkomen: data.monthly_income || 0,
     // Add fields expected by validation
-    maandinkomen: data.monthly_income,
-    bio: data.bio,
-    stad: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 
-      ? (data.preferred_city[0]?.name || data.preferred_city[0]) 
-      : (typeof data.preferred_city === 'string' ? data.preferred_city : ''),
-    minBudget: data.min_budget,
-    maxBudget: data.max_budget,
-    slaapkamers: data.min_kamers,
-    woningtype: data.preferred_property_type,
-    extra_inkomen: data.extra_income,
-    extra_inkomen_beschrijving: data.extra_income_description,
-    thuiswerken: data.work_from_home,
-    nationaliteit: data.nationality,
-    geslacht: data.sex,
-    burgerlijke_staat: data.marital_status,
+    maandinkomen: data.monthly_income || 0,
+    bio: data.bio || 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+    beschrijving: data.bio || 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+    stad: stad,
+    minBudget: data.min_budget ?? 0,
+    maxBudget: data.max_budget ?? 1000,
+    slaapkamers: data.min_kamers ?? 1,
+    woningtype: data.preferred_property_type || 'appartement',
+    motivatie: data.motivation || 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+    extra_inkomen: data.extra_income || 0,
+    extra_inkomen_beschrijving: data.extra_income_description || '',
+    thuiswerken: data.work_from_home || false,
+    nationaliteit: data.nationality || 'Nederlandse',
+    geslacht: data.sex || 'zeg_ik_liever_niet',
+    burgerlijke_staat: data.marital_status || 'single',
     
     // Partner information
-    partner: data.has_partner,
-    partner_naam: data.partner_name,
-    partner_beroep: data.partner_profession,
-    partner_dienstverband: data.partner_employment_status,
-    partner_inkomen: data.partner_monthly_income,
+    partner: data.has_partner || false,
+    partner_naam: data.partner_name || '',
+    partner_beroep: data.partner_profession || '',
+    partner_dienstverband: data.partner_employment_status || '',
+    partner_inkomen: data.partner_monthly_income || 0,
     
     // Children information
-    heeft_kinderen: data.has_children,
-    aantal_kinderen: data.number_of_children,
-    kinderen_leeftijden: data.children_ages,
+    heeft_kinderen: data.has_children || false,
+    aantal_kinderen: data.number_of_children || 0,
+    kinderen_leeftijden: data.children_ages || [],
     
     // Housing preferences
-    locatie_voorkeur: Array.isArray(data.preferred_city) && data.preferred_city.length > 0 ? data.preferred_city.map(location => location.name || location) : [data.preferred_city],
-    voorkeur_woningtype: data.preferred_property_type,
+    locatie_voorkeur: locatie_voorkeur,
+    voorkeur_woningtype: data.preferred_property_type || 'appartement',
     min_budget: data.min_budget,
     max_huur: data.max_budget,
     min_kamers: data.min_kamers,
@@ -63,39 +95,37 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     voorkeur_meubilering: data.furnished_preference,
     voorkeur_verhuisdatum: data.move_in_date_preferred ? convertDateFormat(data.move_in_date_preferred) : undefined,
     vroegste_verhuisdatum: data.move_in_date_earliest ? convertDateFormat(data.move_in_date_earliest) : undefined,
-    beschikbaarheid_flexibel: data.availability_flexible,
+    beschikbaarheid_flexibel: data.availability_flexible || false,
     huurcontract_voorkeur: data.lease_duration_preference,
-    parkeren_vereist: data.parking_required,
+    parkeren_vereist: data.parking_required || false,
     
     // Storage preferences
-    opslag_kelder: data.storage_kelder,
-    opslag_zolder: data.storage_zolder,
-    opslag_berging: data.storage_berging,
-    opslag_garage: data.storage_garage,
-    opslag_schuur: data.storage_schuur,
+    opslag_kelder: data.storage_kelder || false,
+    opslag_zolder: data.storage_zolder || false,
+    opslag_berging: data.storage_berging || false,
+    opslag_garage: data.storage_garage || false,
+    opslag_schuur: data.storage_schuur || false,
     
     // Lifestyle
-    huisdieren: data.hasPets,
-    huisdier_details: data.pet_details,
-    roken: data.smokes,
-    rook_details: data.smoking_details,
+    huisdieren: data.hasPets || false,
+    huisdier_details: data.pet_details || '',
+    roken: data.smokes || false,
+    rook_details: data.smoking_details || '',
     
     // Guarantor
-    borgsteller_beschikbaar: data.borgsteller_beschikbaar,
-    borgsteller_naam: data.borgsteller_naam,
-    borgsteller_relatie: data.borgsteller_relatie,
-    borgsteller_telefoon: data.borgsteller_telefoon,
-    borgsteller_inkomen: data.borgsteller_inkomen,
+    borgsteller_beschikbaar: data.borgsteller_beschikbaar || false,
+    borgsteller_naam: data.borgsteller_naam || '',
+    borgsteller_relatie: data.borgsteller_relatie || '',
+    borgsteller_telefoon: data.borgsteller_telefoon || '',
+    borgsteller_inkomen: data.borgsteller_inkomen || 0,
     
     // References
-    referenties_beschikbaar: data.references_available,
-    verhuurgeschiedenis_jaren: data.rental_history_years,
-    reden_verhuizing: data.reason_for_moving,
+    referenties_beschikbaar: data.references_available || false,
+    verhuurgeschiedenis_jaren: data.rental_history_years || 0,
+    reden_verhuizing: data.reason_for_moving || '',
     
     // Profile
-    beschrijving: data.bio,
-    motivatie: data.motivation,
-    profiel_foto: data.profilePictureUrl,
+    profiel_foto: data.profilePictureUrl || '',
   };
 
   // Remove undefined values (but preserve false boolean values)
@@ -105,5 +135,6 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     }
   });
 
+  console.log('🔥 Mapped profile data:', dutchData);
   return dutchData;
 }

@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { consolidatedDashboardService } from '@/services/ConsolidatedDashboardService';
 import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';
 import { userService } from '@/services/UserService';
-import { TenantProfile, Subscription, TenantDashboardData, User } from '@/types';
+import { TenantProfile, Subscription, TenantDashboardData } from '@/types';
 import { Document } from '@/types/documents';
 import { mapProfileFormToDutch } from '@/utils/profileDataMapper';
 
@@ -53,14 +53,20 @@ export const useHuurder = () => {
         if (subscription && subscription.status === 'active') {
           const expiration = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
           if (expiration.success && expiration.data?.expiresAt) {
-            setSubscription(prev => prev ? { ...prev, end_date: expiration.data.expiresAt } : {
-              id: subscription.id || '',
-              user_id: user.id,
-              status: 'active',
-              start_date: subscription.start_date || new Date().toISOString(),
-              end_date: expiration.data.expiresAt,
-              stripe_subscription_id: subscription.stripe_subscription_id || ''
-            } as Subscription);
+            setSubscription(prev => {
+              if (prev) {
+                return { ...prev, end_date: expiration.data!.expiresAt } as Subscription;
+              } else {
+                return {
+                  id: subscription?.id || '',
+                  user_id: user.id,
+                  status: 'active',
+                  start_date: subscription?.start_date || new Date().toISOString(),
+                  end_date: expiration.data!.expiresAt,
+                  stripe_subscription_id: subscription?.stripe_subscription_id || ''
+                } as Subscription;
+              }
+            });
           }
         }
       } else {
@@ -127,14 +133,14 @@ export const useHuurder = () => {
     try {
       // Create update data with all required properties for CreateTenantProfileData
       const updateData = {
-        voornaam: tenantProfile.firstName,
-        achternaam: tenantProfile.lastName,
-        telefoon: tenantProfile.phone,
-        geboortedatum: tenantProfile.dateOfBirth,
-        beroep: tenantProfile.profession,
-        maandinkomen: tenantProfile.income,
-        bio: tenantProfile.bio,
-        motivatie: tenantProfile.motivation,
+        voornaam: tenantProfile.firstName || '',
+        achternaam: tenantProfile.lastName || '',
+        telefoon: tenantProfile.phone || '',
+        geboortedatum: tenantProfile.dateOfBirth || '',
+        beroep: tenantProfile.profession || '',
+        maandinkomen: tenantProfile.income || 0,
+        bio: tenantProfile.bio || '',
+        motivatie: tenantProfile.motivation || '',
         stad: tenantProfile.preferences?.city || '',
         minBudget: tenantProfile.preferences?.minBudget || 0,
         maxBudget: tenantProfile.preferences?.maxBudget || 0,
@@ -166,33 +172,61 @@ export const useHuurder = () => {
       return;
     }
 
+    console.log('🔥 useHuurder.handleProfileComplete - Received profileData:', profileData);
 
     try {
       const mappedData = mapProfileFormToDutch(profileData);
       
+      console.log('🔥 useHuurder.handleProfileComplete - Mapped data:', mappedData);
+      
       // Check if required fields are present in mapped data
       const requiredFields = ['voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'];
-      const missingFields = requiredFields.filter(field => !mappedData[field]);
+      const missingFields = requiredFields.filter(field => {
+        const value = mappedData[field];
+        const isMissing = value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+        if (isMissing) {
+          console.error(`🔥 Missing required field: ${field}`, { value: mappedData[field] });
+        }
+        return isMissing;
+      });
+      
       if (missingFields.length > 0) {
         console.error('🔥 Missing required fields in mapped data:', missingFields);
         console.error('🔥 Available fields in mapped data:', Object.keys(mappedData));
+        toast({
+          title: 'Fout',
+          description: `Ontbrekende verplichte velden: ${missingFields.join(', ')}`,
+          variant: 'destructive',
+        } as any);
+        return;
       }
       
+      console.log('🔥 useHuurder.handleProfileComplete - Calling userService.createTenantProfile');
       const result = await userService.createTenantProfile(mappedData);
+      console.log('🔥 useHuurder.handleProfileComplete - userService.createTenantProfile result:', result);
 
-      toast({
-        title: 'Succes',
-        description: 'Profiel succesvol opgeslagen!',
-      });
-      await refresh(); // Refresh user context to reflect profile changes
-      if (callback) callback();
+      if (result.success) {
+        toast({
+          title: 'Succes',
+          description: 'Profiel succesvol opgeslagen!',
+        } as any);
+        await refresh(); // Refresh user context to reflect profile changes
+        if (callback) callback();
+      } else {
+        console.error('🔥 useHuurder.handleProfileComplete - Service error:', result.error);
+        toast({
+          title: 'Fout',
+          description: `Fout bij opslaan profiel: ${result.error?.message || 'Onbekende fout'}`,
+          variant: 'destructive',
+        } as any);
+      }
     } catch (error) {
-      console.error('Fout bij opslaan profiel:', error);
+      console.error('🔥 useHuurder.handleProfileComplete - Unexpected error:', error);
       toast({
         title: 'Fout',
         description: `Fout bij opslaan profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
-      });
+      } as any);
     }
   };
 

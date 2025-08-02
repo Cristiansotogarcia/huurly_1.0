@@ -1,13 +1,11 @@
 
-import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { DateInput } from '@/components/ui/DateInput';
 import EnhancedDatePicker from '../EnhancedDatePicker';
-import { Home, Euro, MapPin, Clock, Calendar, Heart, PawPrint, Cigarette } from 'lucide-react';
+import { Home, Euro, Clock, Calendar, Heart, PawPrint, Cigarette } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
 import LocationSelector from '@/components/ui/LocationSelector';
@@ -104,16 +102,16 @@ export default function Step4Housing() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="min_budget">Minimum budget *</Label>
+          <Label htmlFor="min_budget">Minimum budget</Label>
           <div className="relative">
             <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="min_budget"
-              type="number"
-              {...register('min_budget', { valueAsNumber: true, required: true })}
-              placeholder="1200"
-              className="pl-10"
-            />
+          <Input
+            id="min_budget"
+            type="number"
+            {...register('min_budget', { valueAsNumber: true })}
+            placeholder="1200"
+            className="pl-10"
+          />
           </div>
           {errors.min_budget && <p className="text-red-500 text-xs">{`${errors.min_budget.message}`}</p>}
         </div>

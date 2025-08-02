@@ -17,12 +17,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting relaxed */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
+    /* Linting - Enabling strict mode and related checks for better type safety */
+    "strict": true, // Enables all strict type checking options.
+    "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type.
+    "strictNullChecks": true, // When strictNullChecks is false, null and undefined are effectively ignored by the language.
+    "noUnusedLocals": true, // Report errors on unused locals.
+    "noUnusedParameters": true, // Report errors on unused parameters.
+    "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statements.
 
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
