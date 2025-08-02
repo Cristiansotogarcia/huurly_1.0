@@ -164,12 +164,13 @@ export const useHuurder = () => {
 
   const handleProfileComplete = async (profileData: any, callback?: () => void) => {
     if (!user?.id) {
+      const error = new Error('Gebruiker niet ingelogd.');
       toast({ 
         title: 'Fout', 
-        description: 'Gebruiker niet ingelogd.', 
+        description: error.message, 
         variant: 'destructive' 
       });
-      return;
+      throw error;
     }
 
     console.log('🔥 useHuurder.handleProfileComplete - Received profileData:', profileData);
@@ -193,15 +194,16 @@ export const useHuurder = () => {
       if (missingFields.length > 0) {
         console.error('🔥 Missing required fields in mapped data:', missingFields);
         console.error('🔥 Available fields in mapped data:', Object.keys(mappedData));
+        const error = new Error(`Ontbrekende verplichte velden: ${missingFields.join(', ')}`);
         toast({
           title: 'Fout',
-          description: `Ontbrekende verplichte velden: ${missingFields.join(', ')}`,
+          description: error.message,
           variant: 'destructive',
         } as any);
-        return;
+        throw error;
       }
       
-      console.log('🔥 useHuurder.handleProfileComplete - Calling userService.createTenantProfile');
+      console.log('🔥 useHuurder.handleProfileComplete - All required fields present, calling userService.createTenantProfile');
       const result = await userService.createTenantProfile(mappedData);
       console.log('🔥 useHuurder.handleProfileComplete - userService.createTenantProfile result:', result);
 
@@ -212,21 +214,26 @@ export const useHuurder = () => {
         } as any);
         await refresh(); // Refresh user context to reflect profile changes
         if (callback) callback();
+        return result;
       } else {
         console.error('🔥 useHuurder.handleProfileComplete - Service error:', result.error);
+        const error = new Error(`Fout bij opslaan profiel: ${result.error?.message || 'Onbekende fout'}`);
         toast({
           title: 'Fout',
-          description: `Fout bij opslaan profiel: ${result.error?.message || 'Onbekende fout'}`,
+          description: error.message,
           variant: 'destructive',
         } as any);
+        throw error;
       }
     } catch (error) {
       console.error('🔥 useHuurder.handleProfileComplete - Unexpected error:', error);
+      const displayError = error instanceof Error ? error : new Error('Onbekende fout');
       toast({
         title: 'Fout',
-        description: `Fout bij opslaan profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
+        description: `Fout bij opslaan profiel: ${displayError.message}`,
         variant: 'destructive',
       } as any);
+      throw displayError;
     }
   };
 

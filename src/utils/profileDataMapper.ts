@@ -22,15 +22,23 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
   if (Array.isArray(data.preferred_city) && data.preferred_city.length > 0) {
     const firstCity = data.preferred_city[0];
     if (typeof firstCity === 'object' && firstCity !== null && 'name' in firstCity) {
-      stad = firstCity.name as string;
+      stad = (firstCity as { name: string }).name;
     } else if (typeof firstCity === 'string') {
       stad = firstCity;
+    } else {
+      // Handle case where firstCity might be an object with different structure
+      stad = 'Amsterdam'; // fallback
     }
     
     // Map all cities for location preferences
     locatie_voorkeur = data.preferred_city.map(location => {
-      if (typeof location === 'object' && location !== null && 'name' in location) {
-        return (location as { name: string }).name;
+      if (typeof location === 'object' && location !== null) {
+        if ('name' in location) {
+          return (location as { name: string }).name;
+        } else {
+          // Handle objects without 'name' property
+          return String(location);
+        }
       } else if (typeof location === 'string') {
         return location;
       }

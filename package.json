@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-types": "npx supabase gen types typescript --project-id sqhultitvpivlnlgogen > src/types/database.ts"
+    "generate-types": "npx supabase gen types typescript --local > src/integrations/supabase/types.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.839.0",

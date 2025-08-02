@@ -34,8 +34,8 @@ const ProfileEditPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
-  const huurder = useHuurder();
-  const defaultHandleProfileComplete = huurder.handleProfileComplete;
+  const huurderHook = useHuurder();
+  const { handleProfileComplete: defaultHandleProfileComplete } = huurderHook;
   
   // Get data from navigation state
   const state = location.state as any;
@@ -222,6 +222,8 @@ const ProfileEditPage: React.FC = () => {
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
       } as any);
+      // Don't navigate away on error - let user fix the issue
+      // Don't re-throw the error as it's already handled
     } finally {
       setIsManuallySubmitting(false);
     }

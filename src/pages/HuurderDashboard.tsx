@@ -350,6 +350,7 @@ const buildStats = (stats: any, isLoadingStats: boolean) => [
 ];
 
 const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
+  const huurderHook = useHuurder();
   const {
     user,
     userDocuments,
@@ -363,7 +364,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
     getSubscriptionEndDate,
     handleProfileComplete,
     handleDocumentUploadComplete,
-  } = useHuurder();
+  } = huurderHook;
   const navigate = useNavigate();
 
   const {

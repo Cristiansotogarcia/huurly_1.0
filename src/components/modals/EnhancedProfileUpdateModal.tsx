@@ -218,6 +218,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
       } as any);
+      // Don't close the modal on error - let user fix the issue
+      // Don't re-throw the error as it's already handled
     } finally {
       // Always reset manual loading state
       setIsManuallySubmitting(false);

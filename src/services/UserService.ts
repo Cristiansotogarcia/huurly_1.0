@@ -317,10 +317,24 @@ export class UserService extends DatabaseService {
       ]);
       
       console.log('🔥 UserService.createTenantProfile - Validation result:', validation);
+      console.log('🔥 UserService.createTenantProfile - Required fields check:', {
+        voornaam: sanitizedData.voornaam,
+        achternaam: sanitizedData.achternaam,
+        telefoon: sanitizedData.telefoon,
+        geboortedatum: sanitizedData.geboortedatum,
+        beroep: sanitizedData.beroep,
+        maandinkomen: sanitizedData.maandinkomen,
+        bio: sanitizedData.bio,
+        stad: sanitizedData.stad,
+        minBudget: sanitizedData.minBudget,
+        maxBudget: sanitizedData.maxBudget,
+        motivatie: sanitizedData.motivatie
+      });
       
       if (!validation.isValid) {
         const error = new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`);
         console.error('🔥 UserService.createTenantProfile - Validation failed:', error.message);
+        console.error('🔥 UserService.createTenantProfile - Missing fields:', validation.missingFields);
         return {
           data: null,
           error: error,
