@@ -33,7 +33,6 @@ const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
 const PropertySearch = lazy(() => import('./pages/PropertySearch'));
 const IssueReporting = lazy(() => import('./pages/IssueReporting'));
 const HelpSupport = lazy(() => import('./pages/HelpSupport'));
-const TestModal = lazy(() => import('./pages/TestModal'));
 
 // Mobile modal pages
 const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
@@ -171,10 +170,6 @@ const App = () => (
             <Route
               path="/help-support"
               element={<HelpSupport />}
-            />
-            <Route
-              path="/testmodal"
-              element={<TestModal />}
             />
             {/* Mobile modal routes */}
             <Route
