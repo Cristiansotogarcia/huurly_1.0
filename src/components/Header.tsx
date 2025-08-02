@@ -3,15 +3,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { LoginForm } from './auth/LoginForm';
-import { MultiStepSignupModal } from './auth/MultiStepSignupModal';
 import { Logo } from './Logo';
 import { useAuthStore } from '@/store/authStore';
 
-interface HeaderProps {
-  onShowSignup?: () => void;
-}
-
-export const Header = ({ onShowSignup }: HeaderProps) => {
+export const Header = () => {
   const [showLogin, setShowLogin] = useState(false);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
