@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { LoginForm } from './auth/LoginForm';
-import { MultiStepSignupModal } from './auth/MultiStepSignupModal';
+import { MultiStepSignupModal } from './modals/MultiStepSignupModal';
 import { Logo } from './Logo';
 import { useAuthStore } from '@/store/authStore';
 
