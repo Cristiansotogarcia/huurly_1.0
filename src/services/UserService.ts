@@ -469,15 +469,13 @@ export class UserService extends DatabaseService {
           // Budget preferences
           min_budget: sanitizedData.min_budget,
           
-          // Profile media - FIXED: Corrected field name
+          // Profile media
           profiel_foto: sanitizedData.profielfotoUrl || sanitizedData.profiel_foto || null,
           cover_foto: sanitizedData.coverFotoUrl || sanitizedData.cover_foto || null,
           
           // Motivation
-          motivatie: sanitizedData.motivation,
+          motivatie: sanitizedData.motivatie,
         };
-
-        console.log('🔥 UserService.createTenantProfile - Prepared tenantProfileData:', JSON.stringify(tenantProfileData, null, 2));
 
         // Calculate age from birth date
         if (sanitizedData.geboortedatum) {
