@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -65,7 +64,6 @@ interface ProfileModalProps {
 export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModalProps) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
     register,
@@ -87,10 +85,6 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
     },
   });
 
-  const handleProfilePictureUpload = (url: string) => {
-    setValue('profielfoto_url', url);
-  };
-
   const onSubmit = async (data: ProfileModalData) => {
     if (!user?.id) {
       toast({
@@ -100,8 +94,6 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
       });
       return;
     }
-
-    setIsSubmitting(true);
 
     try {
       // Convert date format from dd/mm/yyyy to yyyy-mm-dd
@@ -184,7 +176,6 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -206,7 +197,7 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
       }
     >
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Profile Picture */}
           <div>
             <Label>Profielfoto</Label>

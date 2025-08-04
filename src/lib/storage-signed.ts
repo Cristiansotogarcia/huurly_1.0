@@ -71,7 +71,6 @@ export class SignedUrlStorageService {
       // Generate unique file path
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = file.name.split('.').pop();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${folder}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 
@@ -183,7 +182,7 @@ export class SignedUrlStorageService {
   /**
    * Delete file (placeholder - would need server-side implementation)
    */
-  async deleteFile(filePath: string): Promise<{ success: boolean; error: Error | null }> {
+  async deleteFile(_filePath: string): Promise<{ success: boolean; error: Error | null }> {
     try {
       // For signed URL approach, deletion would need a separate server function
       // This is a placeholder for now

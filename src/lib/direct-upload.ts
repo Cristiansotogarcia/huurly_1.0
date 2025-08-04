@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client'
-
 export interface UploadResult {
   url: string | null;
   path: string | null;
@@ -64,7 +62,6 @@ export class DirectUploadService {
       // Generate unique file path
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = file.name.split('.').pop();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${folder}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
 

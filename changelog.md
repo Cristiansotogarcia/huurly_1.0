@@ -10,6 +10,30 @@
   - **Files Modified**: 
     - `src/pages/HuurderDashboard.tsx`: Commented out `useProfileWarnings` import and `checkAndShowWarnings` functionality
   - **Result**: Users no longer see the unwanted documents missing toast at sign-in
+- Fixed form submission in ProfileModal.tsx by adding form ID
+  - **Problem**: 'Profiel opslaan' button not triggering submission
+  - **Solution**: Added id="profile-form" to the form element
+  - **Files Modified**: src/components/modals/ProfileModal.tsx
+- Resolved TypeScript errors in HuurderDashboard.tsx related to icon imports
+  - **Problem**: TS6133 errors for unused declarations
+  - **Solution**: Adjusted imports for Heart, Shield, Users icons which are used in profile sections
+  - **Files Modified**: src/pages/HuurderDashboard.tsx
+- Fixed TS6133 error in storage-signed.ts
+  - **Problem**: Unused 'filePath' parameter in deleteFile method
+  - **Solution**: Prefixed parameter with underscore to indicate intentional non-use
+  - **Files Modified**: src/lib/storage-signed.ts
+- Fixed TS6133 errors in direct-upload.ts
+  - **Problem**: Unused 'extension' declaration and supabase import
+  - **Solution**: Removed unused extension variable and supabase import
+  - **Files Modified**: src/lib/direct-upload.ts
+- Resolved TS6133 errors in ProfileModal.tsx
+  - **Problem**: Unused declarations for 'React', 'isSubmitting', and 'handleProfilePictureUpload'
+  - **Solution**: Removed unused React import, eliminated isSubmitting state, deleted unused handleProfilePictureUpload function
+  - **Files Modified**: src/components/modals/ProfileModal.tsx
+- Resolved additional TS6133 error in ProfileModal.tsx
+  - **Problem**: Unused 'useState' import after previous fixes
+  - **Solution**: Removed unnecessary 'useState' import
+  - **Files Modified**: src/components/modals/ProfileModal.tsx
 
 ## ✅ IMPLEMENTED: Route-Based Modal System for Mobile - January 2025
 
