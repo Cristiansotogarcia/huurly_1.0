@@ -3,7 +3,7 @@ import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { CTA } from '@/components/CTA';
 import { Logo } from '@/components/Logo';
-import { MultiStepSignupModal } from '@/components/auth/MultiStepSignupModal';
+import { MultiStepSignupModal } from '@/components/modals/MultiStepSignupModal';
 import EmailConfirmationModal from '@/components/modals/EmailConfirmationModal';
 import EmailVerificationSuccessModal from '@/components/modals/EmailVerificationSuccessModal';
 import PaymentSuccessModal from '@/components/modals/PaymentSuccessModal';
@@ -77,7 +77,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Header onShowSignup={() => setShowSignup(true)} />
+      <Header />
       <Hero onShowSignup={() => setShowSignup(true)} />
       <Features />
       <CTA />

@@ -29,3 +29,4 @@ export { default as ValidationErrorModal } from './ValidationErrorModal';
 export { default as ProfileFormStepper } from './ProfileFormStepper';
 export { default as ProfileFormNavigation } from './ProfileFormNavigation';
 export { default as MobileModalPage, useMobileModalPage } from './MobileModalPage';
+export { MultiStepSignupModal } from './MultiStepSignupModal';
