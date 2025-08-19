@@ -15,13 +15,18 @@ export const Header = ({ onShowSignup }: HeaderProps) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   return (
-    <header>
+    <header className="flex justify-between items-center">
       <Logo />
       {!isAuthenticated && (
         <>
           <Dialog open={showLogin} onOpenChange={setShowLogin}>
             <DialogTrigger asChild>
-              <button onClick={() => setShowLogin(true)}>Login</button>
+              <button
+                onClick={() => setShowLogin(true)}
+                className="bg-dutch-orange text-white px-4 py-2 rounded-md"
+              >
+                Login
+              </button>
             </DialogTrigger>
             <DialogContent>
               <LoginForm />
