@@ -16,11 +16,11 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
   onNavigateHelp,
 }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 mt-8">
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="flex flex-wrap justify-center gap-4">
       <Button
         variant="default"
         size="sm"
-        className="w-full justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
+        className="w-full sm:w-auto justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
         onClick={onShowProfileModal}
       >
         <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -30,27 +30,30 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
       <Button
         variant="outline"
         size="sm"
-        className="w-full justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
+        className="w-full sm:w-auto justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
         onClick={onShowDocumentModal}
       >
         <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         <span className="hidden lg:inline">Documenten beheren</span>
         <span className="lg:hidden">Documenten</span>
       </Button>
+      {/*
+        Temporarily hidden until woning zoeken functionality is reactivated.
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full sm:w-auto justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
+          onClick={onNavigateSearch}
+        >
+          <Home className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden lg:inline">Woningen zoeken</span>
+          <span className="lg:hidden">Zoeken</span>
+        </Button>
+      */}
       <Button
         variant="outline"
         size="sm"
-        className="w-full justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
-        onClick={onNavigateSearch}
-      >
-        <Home className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        <span className="hidden lg:inline">Woningen zoeken</span>
-        <span className="lg:hidden">Zoeken</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
+        className="w-full sm:w-auto justify-center text-xs sm:text-sm lg:text-base h-12 sm:h-9 lg:h-10"
         onClick={onNavigateHelp}
       >
         <span className="hidden lg:inline">Help & Support</span>
