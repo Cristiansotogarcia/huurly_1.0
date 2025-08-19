@@ -97,11 +97,11 @@ export function StandardTable<T extends Record<string, any>>({
     ? [...filteredData].sort((a, b) => {
         const key = sortConfig.key as string;
         
-        let aValue = key.includes('.')
+        const aValue = key.includes('.')
           ? key.split('.').reduce((obj, path) => obj && obj[path], a)
           : a[key];
-          
-        let bValue = key.includes('.')
+
+        const bValue = key.includes('.')
           ? key.split('.').reduce((obj, path) => obj && obj[path], b)
           : b[key];
 
