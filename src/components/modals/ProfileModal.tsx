@@ -175,7 +175,6 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
         description: 'Er is een fout opgetreden bij het bijwerken van je profiel',
         variant: 'destructive',
       });
-    } finally {
     }
   };
 

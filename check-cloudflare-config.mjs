@@ -4,32 +4,24 @@ import { readFileSync } from 'fs';
 // Load environment variables
 config();
 
+const requiredVars = [
+  'VITE_CLOUDFLARE_R2_ENDPOINT',
+  'VITE_CLOUDFLARE_R2_ACCESS_KEY_ID',
+  'VITE_CLOUDFLARE_R2_SECRET_KEY',
+  'VITE_CLOUDFLARE_R2_BUCKET',
+];
 
-// Check for missing variables
-const missing = [];
-if (!process.env.VITE_CLOUDFLARE_R2_ENDPOINT) missing.push('VITE_CLOUDFLARE_R2_ENDPOINT');
-if (!process.env.VITE_CLOUDFLARE_R2_ACCESS_KEY_ID) missing.push('VITE_CLOUDFLARE_R2_ACCESS_KEY_ID');
-if (!process.env.VITE_CLOUDFLARE_R2_SECRET_KEY) missing.push('VITE_CLOUDFLARE_R2_SECRET_KEY');
-if (!process.env.VITE_CLOUDFLARE_R2_BUCKET) missing.push('VITE_CLOUDFLARE_R2_BUCKET');
+const missing = requiredVars.filter((key) => !process.env[key]);
 
 if (missing.length > 0) {
   console.error('\n❌ Missing environment variables:', missing);
 } else {
+  console.log('✅ All required Cloudflare environment variables are set.');
 }
 
-// Test the actual client configuration
 try {
-  const clientCode = readFileSync('./src/integrations/cloudflare/client.ts', 'utf8');
-  
-  // Check if we can import the client
-  const { execSync } = await import('child_process');
-  try {
-      encoding: 'utf8',
-      stdio: 'pipe'
-    });
-  } catch (error) {
-    console.error('Error importing client:', error.message);
-  }
+  readFileSync('./src/integrations/cloudflare/client.ts', 'utf8');
+  console.log('✅ Cloudflare client file is present.');
 } catch (error) {
   console.error('Error reading client file:', error.message);
 }
