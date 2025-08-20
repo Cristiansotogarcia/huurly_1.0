@@ -151,7 +151,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   );
   
   const { openModal, isMobile } = useModalRouter();
-  
+
   // Handle profile modal opening with route-based approach
   React.useEffect(() => {
     if (showProfileModal) {
@@ -168,6 +168,16 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       }
     }
   }, [showProfileModal, openModal, initialData, onProfileComplete, setShowProfileModal]);
+
+  // Handle payment modal opening with route-based approach
+  React.useEffect(() => {
+    if (showPaymentModal) {
+      const shouldShowDesktopModal = openModal('payment');
+      if (!shouldShowDesktopModal) {
+        setShowPaymentModal(false);
+      }
+    }
+  }, [showPaymentModal, openModal, setShowPaymentModal]);
   
   return (
     <>
@@ -188,12 +198,14 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         onUploadComplete={onDocumentUploadComplete}
       />
 
-      {/* Persistent Payment Modal - cannot be closed without payment */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={(open) => setShowPaymentModal(open)}
-        persistent={true}
-      />
+      {/* Persistent Payment Modal - Only shown on desktop */}
+      {!isMobile && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={(open) => setShowPaymentModal(open)}
+          persistent={true}
+        />
+      )}
     </>
   );
 };
