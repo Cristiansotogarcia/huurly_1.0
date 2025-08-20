@@ -161,13 +161,14 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         onProfileComplete, // Pass the callback
         returnPath: '/huurder-dashboard'
       });
-      
+
       if (!shouldShowDesktopModal) {
         // On mobile, we navigated to a page, so close the modal state
         setShowProfileModal(false);
       }
     }
   }, [showProfileModal, openModal, initialData, onProfileComplete, setShowProfileModal]);
+
 
   // Handle payment modal opening with route-based approach
   React.useEffect(() => {
@@ -178,6 +179,22 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       }
     }
   }, [showPaymentModal, openModal, setShowPaymentModal]);
+
+  // Handle document upload modal routing
+  React.useEffect(() => {
+    if (showDocumentModal) {
+      const shouldShowDesktopModal = openModal('documentUpload', {
+        onUploadComplete: onDocumentUploadComplete,
+        returnPath: '/huurder-dashboard'
+      });
+
+      if (!shouldShowDesktopModal) {
+        // On mobile, we navigated to a page, so close the modal state
+        setShowDocumentModal(false);
+      }
+    }
+  }, [showDocumentModal, openModal, onDocumentUploadComplete, setShowDocumentModal]);
+
   
   return (
     <>
@@ -191,12 +208,14 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         />
       )}
 
-      {/* Document Upload Modal */}
-      <DocumentUploadModal
-        open={showDocumentModal}
-        onOpenChange={setShowDocumentModal}
-        onUploadComplete={onDocumentUploadComplete}
-      />
+      {/* Document Upload Modal - Only shown on desktop */}
+      {!isMobile && (
+        <DocumentUploadModal
+          open={showDocumentModal}
+          onOpenChange={setShowDocumentModal}
+          onUploadComplete={onDocumentUploadComplete}
+        />
+      )}
 
       {/* Persistent Payment Modal - Only shown on desktop */}
       {!isMobile && (

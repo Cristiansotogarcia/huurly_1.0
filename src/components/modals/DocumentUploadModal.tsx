@@ -292,6 +292,8 @@ const DocumentUploadModal = ({
               : d,
           ),
         );
+        // Refresh existing documents after successful upload
+        await loadExistingDocuments();
         return result.data;
       } else {
         throw result.error || new Error("Upload mislukt");
@@ -355,6 +357,9 @@ const DocumentUploadModal = ({
         title: "Documenten geüpload",
         description: `${uploadedDocuments.length} document(en) zijn succesvol geüpload voor beoordeling.`,
       });
+
+      // Refresh existing documents after batch upload
+      await loadExistingDocuments();
 
       if (!hasErrors) {
         // Only close modal if no errors occurred

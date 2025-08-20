@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHuurder } from "@/hooks/useHuurder";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
@@ -6,7 +6,11 @@ import { useAuthStore } from "@/store/authStore";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
 import { StatsGrid } from "@/components/standard/StatsGrid";
-import { DocumentsSection } from "@/components/standard/DocumentsSection";
+import { QuickActionsSection } from "@/components/HuurderDashboard/QuickActionsSection";
+import { ProfileStatusCard } from "@/components/HuurderDashboard/ProfileStatusCard";
+import { DocumentsSection } from "@/components/HuurderDashboard/DocumentsSection";
+import { ImportantInfoSection } from "@/components/HuurderDashboard/ImportantInfoSection";
+import { MobileNavigation } from "@/components/HuurderDashboard/MobileNavigation";
 import ProfileOverview, {
   ProfileSection,
 } from "@/components/standard/ProfileOverview";
@@ -24,10 +28,9 @@ import {
   Users,
 } from "lucide-react";
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
-import ProfileActions from "@/components/HuurderDashboard/ProfileActions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from "@/hocs/withAuth";
-import { User } from "@/types";
+import { User, TenantDashboardData } from "@/types";
 import {
   mapEmploymentStatusLabel,
   mapContractTypeLabel,
@@ -318,7 +321,7 @@ const buildProfileSections = (
   ];
 };
 
-const buildStats = (stats: any, isLoadingStats: boolean) => [
+const buildStats = (stats: TenantDashboardData, isLoadingStats: boolean) => [
   {
     title: "Profiel weergaven",
     value: stats.profileViews,
@@ -364,6 +367,10 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
     getSubscriptionEndDate,
     handleProfileComplete,
     handleDocumentUploadComplete,
+    hasProfile,
+    isLookingForPlace,
+    isUpdatingStatus,
+    toggleLookingStatus,
   } = huurderHook;
   const navigate = useNavigate();
 
@@ -378,6 +385,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const { toast } = useToast();
+
+  const statsRef = useRef<HTMLDivElement>(null);
 
 
   const profileSections = useMemo(
@@ -517,15 +526,32 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Content Sections - Proper Order */}
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* 1. Cover Photo, Profile Photo, and Stats Section */}
+            <QuickActionsSection
+              hasProfile={hasProfile}
+              isLookingForPlace={isLookingForPlace}
+              isUpdatingStatus={isUpdatingStatus}
+              onShowProfileModal={() => setShowProfileModal(true)}
+              onShowDocumentModal={() => setShowDocumentModal(true)}
+              onStartSearch={() => {}}
+              onReportIssue={() => navigate("/issue-reporting")}
+              onHelpSupport={() => navigate("/help-support")}
+              onToggleLookingStatus={toggleLookingStatus}
+            />
+
             <ProfilePhotoSection>
-              <div className="relative mt-4 px-4">
+              <div className="relative mt-4 px-4 space-y-4" ref={statsRef}>
+                <ProfileStatusCard
+                  isLookingForPlace={isLookingForPlace}
+                  isUpdatingStatus={isUpdatingStatus}
+                  onToggleLookingStatus={toggleLookingStatus}
+                />
                 <StatsGrid
                   stats={huurderStats}
                   className="grid-cols-2 sm:grid-cols-4 bg-transparent shadow-none border-none"
                 />
               </div>
             </ProfilePhotoSection>
+
 
             {/* 2. Profile Actions Section */}
             <ProfileActions
@@ -542,6 +568,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
             />
 
             {/* 3. Profile Overview - Third */}
+
             <ProfileOverview
               sections={profileSections}
               title="Profiel Overzicht"
@@ -552,13 +579,17 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
             />
             <DocumentsSection
               userDocuments={userDocuments}
+
               onShowDocumentModal={() =>
                 isSubscribed ? setShowDocumentModal(true) : setShowPaymentModal(true)
               }
               title="Mijn Documenten"
               emptyStateTitle="Nog geen documenten geüpload."
               emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."
+
+
             />
+            <ImportantInfoSection />
           </div>
         </div>
       </div>
@@ -573,6 +604,12 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
         tenantProfile={tenantProfile}
+      />
+      <MobileNavigation
+        onProfileClick={() => setShowProfileModal(true)}
+        onDocumentsClick={() => setShowDocumentModal(true)}
+        onStatsClick={() => statsRef.current?.scrollIntoView({ behavior: "smooth" })}
+        onNotificationsClick={() => navigate("/issue-reporting")}
       />
     </>
   );
