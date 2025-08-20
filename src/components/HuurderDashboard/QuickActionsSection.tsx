@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { User, Bell, Settings, Loader2 } from "lucide-react";
+import { User, Bell, Settings, Loader2, FileText } from "lucide-react";
 
 interface QuickActionsSectionProps {
   hasProfile: boolean;
@@ -91,16 +91,24 @@ export const QuickActionsSection = ({
           </Button>
         </div>
         
-        <Button 
-          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 h-auto flex-col items-center justify-center min-h-[70px] sm:min-h-[80px] shadow-md" 
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 h-auto flex-col items-center justify-center min-h-[70px] sm:min-h-[80px] shadow-md"
           onClick={onShowProfileModal}
         >
           <User className="mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5" />
           <span className="text-center">Profiel Bewerken</span>
         </Button>
-        
-        <Button 
-          className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 h-auto flex-col items-center justify-center min-h-[70px] sm:min-h-[80px] border border-blue-500 shadow-md" 
+
+        <Button
+          className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 h-auto flex-col items-center justify-center min-h-[70px] sm:min-h-[80px] border border-blue-500 shadow-md"
+          onClick={onShowDocumentModal}
+        >
+          <FileText className="mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="text-center">Documenten</span>
+        </Button>
+
+        <Button
+          className="bg-blue-600 text-white hover:bg-blue-500 font-semibold text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4 h-auto flex-col items-center justify-center min-h-[70px] sm:min-h-[80px] border border-blue-500 shadow-md"
           onClick={onReportIssue}
         >
           <Bell className="mb-1 sm:mb-2 h-4 w-4 sm:h-5 sm:w-5" />
