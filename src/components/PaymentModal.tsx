@@ -17,7 +17,8 @@ import { logStripeDebugInfo } from "@/utils/stripe-debug";
 
 interface PaymentModalProps {
   isOpen: boolean;
-  onClose: (show: boolean) => void;
+  /** Callback when the modal's open state changes */
+  onClose?: (show: boolean) => void;
   /** Display the modal without a close button and ignore outside clicks */
   persistent?: boolean;
 }
@@ -110,7 +111,10 @@ const PaymentModal = ({
   const Content = PersistentDialogContent;
 
   return (
-    <Dialog open={isOpen} onOpenChange={persistent ? undefined : (open) => onClose(open)}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={persistent ? undefined : (open) => onClose?.(open)}
+    >
       <Content className="max-w-[95vw] sm:max-w-md mx-4 sm:mx-auto" aria-describedby="payment-modal-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -122,7 +126,7 @@ const PaymentModal = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onClose(false)}
+                onClick={() => onClose?.(false)}
                 className="h-6 w-6 rounded-full"
               >
                 <X className="h-4 w-4" />

@@ -529,9 +529,15 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
 
             {/* 2. Profile Actions Section */}
             <ProfileActions
-              onShowProfileModal={() => setShowProfileModal(true)}
-              onShowDocumentModal={() => setShowDocumentModal(true)}
-              onNavigateSearch={() => navigate("/property-search")}
+              onShowProfileModal={() =>
+                isSubscribed ? setShowProfileModal(true) : setShowPaymentModal(true)
+              }
+              onShowDocumentModal={() =>
+                isSubscribed ? setShowDocumentModal(true) : setShowPaymentModal(true)
+              }
+              onNavigateSearch={() =>
+                isSubscribed ? navigate("/property-search") : setShowPaymentModal(true)
+              }
               onNavigateHelp={() => navigate("/help-support")}
             />
 
@@ -539,12 +545,16 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
             <ProfileOverview
               sections={profileSections}
               title="Profiel Overzicht"
-              onEdit={() => setShowProfileModal(true)}
+              onEdit={() =>
+                isSubscribed ? setShowProfileModal(true) : setShowPaymentModal(true)
+              }
               isCreating={!tenantProfile}
             />
             <DocumentsSection
               userDocuments={userDocuments}
-              onShowDocumentModal={() => setShowDocumentModal(true)}
+              onShowDocumentModal={() =>
+                isSubscribed ? setShowDocumentModal(true) : setShowPaymentModal(true)
+              }
               title="Mijn Documenten"
               emptyStateTitle="Nog geen documenten geüpload."
               emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."

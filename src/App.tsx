@@ -36,6 +36,7 @@ const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 
 // Mobile modal pages
 const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
+const PaymentPage = lazy(() => import('./pages/mobile/PaymentPage'));
 
 
 const queryClient = new QueryClient({
@@ -177,6 +178,14 @@ const App = () => (
               element={
                 <ProtectedRoute roles={['huurder']}>
                   <ProfileEditPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mobile/payment"
+              element={
+                <ProtectedRoute roles={['huurder']}>
+                  <PaymentPage />
                 </ProtectedRoute>
               }
             />
