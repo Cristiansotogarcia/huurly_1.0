@@ -66,8 +66,11 @@ export const step3Schema = z.object({
 export const step4Schema = z.object({
   preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
-  min_budget: z.number().min(0, "Budget mag niet negatief zijn").optional(),
-  max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
+  min_budget: z.number().min(1, 'Minimum budget moet minimaal €1 zijn'),
+  max_budget: z.number().min(1, 'Maximum budget moet minimaal €1 zijn')
+}).refine((data) => data.max_budget >= data.min_budget, {
+  message: 'Maximum budget moet groter of gelijk zijn aan minimum budget',
+  path: ['max_budget'],
 });
 
 // Step 5: Guarantor - No required fields (consolidated from old step 6)

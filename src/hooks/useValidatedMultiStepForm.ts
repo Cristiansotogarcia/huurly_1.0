@@ -38,7 +38,7 @@ export function useValidatedMultiStepForm(
 
 
     try {
-      const result = schema.parse(formData);
+      schema.parse(formData);
       return [];
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -86,18 +86,25 @@ export function useValidatedMultiStepForm(
     
     // Special handling for Step 2 (index 1) - Employment step
     if (currentStep === 1) {
+      
+      // Manual validation for debugging
       const missingFields = [];
       if (!formData.profession || formData.profession.trim() === '') {
         missingFields.push('profession (Beroep)');
       }
+      // Employer is now optional, so we don't check it
       if (!formData.employment_status || formData.employment_status.trim() === '') {
         missingFields.push('employment_status (Status)');
       }
       if (!formData.monthly_income || formData.monthly_income <= 0) {
         missingFields.push('monthly_income (Maandinkomen)');
       }
+      
       if (missingFields.length > 0) {
+        // Validation failed - errors will be handled by the form
         return false;
+      } else {
+        // Validation passed - continue to next step
       }
     }
     

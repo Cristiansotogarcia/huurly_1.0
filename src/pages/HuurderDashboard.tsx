@@ -1,20 +1,24 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHuurder } from "@/hooks/useHuurder";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
 import { useAuthStore } from "@/store/authStore";
+import { useMatching } from "@/hooks/useMatching";
+import { useMessaging } from "@/hooks/useMessaging";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
 import { StatsGrid } from "@/components/standard/StatsGrid";
-import { QuickActionsSection } from "@/components/HuurderDashboard/QuickActionsSection";
-import { ProfileStatusCard } from "@/components/HuurderDashboard/ProfileStatusCard";
-import { DocumentsSection } from "@/components/HuurderDashboard/DocumentsSection";
-import { ImportantInfoSection } from "@/components/HuurderDashboard/ImportantInfoSection";
-import { MobileNavigation } from "@/components/HuurderDashboard/MobileNavigation";
+import { DocumentsSection } from "@/components/standard/DocumentsSection";
 import ProfileOverview, {
   ProfileSection,
 } from "@/components/standard/ProfileOverview";
 import { ProfilePhotoSection } from "@/components/dashboard/ProfilePhotoSection";
+import MatchRecommendations from "@/components/HuurderDashboard/MatchRecommendations";
+import MessageInbox from "@/components/HuurderDashboard/MessageInbox";
+import NotificationPanel from "@/components/HuurderDashboard/NotificationPanel";
+import DashboardOverview from "@/components/HuurderDashboard/DashboardOverview";
 import {
   Eye,
   Calendar,
@@ -26,11 +30,16 @@ import {
   Heart,
   Shield,
   Users,
+  Star,
+  MapPin,
+  Euro,
+  Bed,
 } from "lucide-react";
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
+import ProfileActions from "@/components/HuurderDashboard/ProfileActions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from "@/hocs/withAuth";
-import { User, TenantDashboardData } from "@/types";
+import { User } from "@/types";
 import {
   mapEmploymentStatusLabel,
   mapContractTypeLabel,
@@ -321,7 +330,7 @@ const buildProfileSections = (
   ];
 };
 
-const buildStats = (stats: TenantDashboardData, isLoadingStats: boolean) => [
+const buildStats = (stats: any, isLoadingStats: boolean) => [
   {
     title: "Profiel weergaven",
     value: stats.profileViews,
@@ -354,10 +363,12 @@ const buildStats = (stats: TenantDashboardData, isLoadingStats: boolean) => [
 
 const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const huurderHook = useHuurder();
+  const matchingHook = useMatching();
+  
   const {
     user,
     userDocuments,
-    isLoading,
+    isLoading: isHuurderLoading,
     stats,
     isLoadingStats,
     profilePictureUrl,
@@ -367,11 +378,30 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
     getSubscriptionEndDate,
     handleProfileComplete,
     handleDocumentUploadComplete,
-    hasProfile,
-    isLookingForPlace,
-    isUpdatingStatus,
-    toggleLookingStatus,
   } = huurderHook;
+  
+  const {
+    recommendations,
+    isLoading: isMatchingLoading,
+    error: matchingError,
+    refreshRecommendations,
+  } = matchingHook;
+  
+  const messagingHook = useMessaging();
+  const notificationsHook = useNotifications();
+  
+  const {
+    threads: messageThreads,
+    loading: isMessagingLoading,
+    error: messagingError,
+  } = messagingHook;
+  
+  const {
+    notifications: userNotifications,
+    loading: isNotificationsLoading,
+    error: notificationsError,
+  } = notificationsHook;
+  
   const navigate = useNavigate();
 
   const {
@@ -386,8 +416,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const { toast } = useToast();
 
-  const statsRef = useRef<HTMLDivElement>(null);
-
+  // Calculate profile completeness
+  const profileCompleteness = useProfileCompleteness(tenantProfile, userDocuments);
 
   const profileSections = useMemo(
     () => buildProfileSections(tenantProfile, user),
@@ -401,6 +431,7 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   );
 
   const isSubscribed = subscription && subscription.status === "active";
+  const isLoading = isHuurderLoading || isMatchingLoading || isMessagingLoading || isNotificationsLoading;
 
   // Track when initial data has been loaded to prevent modal flash
   useEffect(() => {
@@ -525,72 +556,58 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
         )}
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Content Sections - Proper Order */}
-          <div className="max-w-4xl mx-auto space-y-6">
-            <QuickActionsSection
-              hasProfile={hasProfile}
-              isLookingForPlace={isLookingForPlace}
-              isUpdatingStatus={isUpdatingStatus}
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Dashboard Overview - Main Dashboard View */}
+            <DashboardOverview
+              stats={stats}
+              subscription={subscription}
+              unreadMessages={messageThreads.filter(t => t.unread_count > 0).length}
+              unreadNotifications={userNotifications.filter(n => !n.gelezen).length}
+              profileCompleteness={profileCompleteness}
               onShowProfileModal={() => setShowProfileModal(true)}
               onShowDocumentModal={() => setShowDocumentModal(true)}
-              onStartSearch={() => {}}
-              onReportIssue={() => navigate("/issue-reporting")}
-              onHelpSupport={() => navigate("/help-support")}
-              onToggleLookingStatus={toggleLookingStatus}
+              onNavigateSearch={() => navigate("/property-search")}
+              onNavigateMessages={() => navigate("/dashboard/messages")}
+              onNavigateNotifications={() => navigate("/dashboard/notifications")}
+              onNavigateMatches={() => navigate("/dashboard/matches")}
             />
 
-            <ProfilePhotoSection>
-              <div className="relative mt-4 px-4 space-y-4" ref={statsRef}>
-                <ProfileStatusCard
-                  isLookingForPlace={isLookingForPlace}
-                  isUpdatingStatus={isUpdatingStatus}
-                  onToggleLookingStatus={toggleLookingStatus}
-                />
-                <StatsGrid
-                  stats={huurderStats}
-                  className="grid-cols-2 sm:grid-cols-4 bg-transparent shadow-none border-none"
-                />
+            {/* Detailed Sections for Comprehensive View */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Match Recommendations */}
+              <MatchRecommendations
+                recommendations={recommendations}
+                isLoading={isMatchingLoading}
+                onRefresh={refreshRecommendations}
+                onViewProperty={(propertyId) => navigate(`/property/${propertyId}`)}
+              />
+              
+              {/* Messaging and Notifications Side by Side */}
+              <div className="space-y-6">
+                <MessageInbox />
+                <NotificationPanel userId={user?.id || ''} />
               </div>
-            </ProfilePhotoSection>
+            </div>
 
-
-            {/* 2. Profile Actions Section */}
-            <ProfileActions
-              onShowProfileModal={() =>
-                isSubscribed ? setShowProfileModal(true) : setShowPaymentModal(true)
-              }
-              onShowDocumentModal={() =>
-                isSubscribed ? setShowDocumentModal(true) : setShowPaymentModal(true)
-              }
-              onNavigateSearch={() =>
-                isSubscribed ? navigate("/property-search") : setShowPaymentModal(true)
-              }
-              onNavigateHelp={() => navigate("/help-support")}
-            />
-
-            {/* 3. Profile Overview - Third */}
-
-            <ProfileOverview
-              sections={profileSections}
-              title="Profiel Overzicht"
-              onEdit={() =>
-                isSubscribed ? setShowProfileModal(true) : setShowPaymentModal(true)
-              }
-              isCreating={!tenantProfile}
-            />
-            <DocumentsSection
-              userDocuments={userDocuments}
-
-              onShowDocumentModal={() =>
-                isSubscribed ? setShowDocumentModal(true) : setShowPaymentModal(true)
-              }
-              title="Mijn Documenten"
-              emptyStateTitle="Nog geen documenten geüpload."
-              emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."
-
-              onShowDocumentModal={() => setShowDocumentModal(true)}
-
-            />
-            <ImportantInfoSection />
+            {/* Profile and Documents Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Profile Overview */}
+              <ProfileOverview
+                sections={profileSections}
+                title="Profiel Overzicht"
+                onEdit={() => setShowProfileModal(true)}
+                isCreating={!tenantProfile}
+              />
+              
+              {/* Documents Section */}
+              <DocumentsSection
+                userDocuments={userDocuments}
+                onShowDocumentModal={() => setShowDocumentModal(true)}
+                title="Mijn Documenten"
+                emptyStateTitle="Nog geen documenten geüpload."
+                emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -605,12 +622,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
         tenantProfile={tenantProfile}
-      />
-      <MobileNavigation
-        onProfileClick={() => setShowProfileModal(true)}
-        onDocumentsClick={() => setShowDocumentModal(true)}
-        onStatsClick={() => statsRef.current?.scrollIntoView({ behavior: "smooth" })}
-        onNotificationsClick={() => navigate("/issue-reporting")}
       />
     </>
   );

@@ -73,8 +73,8 @@ export const profileSchema = z.object({
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
   preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer').optional(),
   furnished_preference: z.enum(['gemeubileerd', 'ongemeubileerd', 'geen_voorkeur']).optional(),
-  min_budget: z.number().min(0, "Budget mag niet negatief zijn").optional(),
-  max_budget: z.number().min(1, "Budget moet groter dan 0 zijn"),
+  min_budget: z.number().min(1, 'Minimum budget moet minimaal €1 zijn'),
+  max_budget: z.number().min(1, 'Maximum budget moet minimaal €1 zijn'),
   min_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
   max_kamers: z.number().min(1, 'Minimaal 1 kamer').optional(),
   
@@ -114,6 +114,9 @@ export const profileSchema = z.object({
   profilePictureUrl: z.string().optional(),
   bio: z.string().min(50, 'Bio moet minimaal 50 karakters lang zijn').max(500, 'Bio mag maximaal 500 karakters lang zijn'),
   motivation: z.string().min(50, 'Motivatie moet minimaal 50 karakters lang zijn').max(500, 'Motivatie mag maximaal 500 karakters lang zijn'),
+}).refine((data) => data.max_budget >= data.min_budget, {
+  message: 'Maximum budget moet groter of gelijk zijn aan minimum budget',
+  path: ['max_budget'],
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

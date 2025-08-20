@@ -13,9 +13,9 @@ export class LogoutService {
    */
   static async performLogout(options: LogoutOptions = {}): Promise<{ success: boolean; error?: Error }> {
     const {
-      redirectTo = '/',
+      redirectTo: _redirectTo = '/',
       clearAllStorage = true,
-      showToast = true
+      showToast: _showToast = true
     } = options;
 
     try {

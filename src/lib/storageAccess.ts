@@ -53,6 +53,9 @@ export async function getDocumentUrl(
   if (!allowed) {
     return null;
   }
+  if (!r2Client) {
+    return null;
+  }
 
   try {
     const url = await getSignedUrl(
@@ -79,6 +82,9 @@ export async function uploadDocument(file: File): Promise<string | null> {
     return null;
   }
   const filePath = `${user.id}/${file.name}`;
+  if (!r2Client) {
+    return null;
+  }
   try {
     await r2Client.send(
       new PutObjectCommand({
@@ -107,6 +113,9 @@ export async function uploadProfilePicture(file: File): Promise<string | null> {
     return null;
   }
   const filePath = `${user.id}/profile.jpg`;
+  if (!r2Client) {
+    return null;
+  }
   try {
     await r2Client.send(
       new PutObjectCommand({

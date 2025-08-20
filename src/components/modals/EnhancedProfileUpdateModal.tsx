@@ -76,7 +76,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
       furnished_preference: undefined,
-      min_budget: undefined,
+      min_budget: 1,
       max_budget: 1000,
       min_kamers: undefined,
       max_kamers: undefined,
@@ -239,7 +239,11 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         </p>
         <FormProvider {...methods}>
           <form 
-            onSubmit={methods.handleSubmit(onSubmit)} 
+            onSubmit={(e) => {
+              console.log('🔥 EnhancedProfileUpdateModal - Form submit event triggered!');
+              console.log('🔥 EnhancedProfileUpdateModal - Event:', e);
+              methods.handleSubmit(onSubmit)(e);
+            }} 
             className="space-y-6"
           >
             <ProfileFormStepper 

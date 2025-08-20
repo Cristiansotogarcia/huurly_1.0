@@ -13,7 +13,7 @@
 
 - Use mem0 to remember every coding change you made that is important and use to retrieve memory of what has been done.
 
-- Use Context7 to make sure all libraries used are up 2 date.
+- Use Context7 and Ref MCP for the latest updated context and documentation for coding.
 
 - Files in the Reffrece Docs Folder is ONLY to be used as reffrence. Do not use it in coding by any means!
 

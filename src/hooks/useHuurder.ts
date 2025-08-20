@@ -216,14 +216,20 @@ export const useHuurder = () => {
         if (callback) callback();
         return result;
       } else {
-        console.error('🔥 useHuurder.handleProfileComplete - Service error:', result.error);
-        const error = new Error(`Fout bij opslaan profiel: ${result.error?.message || 'Onbekende fout'}`);
-        toast({
-          title: 'Fout',
-          description: error.message,
-          variant: 'destructive',
-        } as any);
-        throw error;
+        if (result.error) {
+          toast({
+            title: 'Fout',
+            description: result.error.message || 'Onbekende fout bij opslaan profiel',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Fout',
+            description: 'Onbekende fout bij opslaan profiel',
+            variant: 'destructive',
+          });
+        }
+        throw new Error(result.error?.message || 'Onbekende fout');
       }
     } catch (error) {
       console.error('🔥 useHuurder.handleProfileComplete - Unexpected error:', error);

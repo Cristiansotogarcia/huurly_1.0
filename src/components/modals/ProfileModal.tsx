@@ -3,12 +3,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
 import UnifiedModal from './UnifiedModal';
 
 // Simplified schema for the Profile Modal
@@ -63,7 +64,7 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModalProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   
   const {
     register,
@@ -175,6 +176,8 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
         description: 'Er is een fout opgetreden bij het bijwerken van je profiel',
         variant: 'destructive',
       });
+    } finally {
+      // Cleanup if needed
     }
   };
 
@@ -201,10 +204,11 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
           <div>
             <Label>Profielfoto</Label>
             <div className="mt-2">
-              <Input
-                type="url"
-                placeholder="URL van je profielfoto"
-                {...register('profielfoto_url')}
+              <ProfilePictureUpload
+                userId={user?.id || ''}
+                type="profile"
+                currentImageUrl={watch('profielfoto_url')}
+                onImageUploaded={(url) => setValue('profielfoto_url', url)}
               />
             </div>
           </div>

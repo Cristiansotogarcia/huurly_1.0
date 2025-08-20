@@ -1,13 +1,13 @@
 
 import { supabase } from '../../integrations/supabase/client.ts';
-import { User, UserRole } from '../../types/index.ts';
+import { User } from '../../types/index.ts';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
 import { logger } from '../logger.ts';
 import { AuthResponse, SignUpData, SignInData } from './types.ts';
 import { roleMapper } from './roleMapper.ts';
 import { userMapper } from './userMapper.ts';
 import { paymentChecker } from './paymentChecker.ts';
-import { emailSchema, passwordSchema, registerSchema, loginSchema } from '../validation.ts';
+import { emailSchema, passwordSchema, loginSchema } from '../validation.ts';
 import { rateLimiter } from './rateLimiter.ts';
 
 export class AuthService {
@@ -183,7 +183,7 @@ export class AuthService {
    * Listen to auth state changes
    */
   onAuthStateChange(callback: (user: User | null) => void) {
-    return supabase.auth.onAuthStateChange(async (event, session) => {
+    return supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const user = await userMapper.mapSupabaseUserToUser(session.user);
         callback(user);

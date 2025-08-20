@@ -1,4 +1,4 @@
-import { r2Client, R2_BUCKET, R2_PUBLIC_BASE, isR2ConfigValid } from '../integrations/cloudflare/client.ts';
+import { r2Client, R2_BUCKET, isR2ConfigValid } from '../integrations/cloudflare/client.ts';
 import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from '@/lib/logger';
@@ -59,7 +59,6 @@ export class StorageService {
   private generateFilePath(userId: string, fileName: string, folder: string = 'general'): string {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
-    const extension = fileName.split('.').pop();
     const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
     return `${folder}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;
@@ -166,7 +165,6 @@ export class StorageService {
       // Generate unique file path using standardized storage paths
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = file.name.split('.').pop();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const basePath = DOCUMENT_STORAGE_PATHS[documentType];
       const filePath = `${basePath}/${userId}/${timestamp}_${randomString}_${sanitizedName}`;

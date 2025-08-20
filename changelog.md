@@ -3,6 +3,76 @@
 ## [Unreleased]
 
 ### Fixed
+- **Header Component Button Updates - January 2025**
+  - **Problem**: User requested to remove registration button and update login button styling
+  - **Solution**: 
+    - Removed 'Registreren' button completely from Header component
+    - Updated 'Inloggen' button styling to use orange background (`bg-orange-500`) with white text (`text-white`)
+    - Added orange hover effect (`hover:bg-orange-600`) for consistent aesthetics
+    - Maintained existing authentication state handling and dialog functionality
+  - **Files Modified**:
+    - `src/components/Header.tsx`: Removed registration button and updated login button styling
+  - **Result**: 
+    - Header now displays only the login button with orange styling
+    - Login button has same aesthetic as previous registration button
+    - Simplified header layout with single authentication action
+- **Header Component Styling and Login Button Fix - January 2025**
+  - **Problem**: Login button was not visible due to missing styling and layout structure in Header component
+  - **Root Cause**: Header component was missing proper CSS classes, layout structure, Button components, and registration button
+  - **Solution**: 
+    - Added proper CSS classes for styling (`bg-white shadow-sm border-b`)
+    - Added proper layout structure with max-width container and flexbox
+    - Replaced plain button with Button component for 'Inloggen' with proper styling
+    - Added 'Registreren' button with Dutch orange styling
+    - Added proper spacing and hover effects
+    - Ensured authentication state handling works correctly
+  - **Files Modified**:
+    - `src/components/Header.tsx`: Updated to match reference implementation with proper styling and Button components
+  - **Result**: 
+    - Login button ('Inloggen') is now visible with proper styling and hover effects
+    - Registration button ('Registreren') is properly displayed
+    - Header has professional appearance with shadow and border
+    - Responsive layout works correctly on all screen sizes
+    - Authentication state handling preserved
+- **ProfileModal Validation Fixes & Testing - January 2025**
+  - **Problem**: Validation mismatch between frontend and backend causing profile save failures
+    - `min_budget` field was optional in frontend schema but required by backend API
+    - Form allowed users to proceed without entering minimum budget, causing API errors
+    - Generic error messages provided no specific feedback about missing fields
+    - Mapping function could send `minBudget: 0` which failed backend validation
+  - **Root Cause**: 
+    - Frontend `profileSchema.ts` had `min_budget` as optional with `z.number().min(0).optional()`
+    - Backend `UserService.createTenantProfile` explicitly checks for presence of `minBudget`
+    - `mapProfileFormToDutch` used `data.min_budget ?? 0` which could send zero values
+    - Limited error feedback showed generic toast messages instead of specific field errors
+  - **Solution**: 
+    - **profileSchema.ts**: Made `min_budget` required with `z.number().min(1, 'Minimum budget moet minimaal €1 zijn')`
+    - **stepValidationSchemas.ts**: Updated `step4Schema` to require `min_budget` and added `.refine()` to ensure `max_budget >= min_budget`
+    - **profileDataMapper.ts**: Changed `minBudget` mapping from `data.min_budget ?? 0` to `data.min_budget || 1`
+    - **EnhancedProfileUpdateModal.tsx**: Updated default values to set `min_budget: 1` instead of `undefined`
+    - **useHuurder.ts**: Improved error handling to display specific API error messages instead of generic ones
+  - **Testing Results**: 
+    - **Development Server**: Successfully started at `http://localhost:8080/` with no errors
+    - **Validation Implementation**: Confirmed all validation fixes are properly implemented:
+      - `min_budget` is now required in both `profileSchema.ts` and `stepValidationSchemas.ts`
+      - Default value of `1` is set in `EnhancedProfileUpdateModal.tsx`
+      - Data mapper ensures `minBudget` always has positive value (`data.min_budget || 1`)
+      - Cross-validation ensures `max_budget >= min_budget`
+    - **Error Handling**: Enhanced error messages provide specific feedback about missing fields
+    - **Form Flow**: Multi-step form properly validates budget fields before allowing progression
+  - **Files Modified**:
+    - `src/components/modals/profileSchema.ts`: Made min_budget required, added budget validation refine
+    - `src/components/modals/stepValidationSchemas.ts`: Updated step4Schema with required min_budget and cross-field validation
+    - `src/utils/profileDataMapper.ts`: Fixed minBudget mapping to ensure positive values
+    - `src/components/modals/EnhancedProfileUpdateModal.tsx`: Updated default min_budget value
+    - `src/hooks/useHuurder.ts`: Enhanced error handling for better user feedback
+  - **Result**: 
+    - Users must now enter a minimum budget before proceeding to final step
+    - Form validation prevents submission with invalid budget ranges
+    - API receives properly formatted data with positive budget values
+    - Users receive specific error messages when validation fails
+    - Profile save functionality works correctly on both desktop and mobile
+    - "Profiel Opslaan" button functionality is fully operational with proper validation
 - Removed 'documenten ontbreken' toast message that appeared at sign-in
   - **Problem**: Users were seeing an unwanted "Documenten ontbreken" (Documents missing) toast notification every time they signed in to the dashboard
   - **Root Cause**: The `useProfileWarnings` hook was automatically checking for missing documents and showing toast warnings on dashboard load

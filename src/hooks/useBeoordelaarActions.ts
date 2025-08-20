@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { documentService } from '@/services/DocumentService';
-import { useAuthStore } from '@/store/authStore';
 import { enhancedLogger as logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 

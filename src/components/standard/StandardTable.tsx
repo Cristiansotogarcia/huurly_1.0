@@ -50,6 +50,7 @@ interface StandardTableProps<T> {
   onRowClick?: (item: T) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function StandardTable<T extends Record<string, any>>({ 
   data, 
   columns, 
@@ -100,7 +101,7 @@ export function StandardTable<T extends Record<string, any>>({
         const aValue = key.includes('.')
           ? key.split('.').reduce((obj, path) => obj && obj[path], a)
           : a[key];
-
+          
         const bValue = key.includes('.')
           ? key.split('.').reduce((obj, path) => obj && obj[path], b)
           : b[key];

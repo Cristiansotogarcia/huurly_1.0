@@ -68,7 +68,7 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
     bio: data.bio || 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
     beschrijving: data.bio || 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
     stad: stad,
-    minBudget: data.min_budget ?? 0,
+    minBudget: data.min_budget || 1, // Ensure positive value since min_budget is now required
     maxBudget: data.max_budget ?? 1000,
     slaapkamers: data.min_kamers ?? 1,
     woningtype: data.preferred_property_type || 'appartement',
