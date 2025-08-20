@@ -9,6 +9,7 @@ import { propertyService } from '@/services/PropertyService';
 import { Property } from '@/types';
 import { applicationService } from '@/services/ApplicationService';
 import { messageService } from '@/services/MessageService';
+import { Helmet } from 'react-helmet-async';
 import { 
   ArrowLeft, 
   Edit, 
@@ -36,12 +37,13 @@ const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [property, setProperty] = useState<Property | null>(null);
   const [applications, setApplications] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://huurly.example.com';
 
   useEffect(() => {
     if (id) {
@@ -191,8 +193,32 @@ const getStatusBadge = (isActive: boolean) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <>
+      <Helmet>
+        <title>{property.title} - Huurly</title>
+        <meta name="description" content={`${property.title} in ${property.city}`} />
+        <link rel="canonical" href={`${siteUrl}/property/${property.id}`} />
+        <meta property="og:title" content={`${property.title} - Huurly`} />
+        <meta property="og:description" content={`${property.title} in ${property.city}`} />
+        <meta property="og:url" content={`${siteUrl}/property/${property.id}`} />
+        <meta property="og:image" content={property.images?.[0] || `${siteUrl}/placeholder.svg`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={property.images?.[0] || `${siteUrl}/placeholder.svg`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Apartment',
+            name: property.title,
+            description: property.description,
+            address: property.address,
+            image: property.images?.[0],
+            price: property.rent,
+            url: `${siteUrl}/property/${property.id}`
+          })}
+        </script>
+      </Helmet>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -403,6 +429,7 @@ const getStatusBadge = (isActive: boolean) => {
         </Tabs>
       </div>
     </div>
+  </>
   );
 };
 

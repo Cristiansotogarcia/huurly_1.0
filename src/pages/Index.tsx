@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
   const { 
@@ -28,6 +29,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [showSignup, setShowSignup] = useState(false);
   const hasHandledEmailVerification = useRef(false);
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://huurly.example.com';
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -76,11 +78,30 @@ const Index = () => {
   }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal]);
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <Hero onShowSignup={() => setShowSignup(true)} />
-      <Features />
-      <CTA />
+    <>
+      <Helmet>
+        <title>Huurly - Verlies geen tijd met zoeken, laat de woning jou vinden!</title>
+        <meta
+          name="description"
+          content="Het Nederlandse platform waar verhuurders huurders vinden op basis van geverifieerde profielen"
+        />
+        <link rel="canonical" href={`${siteUrl}/`} />
+        <meta property="og:title" content="Huurly - Verlies geen tijd met zoeken, laat de woning jou vinden!" />
+        <meta
+          property="og:description"
+          content="Het Nederlandse platform waar verhuurders huurders vinden op basis van geverifieerde profielen"
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${siteUrl}/`} />
+        <meta property="og:image" content={`${siteUrl}/placeholder.svg`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${siteUrl}/placeholder.svg`} />
+      </Helmet>
+      <div className="min-h-screen">
+        <Header />
+        <Hero onShowSignup={() => setShowSignup(true)} />
+        <Features />
+        <CTA />
       
       <MultiStepSignupModal 
         isOpen={showSignup} 
@@ -207,6 +228,7 @@ const Index = () => {
         </div>
       </footer>
     </div>
+  </>
   );
 };
 

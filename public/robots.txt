@@ -1,14 +1,10 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Disallow: /huurder-dashboard
+Disallow: /verhuurder-dashboard
+Disallow: /beoordelaar-dashboard
+Disallow: /beheerder-dashboard
+Disallow: /property-management
+Disallow: /subscription
+Disallow: /admin
+Sitemap: /sitemap.xml
