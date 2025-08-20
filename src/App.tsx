@@ -37,7 +37,9 @@ const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 // Mobile modal pages
 const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
 const DocumentUploadPage = lazy(() => import('./pages/mobile/DocumentUploadPage'));
+
 const PaymentPage = lazy(() => import('./pages/mobile/PaymentPage'));
+
 
 
 const queryClient = new QueryClient({
@@ -203,6 +205,13 @@ const App = () => (
               <div className="min-h-screen flex flex-col items-center justify-center">
                 <h1 className="text-2xl font-bold mb-4">Pagina niet gevonden</h1>
                 <p className="text-gray-600 mb-4">De pagina die je zoekt bestaat niet.</p>
+
+            {/* Catch-all route for 404s */}
+            <Route path="*" element={
+              <div className="min-h-screen flex flex-col items-center justify-center">
+                <h1 className="text-2xl font-bold mb-4">Pagina niet gevonden</h1>
+                <p className="text-gray-600 mb-4">De pagina die je zoekt bestaat niet.</p>
+
                 <button 
                   onClick={() => window.location.href = '/'}
                   className="bg-dutch-blue text-white px-4 py-2 rounded hover:bg-blue-700"

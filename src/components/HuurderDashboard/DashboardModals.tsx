@@ -160,7 +160,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         onProfileComplete, // Pass the callback
         returnPath: '/huurder-dashboard'
       });
-      
+
       if (!shouldShowDesktopModal) {
         // On mobile, we navigated to a page, so close the modal state
         setShowProfileModal(false);
@@ -183,6 +183,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
     }
   }, [showDocumentModal, openModal, onDocumentUploadComplete, setShowDocumentModal]);
 
+
   // Handle payment modal opening with route-based approach
   React.useEffect(() => {
     if (showPaymentModal) {
@@ -192,6 +193,8 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
       }
     }
   }, [showPaymentModal, openModal, setShowPaymentModal]);
+
+
   
   return (
     <>
@@ -214,14 +217,14 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
         />
       )}
 
-      {/* Persistent Payment Modal - Only shown on desktop */}
-      {!isMobile && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={(open) => setShowPaymentModal(open)}
-          persistent={true}
-        />
-      )}
+
+      {/* Persistent Payment Modal - cannot be closed without payment */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={(open) => setShowPaymentModal(open)}
+        persistent={true}
+      />
+
     </>
   );
 };

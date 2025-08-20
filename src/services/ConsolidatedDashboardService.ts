@@ -178,7 +178,11 @@ export class ConsolidatedDashboardService extends DatabaseService {
           profileResult,
           userResult,
           subscriptionResult,
-          profilePictureResult
+          profilePictureResult,
+          profileViewsResult,
+          invitationsResult,
+          applicationsResult,
+          acceptedApplicationsResult
         ] = await Promise.allSettled([
           // Get user documents
           supabase
@@ -186,7 +190,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
             .select('*')
             .eq('huurder_id', userId)
             .order('aangemaakt_op', { ascending: false }),
-          
+
           // Get tenant profile
           supabase
             .from('huurders')
@@ -200,16 +204,58 @@ export class ConsolidatedDashboardService extends DatabaseService {
             .select('*')
             .eq('id', userId)
             .maybeSingle(),
-          
+
           // Get active subscription using optimized service
           optimizedSubscriptionService.checkSubscriptionStatus(userId),
-          
+
           // Get profile and cover photo URLs from database
-          this.getPhotoUrls(userId)
+          this.getPhotoUrls(userId),
+
+          // Count profile views
+          supabase
+            .from('profiel_weergaves')
+            .select('id', { count: 'exact', head: true })
+            .eq('huurder_id', userId),
+
+          // Count viewing invitations
+          supabase
+            .from('bezichtiging_verzoeken')
+            .select('id', { count: 'exact', head: true })
+            .eq('huurder_id', userId),
+
+          // Count property applications
+          supabase
+            .from('aanvragen')
+            .select('id', { count: 'exact', head: true })
+            .eq('huurder_id', userId),
+
+          // Count accepted applications
+          supabase
+            .from('aanvragen')
+            .select('id', { count: 'exact', head: true })
+            .eq('huurder_id', userId)
+            .eq('status', 'geaccepteerd')
         ]);
 
         // Process results
-        const stats = { profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 };
+        const stats: TenantDashboardData = {
+          profileViews:
+            profileViewsResult.status === 'fulfilled'
+              ? profileViewsResult.value.count ?? 0
+              : 0,
+          invitations:
+            invitationsResult.status === 'fulfilled'
+              ? invitationsResult.value.count ?? 0
+              : 0,
+          applications:
+            applicationsResult.status === 'fulfilled'
+              ? applicationsResult.value.count ?? 0
+              : 0,
+          acceptedApplications:
+            acceptedApplicationsResult.status === 'fulfilled'
+              ? acceptedApplicationsResult.value.count ?? 0
+              : 0
+        };
 
         const rawDocuments = documentsResult.status === 'fulfilled' && documentsResult.value.data
           ? documentsResult.value.data
