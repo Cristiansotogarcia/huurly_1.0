@@ -27,7 +27,7 @@ import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
 import ProfileActions from "@/components/HuurderDashboard/ProfileActions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from "@/hocs/withAuth";
-import { User } from "@/types";
+import { User, TenantDashboardData } from "@/types";
 import {
   mapEmploymentStatusLabel,
   mapContractTypeLabel,
@@ -318,7 +318,7 @@ const buildProfileSections = (
   ];
 };
 
-const buildStats = (stats: any, isLoadingStats: boolean) => [
+const buildStats = (stats: TenantDashboardData, isLoadingStats: boolean) => [
   {
     title: "Profiel weergaven",
     value: stats.profileViews,
