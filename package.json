@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/generate-sitemap.mjs && vite build && npx react-snap --source=dist",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -60,6 +60,7 @@
     "react": "^19.1.1",
     "react-day-picker": "^9.9.0",
     "react-dom": "^19.1.1",
+    "react-helmet-async": "^2.0.4",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.62.0",
     "react-resizable-panels": "^3.0.4",
@@ -84,11 +85,17 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "react-snap": "^1.23.0",
     "postcss": "^8.4.47",
     "supabase": "^2.30.4",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
+  },
+  "reactSnap": {
+    "source": "dist",
+    "include": ["/", "/property-search"],
+    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"]
   }
 }
