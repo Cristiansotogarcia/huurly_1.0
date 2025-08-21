@@ -12,7 +12,6 @@ import {
   Star, 
   Heart,
   Eye,
-  Calendar,
   FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -97,7 +96,7 @@ const MatchRecommendations: React.FC<MatchRecommendationsProps> = ({
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
-          {recommendations.slice(0, 4).map((match, index) => (
+          {recommendations.slice(0, 4).map((match, _) => (
             <div key={match.property.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="font-medium text-sm line-clamp-2">

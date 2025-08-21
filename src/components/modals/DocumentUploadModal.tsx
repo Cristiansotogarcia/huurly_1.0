@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,10 +8,6 @@ import { useAuthStore } from "@/store/authStore";
 import { documentService } from "@/services/DocumentService";
 import {
   DocumentType,
-  DOCUMENT_TYPE_LABELS,
-  DOCUMENT_TYPE_DESCRIPTIONS,
-  DOCUMENT_REQUIREMENTS,
-  FILE_VALIDATION_RULES,
 } from "@/types/documents";
 import {
   Upload,
@@ -19,10 +15,9 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Eye,
   Trash2,
 } from "lucide-react";
-import { BaseModal, BaseModalActions, useModalState } from "./BaseModal";
+import { BaseModal, BaseModalActions } from "./BaseModal";
 
 interface DocumentUploadModalProps {
   open: boolean;
@@ -84,7 +79,6 @@ const documentTypes = [
 const DocumentUploadModal = ({
   open,
   onOpenChange,
-  onUploadComplete,
 }: DocumentUploadModalProps) => {
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -184,7 +178,7 @@ const DocumentUploadModal = ({
 
     // Start upload immediately
     try {
-      const uploadedDoc = await uploadDocument(newDocument);
+      await uploadDocument(newDocument);
 
       toast({
         title: "Document geüpload",
@@ -263,6 +257,10 @@ const DocumentUploadModal = ({
   };
 
   const uploadDocument = async (document: UploadedDocument) => {
+    if (!user?.id) {
+      throw new Error("Gebruiker niet ingelogd");
+    }
+
     // Update status to uploading
     setDocuments((prev) =>
       prev.map((d) =>
@@ -318,56 +316,7 @@ const DocumentUploadModal = ({
     }
   };
 
-  const handleCompleteUpload = async () => {
-    const documentsToUpload = documents.filter((doc) => doc.status === "ready");
 
-    if (documentsToUpload.length === 0) {
-      toast({
-        title: "Geen documenten om te uploaden",
-        description: "Voeg eerst documenten toe voordat je ze uploadt.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const uploadedDocuments: any[] = [];
-    let hasErrors = false;
-
-    // Upload documents one by one
-    for (const doc of documentsToUpload) {
-      try {
-        const uploadedDoc = await uploadDocument(doc);
-        uploadedDocuments.push(uploadedDoc);
-      } catch (error) {
-        hasErrors = true;
-        const errorMessage =
-          error instanceof Error ? error.message : "Upload mislukt";
-        toast({
-          title: "Upload mislukt",
-          description: `${doc.fileName}: ${errorMessage}`,
-          variant: "destructive",
-        });
-      }
-    }
-
-    if (uploadedDocuments.length > 0) {
-      onUploadComplete(uploadedDocuments);
-
-      toast({
-        title: "Documenten geüpload",
-        description: `${uploadedDocuments.length} document(en) zijn succesvol geüpload voor beoordeling.`,
-      });
-
-      // Refresh existing documents after batch upload
-      await loadExistingDocuments();
-
-      if (!hasErrors) {
-        // Only close modal if no errors occurred
-        onOpenChange(false);
-        setDocuments([]);
-      }
-    }
-  };
 
   const requiredDocuments = documentTypes.filter((type) => type.required);
   const uploadedRequiredTypes = documents
@@ -377,7 +326,7 @@ const DocumentUploadModal = ({
     uploadedRequiredTypes.includes(type.type),
   );
 
-  const readyDocuments = documents.filter((doc) => doc.status === "ready");
+
 
   return (
     <BaseModal

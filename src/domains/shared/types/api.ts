@@ -30,6 +30,30 @@ export interface ServiceContext {
 }
 
 /**
+ * Base validation error interface
+ */
+export interface BaseValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
+
+/**
+ * Validation schema interface
+ */
+export interface ValidationSchema<T> {
+  required?: Array<keyof T>;
+  fields?: Record<string, {
+    required?: boolean;
+    type?: string;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: RegExp;
+    validate?: (value: any) => boolean;
+  }>;
+}
+
+/**
  * Enhanced service error class
  */
 export class ServiceError extends Error {

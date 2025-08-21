@@ -4,24 +4,20 @@ import { Switch } from "@/components/ui/switch";
 import { User, Bell, Settings, Loader2, FileText } from "lucide-react";
 
 interface QuickActionsSectionProps {
-  hasProfile: boolean;
   isLookingForPlace: boolean;
   isUpdatingStatus: boolean;
   onShowProfileModal: () => void;
   onShowDocumentModal: () => void;
-  onStartSearch: () => void;
   onReportIssue: () => void;
   onHelpSupport: () => void;
   onToggleLookingStatus: () => void;
 }
 
 export const QuickActionsSection = ({
-  hasProfile,
   isLookingForPlace,
   isUpdatingStatus,
   onShowProfileModal,
   onShowDocumentModal,
-  onStartSearch,
   onReportIssue,
   onHelpSupport,
   onToggleLookingStatus

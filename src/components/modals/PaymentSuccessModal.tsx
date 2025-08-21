@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
+import { CheckCircle, CreditCard } from 'lucide-react';
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface PaymentSuccessModalProps {
   subscriptionType?: string;
 }
 
-export default function PaymentSuccessModal({ isOpen, onClose, onGoToDashboard, userName, subscriptionType = 'Premium' }: PaymentSuccessModalProps) {
+export default function PaymentSuccessModal({ isOpen, onClose, onGoToDashboard }: PaymentSuccessModalProps) {
   const [canClose, setCanClose] = useState(false);
 
   // Prevent modal from closing too quickly

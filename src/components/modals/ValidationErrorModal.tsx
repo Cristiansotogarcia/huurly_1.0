@@ -1,7 +1,7 @@
 import React from 'react';
 import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+// import { AlertCircle } from 'lucide-react'; // Commented out as unused
 
 interface ValidationErrorModalProps {
   isOpen: boolean;

@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+
 import { Progress } from '@/components/ui/progress';
 
 interface CoverPhotoProps {
@@ -29,7 +29,7 @@ export const CoverPhoto: React.FC<CoverPhotoProps> = ({
     }
   });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
@@ -50,7 +50,7 @@ export const CoverPhoto: React.FC<CoverPhotoProps> = ({
   };
 
   const getImageUrl = () => {
-    return currentImageUrl || null;
+    return currentImageUrl || undefined;
   };
 
   return (

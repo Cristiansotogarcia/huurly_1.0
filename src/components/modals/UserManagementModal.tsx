@@ -11,18 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   User, 
   Mail, 
-  Calendar,
   Shield,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Clock,
   FileText,
   Activity,
   Ban,
   UserCheck
 } from 'lucide-react';
-import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
+import { BaseModal, BaseModalActions } from './BaseModal';
 
 interface UserManagementModalProps {
   open: boolean;
@@ -42,7 +40,7 @@ const UserManagementModal = ({
   onActivateUser
 }: UserManagementModalProps) => {
   const { toast } = useToast();
-  const { isSubmitting, setIsSubmitting } = useModalState();
+  // const { isSubmitting, setIsSubmitting } = useModalState(); // Commented out as unused
   const [suspensionReason, setSuspensionReason] = useState('');
   const [showSuspensionForm, setShowSuspensionForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -173,7 +171,7 @@ const UserManagementModal = ({
                         <Input
                           id="name"
                           value={editedUser.name || ''}
-                          onChange={(e) => setEditedUser(prev => ({ ...prev, name: e.target.value }))}
+                          onChange={(e) => setEditedUser((prev: any) => ({ ...prev, name: e.target.value }))}
                         />
                       </div>
                       <div>
@@ -181,14 +179,14 @@ const UserManagementModal = ({
                         <Input
                           id="email"
                           value={editedUser.email || ''}
-                          onChange={(e) => setEditedUser(prev => ({ ...prev, email: e.target.value }))}
+                          onChange={(e) => setEditedUser((prev: any) => ({ ...prev, email: e.target.value }))}
                         />
                       </div>
                       <div>
                         <Label htmlFor="role">Rol</Label>
                         <Select 
                           value={editedUser.role || ''} 
-                          onValueChange={(value) => setEditedUser(prev => ({ ...prev, role: value }))}
+                          onValueChange={(value) => setEditedUser((prev: any) => ({ ...prev, role: value }))}
                         >
                           <SelectTrigger>
                             <SelectValue />

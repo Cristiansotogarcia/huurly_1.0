@@ -116,7 +116,7 @@ export class AuthService {
       });
 
       if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid credentials';
+        const errorMessage = validationResult.error.errors[0]?.message || 'Ongeldige Wachtwoord - Probeer Opnieuw';
         const error = new Error(errorMessage) as AuthError;
         error.status = 400;
         return { user: null, error };
@@ -127,6 +127,17 @@ export class AuthService {
       });
 
       if (error) {
+        // Translate Supabase authentication errors to Dutch
+        if (error.message && (
+          error.message.includes('Invalid login credentials') ||
+          error.message.includes('Invalid credentials') ||
+          error.message.includes('Email not confirmed') ||
+          error.message.includes('Invalid email or password')
+        )) {
+          const translatedError = new Error('Ongeldige Wachtwoord - Probeer Opnieuw') as AuthError;
+          translatedError.status = error.status || 400;
+          return { user: null, error: translatedError };
+        }
         return { user: null, error };
       }
 

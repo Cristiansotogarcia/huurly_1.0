@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,58 +13,101 @@ import { useAuthStore } from '@/store/authStore';
 
 interface Property {
   id: string;
+  landlordId: string;
   title: string;
-  location: string;
-  price: number;
-  type: string;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
   description: string;
-  imageUrl: string;
-  available: boolean;
+  address: string;
+  city: string;
+  rent: number;
+  bedrooms: number;
+  propertyType: string;
+  images: string[];
+  requirements: {
+    minIncome: number;
+    maxAge?: number;
+    minAge?: number;
+    allowPets: boolean;
+  };
+  isActive: boolean;
+  availableFrom?: string;
+  deposit?: number;
+  utilities?: number;
+  
+  // Enhanced property fields
+  furnished?: boolean;
+  parkingAvailable?: boolean;
+  smokingAllowed?: boolean;
+  petsAllowed?: boolean;
+  availableUntil?: string;
+  voorzieningen?: string[];
 }
 
 // Mock data for demonstration
 const mockProperties: Property[] = [
   {
     id: '1',
+    landlordId: 'landlord1',
     title: 'Moderne Appartement in Centrum',
-    location: 'Amsterdam, Noord-Holland',
-    price: 1500,
-    type: 'Appartement',
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 75,
     description: 'Prachtig modern appartement in het hart van Amsterdam met alle voorzieningen op loopafstand.',
-    imageUrl: '/api/placeholder/400/300',
-    available: true
+    address: 'Damstraat 1',
+    city: 'Amsterdam',
+    rent: 1500,
+    bedrooms: 2,
+    propertyType: 'Appartement',
+    images: ['/api/placeholder/400/300'],
+    requirements: {
+      minIncome: 3000,
+      allowPets: true
+    },
+    isActive: true,
+    furnished: true,
+    parkingAvailable: false,
+    smokingAllowed: false,
+    petsAllowed: true,
+    voorzieningen: ['lift', 'balkon']
   },
   {
     id: '2',
+    landlordId: 'landlord2',
     title: 'Gezellige Studio',
-    location: 'Utrecht, Utrecht',
-    price: 950,
-    type: 'Studio',
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 45,
     description: 'Compacte maar gezellige studio perfect voor studenten of young professionals.',
-    imageUrl: '/api/placeholder/400/300',
-    available: true
+    address: 'Oudegracht 100',
+    city: 'Utrecht',
+    rent: 950,
+    bedrooms: 1,
+    propertyType: 'Studio',
+    images: ['/api/placeholder/400/300'],
+    requirements: {
+      minIncome: 2000,
+      allowPets: false
+    },
+    isActive: true,
+    furnished: true,
+    parkingAvailable: true,
+    smokingAllowed: false,
+    petsAllowed: false
   },
   {
     id: '3',
+    landlordId: 'landlord3',
     title: 'Ruim Familiehuis',
-    location: 'Rotterdam, Zuid-Holland',
-    price: 2200,
-    type: 'Huis',
-    bedrooms: 4,
-    bathrooms: 2,
-    area: 120,
     description: 'Ruim familiehuis met tuin, perfect voor gezinnen met kinderen.',
-    imageUrl: '/api/placeholder/400/300',
-    available: true
+    address: 'Kralingseweg 50',
+    city: 'Rotterdam',
+    rent: 2200,
+    bedrooms: 4,
+    propertyType: 'Huis',
+    images: ['/api/placeholder/400/300'],
+    requirements: {
+      minIncome: 4500,
+      allowPets: true
+    },
+    isActive: true,
+    furnished: false,
+    parkingAvailable: true,
+    smokingAllowed: false,
+    petsAllowed: true,
+    voorzieningen: ['tuin', 'garage']
   }
 ];
 
@@ -95,7 +138,7 @@ const PropertySearch: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(property => 
         property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
         property.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -103,21 +146,21 @@ const PropertySearch: React.FC = () => {
     // Location filter
     if (filters.location) {
       filtered = filtered.filter(property => 
-        property.location.toLowerCase().includes(filters.location.toLowerCase())
+        property.city.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
     // Price filters
     if (filters.minPrice) {
-      filtered = filtered.filter(property => property.price >= parseInt(filters.minPrice));
+      filtered = filtered.filter(property => property.rent >= parseInt(filters.minPrice));
     }
     if (filters.maxPrice) {
-      filtered = filtered.filter(property => property.price <= parseInt(filters.maxPrice));
+      filtered = filtered.filter(property => property.rent <= parseInt(filters.maxPrice));
     }
 
     // Property type filter
     if (filters.propertyType) {
-      filtered = filtered.filter(property => property.type === filters.propertyType);
+      filtered = filtered.filter(property => property.propertyType === filters.propertyType);
     }
 
     // Bedrooms filter
@@ -305,68 +348,65 @@ const PropertySearch: React.FC = () => {
 
           {/* Properties Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((property) => (
-              <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <img
-                    src={property.imageUrl}
-                    alt={property.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                    onClick={() => toggleFavorite(property.id)}
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        favorites.includes(property.id)
-                          ? 'fill-red-500 text-red-500'
-                          : 'text-gray-600'
-                      }`}
-                    />
-                  </Button>
-                  <Badge
-                    className="absolute top-2 left-2"
-                    variant={property.available ? 'default' : 'secondary'}
-                  >
-                    {property.available ? 'Beschikbaar' : 'Niet beschikbaar'}
-                  </Badge>
-                </div>
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">{property.title}</h3>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {property.location}
-                    </div>
-                    <div className="flex items-center text-blue-600 font-semibold">
-                      <Euro className="w-4 h-4 mr-1" />
-                      €{property.price}/maand
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>{property.bedrooms} slaapkamers</span>
-                      <span>{property.bathrooms} badkamers</span>
-                      <span>{property.area}m²</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {property.description}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2 mt-4">
-                    <Button
-                      className="flex-1"
-                      onClick={() => handleViewProperty(property.id)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Bekijken
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+  {filteredProperties.map(property => (
+    <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+      <CardHeader>
+        <CardTitle>{property.title}</CardTitle>
+        <CardDescription className="flex items-center">
+          <MapPin className="w-4 h-4 mr-1" />
+          {property.address}, {property.city}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center space-x-2">
+            <Euro className="w-4 h-4" />
+            <span className="font-semibold">{property.rent}</span>
+            <span className="text-sm text-gray-500">/maand</span>
           </div>
+          <div className="flex items-center space-x-2">
+            <Bed className="w-4 h-4" />
+            <span>{property.bedrooms} slaapkamers</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {property.furnished && <Badge variant="secondary">Gemeubileerd</Badge>}
+          {property.parkingAvailable && <Badge variant="secondary">Parkeerplaats</Badge>}
+          {property.petsAllowed && <Badge variant="secondary">Huisdieren toegestaan</Badge>}
+          {property.voorzieningen?.map(voorziening => (
+            <Badge key={voorziening} variant="outline">{voorziening}</Badge>
+          ))}
+        </div>
+        <p className="text-sm text-gray-600 mb-4">{property.description}</p>
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center">
+            <span className="text-sm font-medium mr-2">Minimaal inkomen:</span>
+            <span className="text-sm">€{property.requirements.minIncome}</span>
+          </div>
+          <div className="flex items-center">
+            <span className="text-sm font-medium mr-2">Huisdieren:</span>
+            <span className="text-sm">{property.requirements.allowPets ? 'Toegestaan' : 'Niet toegestaan'}</span>
+          </div>
+        </div>
+        <div className="flex justify-between">
+          <Button variant="outline" size="sm" onClick={() => handleViewProperty(property.id)}>
+            <Eye className="w-4 h-4 mr-2" />
+            Bekijken
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => toggleFavorite(property.id)}
+            className={favorites.includes(property.id) ? 'text-red-500' : ''}
+          >
+            <Heart className="w-4 h-4 mr-2" />
+            Favoriet
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  ))}
+</div>
 
           {filteredProperties.length === 0 && (
             <Card className="text-center py-12">

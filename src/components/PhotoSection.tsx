@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { ProfilePicture } from '@/components/ProfilePicture';
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { useHuurder } from '@/hooks/useHuurder';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client'; // Commented out as unused
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export const PhotoSection: React.FC<{ children?: React.ReactNode }> = ({ childre
   const { profilePictureUrl, coverPhotoUrl, refresh, isLoading } = useHuurder();
   const { toast } = useToast();
 
-  const handleProfilePictureUploaded = async (url: string) => {
+  const handleProfilePictureUploaded = async (_url: string) => {
     if (!user?.id) return;
     
     try {
@@ -31,7 +31,7 @@ export const PhotoSection: React.FC<{ children?: React.ReactNode }> = ({ childre
     }
   };
 
-  const handleCoverPhotoUploaded = async (url: string) => {
+  const handleCoverPhotoUploaded = async (_url: string) => {
     if (!user?.id) return;
     
     try {
@@ -69,7 +69,7 @@ export const PhotoSection: React.FC<{ children?: React.ReactNode }> = ({ childre
       <div className="mb-[-48px]"> {/* Negative margin to pull profile picture up */}
         <CoverPhoto
           userId={user?.id || ''}
-          currentImageUrl={getCurrentCoverUrl()}
+          currentImageUrl={getCurrentCoverUrl() || undefined}
           onImageUploaded={handleCoverPhotoUploaded}
         />
       </div>
@@ -79,7 +79,7 @@ export const PhotoSection: React.FC<{ children?: React.ReactNode }> = ({ childre
         <div className="relative z-10 flex-shrink-0">
           <ProfilePicture
             userId={user?.id || ''}
-            currentImageUrl={profilePictureUrl}
+            currentImageUrl={profilePictureUrl || undefined}
             onImageUploaded={handleProfilePictureUploaded}
             size="large"
           />

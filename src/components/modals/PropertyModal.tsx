@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+
 import { useToast } from '@/hooks/use-toast';
 import { propertyService, PropertyCreateData } from '@/services/PropertyService';
 import { Property } from '@/types';
@@ -34,6 +34,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
     huurprijs: 0,
     woning_type: 'appartement',
     beschikbaar_vanaf: '',
+    voorzieningen: [],
   });
 
   const [newVoorziening, setNewVoorziening] = useState('');
@@ -48,6 +49,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
         huurprijs: property.rent,
         woning_type: property.propertyType || 'appartement',
         beschikbaar_vanaf: property.availableFrom || '',
+        voorzieningen: property.voorzieningen || [],
       });
     } else {
       // Reset form for new property
@@ -59,6 +61,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
         huurprijs: 0,
         woning_type: 'appartement',
         beschikbaar_vanaf: '',
+        voorzieningen: [],
       });
     }
   }, [property, isOpen]);
@@ -110,7 +113,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
     if (newVoorziening.trim()) {
       setFormData(prev => ({
         ...prev,
-        voorzieningen: [...prev.voorzieningen, newVoorziening.trim()]
+        voorzieningen: [...(prev.voorzieningen || []), newVoorziening.trim()]
       }));
       setNewVoorziening('');
     }
@@ -119,7 +122,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
   const removeVoorziening = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      voorzieningen: prev.voorzieningen.filter((_, i) => i !== index)
+      voorzieningen: (prev.voorzieningen || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -306,7 +309,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.voorzieningen.map((voorziening, index) => (
+              {(formData.voorzieningen || []).map((voorziening, index) => (
                 <div key={index} className="bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1 text-sm">
                   {voorziening}
                   <button

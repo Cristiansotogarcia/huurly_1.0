@@ -1,18 +1,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { User as UserIcon, FileText, Home } from "lucide-react";
+import { User as UserIcon, FileText } from "lucide-react";
 
 interface ProfileActionsProps {
   onShowProfileModal: () => void;
   onShowDocumentModal: () => void;
-  onNavigateSearch: () => void;
   onNavigateHelp: () => void;
 }
 
 export const ProfileActions: React.FC<ProfileActionsProps> = ({
   onShowProfileModal,
   onShowDocumentModal,
-  onNavigateSearch,
   onNavigateHelp,
 }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 mt-8">

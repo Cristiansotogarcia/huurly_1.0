@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button'; // Commented out as unused
 import { Progress } from '@/components/ui/progress';
 
 interface ProfilePictureProps {
@@ -38,7 +38,7 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
     large: 'w-36 h-36 sm:w-48 sm:h-48'
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],

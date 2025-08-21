@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { User, FileText, Eye, Bell, Menu } from 'lucide-react';
+import { User, FileText, Eye, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MobileNavigationProps {

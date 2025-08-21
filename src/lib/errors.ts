@@ -125,7 +125,7 @@ export class FileUploadError extends HuurlyError {
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.UNAUTHORIZED]: 'Je bent niet ingelogd. Log eerst in om door te gaan.',
   [ErrorCode.FORBIDDEN]: 'Je hebt geen toegang tot deze functie.',
-  [ErrorCode.INVALID_CREDENTIALS]: 'Ongeldige inloggegevens.',
+  [ErrorCode.INVALID_CREDENTIALS]: 'Ongeldige Wachtwoord - Probeer Opnieuw',
   
   [ErrorCode.VALIDATION_ERROR]: 'De ingevoerde gegevens zijn ongeldig.',
   [ErrorCode.MISSING_REQUIRED_FIELDS]: 'Verplichte velden ontbreken.',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { userService } from '@/services/UserService';
-import { User, Settings, Bell, Shield, CreditCard } from 'lucide-react';
+import { User, Bell, Shield, CreditCard } from 'lucide-react';
 import UnifiedModal from './UnifiedModal';
 
 interface SettingsModalProps {
@@ -36,13 +36,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     messageNotifications: true
   });
 
-  // Privacy settings state
-  const [privacySettings, setPrivacySettings] = useState({
-    profileVisible: true,
-    showPhoneNumber: false,
-    allowDirectMessages: true,
-    dataProcessing: true
-  });
+
 
   const handleProfileUpdate = async () => {
     if (!user?.id) return;
@@ -82,13 +76,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     });
   };
 
-  const handlePrivacyUpdate = () => {
-    // TODO: Implement privacy settings update
-    toast({
-      title: 'Privacy-instellingen bijgewerkt',
-      description: 'Je privacy-instellingen zijn opgeslagen.',
-    });
-  };
+
 
   return (
     <UnifiedModal

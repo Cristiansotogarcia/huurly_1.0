@@ -1,20 +1,17 @@
-import React from 'react';
 import UnifiedModal from './UnifiedModal';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 interface EmailVerificationSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGoToDashboard: () => void;
-  userName?: string;
 }
 
 const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessModalProps> = ({
   isOpen,
   onClose,
   onGoToDashboard,
-  userName,
 }) => {
   return (
     <UnifiedModal

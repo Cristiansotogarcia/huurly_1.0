@@ -4,16 +4,12 @@ import { BaseService, ServiceResponse, ValidationError, PermissionError } from '
 import { storageService } from '../lib/storage';
 import { 
   DocumentType, 
-  DocumentStatus, 
   Document,
-  DocumentUploadData,
-  DocumentReviewData,
   DOCUMENT_STORAGE_PATHS,
-  validateDocumentType,
-  validateDocumentStatus
+  validateDocumentType
 } from '@/types/documents';
-import { isTenant, hasRole } from '@/utils/roleUtils';
-import { validateFile, ValidationPresets } from '@/utils/validationUtils';
+import { isTenant } from '@/utils/roleUtils';
+import { validateFile } from '@/utils/validationUtils';
 
 export class DocumentService extends BaseService {
   constructor() {

@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface BaseModalProps {
@@ -83,11 +83,25 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       <DialogContent 
         className={`${mobileClasses} overflow-y-auto ${className} ${contentPadding}`}
       >
-        <DialogHeader className={isMobile ? "pb-4 border-b" : "pb-2 sm:pb-4"}>
-          <DialogTitle className={`flex items-center ${isMobile ? 'text-lg' : 'text-base sm:text-lg'}`}>
-            {Icon && <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4 sm:w-5 sm:h-5'} mr-2`} />}
-            {title}
-          </DialogTitle>
+        <DialogHeader className={`${isMobile ? "pb-4 border-b" : "pb-2 sm:pb-4"} relative`}>
+          <div className="flex items-center justify-between">
+            <DialogTitle className={`flex items-center ${isMobile ? 'text-lg' : 'text-base sm:text-lg'}`}>
+              {Icon && <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4 sm:w-5 sm:h-5'} mr-2`} />}
+              {title}
+            </DialogTitle>
+            
+            {showCloseButton && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                className={`h-8 w-8 p-0 ${isMobile ? 'h-7 w-7' : ''}`}
+                aria-label="Sluiten"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <DialogDescription className="sr-only">
             {title}
           </DialogDescription>

@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, User, Send, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle } from 'lucide-react';
 import { BaseModal, BaseModalActions, useModalState, useModalForm } from './BaseModal';
 
 interface ViewingInvitationModalProps {

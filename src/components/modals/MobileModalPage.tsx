@@ -25,7 +25,7 @@ const MobileModalPage: React.FC<MobileModalPageProps> = ({
   className,
   headerActions
 }) => {
-  const { closeModal } = useModalRouter();
+
 
   const handleClose = () => {
     if (onClose) {

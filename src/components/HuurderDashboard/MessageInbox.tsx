@@ -14,7 +14,6 @@ import {
   Check, 
   Clock, 
   Search,
-  Filter,
   Archive,
   MoreHorizontal
 } from 'lucide-react';

@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -13,15 +12,13 @@ import {
   User, 
   Clock,
   CheckCircle,
-  XCircle,
   MessageSquare,
   Flag,
-  Calendar,
   ArrowRight,
   FileText,
   Mail
 } from 'lucide-react';
-import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
+import { BaseModal, BaseModalActions } from './BaseModal';
 
 interface IssueManagementModalProps {
   open: boolean;
@@ -41,7 +38,7 @@ const IssueManagementModal = ({
   onAddNote
 }: IssueManagementModalProps) => {
   const { toast } = useToast();
-  const { isSubmitting, setIsSubmitting } = useModalState();
+
   const [resolution, setResolution] = useState('');
   const [escalationNote, setEscalationNote] = useState('');
   const [newNote, setNewNote] = useState('');

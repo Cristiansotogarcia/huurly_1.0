@@ -12,7 +12,6 @@ import {
   CheckCircle, 
   XCircle, 
   User, 
-  Calendar,
   Download,
   ZoomIn,
   ZoomOut,
@@ -20,7 +19,7 @@ import {
   AlertTriangle,
   Clock
 } from 'lucide-react';
-import { BaseModal, BaseModalActions, useModalState } from './BaseModal';
+import { BaseModal, useModalState } from './BaseModal';
 
 interface DocumentReviewModalProps {
   open: boolean;
@@ -134,7 +133,7 @@ const DocumentReviewModal = ({
     }
   };
 
-  const getDocumentIcon = (type: string) => {
+  const getDocumentIcon = () => {
     return <FileText className="w-5 h-5" />;
   };
 
@@ -157,7 +156,7 @@ const DocumentReviewModal = ({
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center">
-                    {getDocumentIcon(document.type)}
+                    {getDocumentIcon()}
                     <span className="ml-2">{document.fileName}</span>
                   </CardTitle>
                   <div className="flex items-center space-x-2">

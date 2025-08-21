@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +29,6 @@ export const SignupForm = ({ onClose }: SignupFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { signUp } = useAuth();
-  const navigate = useNavigate();
 
   // keep validation in sync with the password field
   useEffect(() => {

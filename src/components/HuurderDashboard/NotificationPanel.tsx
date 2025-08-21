@@ -6,18 +6,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Bell, 
   Check, 
-  X, 
   User, 
-  Home, 
   MessageSquare, 
   CreditCard,
-  Calendar,
   Star,
   AlertCircle
 } from 'lucide-react';
 import { notificationService, Notification } from '@/services/NotificationService';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+
 
 interface NotificationPanelProps {
   userId: string;
@@ -28,7 +25,6 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   useEffect(() => {
     if (userId) {

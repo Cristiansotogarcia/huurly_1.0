@@ -1,12 +1,11 @@
 
-import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Clock } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 
 export default function Step6References() {
   const { control, register, formState: { errors } } = useFormContext();

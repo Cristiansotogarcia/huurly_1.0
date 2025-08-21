@@ -222,6 +222,7 @@ export interface Property {
   smokingAllowed?: boolean;
   petsAllowed?: boolean;
   availableUntil?: string;
+  voorzieningen?: string[];
 }
 
 export interface AdminStats {

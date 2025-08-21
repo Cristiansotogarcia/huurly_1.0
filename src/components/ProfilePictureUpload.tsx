@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Camera, Loader2 } from 'lucide-react';
+import { Upload, X, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cloudflareR2UploadService } from '@/lib/cloudflare-r2-upload';
-import { ImageOptimizer } from '@/lib/image-optimization';
+// import { ImageOptimizer } from '@/lib/image-optimization'; // Commented out as unused
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

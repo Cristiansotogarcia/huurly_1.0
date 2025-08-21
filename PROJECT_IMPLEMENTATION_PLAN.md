@@ -3,7 +3,40 @@
 ## Project Overview
 Huurly is a Dutch rental platform with a unique "reverse-search" model where properties find tenants. This document tracks implementation progress and remaining tasks.
 
-## Phase 1: Technical Foundation & Core Functionality (Highest Priority)
+## Phase 1: Application Simplification (Highest Priority)
+
+### 1. Huurder Dashboard Simplification
+**Objective**: Simplify huurder dashboard to focus on profile data collection
+
+**Tasks**:
+- [ ] Create simplified huurder profile form
+- [ ] Remove unnecessary components and features
+- [ ] Focus on core profile data collection
+- [ ] Implement basic profile management
+
+**Timeline**: 1 week
+
+### 2. Verhuurder Dashboard Simplification
+**Objective**: Simplify verhuurder dashboard to focus on candidate search and filtering
+
+**Tasks**:
+- [ ] Create simplified candidate search interface
+- [ ] Implement basic filtering capabilities
+- [ ] Remove unnecessary property management features
+- [ ] Focus on core candidate discovery
+
+**Timeline**: 1 week
+
+### 3. Payment Processing Simplification
+**Objective**: Streamline payment processing to core functionality
+
+**Tasks**:
+- [ ] Simplify payment modal and flow
+- [ ] Focus on essential subscription management
+- [ ] Remove complex payment features
+- [ ] Ensure reliable payment processing
+
+**Timeline**: 1 week
 
 ### 1. Core Matching Algorithm Implementation
 **Objective**: Implement the unique "reverse-search" functionality where properties find tenants
