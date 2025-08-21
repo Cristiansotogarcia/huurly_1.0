@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Euro, Home, ArrowLeft, Heart, Eye } from 'lucide-react';
+import { Search, MapPin, Euro, Home, ArrowLeft, Heart, Eye, Bed } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardHeader } from '@/components/dashboard';
 import { useAuthStore } from '@/store/authStore';
@@ -115,7 +115,7 @@ const PropertySearch: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuthStore();
-  const [properties, setProperties] = useState<Property[]>(mockProperties);
+  const [properties] = useState<Property[]>(mockProperties);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(mockProperties);
   const [filters, setFilters] = useState({
     location: '',
@@ -187,7 +187,7 @@ const PropertySearch: React.FC = () => {
     });
   };
 
-  const handleViewProperty = (propertyId: string) => {
+  const handleViewProperty = () => {
     toast({
       title: 'Eigenschap bekijken',
       description: 'Functionaliteit voor het bekijken van eigenschappen wordt binnenkort toegevoegd.',
@@ -217,8 +217,8 @@ const PropertySearch: React.FC = () => {
             isActive: true,
             createdAt: user.createdAt,
             hasPayment: false,
-            subscriptionEndDate: null,
-            profilePictureUrl: null
+            subscriptionEndDate: undefined,
+            profilePictureUrl: undefined
           }}
           onSettings={() => {}}
           onLogout={() => navigate('/login')}
@@ -389,7 +389,7 @@ const PropertySearch: React.FC = () => {
           </div>
         </div>
         <div className="flex justify-between">
-          <Button variant="outline" size="sm" onClick={() => handleViewProperty(property.id)}>
+          <Button variant="outline" size="sm" onClick={() => handleViewProperty()}>
             <Eye className="w-4 h-4 mr-2" />
             Bekijken
           </Button>

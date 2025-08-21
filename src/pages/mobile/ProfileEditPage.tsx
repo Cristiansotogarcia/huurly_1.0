@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { z, ZodIssue } from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { profileSchema, ProfileFormData } from '@/components/modals/profileSchema';
 import { useValidatedMultiStepForm } from '@/hooks/useValidatedMultiStepForm';
@@ -83,7 +83,7 @@ const ProfileEditPage: React.FC = () => {
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
       furnished_preference: undefined,
-      min_budget: undefined,
+      min_budget: 1,
       max_budget: 1000,
       min_kamers: undefined,
       max_kamers: undefined,
@@ -149,7 +149,7 @@ const ProfileEditPage: React.FC = () => {
   };
 
   const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileSchema) as any,
     defaultValues: getDefaultValues(),
   });
 
@@ -187,7 +187,7 @@ const ProfileEditPage: React.FC = () => {
       profileSchema.parse(data);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        const errorMessages = validationError.errors.map(err => err.message).join(', ');
+        const errorMessages = validationError.issues.map((err: ZodIssue) => err.message).join(', ');
         toast({
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
@@ -260,7 +260,7 @@ const ProfileEditPage: React.FC = () => {
 
         <FormProvider {...methods}>
           <form 
-            onSubmit={methods.handleSubmit(onSubmit)} 
+            onSubmit={methods.handleSubmit(onSubmit as SubmitHandler<ProfileFormData>)}
             className="space-y-6"
           >
             {/* Step navigation - mobile optimized */}

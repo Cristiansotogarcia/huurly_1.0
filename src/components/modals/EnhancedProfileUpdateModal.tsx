@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { z, ZodIssue } from 'zod';
 import { profileSchema, ProfileFormData } from './profileSchema';
 import { useValidatedMultiStepForm } from '@/hooks/useValidatedMultiStepForm';
 import Step1PersonalInfo from './EnhancedProfileSteps/Step1PersonalInfo';
@@ -142,7 +142,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   };
 
   const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileSchema) as any,
     defaultValues: getDefaultValues(),
   });
 
@@ -182,8 +182,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        console.error('🔥 Final Profile Validation Error:', validationError.errors);
-        const errorMessages = validationError.errors.map(err => err.message).join(', ');
+        console.error('🔥 Final Profile Validation Error:', validationError.issues);
+        const errorMessages = validationError.issues.map((err: ZodIssue) => err.message).join(', ');
         toast({
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
@@ -242,7 +242,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
             onSubmit={(e) => {
               console.log('🔥 EnhancedProfileUpdateModal - Form submit event triggered!');
               console.log('🔥 EnhancedProfileUpdateModal - Event:', e);
-              methods.handleSubmit(onSubmit)(e);
+              methods.handleSubmit(onSubmit as SubmitHandler<ProfileFormData>)(e);
             }} 
             className="space-y-6"
           >

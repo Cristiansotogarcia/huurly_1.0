@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/standard/DataTable';
 import CreateUserModal from '@/components/modals/CreateUserModal';
 import { useToast } from '@/hooks/use-toast';
-import { UserService, userService } from '@/services/UserService';
-import { Users, UserPlus, Search, Filter, Download, RotateCcw, Mail } from 'lucide-react';
+import { userService } from '@/services/UserService';
+import { Users, UserPlus, Search, Download } from 'lucide-react';
 
 const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -41,7 +41,7 @@ const UserManagementPage: React.FC = () => {
     }
   };
 
-  const handleUserAction = async (action: string, userId: string, userData?: any) => {
+  const handleUserAction = async (action: string, userId: string) => {
     try {
       switch (action) {
         case 'activate':
