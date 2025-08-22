@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { notificationService, Notification } from '@/services/NotificationService';
 import { useToast } from '@/hooks/use-toast';
 

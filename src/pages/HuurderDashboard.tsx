@@ -9,12 +9,10 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
-import { StatsGrid } from "@/components/standard/StatsGrid";
 import { DocumentsSection } from "@/components/standard/DocumentsSection";
 import ProfileOverview, {
   ProfileSection,
 } from "@/components/standard/ProfileOverview";
-import { ProfilePhotoSection } from "@/components/dashboard/ProfilePhotoSection";
 import MatchRecommendations from "@/components/HuurderDashboard/MatchRecommendations";
 import MessageInbox from "@/components/HuurderDashboard/MessageInbox";
 import NotificationPanel from "@/components/HuurderDashboard/NotificationPanel";
@@ -30,13 +28,8 @@ import {
   Heart,
   Shield,
   Users,
-  Star,
-  MapPin,
-  Euro,
-  Bed,
 } from "lucide-react";
 import { DashboardModals } from "@/components/HuurderDashboard/DashboardModals";
-import ProfileActions from "@/components/HuurderDashboard/ProfileActions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from "@/hocs/withAuth";
 import { User } from "@/types";
@@ -383,7 +376,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const {
     recommendations,
     isLoading: isMatchingLoading,
-    error: matchingError,
     refreshRecommendations,
   } = matchingHook;
   
@@ -393,13 +385,11 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const {
     threads: messageThreads,
     loading: isMessagingLoading,
-    error: messagingError,
   } = messagingHook;
   
   const {
     notifications: userNotifications,
     loading: isNotificationsLoading,
-    error: notificationsError,
   } = notificationsHook;
   
   const navigate = useNavigate();
@@ -422,12 +412,6 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const profileSections = useMemo(
     () => buildProfileSections(tenantProfile, user),
     [tenantProfile, user],
-  );
-
-  // Define stats for the StatsGrid component
-  const huurderStats = useMemo(
-    () => buildStats(stats, isLoadingStats),
-    [stats, isLoadingStats],
   );
 
   const isSubscribed = subscription && subscription.status === "active";

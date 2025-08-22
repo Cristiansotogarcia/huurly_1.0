@@ -11,14 +11,12 @@ import { Property } from '@/types';
 import { 
   Plus, 
   Search, 
-  Filter, 
   Eye, 
   Edit, 
   Trash2,
   Home,
   MapPin,
   Euro,
-  Bed,
   Calendar,
   Users,
   TrendingUp

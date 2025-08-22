@@ -1,5 +1,4 @@
-import { supabase } from '../integrations/supabase/client.ts';
-import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
+import { DatabaseService, PaginationOptions, SortOptions } from '../lib/database.ts';
 import { logger } from '../lib/logger.ts';
 import { useAuthStore } from '../store/authStore.ts';
 

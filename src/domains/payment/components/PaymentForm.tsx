@@ -19,7 +19,6 @@ interface PaymentFormProps {
     payment_method_id: string;
     description: string;
   }) => void;
-  onAddPaymentMethod?: () => void;
   isLoading?: boolean;
 }
 
@@ -31,7 +30,6 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   description,
   paymentMethods = [],
   onSubmit,
-  onAddPaymentMethod,
   isLoading = false
 }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(

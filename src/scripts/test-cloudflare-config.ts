@@ -1,6 +1,5 @@
 // Test script to verify Cloudflare R2 configuration
 import { config } from 'dotenv';
-import { readFileSync } from 'fs';
 import { join } from 'path';
 
 // Load environment variables from .env file

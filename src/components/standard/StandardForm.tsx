@@ -1,6 +1,6 @@
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, UseFormReturn, FieldValues, DefaultValues } from 'react-hook-form';
+import { useForm, UseFormReturn, FieldValues, DefaultValues, Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
 import { StandardButton } from './StandardButton';
@@ -49,7 +49,7 @@ export function StandardForm<TFormValues extends FieldValues>({
 }: StandardFormProps<TFormValues>) {
   // Initialize form with react-hook-form and zod validation
   const form = useForm<TFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema as any) as Resolver<TFormValues, any>,
     defaultValues,
     mode: 'onBlur',
   });

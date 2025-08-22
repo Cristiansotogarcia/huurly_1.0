@@ -120,15 +120,8 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     }
   };
 
-  const getPlaceholderText = () => {
-    if (type === 'profile') {
-      return 'Upload profielfoto';
-    }
-    return 'Upload cover foto';
-  };
-
   const getImageUrl = () => {
-    const result = previewUrl || currentImageUrl || null;
+    const result = previewUrl || currentImageUrl || undefined;
     return result;
   };
 

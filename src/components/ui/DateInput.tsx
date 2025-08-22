@@ -14,7 +14,7 @@ interface DateInputProps {
 }
 
 export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
-  ({ value = '', onChange, placeholder = 'dd/mm/yyyy', className, id, required, disabled, ...props }, ref) => {
+  ({ value = '', onChange, placeholder = 'dd/mm/yyyy', className, id, required, disabled, ...props }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const inputRef = useRef<HTMLInputElement>(null);
     const lastValidValue = useRef(value);
@@ -57,7 +57,6 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
-      const cursorPosition = e.target.selectionStart || 0;
       
       // If user is deleting, allow it
       if (inputValue.length < displayValue.length) {

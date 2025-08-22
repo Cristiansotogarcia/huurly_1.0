@@ -37,9 +37,9 @@ export const profileSchema = z.object({
       return true;
     }, 'Ongeldige geboortedatum'),
   phone: z.string().min(10, 'Ongeldig telefoonnummer'),
-  sex: z.enum(['man', 'vrouw', 'anders', 'zeg_ik_liever_niet'], { required_error: 'Geslacht is verplicht' }),
+  sex: z.enum(['man', 'vrouw', 'anders', 'zeg_ik_liever_niet'], { message: 'Geslacht is verplicht' }),
   nationality: z.string().min(1, 'Nationaliteit is verplicht'),
-  marital_status: z.enum(['single', 'samenwonend', 'getrouwd', 'gescheiden'], { required_error: 'Burgerlijke staat is verplicht' }),
+  marital_status: z.enum(['single', 'samenwonend', 'getrouwd', 'gescheiden'], { message: 'Burgerlijke staat is verplicht' }),
   
   // Children information
   has_children: z.boolean().default(false),
@@ -53,7 +53,7 @@ export const profileSchema = z.object({
   // Step 2: Employment
   profession: z.string().min(1, 'Beroep is verplicht'),
   employer: z.string().optional(),
-  employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
+  employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { message: 'Dienstverband is verplicht' }),
   work_contract_type: z.string().optional(),
   monthly_income: z.number().min(0, 'Inkomen mag niet negatief zijn'),
   inkomensbewijs_beschikbaar: z.boolean().default(false),
@@ -70,7 +70,7 @@ export const profileSchema = z.object({
   
   // Step 4: Housing Preferences (consolidated with Step 5 & 6)
   preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
-  preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
+  preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { message: 'Woningtype is verplicht' }),
   preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer').optional(),
   furnished_preference: z.enum(['gemeubileerd', 'ongemeubileerd', 'geen_voorkeur']).optional(),
   min_budget: z.number().min(1, 'Minimum budget moet minimaal €1 zijn'),

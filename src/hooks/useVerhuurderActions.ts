@@ -13,7 +13,7 @@ export const useVerhuurderActions = () => {
     manageProperties: () => navigate('/verhuurder/woningen'),
     addProperty: () => navigate('/verhuurder/woningen/toevoegen'),
     editProperty: (propertyId: string) => navigate(`/verhuurder/woningen/${propertyId}/bewerken`),
-    deleteProperty: async (propertyId: string) => {
+    deleteProperty: async () => {
       // This would typically call a service to delete the property
       toast({
         title: "Woning verwijderd",

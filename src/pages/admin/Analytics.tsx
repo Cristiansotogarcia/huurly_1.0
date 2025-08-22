@@ -8,7 +8,6 @@ import {
   Users, 
   DollarSign, 
   TrendingUp, 
-  Calendar,
   Download,
   RefreshCw
 } from 'lucide-react';
@@ -19,7 +18,7 @@ const AnalyticsPage: React.FC = () => {
   const { toast } = useToast();
 
   // Mock data - in real implementation, fetch from API
-  const [analytics, setAnalytics] = useState({
+  const [analytics] = useState({
     totalUsers: 1245,
     newUsersThisMonth: 127,
     totalRevenue: 80925,
@@ -30,7 +29,7 @@ const AnalyticsPage: React.FC = () => {
     avgRevenuePerUser: 65
   });
 
-  const [chartData, setChartData] = useState({
+  const [chartData] = useState({
     userGrowth: [
       { month: 'Jan', users: 856 },
       { month: 'Feb', users: 923 },
@@ -183,7 +182,7 @@ const AnalyticsPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {chartData.userGrowth.map((data, index) => (
+                {chartData.userGrowth.map((data) => (
                   <div key={data.month} className="flex items-center justify-between">
                     <div className="text-sm font-medium">{data.month}</div>
                     <div className="flex items-center space-x-3">
@@ -210,7 +209,7 @@ const AnalyticsPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {chartData.revenueGrowth.map((data, index) => (
+                {chartData.revenueGrowth.map((data) => (
                   <div key={data.month} className="flex items-center justify-between">
                     <div className="text-sm font-medium">{data.month}</div>
                     <div className="flex items-center space-x-3">

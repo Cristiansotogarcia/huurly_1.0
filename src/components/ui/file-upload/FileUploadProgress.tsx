@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, X, Check, AlertCircle } from 'lucide-react';
 import { storageService } from '@/lib/storage';
 
 export interface UploadingFile {

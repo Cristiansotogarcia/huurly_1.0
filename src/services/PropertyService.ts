@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { BaseService, ServiceResponse, ValidationError, PermissionError } from './BaseService';
 import { Property } from '@/types';
-import { isLandlord, hasRole } from '@/utils/roleUtils';
+import { isLandlord } from '@/utils/roleUtils';
 import { ValidationPresets } from '@/utils/validationUtils';
 
 // Property creation data interface (matches database schema)

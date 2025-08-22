@@ -23,7 +23,7 @@ export interface UseMessagingReturn {
 export const useMessaging = (): UseMessagingReturn => {
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
+  const [selectedThread] = useState<MessageThread | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');

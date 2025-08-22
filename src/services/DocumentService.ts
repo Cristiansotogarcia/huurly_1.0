@@ -161,7 +161,7 @@ export class DocumentService extends BaseService {
   }
 
   async deleteDocument(documentId: string, userId: string): Promise<ServiceResponse<boolean>> {
-    return this.executeAuthenticatedOperation(async (currentUserId) => {
+    return this.executeAuthenticatedOperation(async (userId) => {
       if (currentUserId !== userId) {
         throw new PermissionError('Alleen eigen documenten kunnen worden verwijderd');
       }

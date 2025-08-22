@@ -106,7 +106,7 @@ export class StatisticsService extends DatabaseService {
     }
   }
 
-  async getDashboardStats(userId: string): Promise<ServiceResponse<any>> {
+  async getDashboardStats(): Promise<ServiceResponse<any>> {
     try {
       const propertyStats = await this.getPropertyStatistics();
       const userStats = await this.getUserStatistics();

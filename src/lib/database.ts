@@ -56,7 +56,7 @@ export class DatabaseService {
   /**
    * Apply pagination to a query
    */
-  protected applyPagination<T>(
+  protected applyPagination(
     query: any,
     options?: PaginationOptions
   ) {
@@ -71,7 +71,7 @@ export class DatabaseService {
   /**
    * Apply sorting to a query
    */
-  protected applySorting<T>(
+  protected applySorting(
     query: any,
     options?: SortOptions
   ) {

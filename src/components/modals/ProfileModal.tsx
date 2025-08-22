@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
@@ -74,7 +74,7 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
     watch,
     reset,
   } = useForm<ProfileModalData>({
-    resolver: zodResolver(profileModalSchema),
+    resolver: zodResolver(profileModalSchema) as Resolver<ProfileModalData, any>,
     defaultValues: {
       locatie_voorkeur: [],
       kinderen: 0,
