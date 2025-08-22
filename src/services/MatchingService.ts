@@ -313,9 +313,9 @@ export class MatchingService {
       'studio': ['appartement', 'loft']
     };
 
-    if (similarTypes[tenantType]?.includes(propertyType)) {
-      return 0.8; // Good match
-    }
+      if (similarTypes[tenantType as keyof typeof similarTypes]?.includes(propertyType)) {
+        return 0.8; // Good match
+      }
 
     return 0.3; // Low match
   }

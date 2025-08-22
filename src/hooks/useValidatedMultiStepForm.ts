@@ -42,7 +42,7 @@ export function useValidatedMultiStepForm(
       return [];
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const validationErrors = error.errors.map(err => ({
+        const validationErrors = error.issues.map((err: z.ZodIssue) => ({
           field: err.path.join('.'),
           message: err.message,
           label: getFieldLabel(err.path[0] as string)

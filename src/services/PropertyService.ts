@@ -151,10 +151,8 @@ export class PropertyService extends BaseService {
   }
 
   async getProperties(landlordId?: string): Promise<ServiceResponse<Property[]>> {
-    return this.executeAuthenticatedOperation(async (currentUserId) => {
-      const targetUserId = landlordId || currentUserId;
-
-      let query = supabase.from('woningen').select('*').order('aangemaakt_op', { ascending: false });
+      return this.executeAuthenticatedOperation(async (currentUserId) => {
+        let query = supabase.from('woningen').select('*').order('aangemaakt_op', { ascending: false });
 
       if (landlordId) {
         query = query.eq('verhuurder_id', landlordId);

@@ -91,7 +91,7 @@ export class ApplicationService extends DatabaseService {
     });
   }
 
-  async getApplications(userId?: string): Promise<DatabaseResponse<Application[]>> {
+  async getApplications(): Promise<DatabaseResponse<Application[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {

@@ -182,7 +182,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        const fieldErrors = validationError.flatten().fieldErrors;
+        const fieldErrors = validationError.flatten().fieldErrors as Record<string, string[]>;
         const errorMessages = Object.entries(fieldErrors)
           .map(([fieldName, errors]) => `${fieldName}: ${errors?.join(', ')}`)
           .join('; ');

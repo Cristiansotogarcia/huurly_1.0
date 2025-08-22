@@ -1,6 +1,5 @@
 import { supabase } from '../integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '../lib/database';
-import { logger } from '../lib/logger';
 
 export class FavoritesService extends DatabaseService {
   async listSavedProfiles(landlordId: string): Promise<DatabaseResponse<string[]>> {

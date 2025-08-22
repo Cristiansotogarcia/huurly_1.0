@@ -79,10 +79,10 @@ const ResetPassword: React.FC = () => {
     try {
       // Validate password strength
       const passwordValidation = passwordSchema.safeParse(password);
-      if (!passwordValidation.success) {
-        setError(passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen');
-        return;
-      }
+        if (!passwordValidation.success) {
+          setError(passwordValidation.error.issues[0]?.message || 'Wachtwoord voldoet niet aan de eisen');
+          return;
+        }
 
       // Update password directly using Supabase
       const { error: updateError } = await supabase.auth.updateUser({

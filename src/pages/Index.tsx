@@ -125,7 +125,6 @@ const Index = () => {
             }, 1000);
           }
         }}
-        userName={user?.name}
       />
       
       <PaymentSuccessModal

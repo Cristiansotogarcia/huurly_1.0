@@ -113,27 +113,20 @@ class OptimizedSubscriptionService extends DatabaseService {
   async getSubscriptionExpiration(userId: string): Promise<DatabaseResponse<{ expiresAt: string | null; daysRemaining: number | null }>> {
     return this.executeQuery(async () => {
       const result = await this.checkSubscriptionStatus(userId);
-      
+
+      let expiresAt: string | null = null;
+      let daysRemaining: number | null = null;
+
       if (result.success && result.data?.expiresAt) {
-        const expiresAt = result.data.expiresAt;
+        expiresAt = result.data.expiresAt;
         const expirationDate = new Date(expiresAt);
         const today = new Date();
-        const daysRemaining = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        return {
-          data: {
-            expiresAt,
-            daysRemaining: daysRemaining > 0 ? daysRemaining : 0
-          },
-          error: null
-        };
+        const diff = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        daysRemaining = diff > 0 ? diff : 0;
       }
 
       return {
-        data: {
-          expiresAt: null,
-          daysRemaining: null
-        },
+        data: { expiresAt, daysRemaining },
         error: null
       };
     });
@@ -145,7 +138,7 @@ class OptimizedSubscriptionService extends DatabaseService {
   async isSubscriptionExpiringSoon(userId: string): Promise<boolean> {
     try {
       const result = await this.getSubscriptionExpiration(userId);
-      if (result.success && result.data?.daysRemaining !== null) {
+      if (result.success && result.data && result.data.daysRemaining !== null) {
         return result.data.daysRemaining <= 14;
       }
       return false;

@@ -34,7 +34,7 @@ export class AuthService {
       // Validate email format
       const emailValidation = emailSchema.safeParse(data.email);
       if (!emailValidation.success) {
-        const error = new Error(emailValidation.error.errors[0]?.message || 'Ongeldig e-mailadres') as AuthError;
+        const error = new Error(emailValidation.error.issues[0]?.message || 'Ongeldig e-mailadres') as AuthError;
         error.status = 400;
         return { user: null, error };
       }
@@ -42,7 +42,7 @@ export class AuthService {
       // Validate password strength
       const passwordValidation = passwordSchema.safeParse(data.password);
       if (!passwordValidation.success) {
-        const error = new Error(passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen') as AuthError;
+        const error = new Error(passwordValidation.error.issues[0]?.message || 'Wachtwoord voldoet niet aan de eisen') as AuthError;
         error.status = 400;
         return { user: null, error };
       }
@@ -116,7 +116,7 @@ export class AuthService {
       });
 
       if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Ongeldige Wachtwoord - Probeer Opnieuw';
+        const errorMessage = validationResult.error.issues[0]?.message || 'Ongeldige Wachtwoord - Probeer Opnieuw';
         const error = new Error(errorMessage) as AuthError;
         error.status = 400;
         return { user: null, error };
@@ -320,7 +320,7 @@ export class AuthService {
       if (!passwordValidation.success) {
         return {
           success: false,
-          message: passwordValidation.error.errors[0]?.message || 'Wachtwoord voldoet niet aan de eisen'
+          message: passwordValidation.error.issues[0]?.message || 'Wachtwoord voldoet niet aan de eisen'
         };
       }
 

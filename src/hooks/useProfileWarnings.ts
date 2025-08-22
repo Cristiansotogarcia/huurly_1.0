@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useHuurder } from '@/hooks/useHuurder';
+import type { TenantProfile } from '@/types';
 
 interface ProfileWarningsState {
   profileWarningShown: boolean;
@@ -57,8 +58,8 @@ export const useProfileWarnings = () => {
     const isSameDay = warningsState.lastShownDate === today;
 
     // Check profile completeness
-    const requiredFields = ['profession', 'income', 'age', 'preferredLocations', 'maxRent'];
-    const isProfileComplete = requiredFields.every(field => tenantProfile[field] != null);
+    const requiredFields = ['profession', 'income', 'age', 'preferredLocations', 'maxRent'] as const;
+    const isProfileComplete = requiredFields.every(field => tenantProfile[field as keyof TenantProfile] != null);
     
     // Check documents
     const hasRequiredDocuments = userDocuments.length >= 3;
