@@ -57,7 +57,7 @@ export class PricingService extends DatabaseService {
         created_at: new Date().toISOString()
       };
 
-      await this.createAuditLog('APPROVAL_REQUEST', 'approval_requests', null, null, requestData);
+        await this.createAuditLog('APPROVAL_REQUEST', 'approval_requests', undefined, undefined, requestData);
 
       return { data: requestData, error: null };
     });

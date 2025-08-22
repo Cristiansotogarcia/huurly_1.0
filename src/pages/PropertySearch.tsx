@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Euro, Home, ArrowLeft, Heart, Eye } from 'lucide-react';
+import { Search, MapPin, Euro, Home, ArrowLeft, Heart, Eye, Bed } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardHeader } from '@/components/dashboard';
 import { useAuthStore } from '@/store/authStore';
@@ -187,10 +187,10 @@ const PropertySearch: React.FC = () => {
     });
   };
 
-  const handleViewProperty = () => {
+  const handleViewProperty = (propertyId: string) => {
     toast({
       title: 'Eigenschap bekijken',
-      description: 'Functionaliteit voor het bekijken van eigenschappen wordt binnenkort toegevoegd.',
+      description: `Functionaliteit voor het bekijken van eigenschap ${propertyId} wordt binnenkort toegevoegd.`,
     });
   };
 
@@ -216,10 +216,10 @@ const PropertySearch: React.FC = () => {
             email: user.email,
             isActive: true,
             createdAt: user.createdAt,
-            hasPayment: false,
-            subscriptionEndDate: null,
-            profilePictureUrl: null
-          }}
+              hasPayment: false,
+              subscriptionEndDate: undefined,
+              profilePictureUrl: undefined
+            }}
           onSettings={() => {}}
           onLogout={() => navigate('/login')}
         />

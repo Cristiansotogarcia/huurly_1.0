@@ -1,6 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { authService } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { User } from '@/types';
 import { optimizedSubscriptionService } from '@/services/OptimizedSubscriptionService';

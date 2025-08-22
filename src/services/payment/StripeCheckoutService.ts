@@ -3,7 +3,6 @@ import { supabase } from '../../integrations/supabase/client';
 import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe-config';
 import { DatabaseService, DatabaseResponse } from '../../lib/database';
 import { ErrorHandler } from '../../lib/errors';
-import { paymentRecordService } from './PaymentRecordService';
 import { logger } from '../../lib/logger';
 
 export class StripeCheckoutService extends DatabaseService {

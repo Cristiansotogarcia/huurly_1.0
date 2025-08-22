@@ -247,18 +247,18 @@ export abstract class BaseService extends DatabaseService {
     operationName: string,
     resourceId?: string
   ): Promise<ServiceResponse<T>> {
-    return this.executeServiceOperation(async () => {
+    return this.executeServiceOperation<T | null>(async () => {
       const { data, error } = await query();
-      
+
       if (error) {
         throw this.handleDatabaseError(error);
       }
-      
+
       return data;
     }, {
       operation: operationName,
       resourceId
-    });
+    }) as Promise<ServiceResponse<T>>;
   }
 
   /**
@@ -310,7 +310,7 @@ export abstract class BaseService extends DatabaseService {
     try {
       const currentUserId = userId || await this.getCurrentUserId();
       if (currentUserId) {
-        await this.createAuditLog(action, table, recordId, oldData, newData);
+        await this.createAuditLog(action, table, recordId ?? undefined, oldData, newData);
       }
     } catch (error) {
       // Log audit failures but don't throw - audit should not break main operations

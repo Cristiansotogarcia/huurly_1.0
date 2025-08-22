@@ -18,10 +18,6 @@ import MessageInbox from "@/components/HuurderDashboard/MessageInbox";
 import NotificationPanel from "@/components/HuurderDashboard/NotificationPanel";
 import DashboardOverview from "@/components/HuurderDashboard/DashboardOverview";
 import {
-  Eye,
-  Calendar,
-  FileText,
-  CheckCircle,
   User as UserIcon,
   Briefcase,
   Home,
@@ -323,38 +319,7 @@ const buildProfileSections = (
   ];
 };
 
-const buildStats = (stats: any, isLoadingStats: boolean) => [
-  {
-    title: "Profiel weergaven",
-    value: stats.profileViews,
-    icon: Eye,
-    color: "blue-600",
-    loading: isLoadingStats,
-  },
-  {
-    title: "Uitnodigingen",
-    value: stats.invitations,
-    icon: Calendar,
-    color: "green-600",
-    loading: isLoadingStats,
-  },
-  {
-    title: "Aanvragen",
-    value: stats.applications,
-    icon: FileText,
-    color: "orange-600",
-    loading: isLoadingStats,
-  },
-  {
-    title: "Geaccepteerd",
-    value: stats.acceptedApplications,
-    icon: CheckCircle,
-    color: "emerald-600",
-    loading: isLoadingStats,
-  },
-];
-
-const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
+  const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const huurderHook = useHuurder();
   const matchingHook = useMatching();
   
@@ -362,9 +327,8 @@ const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
     user,
     userDocuments,
     isLoading: isHuurderLoading,
-    stats,
-    isLoadingStats,
-    profilePictureUrl,
+      stats,
+      profilePictureUrl,
     tenantProfile,
     subscription,
     refresh,

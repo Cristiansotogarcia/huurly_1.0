@@ -20,17 +20,17 @@ export class DocumentService extends BaseService {
     documentType: DocumentType,
     userId: string
   ): Promise<ServiceResponse<Document>> {
-    return this.executeAuthenticatedOperation(async (currentUserId) => {
-      // Validate user authorization
-      if (currentUserId !== userId) {
-        throw new PermissionError('Alleen eigen documenten kunnen worden geüpload');
-      }
+      return this.executeAuthenticatedOperation(async (_currentUserId) => {
+        // Validate user authorization
+        if (_currentUserId !== userId) {
+          throw new PermissionError('Alleen eigen documenten kunnen worden geüpload');
+        }
 
       // Validate user role
-      const { data: gebruiker } = await supabase
-        .from('gebruikers')
-        .select('rol')
-        .eq('id', currentUserId)
+        const { data: gebruiker } = await supabase
+          .from('gebruikers')
+          .select('rol')
+          .eq('id', _currentUserId)
         .single();
 
       if (!gebruiker || !isTenant(gebruiker.rol)) {
@@ -160,11 +160,11 @@ export class DocumentService extends BaseService {
     }, 'reviewDocument', documentId, { status, notes });
   }
 
-  async deleteDocument(documentId: string, userId: string): Promise<ServiceResponse<boolean>> {
-    return this.executeAuthenticatedOperation(async (userId) => {
-      if (currentUserId !== userId) {
-        throw new PermissionError('Alleen eigen documenten kunnen worden verwijderd');
-      }
+    async deleteDocument(documentId: string, userId: string): Promise<ServiceResponse<boolean>> {
+      return this.executeAuthenticatedOperation(async (currentUserId) => {
+        if (currentUserId !== userId) {
+          throw new PermissionError('Alleen eigen documenten kunnen worden verwijderd');
+        }
 
       const { data: document } = await supabase
         .from('documenten')
@@ -181,7 +181,7 @@ export class DocumentService extends BaseService {
         .from('documenten')
         .delete()
         .eq('id', documentId)
-        .eq('huurder_id', userId);
+          .eq('huurder_id', userId);
 
       if (error) {
         throw this.handleDatabaseError(error);
@@ -190,11 +190,11 @@ export class DocumentService extends BaseService {
       await this.createStandardAuditLog('DOCUMENT_DELETE', 'documenten', documentId, null);
 
       return true;
-    }, 'deleteDocument', documentId, { userId });
-  }
+      }, 'deleteDocument', documentId, { userId });
+    }
 
-  async getDocumentUrl(documentId: string, userId: string): Promise<ServiceResponse<string>> {
-    return this.executeAuthenticatedOperation(async (currentUserId) => {
+    async getDocumentUrl(documentId: string, userId: string): Promise<ServiceResponse<string>> {
+      return this.executeAuthenticatedOperation(async (_currentUserId) => {
       const { data: document, error } = await supabase
         .from('documenten')
         .select('bestand_url')

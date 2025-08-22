@@ -1,5 +1,14 @@
 import { logger } from '../../../lib/logger';
-import { ServiceResponse, ServiceContext, ServiceError } from '../types/api';
+import { ServiceResponse, ServiceContext, ServiceError, ValidationSchema, BaseValidationError } from '../types/api';
+
+interface FieldValidationRules {
+  type?: 'string' | 'number' | 'boolean' | 'object';
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  patternMessage?: string;
+  custom?: (value: any) => boolean | string;
+}
 
 /**
  * Enhanced Base Service with improved architecture
@@ -69,15 +78,15 @@ export abstract class BaseService {
     queryFn: () => Promise<{ data: T | null; error: any }>,
     context: ServiceContext
   ): Promise<ServiceResponse<T>> {
-    return this.executeOperation(async () => {
+    return this.executeOperation<T | null>(async () => {
       const { data, error } = await queryFn();
-      
+
       if (error) {
         throw this.createDatabaseError(error);
       }
-      
+
       return data;
-    }, context);
+    }, context) as Promise<ServiceResponse<T>>;
   }
 
   /**
@@ -102,7 +111,7 @@ export abstract class BaseService {
     }
 
     // Validate field rules
-    for (const [field, rules] of Object.entries(schema.fields || {})) {
+    for (const [field, rules] of Object.entries(schema.fields || {}) as [string, FieldValidationRules][]) {
       const value = sanitizedData[field as keyof T];
       if (this.hasValue(value)) {
         const fieldErrors = this.validateField(field, value, rules);
@@ -304,33 +313,4 @@ export abstract class BaseService {
   private generateOperationId(): string {
     return `${this.domain}_${this.serviceName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-}
-
-/**
- * Validation schema interface
- */
-export interface ValidationSchema<T> {
-  required?: (keyof T)[];
-  fields?: Partial<Record<keyof T, FieldValidationRules>>;
-}
-
-/**
- * Field validation rules
- */
-export interface FieldValidationRules {
-  type?: 'string' | 'number' | 'boolean' | 'object';
-  minLength?: number;
-  maxLength?: number;
-  pattern?: RegExp;
-  patternMessage?: string;
-  custom?: (value: any) => boolean | string;
-}
-
-/**
- * Validation error interface
- */
-export interface BaseValidationError {
-  field: string;
-  message: string;
-  code: string;
 }
