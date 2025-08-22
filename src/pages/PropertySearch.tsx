@@ -115,7 +115,7 @@ const PropertySearch: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuthStore();
-  const [properties, setProperties] = useState<Property[]>(mockProperties);
+  const [properties] = useState<Property[]>(mockProperties);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(mockProperties);
   const [filters, setFilters] = useState({
     location: '',
@@ -187,7 +187,7 @@ const PropertySearch: React.FC = () => {
     });
   };
 
-  const handleViewProperty = (propertyId: string) => {
+  const handleViewProperty = () => {
     toast({
       title: 'Eigenschap bekijken',
       description: 'Functionaliteit voor het bekijken van eigenschappen wordt binnenkort toegevoegd.',

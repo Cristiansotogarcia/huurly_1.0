@@ -44,16 +44,16 @@ export const step1Schema = z.object({
     return true;
   }, 'Geboortedatum is verplicht en moet een geldige datum zijn in dd/mm/jjjj formaat'),
   phone: z.string().min(10, 'Ongeldig telefoonnummer'),
-  sex: z.enum(['man', 'vrouw', 'anders', 'zeg_ik_liever_niet'], { required_error: 'Geslacht is verplicht' }),
+  sex: z.enum(['man', 'vrouw', 'anders', 'zeg_ik_liever_niet'], { message: 'Geslacht is verplicht' }),
   nationality: z.string().min(1, 'Nationaliteit is verplicht'),
-  marital_status: z.enum(['single', 'samenwonend', 'getrouwd', 'gescheiden'], { required_error: 'Burgerlijke staat is verplicht' }),
+  marital_status: z.enum(['single', 'samenwonend', 'getrouwd', 'gescheiden'], { message: 'Burgerlijke staat is verplicht' }),
 });
 
 // Step 2: Employment - Required fields
 export const step2Schema = z.object({
   profession: z.string().min(1, 'Beroep is verplicht'),
   employer: z.string().optional(), // Made optional to match UI
-  employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { required_error: 'Dienstverband is verplicht' }),
+  employment_status: z.enum(['full-time', 'part-time', 'zzp', 'student', 'werkloos'], { message: 'Dienstverband is verplicht' }),
   monthly_income: z.number().min(1, 'Maandinkomen is verplicht en moet groter dan 0 zijn'),
 });
 
@@ -65,7 +65,7 @@ export const step3Schema = z.object({
 // Step 4: Housing Preferences - Required fields
 export const step4Schema = z.object({
   preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
-  preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { required_error: 'Woningtype is verplicht' }),
+  preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { message: 'Woningtype is verplicht' }),
   min_budget: z.number().min(1, 'Minimum budget moet minimaal €1 zijn'),
   max_budget: z.number().min(1, 'Maximum budget moet minimaal €1 zijn')
 }).refine((data) => data.max_budget >= data.min_budget, {

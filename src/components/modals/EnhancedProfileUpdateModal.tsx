@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { profileSchema, ProfileFormData } from './profileSchema';
@@ -142,7 +142,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   };
 
   const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileSchema) as Resolver<ProfileFormData, any>,
     defaultValues: getDefaultValues(),
   });
 
@@ -182,13 +182,16 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        console.error('🔥 Final Profile Validation Error:', validationError.errors);
-        const errorMessages = validationError.errors.map(err => err.message).join(', ');
+        const fieldErrors = validationError.flatten().fieldErrors;
+        const errorMessages = Object.entries(fieldErrors)
+          .map(([fieldName, errors]) => `${fieldName}: ${errors?.join(', ')}`)
+          .join('; ');
+        console.error('🔥 Final Profile Validation Error:', fieldErrors);
         toast({
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
           variant: 'destructive',
-        } as any);
+        });
         return; // Stop submission
       }
     }
@@ -209,7 +212,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
-      } as any);
+      });
       onClose();
     } catch (error) {
       console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);
@@ -217,7 +220,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         title: 'Fout',
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
-      } as any);
+      });
       // Don't close the modal on error - let user fix the issue
       // Don't re-throw the error as it's already handled
     } finally {

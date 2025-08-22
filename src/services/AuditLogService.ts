@@ -13,11 +13,7 @@ export class AuditLogService extends DatabaseService {
   /**
    * Retrieve audit logs (placeholder - logs to console for now)
    */
-  async getAuditLogs(
-    filters?: AuditLogFilters,
-    pagination?: PaginationOptions,
-    sort?: SortOptions
-  ): Promise<DatabaseResponse<any[]>> {
+  async getAuditLogs(): Promise<DatabaseResponse<any[]>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {
@@ -47,7 +43,7 @@ export class AuditLogService extends DatabaseService {
   /**
    * Retrieve a single audit log by ID (placeholder)
    */
-  async getAuditLog(logId: string): Promise<DatabaseResponse<any>> {
+  async getAuditLog(): Promise<DatabaseResponse<any>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId) {
       return {

@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService, DatabaseResponse } from '@/lib/database';
 import { ErrorHandler } from '@/lib/errors';
-import { logger } from '@/lib/logger';
 import { notificationService } from './NotificationService';
 
 export interface Application {

@@ -1,4 +1,4 @@
-import { BaseEntity, Address, Image, Money, ContactInfo } from '../../shared/types/common';
+import { BaseEntity, Address, Image, Money } from '../../shared/types/common';
 
 // Property-related enums
 export enum PropertyType {

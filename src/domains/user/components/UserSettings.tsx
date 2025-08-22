@@ -18,14 +18,6 @@ export const UserSettings: React.FC<UserSettingsProps> = ({
   const [localSettings, setLocalSettings] = useState<UserSettingsType>(settings);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSettingChange = (key: keyof UserSettingsType, value: any) => {
-    setLocalSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-    setHasChanges(true);
-  };
-
   const handleNestedSettingChange = (section: keyof UserSettingsType, key: string, value: any) => {
     setLocalSettings(prev => ({
       ...prev,

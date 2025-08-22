@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/hooks/use-toast";
-import { paymentService } from "@/services/PaymentService";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { logger } from "@/lib/logger";
 

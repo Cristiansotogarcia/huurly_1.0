@@ -202,8 +202,10 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     };
 
     // Check if location already exists
-    const exists = value.some(loc => 
-      Math.abs(loc.lat - newLocation.lat) < 0.01 && 
+    const exists = value.some(loc =>
+      loc.lat !== undefined && newLocation.lat !== undefined &&
+      Math.abs(loc.lat - newLocation.lat) < 0.01 &&
+      loc.lng !== undefined && newLocation.lng !== undefined &&
       Math.abs(loc.lng - newLocation.lng) < 0.01
     );
 
@@ -373,7 +375,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-500">1km</span>
                 <Slider
-                  value={[value[editingRadius].radius]}
+                  value={[value[editingRadius].radius || 0]}
                   onValueChange={(newRadius) => handleRadiusChange(editingRadius, newRadius)}
                   min={1}
                   max={50}

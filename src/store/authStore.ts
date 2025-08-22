@@ -1,7 +1,6 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User } from '@/types';
 import { AuthState } from './auth/authTypes';
 import { createAuthActions } from './auth/authActions';
 import { createSessionManager } from './auth/sessionManager';

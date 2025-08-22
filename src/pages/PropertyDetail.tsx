@@ -8,28 +8,21 @@ import { useToast } from '@/hooks/use-toast';
 import { propertyService } from '@/services/PropertyService';
 import { Property } from '@/types';
 import { applicationService } from '@/services/ApplicationService';
-import { messageService } from '@/services/MessageService';
 import { 
   ArrowLeft, 
   Edit, 
   Trash2, 
   Users, 
   MessageSquare, 
-  Calendar,
   MapPin,
   Home,
   Euro,
   Plus,
   Bed,
-  Bath,
-  Wifi,
-  Car,
-  PawPrint,
   CheckCircle,
   XCircle,
   Clock,
-  Camera,
-  FileText
+  Camera
 } from 'lucide-react';
 
 const PropertyDetailPage: React.FC = () => {
@@ -39,7 +32,6 @@ const PropertyDetailPage: React.FC = () => {
   
   const [property, setProperty] = useState<Property | null>(null);
   const [applications, setApplications] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
