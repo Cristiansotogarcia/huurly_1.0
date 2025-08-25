@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useImperativeHandle } from 'react';
 import { Input } from '@/components/ui/input';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,11 @@ interface DateInputProps {
 }
 
 export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
-  ({ value = '', onChange, placeholder = 'dd/mm/yyyy', className, id, required, disabled, ...props }) => {
+  ({ value = '', onChange, placeholder = 'dd/mm/yyyy', className, id, required, disabled, ...props }, ref) => {
     const [displayValue, setDisplayValue] = useState(value);
     const inputRef = useRef<HTMLInputElement>(null);
+    // Expose internal ref to parent components
+    useImperativeHandle(ref, () => inputRef.current!);
     const lastValidValue = useRef(value);
 
     useEffect(() => {

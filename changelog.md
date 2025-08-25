@@ -1,6 +1,18 @@
 # Huurly Project Changelog
 
 ## [Unreleased]
+- Fixed TypeScript ref-forwarding fout in `DateInput.tsx` door `useImperativeHandle` correct te gebruiken waardoor React-waarschuwingen zijn verdwenen en datumvelden nu betrouwbaar functioneren.
+- Voorkomt lege payload (400-fout) bij `POST /matches` door invoervalidatie toe te voegen aan `MatchingService.saveMatch`, waardoor er niet meer wordt geupsert met ontbrekende `propertyId` of `score`.
+
+### Changed
+- **Upgrade to Vite 7 and Plugin Updates - February 2025**
+  - Upgraded `vite` to `^7.0.0`
+  - Upgraded `@vitejs/plugin-react-swc` to `^4.0.1`
+  - Removed deprecated `advancedChunks` configuration from `vite.config.ts`
+  - Restored `manualChunks` configuration for bundling `react` and `supabase`
+  - Updated dependencies via `npm install`
+  - Verified TypeScript compilation (`npx tsc --noEmit -p tsconfig.app.json`) passes
+  - Visually tested UI at `http://localhost:8080/` and confirmed no regressions
 
 ### Fixed
 - **Header Component Button Updates - January 2025**

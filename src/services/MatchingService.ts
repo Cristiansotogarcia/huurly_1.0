@@ -324,6 +324,10 @@ export class MatchingService {
    * Save match results to database for analytics and history
    */
   static async saveMatch(tenantId: string, propertyId: string, score: number, status: string = 'pending') {
+    if (!tenantId || !propertyId || score == null) {
+      logger.warn('Ongeldige parameters voor saveMatch, upsert overgeslagen', { tenantId, propertyId, score });
+      return null;
+    }
     try {
       const { data, error } = await supabase
         .from('matches')

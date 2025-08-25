@@ -1,6 +1,7 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 // https://vitejs.dev/config/
@@ -18,6 +19,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    tailwindcss(),
   ],
   resolve: {
     alias: {
@@ -27,13 +29,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
+        
         manualChunks: {
           react: ["react", "react-dom"],
           supabase: ["@supabase/supabase-js"],
-          // Add other large libraries here for better caching
         },
-      },
-    },
+       },
+     },
   },
   define: {
     global: 'globalThis', // Necessary polyfill for browser environments
