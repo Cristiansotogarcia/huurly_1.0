@@ -26,7 +26,7 @@ export const Header = ({}: HeaderProps) => {
                     Inloggen
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md bg-white">
                   <LoginForm onClose={() => setShowLogin(false)} />
                 </DialogContent>
               </Dialog>

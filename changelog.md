@@ -614,3 +614,14 @@ This dual-table approach was unnecessary and created potential data synchronizat
 - ✅ All existing functionality preserved
 
 **Result:** The Enhanced Profile Creation Modal now correctly saves all profile data to the `huurders` table only, eliminating data duplication and ensuring a single source of truth for tenant profile information.
+
+## Fixed
+- **Modal Background Transparency Fix - March 2025**
+  - **Problem**: Multiple modals (login, alert, persistent) displayed transparent background causing underlying content to show through.
+  - **Solution**:
+    - Updated default `DialogContent`, `PersistentDialogContent`, and `AlertDialogContent` to use `bg-white` instead of `bg-background`.
+  - **Files Modified**:
+    - `src/components/ui/dialog.tsx`
+    - `src/components/ui/persistent-dialog.tsx`
+    - `src/components/ui/alert-dialog.tsx`
+  - **Result**: All application modals now consistently display with a solid witte achtergrond, ensuring readability and professional appearance.
