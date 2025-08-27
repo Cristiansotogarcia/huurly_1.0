@@ -76,8 +76,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
       furnished_preference: undefined,
-      min_budget: 1,
-      max_budget: 1000,
+      min_budget: undefined as unknown as number,
+      max_budget: undefined as unknown as number,
       min_kamers: undefined,
       max_kamers: undefined,
       
@@ -114,8 +114,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       reason_for_moving: '',
       
       // Step 7: Profile & Motivation
-      bio: 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
-      motivation: 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+      bio: '',
+      motivation: '',
     };
 
     // Merge with initial data if provided
@@ -133,10 +133,6 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     if (!mergedData.employment_status) mergedData.employment_status = 'full-time';
     if (mergedData.monthly_income === undefined || mergedData.monthly_income === null) mergedData.monthly_income = 0;
     if (!mergedData.preferred_property_type) mergedData.preferred_property_type = 'appartement';
-    if (mergedData.max_budget === undefined || mergedData.max_budget === null) mergedData.max_budget = 1000;
-    if (!mergedData.bio || mergedData.bio.length < 50) mergedData.bio = 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
-    if (!mergedData.motivation || mergedData.motivation.length < 50) mergedData.motivation = 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
-    if (!mergedData.preferred_city || mergedData.preferred_city.length === 0) mergedData.preferred_city = [{ name: 'Amsterdam' }];
 
     return mergedData;
   };
@@ -176,10 +172,28 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   const onSubmit = async (data: ProfileFormData) => {
     console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Form data:', data);
     
+    // Ensure required fields are explicitly provided before submission
+    if (
+      !data.bio ||
+      !data.motivation ||
+      !data.preferred_city?.length ||
+      data.min_budget === undefined ||
+      data.max_budget === undefined
+    ) {
+      toast({
+        title: 'Validatie Fout',
+        description:
+          'Vul je bio, motivatie, budget en gewenste stad in voordat je doorgaat.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validate entire form before submission
     try {
       const parsedData = profileSchema.parse(data);
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
+      data = parsedData;
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const fieldErrors = validationError.flatten().fieldErrors as Record<string, string[]>;
@@ -195,7 +209,6 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         return; // Stop submission
       }
     }
-
 
     try {
       setIsSubmittingForm(true);
@@ -261,6 +274,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
               isSubmitting={methods.formState.isSubmitting}
+              onSaveClick={methods.handleSubmit(onSubmit)}
             />
 
           </form>
