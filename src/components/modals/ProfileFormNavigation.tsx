@@ -15,7 +15,6 @@ interface ProfileFormNavigationProps {
   onNext: () => boolean; // returns boolean for validation result
   validateCurrentStep: () => ValidationError[];
   isSubmitting?: boolean;
-  onSaveClick?: () => void;
 }
 
 const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
@@ -25,7 +24,6 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
   onNext,
   validateCurrentStep,
   isSubmitting = false,
-  onSaveClick,
 }) => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -37,6 +35,17 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
       setMissingFields(errors.map((e) => e.label));
       setShowValidationModal(true);
     }
+  };
+
+  const handleSave = () => {
+    const errors = validateCurrentStep ? validateCurrentStep() : [];
+    if (errors.length > 0) {
+      setMissingFields(errors.map((e) => e.label));
+      setShowValidationModal(true);
+      return;
+    }
+
+    onSaveClick?.();
   };
 
   return (
@@ -77,11 +86,9 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
               type="submit"
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
-              onClick={() => {
-                console.log('🔥 ProfileFormNavigation - Profiel Opslaan button clicked!');
-                console.log('🔥 ProfileFormNavigation - isSubmitting:', isSubmitting);
-                onSaveClick?.();
-              }}
+
+              onClick={handleSave}
+
             >
               {isSubmitting ? (
                 <>

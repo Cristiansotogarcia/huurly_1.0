@@ -38,6 +38,108 @@ const steps = [
 const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
 
+  const getDefaultValues = (): ProfileFormData => {
+    const defaults: ProfileFormData = {
+      // Step 1: Personal Info
+      profilePictureUrl: '',
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
+      phone: '',
+      sex: 'zeg_ik_liever_niet',
+      nationality: 'Nederlandse',
+      marital_status: 'single',
+      
+      // Children information
+      has_children: false,
+      number_of_children: 0,
+      children_ages: [],
+      
+      // Step 2: Employment
+      profession: '',
+      employer: '',
+      employment_status: 'full-time',
+      work_contract_type: '',
+      monthly_income: 0,
+      inkomensbewijs_beschikbaar: false,
+      work_from_home: false,
+      extra_income: undefined,
+      extra_income_description: '',
+      
+      // Step 3: Household
+      has_partner: false,
+      partner_name: '',
+      partner_profession: '',
+      partner_employment_status: '',
+      partner_monthly_income: undefined,
+      
+      // Step 4: Housing Preferences (consolidated with Step 5)
+      preferred_city: [],
+      preferred_property_type: 'appartement',
+      preferred_bedrooms: undefined,
+      furnished_preference: undefined,
+      min_budget: undefined as unknown as number,
+      max_budget: undefined as unknown as number,
+      min_kamers: undefined,
+      max_kamers: undefined,
+      
+      // Timing fields (moved from Step 5 to Step 4)
+      move_in_date_preferred: undefined,
+      move_in_date_earliest: undefined,
+      availability_flexible: false,
+      lease_duration_preference: undefined,
+      parking_required: false,
+      
+      // Storage preferences
+      storage_kelder: false,
+      storage_zolder: false,
+      storage_berging: false,
+      storage_garage: false,
+      storage_schuur: false,
+      
+      // Step 4: Lifestyle (moved from Step 6)
+      hasPets: false,
+      pet_details: '',
+      smokes: false,
+      smoking_details: '',
+      
+      // Step 5: Guarantor
+      borgsteller_beschikbaar: false,
+      borgsteller_naam: '',
+      borgsteller_relatie: '',
+      borgsteller_telefoon: '',
+      borgsteller_inkomen: undefined,
+      
+      // Step 6: References & History
+      references_available: false,
+      rental_history_years: undefined,
+      reason_for_moving: '',
+      
+      // Step 7: Profile & Motivation
+      bio: '',
+      motivation: '',
+    };
+
+    // Merge with initial data if provided
+    const mergedData = initialData ? { ...defaults, ...initialData } : defaults;
+    
+    // Ensure required fields have proper values
+    if (!mergedData.first_name) mergedData.first_name = '';
+    if (!mergedData.last_name) mergedData.last_name = '';
+    if (!mergedData.date_of_birth) mergedData.date_of_birth = '';
+    if (!mergedData.phone) mergedData.phone = '';
+    if (!mergedData.sex) mergedData.sex = 'zeg_ik_liever_niet';
+    if (!mergedData.nationality) mergedData.nationality = 'Nederlandse';
+    if (!mergedData.marital_status) mergedData.marital_status = 'single';
+    if (!mergedData.profession) mergedData.profession = '';
+    if (!mergedData.employment_status) mergedData.employment_status = 'full-time';
+    if (mergedData.monthly_income === undefined || mergedData.monthly_income === null) mergedData.monthly_income = 0;
+    if (!mergedData.preferred_property_type) mergedData.preferred_property_type = 'appartement';
+
+    return mergedData;
+  };
+
+
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema) as Resolver<ProfileFormData, any>,
     defaultValues: getDefaultProfileValues(initialData),
@@ -73,10 +175,28 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   const onSubmit = async (data: ProfileFormData) => {
     console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Form data:', data);
     
+    // Ensure required fields are explicitly provided before submission
+    if (
+      !data.bio ||
+      !data.motivation ||
+      !data.preferred_city?.length ||
+      data.min_budget === undefined ||
+      data.max_budget === undefined
+    ) {
+      toast({
+        title: 'Validatie Fout',
+        description:
+          'Vul je bio, motivatie, budget en gewenste stad in voordat je doorgaat.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validate entire form before submission
     try {
       const parsedData = profileSchema.parse(data);
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
+      data = parsedData;
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const fieldErrors = validationError.flatten().fieldErrors as Record<string, string[]>;
@@ -92,7 +212,6 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         return; // Stop submission
       }
     }
-
 
     try {
       setIsSubmittingForm(true);
@@ -158,6 +277,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
               isSubmitting={methods.formState.isSubmitting}
+              onSaveClick={methods.handleSubmit(onSubmit)}
             />
 
           </form>
