@@ -75,16 +75,13 @@ export const CoverPhoto: React.FC<CoverPhotoProps> = ({
 
           {/* Upload Button Overlay */}
           {!isUploading && (
-            <div {...getRootProps()} className="absolute bottom-4 right-4 transition-opacity duration-200">
+            <label
+              {...getRootProps()}
+              className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white group-hover:scale-110"
+            >
               <input {...getInputProps()} ref={fileInputRef} id="cover-photo-input" />
-              <label
-                htmlFor="cover-photo-input"
-                className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2 border border-gray-300"
-              >
-                <Camera className="w-4 h-4" />
-                <span className="text-sm font-medium">Foto wijzigen</span>
-              </label>
-            </div>
+              <Camera className="w-5 h-5" />
+            </label>
           )}
 
           {/* Upload Progress Overlay */}

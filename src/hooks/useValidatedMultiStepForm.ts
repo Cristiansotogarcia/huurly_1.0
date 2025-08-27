@@ -55,7 +55,9 @@ export function useValidatedMultiStepForm(
 
   const validateCurrentStep = (): ValidationError[] => {
     const formData = getValues();
-    return validateStep(currentStep, formData);
+    const errors = validateStep(currentStep, formData);
+    console.log(`🔥 Validation errors for step ${currentStep}:`, errors);
+    return errors;
   };
 
   const getStepValidationErrors = (stepIndex: number): ValidationError[] => {
@@ -109,15 +111,19 @@ export function useValidatedMultiStepForm(
     }
     
     const errors = validateCurrentStep();
+    console.log(`🔥 nextStep: errors.length = ${errors.length}`);
     
     if (errors.length > 0) {
+      console.log('🔥 nextStep: Validation failed, returning false');
       return false; // Validation failed
     }
 
     setCurrentStep(i => {
       if (i >= totalSteps - 1) return i;
+      console.log(`🔥 nextStep: Moving from step ${i} to ${i + 1}`);
       return i + 1;
     });
+    console.log('🔥 nextStep: Validation passed, returning true');
     return true; // Validation passed
   };
 

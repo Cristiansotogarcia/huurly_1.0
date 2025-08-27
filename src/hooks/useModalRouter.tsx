@@ -42,13 +42,26 @@ export const useModalRouter = () => {
     const route = ModalRoutes[modalName];
     
     if (isMobile) {
-      // On mobile, navigate to dedicated page with state
+      // Filter out any non-serializable values (e.g., functions) to prevent
+      // "DataCloneError: Failed to execute 'pushState' on 'History'" when
+      // React Router performs history.pushState under the hood.
+      const sanitizeForHistory = (value: any): any => {
+        if (value === null || typeof value !== 'object') return value;
+        if (Array.isArray(value)) return value.map(sanitizeForHistory);
+        const result: Record<string, any> = {};
+        Object.entries(value).forEach(([k, v]) => {
+          if (typeof v === 'function' || typeof v === 'symbol' || typeof v === 'undefined') return;
+          result[k] = sanitizeForHistory(v);
+        });
+        return result;
+      };
+
       navigate(route.mobileRoute, {
         state: {
           returnTo: location.pathname,
-          modalData: data,
-          modalName: route.name
-        }
+          modalData: sanitizeForHistory(data),
+          modalName: route.name,
+        },
       });
       return false; // Don't show desktop modal
     } else {

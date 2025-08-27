@@ -14,7 +14,7 @@ export const useHuurder = () => {
   const { toast } = useToast();
 
   // State from useHuurderDashboard
-  const [stats, setStats] = useState<TenantDashboardData>({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+  const [stats, setStats] = useState<TenantDashboardData>({ profileViews: 0, applications: 0, acceptedApplications: 0 });
   const [userDocuments, setUserDocuments] = useState<Document[]>([]);
   const [tenantProfile, setTenantProfile] = useState<TenantProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -71,7 +71,7 @@ export const useHuurder = () => {
         }
       } else {
         // Set default values on error
-        setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+        setStats({ profileViews: 0, applications: 0, acceptedApplications: 0 });
         setUserDocuments([]);
         setTenantProfile(null);
         setSubscription(null);
@@ -93,7 +93,7 @@ export const useHuurder = () => {
       });
       
       // Set safe defaults
-      setStats({ profileViews: 0, invitations: 0, applications: 0, acceptedApplications: 0 });
+      setStats({ profileViews: 0, applications: 0, acceptedApplications: 0 });
       setUserDocuments([]);
       setTenantProfile(null);
       setSubscription(null);
@@ -180,66 +180,37 @@ export const useHuurder = () => {
       
       console.log('🔥 useHuurder.handleProfileComplete - Mapped data:', mappedData);
       
-      // Check if required fields are present in mapped data
-      const requiredFields = ['voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'];
-      const missingFields = requiredFields.filter(field => {
-        const value = mappedData[field];
-        const isMissing = value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
-        if (isMissing) {
-          console.error(`🔥 Missing required field: ${field}`, { value: mappedData[field] });
-        }
-        return isMissing;
-      });
+      // Client-side required-field gate removed; rely on zod UI validation and service-level validation.
       
-      if (missingFields.length > 0) {
-        console.error('🔥 Missing required fields in mapped data:', missingFields);
-        console.error('🔥 Available fields in mapped data:', Object.keys(mappedData));
-        const error = new Error(`Ontbrekende verplichte velden: ${missingFields.join(', ')}`);
+      const updateResponse = await userService.updateTenantProfile(mappedData);
+      if (updateResponse.success) {
+        console.log('🔥 useHuurder.handleProfileComplete - Profile updated successfully:', updateResponse);
+        toast({
+          title: 'Profiel bijgewerkt',
+          description: 'Je profiel is succesvol bijgewerkt.',
+        });
+        if (callback) callback();
+        refresh();
+      } else {
+        console.error('🔥 useHuurder.handleProfileComplete - Failed to update profile:', updateResponse);
+        const errorMessage = updateResponse.error?.message || 'Onbekende fout bij het bijwerken van het profiel.';
         toast({
           title: 'Fout',
-          description: error.message,
+          description: `Kon profiel niet bijwerken: ${errorMessage}. Probeer het opnieuw.`,
           variant: 'destructive',
-        } as any);
-        throw error;
-      }
-      
-      console.log('🔥 useHuurder.handleProfileComplete - All required fields present, calling userService.createTenantProfile');
-      const result = await userService.createTenantProfile(mappedData);
-      console.log('🔥 useHuurder.handleProfileComplete - userService.createTenantProfile result:', result);
-
-      if (result.success) {
-        toast({
-          title: 'Succes',
-          description: 'Profiel succesvol opgeslagen!',
-        } as any);
-        await refresh(); // Refresh user context to reflect profile changes
-        if (callback) callback();
-        return result;
-      } else {
-        if (result.error) {
-          toast({
-            title: 'Fout',
-            description: result.error.message || 'Onbekende fout bij opslaan profiel',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Fout',
-            description: 'Onbekende fout bij opslaan profiel',
-            variant: 'destructive',
-          });
-        }
-        throw new Error(result.error?.message || 'Onbekende fout');
+        });
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('🔥 useHuurder.handleProfileComplete - Unexpected error:', error);
-      const displayError = error instanceof Error ? error : new Error('Onbekende fout');
+      console.error('🔥 useHuurder.handleProfileComplete - Error updating profile:', error);
+      const errorMessage = error instanceof Error ? error.message : (error as any).message || 'Onbekende fout.';
+
       toast({
         title: 'Fout',
-        description: `Fout bij opslaan profiel: ${displayError.message}`,
+        description: `Kon profiel niet bijwerken: ${errorMessage}. Probeer het opnieuw.`,
         variant: 'destructive',
-      } as any);
-      throw displayError;
+      });
+      throw error;
     }
   };
 

@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Trash2,
 } from "lucide-react";
-import { BaseModal, BaseModalActions } from "./BaseModal";
+import { BaseModal } from "./BaseModal";
 
 interface DocumentUploadModalProps {
   open: boolean;
@@ -318,13 +318,8 @@ const DocumentUploadModal = ({
 
 
 
-  const requiredDocuments = documentTypes.filter((type) => type.required);
-  const uploadedRequiredTypes = documents
-    .filter((doc) => doc.status !== "error")
-    .map((doc) => doc.type);
-  const hasAllRequired = requiredDocuments.every((type) =>
-    uploadedRequiredTypes.includes(type.type),
-  );
+
+
 
 
 
@@ -336,6 +331,7 @@ const DocumentUploadModal = ({
       icon={Upload}
       size="4xl"
       maxHeight="max-h-screen"
+      showCloseButton={false}
     >
       <div className="space-y-6">
         {/* Document Types with Individual Upload */}
@@ -542,55 +538,9 @@ const DocumentUploadModal = ({
         )}
 
         {/* Requirements Check */}
-        {documents.length > 0 && (
-          <Card
-            className={
-              hasAllRequired
-                ? "border-green-200 bg-green-50"
-                : "border-orange-200 bg-orange-50"
-            }
-          >
-            <CardContent className="pt-4">
-              <div className="flex items-center space-x-2">
-                {hasAllRequired ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-orange-600" />
-                )}
-                <h4 className="font-semibold">
-                  {hasAllRequired
-                    ? "Alle verplichte documenten geselecteerd"
-                    : "Verplichte documenten ontbreken"}
-                </h4>
-              </div>
-              {!hasAllRequired && (
-                <p className="text-sm text-orange-700 mt-1">
-                  Selecteer nog:{" "}
-                  {requiredDocuments
-                    .filter(
-                      (type) => !uploadedRequiredTypes.includes(type.type),
-                    )
-                    .map((type) => type.label)
-                    .join(", ")}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
-        <BaseModalActions
-          cancelAction={{
-            label: "Annuleren",
-            onClick: () => onOpenChange(false),
-          }}
-          primaryAction={{
-            label: "Sluiten",
-            onClick: () => onOpenChange(false),
-            disabled:
-              documents.filter((doc) => doc.status === "success").length === 0,
-            className: "bg-green-600 hover:bg-green-700",
-          }}
-        />
+
+
       </div>
     </BaseModal>
   );

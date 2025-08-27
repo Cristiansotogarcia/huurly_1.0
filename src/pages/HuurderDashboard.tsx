@@ -1,22 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { useHuurder } from "@/hooks/useHuurder";
 import { useHuurderActions } from "@/hooks/useHuurderActions";
 import { useAuthStore } from "@/store/authStore";
-import { useMatching } from "@/hooks/useMatching";
-import { useMessaging } from "@/hooks/useMessaging";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import { optimizedSubscriptionService } from "@/services/OptimizedSubscriptionService";
 import { DashboardHeader } from "@/components/dashboard";
-import { DocumentsSection } from "@/components/standard/DocumentsSection";
+import { PhotoSection } from "@/components/PhotoSection";
 import ProfileOverview, {
   ProfileSection,
 } from "@/components/standard/ProfileOverview";
-import MatchRecommendations from "@/components/HuurderDashboard/MatchRecommendations";
-import MessageInbox from "@/components/HuurderDashboard/MessageInbox";
-import NotificationPanel from "@/components/HuurderDashboard/NotificationPanel";
-import DashboardOverview from "@/components/HuurderDashboard/DashboardOverview";
 import {
   User as UserIcon,
   Briefcase,
@@ -38,6 +29,10 @@ import {
   mapSexLabel,
   mapMaritalStatusLabel,
 } from "@/utils/labelMappers";
+
+import { Button } from "@/components/ui/button";
+import { FileText, Key } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HuurderDashboardProps {
   user: User;
@@ -321,14 +316,10 @@ const buildProfileSections = (
 
   const HuurderDashboard: React.FC<HuurderDashboardProps> = () => {
   const huurderHook = useHuurder();
-  const matchingHook = useMatching();
-  
   const {
     user,
-    userDocuments,
     isLoading: isHuurderLoading,
-      stats,
-      profilePictureUrl,
+        profilePictureUrl,
     tenantProfile,
     subscription,
     refresh,
@@ -336,28 +327,7 @@ const buildProfileSections = (
     handleProfileComplete,
     handleDocumentUploadComplete,
   } = huurderHook;
-  
-  const {
-    recommendations,
-    isLoading: isMatchingLoading,
-    refreshRecommendations,
-  } = matchingHook;
-  
-  const messagingHook = useMessaging();
-  const notificationsHook = useNotifications();
-  
-  const {
-    threads: messageThreads,
-    loading: isMessagingLoading,
-  } = messagingHook;
-  
-  const {
-    notifications: userNotifications,
-    loading: isNotificationsLoading,
-  } = notificationsHook;
-  
-  const navigate = useNavigate();
-
+  // Verwijderde matching, messaging, notifications en navigate hooks
   const {
     handleSettings,
     handleLogout,
@@ -368,18 +338,18 @@ const buildProfileSections = (
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Calculate profile completeness
-  const profileCompleteness = useProfileCompleteness(tenantProfile, userDocuments);
-
+  
   const profileSections = useMemo(
     () => buildProfileSections(tenantProfile, user),
     [tenantProfile, user],
   );
 
   const isSubscribed = subscription && subscription.status === "active";
-  const isLoading = isHuurderLoading || isMatchingLoading || isMessagingLoading || isNotificationsLoading;
+  const isLoading = isHuurderLoading;
 
   // Track when initial data has been loaded to prevent modal flash
   useEffect(() => {
@@ -505,57 +475,37 @@ const buildProfileSections = (
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Content Sections - Proper Order */}
           <div className="max-w-6xl mx-auto space-y-6">
-            {/* Dashboard Overview - Main Dashboard View */}
-            <DashboardOverview
-              stats={stats}
-              subscription={subscription}
-              unreadMessages={messageThreads.filter(t => t.unread_count > 0).length}
-              unreadNotifications={userNotifications.filter(n => !n.gelezen).length}
-              profileCompleteness={profileCompleteness}
-              onShowProfileModal={() => setShowProfileModal(true)}
-              onShowDocumentModal={() => setShowDocumentModal(true)}
-              onNavigateSearch={() => navigate("/property-search")}
-              onNavigateMessages={() => navigate("/dashboard/messages")}
-              onNavigateNotifications={() => navigate("/dashboard/notifications")}
-              onNavigateMatches={() => navigate("/dashboard/matches")}
+            {/* Foto Sectie */}
+            <PhotoSection>
+            {/* Quick access buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
+            <Button
+            className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
+            onClick={() => navigate("/documenten")}
+            >
+            <FileText className="h-8 w-8 mb-3" />
+            <span className="text-center">Mijn Documenten</span>
+            </Button>
+            <Button
+            className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
+            onClick={() => navigate("/reset-password")}
+            >
+            <Key className="h-8 w-8 mb-3" />
+            <span className="text-center">Mijn gebruikersnaam en wachtwoord</span>
+            </Button>
+            </div>
+            </PhotoSection>
+
+
+            {/* Profiel Overzicht */}
+            <ProfileOverview
+            sections={profileSections}
+            title="Profiel Overzicht"
+            onEdit={() => setShowProfileModal(true)}
+            isCreating={!tenantProfile}
             />
-
-            {/* Detailed Sections for Comprehensive View */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Match Recommendations */}
-              <MatchRecommendations
-                recommendations={recommendations}
-                isLoading={isMatchingLoading}
-                onRefresh={refreshRecommendations}
-                onViewProperty={(propertyId) => navigate(`/property/${propertyId}`)}
-              />
-              
-              {/* Messaging and Notifications Side by Side */}
-              <div className="space-y-6">
-                <MessageInbox />
-                <NotificationPanel userId={user?.id || ''} />
-              </div>
-            </div>
-
-            {/* Profile and Documents Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profile Overview */}
-              <ProfileOverview
-                sections={profileSections}
-                title="Profiel Overzicht"
-                onEdit={() => setShowProfileModal(true)}
-                isCreating={!tenantProfile}
-              />
-              
-              {/* Documents Section */}
-              <DocumentsSection
-                userDocuments={userDocuments}
-                onShowDocumentModal={() => setShowDocumentModal(true)}
-                title="Mijn Documenten"
-                emptyStateTitle="Nog geen documenten geüpload."
-                emptyStateDescription="Klik op 'Document Uploaden' om te beginnen."
-              />
-            </div>
+            {/* Quick access cards */}
+            {/* Duplicate quick access cards removed */}
           </div>
         </div>
       </div>

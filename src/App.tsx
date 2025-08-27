@@ -36,6 +36,7 @@ const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 
 // Mobile modal pages
 const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
+const DocumentenPage = lazy(() => import('./pages/DocumentenPage'));
 const DocumentUploadPage = lazy(() => import('./pages/mobile/DocumentUploadPage'));
 
 const PaymentPage = lazy(() => import('./pages/mobile/PaymentPage'));
@@ -76,6 +77,14 @@ const App = () => (
                   <HuurderDashboard />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/documenten"
+              element={
+                <ProtectedRoute roles={['huurder']}>
+                  <DocumentenPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/verhuurder-dashboard"

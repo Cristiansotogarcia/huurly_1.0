@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm, FormProvider, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import ProfileFormStepper from './ProfileFormStepper';
 import ProfileFormNavigation from './ProfileFormNavigation';
 import BaseModal from './BaseModal';
 import { useToast } from '@/hooks/use-toast';
+import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
 
 interface EnhancedProfileUpdateModalProps {
   isOpen: boolean;
@@ -35,7 +36,6 @@ const steps = [
 
 const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
-  const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
       // Step 1: Personal Info
@@ -196,10 +196,9 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       }
     }
 
-    // Set manual loading state for async operation
-    setIsManuallySubmitting(true);
 
     try {
+      setIsSubmittingForm(true);
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Calling onProfileComplete');
       
       // Add timeout to prevent hanging
@@ -218,14 +217,13 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);
       toast({
         title: 'Fout',
-        description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
+        description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'} `,
         variant: 'destructive',
       });
       // Don't close the modal on error - let user fix the issue
       // Don't re-throw the error as it's already handled
     } finally {
-      // Always reset manual loading state
-      setIsManuallySubmitting(false);
+      setIsSubmittingForm(false);
     }
   };
 
@@ -262,7 +260,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
               onBack={prevStep}
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
-              isSubmitting={methods.formState.isSubmitting || isManuallySubmitting}
+              isSubmitting={methods.formState.isSubmitting}
             />
 
           </form>

@@ -110,7 +110,8 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
         beroep: data.profession,
         inkomen: data.monthly_income,
         leeftijd: data.leeftijd,
-        kinderen: data.kinderen || 0,
+        aantal_kinderen: data.kinderen || 0,
+        geboortedatum: convertDateFormat(data.date_of_birth),
         partner: data.partner,
         huisdieren: data.huisdieren,
         roken: data.roken,
@@ -128,7 +129,7 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
         
         // Profile
         beschrijving: data.beschrijving,
-        profielfoto_url: data.profielfoto_url,
+        profiel_foto: data.profielfoto_url,
         
         // Guarantor
         borgsteller_beschikbaar: data.borgsteller_beschikbaar,

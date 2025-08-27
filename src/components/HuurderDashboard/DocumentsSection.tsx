@@ -1,12 +1,13 @@
-import { FileText, Upload, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { FileText, Upload, CheckCircle, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DocumentsSectionProps {
   userDocuments: any[];
   onShowDocumentModal: () => void;
+  onDeleteDocument: (documentId: string) => void;
 }
 
-export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: DocumentsSectionProps) => {
+export const DocumentsSection = ({ userDocuments, onShowDocumentModal, onDeleteDocument }: DocumentsSectionProps) => {
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
       case 'identiteit':
@@ -38,19 +39,6 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'goedgekeurd':
-        return 'Goedgekeurd';
-      case 'wachtend':
-      case 'in_behandeling':
-        return 'In behandeling';
-      case 'afgewezen':
-        return 'Afgewezen';
-      default:
-        return 'Onbekend';
-    }
-  };
 
   return (
     <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
@@ -88,14 +76,9 @@ export const DocumentsSection = ({ userDocuments, onShowDocumentModal }: Documen
                   <p className="text-xs sm:text-sm text-gray-600 truncate">{document.bestandsnaam}</p>
                 </div>
               </div>
-              <span className={`px-2 py-1 text-xs rounded-full self-start sm:self-auto ${
-                document.status === 'goedgekeurd' ? 'bg-green-100 text-green-800' :
-                document.status === 'wachtend' || document.status === 'in_behandeling' ? 'bg-yellow-100 text-yellow-800' :
-                document.status === 'afgewezen' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {getStatusLabel(document.status)}
-              </span>
+              <Button variant="ghost" size="icon" onClick={() => onDeleteDocument(document.id)}>
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </Button>
             </div>
           ))}
         </div>

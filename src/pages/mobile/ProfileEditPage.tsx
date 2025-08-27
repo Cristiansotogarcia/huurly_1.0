@@ -18,6 +18,7 @@ import MobileModalPage from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { useHuurder } from '@/hooks/useHuurder';
+import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
 
 const steps = [
   { id: 'step1', name: 'Persoonlijke Info' },
@@ -33,7 +34,6 @@ const ProfileEditPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isManuallySubmitting, setIsManuallySubmitting] = React.useState(false);
   const huurderHook = useHuurder();
   const { handleProfileComplete: defaultHandleProfileComplete } = huurderHook;
   
@@ -83,7 +83,7 @@ const ProfileEditPage: React.FC = () => {
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
       furnished_preference: undefined,
-        min_budget: 0,
+        min_budget: 1,
       max_budget: 1000,
       min_kamers: undefined,
       max_kamers: undefined,
@@ -197,7 +197,7 @@ const ProfileEditPage: React.FC = () => {
       }
     }
 
-    setIsManuallySubmitting(true);
+    setIsSubmittingForm(true);
 
     try {
       const timeoutPromise = new Promise((_, reject) => 
@@ -225,7 +225,7 @@ const ProfileEditPage: React.FC = () => {
       // Don't navigate away on error - let user fix the issue
       // Don't re-throw the error as it's already handled
     } finally {
-      setIsManuallySubmitting(false);
+      setIsSubmittingForm(false);
     }
   };
 
@@ -286,7 +286,7 @@ const ProfileEditPage: React.FC = () => {
                 onBack={prevStep}
                 onNext={nextStep}
                 validateCurrentStep={validateCurrentStep}
-                isSubmitting={methods.formState.isSubmitting || isManuallySubmitting}
+                isSubmitting={methods.formState.isSubmitting}
               />
             </div>
           </form>

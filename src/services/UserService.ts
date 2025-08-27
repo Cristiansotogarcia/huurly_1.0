@@ -450,13 +450,9 @@ export class UserService extends DatabaseService {
           thuiswerken: sanitizedData.thuiswerken || false,
           extra_inkomen: sanitizedData.extra_inkomen,
           extra_inkomen_beschrijving: sanitizedData.extra_inkomen_beschrijving,
-          contract_type: sanitizedData.contract_type,
           
           // Partner information
-          partner_naam: sanitizedData.partner_naam,
-          partner_beroep: sanitizedData.partner_beroep,
-          partner_dienstverband: sanitizedData.partner_dienstverband,
-          partner_inkomen: sanitizedData.partner_maandinkomen,
+          partner_inkomen: sanitizedData.partner_inkomen || sanitizedData.partner_monthly_income || null,
           
           // Lifestyle details
           huisdier_details: sanitizedData.huisdier_details,
@@ -467,7 +463,7 @@ export class UserService extends DatabaseService {
           referenties_beschikbaar: sanitizedData.referenties_beschikbaar || false,
           
           // Budget preferences
-          min_budget: sanitizedData.min_budget,
+          min_budget: sanitizedData.min_budget ?? sanitizedData.min_huur,
           
           // Profile media
           profiel_foto: sanitizedData.profielfotoUrl || sanitizedData.profiel_foto || null,

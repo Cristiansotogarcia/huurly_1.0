@@ -361,7 +361,7 @@ export interface EnhancedMatch {
 
 export interface TenantDashboardData {
   profileViews: number;
-  invitations: number;
+
   applications: number;
   acceptedApplications: number;
 }

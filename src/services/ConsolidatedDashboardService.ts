@@ -180,9 +180,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
           subscriptionResult,
           profilePictureResult,
           profileViewsResult,
-          invitationsResult,
-          applicationsResult,
-          acceptedApplicationsResult
+
         ] = await Promise.allSettled([
           // Get user documents
           supabase
@@ -218,23 +216,23 @@ export class ConsolidatedDashboardService extends DatabaseService {
             .eq('huurder_id', userId),
 
           // Count viewing invitations
-          supabase
-            .from('bezichtiging_verzoeken')
-            .select('id', { count: 'exact', head: true })
-            .eq('huurder_id', userId),
+          // supabase
+          //   .from('bezichtiging_verzoeken')
+          //   .select('id', { count: 'exact', head: true })
+          //   .eq('huurder_id', userId),
 
           // Count property applications
-          supabase
-            .from('aanvragen')
-            .select('id', { count: 'exact', head: true })
-            .eq('huurder_id', userId),
+          // supabase
+          //   .from('aanvragen')
+          //   .select('id', { count: 'exact', head: true })
+          //   .eq('huurder_id', userId),
 
           // Count accepted applications
-          supabase
-            .from('aanvragen')
-            .select('id', { count: 'exact', head: true })
-            .eq('huurder_id', userId)
-            .eq('status', 'geaccepteerd')
+          // supabase
+          //   .from('aanvragen')
+          //   .select('id', { count: 'exact', head: true })
+          //   .eq('huurder_id', userId)
+          //   .eq('status', 'geaccepteerd')
         ]);
 
         // Process results
@@ -243,18 +241,11 @@ export class ConsolidatedDashboardService extends DatabaseService {
             profileViewsResult.status === 'fulfilled'
               ? profileViewsResult.value.count ?? 0
               : 0,
-          invitations:
-            invitationsResult.status === 'fulfilled'
-              ? invitationsResult.value.count ?? 0
-              : 0,
+
           applications:
-            applicationsResult.status === 'fulfilled'
-              ? applicationsResult.value.count ?? 0
-              : 0,
-          acceptedApplications:
-            acceptedApplicationsResult.status === 'fulfilled'
-              ? acceptedApplicationsResult.value.count ?? 0
-              : 0
+            0,
+
+          acceptedApplications: 0
         };
 
         const rawDocuments = documentsResult.status === 'fulfilled' && documentsResult.value.data
