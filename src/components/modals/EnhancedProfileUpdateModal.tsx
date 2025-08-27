@@ -16,6 +16,7 @@ import ProfileFormNavigation from './ProfileFormNavigation';
 import BaseModal from './BaseModal';
 import { useToast } from '@/hooks/use-toast';
 import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
+import { getDefaultProfileValues } from '@/utils/profileDefaults';
 
 interface EnhancedProfileUpdateModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const steps = [
 
 const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
+
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
       // Step 1: Personal Info
@@ -137,9 +139,10 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     return mergedData;
   };
 
+
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema) as Resolver<ProfileFormData, any>,
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultProfileValues(initialData),
   });
 
   const { 
@@ -165,7 +168,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
 
   // Reset form when initialData changes (e.g., switching between create/edit modes)
   useEffect(() => {
-    const newValues = getDefaultValues();
+    const newValues = getDefaultProfileValues(initialData);
     methods.reset(newValues);
   }, [initialData]);
 

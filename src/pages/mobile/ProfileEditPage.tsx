@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { useHuurder } from '@/hooks/useHuurder';
 import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
+import { getDefaultProfileValues } from '@/utils/profileDefaults';
 
 const steps = [
   { id: 'step1', name: 'Persoonlijke Info' },
@@ -143,6 +144,7 @@ const ProfileEditPage: React.FC = () => {
 
     return mergedData;
   };
+
 
   const methods = useForm<ProfileFormData>({
       resolver: zodResolver(profileSchema) as any,
