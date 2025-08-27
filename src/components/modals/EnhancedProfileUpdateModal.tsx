@@ -274,6 +274,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
               isSubmitting={methods.formState.isSubmitting}
+              onSaveClick={methods.handleSubmit(onSubmit)}
             />
 
           </form>
