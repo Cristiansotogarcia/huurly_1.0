@@ -28,6 +28,8 @@ import {
   mapLeaseDurationPreferenceLabel,
   mapSexLabel,
   mapMaritalStatusLabel,
+  mapCurrentLivingSituationLabel,
+  mapReasonForMovingLabel,
 } from "@/utils/labelMappers";
 
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,13 @@ const buildProfileSections = (
   user?: User | null,
 ): ProfileSection[] => {
   if (!tenantProfile) return [];
+
+  // Calculate household size: tenant (1) + partner (optioneel 1) + kinderen + extra huisgenoten
+  const householdSize =
+    1 +
+    (tenantProfile.hasPartner ? 1 : 0) +
+    (tenantProfile.numberOfChildren || 0) +
+    (tenantProfile.numberOfHousemates || 0);
 
   return [
     {
@@ -72,16 +81,16 @@ const buildProfileSections = (
         { label: "Partner beroep", value: tenantProfile.partnerProfession },
         {
           label: "Partner dienstverband",
-          value: tenantProfile.partnerEmploymentStatus,
+          value: mapEmploymentStatusLabel(tenantProfile.partnerEmploymentStatus),
         },
         { label: "Partner inkomen", value: tenantProfile.partnerMonthlyIncome },
         {
-          label: "Aantal huisgenoten",
-          value: tenantProfile.numberOfHousemates,
+          label: "Huishoudgrootte",
+          value: householdSize,
         },
         {
           label: "Huidige woonsituatie",
-          value: tenantProfile.currentLivingSituation,
+          value: mapCurrentLivingSituationLabel(tenantProfile.currentLivingSituation),
         },
         { label: "Kinderen", value: tenantProfile.numberOfChildren },
         {
@@ -122,41 +131,6 @@ const buildProfileSections = (
         {
           label: "Inkomensbewijs beschikbaar",
           value: tenantProfile.incomeProofAvailable ? "Ja" : "Nee",
-        },
-        {
-          label: "Borgsteller beschikbaar",
-          value: tenantProfile.guarantorAvailable ? "Ja" : "Nee",
-        },
-        {
-          label: "Borgsteller Naam",
-          value:
-            tenantProfile.guarantorDetails?.name || tenantProfile.guarantorName,
-        },
-        {
-          label: "Borgsteller Relatie",
-          value:
-            tenantProfile.guarantorDetails?.relationship ||
-            tenantProfile.guarantorRelationship,
-        },
-        {
-          label: "Borgsteller Telefoon",
-          value:
-            tenantProfile.guarantorDetails?.phone ||
-            tenantProfile.guarantorPhone,
-        },
-        {
-          label: "Borgsteller E-mail",
-          value: tenantProfile.guarantorDetails?.email,
-        },
-        {
-          label: "Borgsteller Adres",
-          value: tenantProfile.guarantorDetails?.address,
-        },
-        {
-          label: "Borgsteller Inkomen",
-          value:
-            tenantProfile.guarantorDetails?.income ||
-            tenantProfile.guarantorIncome,
         },
       ],
     },
@@ -217,8 +191,8 @@ const buildProfileSections = (
           value: mapLeaseDurationPreferenceLabel(tenantProfile.housingPreferences?.leaseDurationPreference),
         },
         {
-          label: "Reden verhuizing",
-          value: tenantProfile.housingPreferences?.reasonForMoving,
+          label: "Reden voor verhuizing",
+          value: mapReasonForMovingLabel(tenantProfile.housingPreferences?.reasonForMoving),
         },
         {
           label: "Opslag kelder",
@@ -270,11 +244,8 @@ const buildProfileSections = (
         },
         {
           label: "Borgsteller E-mail",
-          value: tenantProfile.guarantorDetails?.email,
-        },
-        {
-          label: "Borgsteller Adres",
-          value: tenantProfile.guarantorDetails?.address,
+          value:
+            tenantProfile.guarantorEmail || tenantProfile.guarantorDetails?.email,
         },
         {
           label: "Borgsteller Inkomen",
@@ -294,7 +265,7 @@ const buildProfileSections = (
           value: tenantProfile.referencesAvailable ? "Ja" : "Nee",
         },
         {
-          label: "Huurverleden (jaren)",
+          label: "Huurgeschiedenis (jaren)",
           value: tenantProfile.rentalHistoryYears,
         },
       ],
@@ -520,6 +491,7 @@ const buildProfileSections = (
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
         tenantProfile={tenantProfile}
+        profilePictureUrl={profilePictureUrl}
       />
     </>
   );

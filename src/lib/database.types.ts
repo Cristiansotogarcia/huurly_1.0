@@ -7,47 +7,117 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
-      abonnementen: {
+      aanvragen: {
         Row: {
-          id: string
+          aangemaakt_op: string | null
+          bericht: string | null
+          bijgewerkt_op: string | null
           huurder_id: string
-          stripe_subscription_id: string | null
-          stripe_customer_id: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
-          start_datum: string
-          eind_datum: string | null
-          bedrag: number
-          currency: string | null
-          aangemaakt_op: string
-          bijgewerkt_op: string
+          id: string
+          status: string | null
+          verhuurder_id: string
+          woning_id: string
         }
         Insert: {
-          id?: string
+          aangemaakt_op?: string | null
+          bericht?: string | null
+          bijgewerkt_op?: string | null
           huurder_id: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
-          start_datum: string
-          eind_datum?: string | null
-          bedrag: number
-          currency?: string | null
-          aangemaakt_op?: string
-          bijgewerkt_op?: string
+          id?: string
+          status?: string | null
+          verhuurder_id: string
+          woning_id: string
         }
         Update: {
-          id?: string
+          aangemaakt_op?: string | null
+          bericht?: string | null
+          bijgewerkt_op?: string | null
           huurder_id?: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          status?: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
-          start_datum?: string
-          eind_datum?: string | null
-          bedrag?: number
-          currency?: string | null
+          id?: string
+          status?: string | null
+          verhuurder_id?: string
+          woning_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aanvragen_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "actieve_huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
+            isOneToOne: false
+            referencedRelation: "verhuurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aanvragen_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      abonnementen: {
+        Row: {
+          aangemaakt_op: string
+          bedrag: number
+          bijgewerkt_op: string
+          currency: string | null
+          eind_datum: string | null
+          huurder_id: string | null
+          id: string
+          start_datum: string
+          status: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id: string | null
+          stripe_sessie_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
           aangemaakt_op?: string
+          bedrag: number
           bijgewerkt_op?: string
+          currency?: string | null
+          eind_datum?: string | null
+          huurder_id?: string | null
+          id?: string
+          start_datum: string
+          status: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id?: string | null
+          stripe_sessie_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          aangemaakt_op?: string
+          bedrag?: number
+          bijgewerkt_op?: string
+          currency?: string | null
+          eind_datum?: string | null
+          huurder_id?: string | null
+          id?: string
+          start_datum?: string
+          status?: Database["public"]["Enums"]["abonnement_status"]
+          stripe_customer_id?: string | null
+          stripe_sessie_id?: string | null
+          stripe_subscription_id?: string | null
         }
         Relationships: [
           {
@@ -65,6 +135,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_logs: {
+        Row: {
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       beoordelaars: {
         Row: {
@@ -94,6 +197,132 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "gebruikers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      berichten: {
+        Row: {
+          aangemaakt_op: string | null
+          gelezen: boolean | null
+          id: string
+          inhoud: string
+          onderwerp: string | null
+          ontvanger_id: string
+          verzender_id: string
+          woning_id: string | null
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          gelezen?: boolean | null
+          id?: string
+          inhoud: string
+          onderwerp?: string | null
+          ontvanger_id: string
+          verzender_id: string
+          woning_id?: string | null
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          gelezen?: boolean | null
+          id?: string
+          inhoud?: string
+          onderwerp?: string | null
+          ontvanger_id?: string
+          verzender_id?: string
+          woning_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "berichten_ontvanger_id_fkey"
+            columns: ["ontvanger_id"]
+            isOneToOne: false
+            referencedRelation: "gebruikers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "berichten_verzender_id_fkey"
+            columns: ["verzender_id"]
+            isOneToOne: false
+            referencedRelation: "gebruikers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "berichten_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bezichtiging_verzoeken: {
+        Row: {
+          aangemaakt_op: string | null
+          alternatieve_datum: string | null
+          bevestigde_datum: string | null
+          bijgewerkt_op: string | null
+          gewenste_datum: string
+          huurder_id: string
+          id: string
+          notities: string | null
+          status: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Insert: {
+          aangemaakt_op?: string | null
+          alternatieve_datum?: string | null
+          bevestigde_datum?: string | null
+          bijgewerkt_op?: string | null
+          gewenste_datum: string
+          huurder_id: string
+          id?: string
+          notities?: string | null
+          status?: string | null
+          verhuurder_id: string
+          woning_id: string
+        }
+        Update: {
+          aangemaakt_op?: string | null
+          alternatieve_datum?: string | null
+          bevestigde_datum?: string | null
+          bijgewerkt_op?: string | null
+          gewenste_datum?: string
+          huurder_id?: string
+          id?: string
+          notities?: string | null
+          status?: string | null
+          verhuurder_id?: string
+          woning_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bezichtiging_verzoeken_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "actieve_huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_huurder_id_fkey"
+            columns: ["huurder_id"]
+            isOneToOne: false
+            referencedRelation: "huurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
+            isOneToOne: false
+            referencedRelation: "verhuurders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bezichtiging_verzoeken_woning_id_fkey"
+            columns: ["woning_id"]
+            isOneToOne: false
+            referencedRelation: "woningen"
             referencedColumns: ["id"]
           },
         ]
@@ -159,49 +388,6 @@ export type Database = {
           },
         ]
       }
-      favoriete_profielen: {
-        Row: {
-          aangemaakt_op: string
-          huurder_id: string | null
-          id: string
-          verhuurder_id: string | null
-        }
-        Insert: {
-          aangemaakt_op?: string
-          huurder_id?: string | null
-          id?: string
-          verhuurder_id?: string | null
-        }
-        Update: {
-          aangemaakt_op?: string
-          huurder_id?: string | null
-          id?: string
-          verhuurder_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "favoriete_profielen_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "actieve_huurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "favoriete_profielen_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "huurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "favoriete_profielen_verhuurder_id_fkey"
-            columns: ["verhuurder_id"]
-            isOneToOne: false
-            referencedRelation: "verhuurders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       gebruiker_rollen: {
         Row: {
           role: string
@@ -256,15 +442,15 @@ export type Database = {
       huurders: {
         Row: {
           aangemaakt_op: string
+          aantal_huisgenoten: number | null
           aantal_kinderen: number | null
-          abonnement_start: string | null
-          abonnement_verloopt: string | null
           achternaam: string | null
           beroep: string | null
           beschikbaarheid_flexibel: boolean | null
           beschrijving: string | null
           bijgewerkt_op: string
           borgsteller_beschikbaar: boolean | null
+          borgsteller_details: Json | null
           borgsteller_inkomen: number | null
           borgsteller_naam: string | null
           borgsteller_relatie: string | null
@@ -277,6 +463,7 @@ export type Database = {
           geboortedatum: string | null
           geslacht: string | null
           heeft_kinderen: boolean | null
+          huidige_woonsituatie: string | null
           huisdier_details: string | null
           huisdieren: boolean | null
           huurcontract_voorkeur: string | null
@@ -303,15 +490,14 @@ export type Database = {
           partner_inkomen: number | null
           partner_naam: string | null
           profiel_foto: string | null
+          reden_verhuizing: string | null
           referenties_beschikbaar: boolean | null
           roken: boolean | null
           rook_details: string | null
           telefoon: string | null
+          thuiswerken: boolean | null
           verhuurgeschiedenis_jaren: number | null
-          voorkeur_meubilering: string | null
-          voorkeur_slaapkamers: number | null
           voorkeur_verhuisdatum: string | null
-          voorkeur_woningtype: string | null
           voornaam: string | null
           vroegste_verhuisdatum: string | null
           werkgever: string | null
@@ -319,15 +505,15 @@ export type Database = {
         }
         Insert: {
           aangemaakt_op?: string
+          aantal_huisgenoten?: number | null
           aantal_kinderen?: number | null
-          abonnement_start?: string | null
-          abonnement_verloopt?: string | null
           achternaam?: string | null
           beroep?: string | null
           beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
           bijgewerkt_op?: string
           borgsteller_beschikbaar?: boolean | null
+          borgsteller_details?: Json | null
           borgsteller_inkomen?: number | null
           borgsteller_naam?: string | null
           borgsteller_relatie?: string | null
@@ -340,6 +526,7 @@ export type Database = {
           geboortedatum?: string | null
           geslacht?: string | null
           heeft_kinderen?: boolean | null
+          huidige_woonsituatie?: string | null
           huisdier_details?: string | null
           huisdieren?: boolean | null
           huurcontract_voorkeur?: string | null
@@ -366,15 +553,14 @@ export type Database = {
           partner_inkomen?: number | null
           partner_naam?: string | null
           profiel_foto?: string | null
+          reden_verhuizing?: string | null
           referenties_beschikbaar?: boolean | null
           roken?: boolean | null
           rook_details?: string | null
           telefoon?: string | null
+          thuiswerken?: boolean | null
           verhuurgeschiedenis_jaren?: number | null
-          voorkeur_meubilering?: string | null
-          voorkeur_slaapkamers?: number | null
           voorkeur_verhuisdatum?: string | null
-          voorkeur_woningtype?: string | null
           voornaam?: string | null
           vroegste_verhuisdatum?: string | null
           werkgever?: string | null
@@ -382,15 +568,15 @@ export type Database = {
         }
         Update: {
           aangemaakt_op?: string
+          aantal_huisgenoten?: number | null
           aantal_kinderen?: number | null
-          abonnement_start?: string | null
-          abonnement_verloopt?: string | null
           achternaam?: string | null
           beroep?: string | null
           beschikbaarheid_flexibel?: boolean | null
           beschrijving?: string | null
           bijgewerkt_op?: string
           borgsteller_beschikbaar?: boolean | null
+          borgsteller_details?: Json | null
           borgsteller_inkomen?: number | null
           borgsteller_naam?: string | null
           borgsteller_relatie?: string | null
@@ -403,6 +589,7 @@ export type Database = {
           geboortedatum?: string | null
           geslacht?: string | null
           heeft_kinderen?: boolean | null
+          huidige_woonsituatie?: string | null
           huisdier_details?: string | null
           huisdieren?: boolean | null
           huurcontract_voorkeur?: string | null
@@ -429,15 +616,14 @@ export type Database = {
           partner_inkomen?: number | null
           partner_naam?: string | null
           profiel_foto?: string | null
+          reden_verhuizing?: string | null
           referenties_beschikbaar?: boolean | null
           roken?: boolean | null
           rook_details?: string | null
           telefoon?: string | null
+          thuiswerken?: boolean | null
           verhuurgeschiedenis_jaren?: number | null
-          voorkeur_meubilering?: string | null
-          voorkeur_slaapkamers?: number | null
           voorkeur_verhuisdatum?: string | null
-          voorkeur_woningtype?: string | null
           voornaam?: string | null
           vroegste_verhuisdatum?: string | null
           werkgever?: string | null
@@ -452,6 +638,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      migration_log: {
+        Row: {
+          description: string | null
+          executed_at: string | null
+          id: number
+          migration_name: string
+        }
+        Insert: {
+          description?: string | null
+          executed_at?: string | null
+          id?: number
+          migration_name: string
+        }
+        Update: {
+          description?: string | null
+          executed_at?: string | null
+          id?: number
+          migration_name?: string
+        }
+        Relationships: []
       }
       notificaties: {
         Row: {
@@ -492,117 +699,6 @@ export type Database = {
             referencedRelation: "gebruikers"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      opgeslagen_zoekopdrachten: {
-        Row: {
-          aangemaakt_op: string
-          id: string
-          naam: string
-          verhuurder_id: string | null
-          zoekfilters: Json
-        }
-        Insert: {
-          aangemaakt_op?: string
-          id?: string
-          naam: string
-          verhuurder_id?: string | null
-          zoekfilters: Json
-        }
-        Update: {
-          aangemaakt_op?: string
-          id?: string
-          naam?: string
-          verhuurder_id?: string | null
-          zoekfilters?: Json
-        }
-        Relationships: [
-          {
-            foreignKeyName: "opgeslagen_zoekopdrachten_verhuurder_id_fkey"
-            columns: ["verhuurder_id"]
-            isOneToOne: false
-            referencedRelation: "verhuurders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiel_weergaves: {
-        Row: {
-          aangemaakt_op: string
-          huurder_id: string | null
-          id: string
-          verhuurder_id: string | null
-        }
-        Insert: {
-          aangemaakt_op?: string
-          huurder_id?: string | null
-          id?: string
-          verhuurder_id?: string | null
-        }
-        Update: {
-          aangemaakt_op?: string
-          huurder_id?: string | null
-          id?: string
-          verhuurder_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiel_weergaves_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "actieve_huurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiel_weergaves_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "huurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiel_weergaves_verhuurder_id_fkey"
-            columns: ["verhuurder_id"]
-            isOneToOne: false
-            referencedRelation: "verhuurders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      opgeslagen_profielen: {
-        Row: {
-          aangemaakt_op: string
-          id: string
-          verhuurder_id: string | null
-          huurder_id: string | null
-        }
-        Insert: {
-          aangemaakt_op?: string
-          id?: string
-          verhuurder_id?: string | null
-          huurder_id?: string | null
-        }
-        Update: {
-          aangemaakt_op?: string
-          id?: string
-          verhuurder_id?: string | null
-          huurder_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "opgeslagen_profielen_verhuurder_id_fkey"
-            columns: ["verhuurder_id"]
-            isOneToOne: false
-            referencedRelation: "verhuurders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "opgeslagen_profielen_huurder_id_fkey"
-            columns: ["huurder_id"]
-            isOneToOne: false
-            referencedRelation: "huurders"
-            referencedColumns: ["id"]
-          }
         ]
       }
       verhuurders: {
@@ -712,68 +808,98 @@ export type Database = {
           },
         ]
       }
-      audit_logs: {
+      woningen: {
         Row: {
-          id: string
-          user_id: string | null
-          action: string | null
-          table_name: string | null
-          record_id: string | null
-          old_values: Json | null
-          new_values: Json | null
           aangemaakt_op: string | null
+          aantal_kamers: number | null
+          aantal_slaapkamers: number | null
+          adres: string
+          beschikbaar_vanaf: string | null
+          beschrijving: string | null
+          bijgewerkt_op: string | null
+          foto_urls: string[] | null
+          huurprijs: number
+          id: string
+          is_actief: boolean | null
+          meubilering: string | null
+          oppervlakte: number | null
+          postcode: string | null
+          provincie: string | null
+          stad: string
+          status: string | null
+          titel: string
+          verhuurder_id: string
+          voorzieningen: string[] | null
+          woning_type: string | null
         }
         Insert: {
-          id?: string
-          user_id?: string | null
-          action?: string | null
-          table_name?: string | null
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
           aangemaakt_op?: string | null
+          aantal_kamers?: number | null
+          aantal_slaapkamers?: number | null
+          adres: string
+          beschikbaar_vanaf?: string | null
+          beschrijving?: string | null
+          bijgewerkt_op?: string | null
+          foto_urls?: string[] | null
+          huurprijs: number
+          id?: string
+          is_actief?: boolean | null
+          meubilering?: string | null
+          oppervlakte?: number | null
+          postcode?: string | null
+          provincie?: string | null
+          stad: string
+          status?: string | null
+          titel: string
+          verhuurder_id: string
+          voorzieningen?: string[] | null
+          woning_type?: string | null
         }
         Update: {
-          id?: string
-          user_id?: string | null
-          action?: string | null
-          table_name?: string | null
-          record_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
           aangemaakt_op?: string | null
+          aantal_kamers?: number | null
+          aantal_slaapkamers?: number | null
+          adres?: string
+          beschikbaar_vanaf?: string | null
+          beschrijving?: string | null
+          bijgewerkt_op?: string | null
+          foto_urls?: string[] | null
+          huurprijs?: number
+          id?: string
+          is_actief?: boolean | null
+          meubilering?: string | null
+          oppervlakte?: number | null
+          postcode?: string | null
+          provincie?: string | null
+          stad?: string
+          status?: string | null
+          titel?: string
+          verhuurder_id?: string
+          voorzieningen?: string[] | null
+          woning_type?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "audit_logs_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "woningen_verhuurder_id_fkey"
+            columns: ["verhuurder_id"]
             isOneToOne: false
-            referencedRelation: "gebruikers"
+            referencedRelation: "verhuurders"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
     Views: {
       actieve_huurders: {
         Row: {
-          abonnement_start: string | null
-          abonnement_verloopt: string | null
-          beroep: string | null
-          beschrijving: string | null
+          abonnement_status:
+            | Database["public"]["Enums"]["abonnement_status"]
+            | null
           email: string | null
           huisdieren: boolean | null
           id: string | null
-          inkomen: number | null
-          kinderen: number | null
-          leeftijd: number | null
           locatie_voorkeur: string[] | null
           max_huur: number | null
-          max_kamers: number | null
-          min_kamers: number | null
-          naam: string | null
-          partner: boolean | null
-          profielfoto_url: string | null
           roken: boolean | null
         }
         Relationships: [
@@ -789,48 +915,16 @@ export type Database = {
       documenten_wachtend: {
         Row: {
           aangemaakt_op: string | null
-          beoordelaar_id: string | null
-          beoordeling_notitie: string | null
           bestand_url: string | null
           bestandsnaam: string | null
-          bijgewerkt_op: string | null
+          huurder_email: string | null
           huurder_id: string | null
+          huurder_naam: string | null
           id: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           type: Database["public"]["Enums"]["document_type"] | null
         }
-        Insert: {
-          aangemaakt_op?: string | null
-          beoordelaar_id?: string | null
-          beoordeling_notitie?: string | null
-          bestand_url?: string | null
-          bestandsnaam?: string | null
-          bijgewerkt_op?: string | null
-          huurder_id?: string | null
-          id?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
-          type?: Database["public"]["Enums"]["document_type"] | null
-        }
-        Update: {
-          aangemaakt_op?: string | null
-          beoordelaar_id?: string | null
-          beoordeling_notitie?: string | null
-          bestand_url?: string | null
-          bestandsnaam?: string | null
-          bijgewerkt_op?: string | null
-          huurder_id?: string | null
-          id?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
-          type?: Database["public"]["Enums"]["document_type"] | null
-        }
         Relationships: [
-          {
-            foreignKeyName: "documenten_beoordelaar_id_fkey"
-            columns: ["beoordelaar_id"]
-            isOneToOne: false
-            referencedRelation: "beoordelaars"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "documenten_huurder_id_fkey"
             columns: ["huurder_id"]
@@ -849,32 +943,91 @@ export type Database = {
       }
     }
     Functions: {
-      check_profiel_volledigheid: {
-        Args: { huurder_uuid: string }
+      calculate_age: {
+        Args: { birth_date: string }
+        Returns: number
+      }
+      check_expiring_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      check_subscription_access: {
+        Args: { user_uuid: string }
+        Returns: {
+          can_access: boolean
+          current_user_id: string
+          subscription_count: number
+          target_user_id: string
+        }[]
+      }
+      custom_access_token_hook: {
+        Args: { event: Json }
+        Returns: Json
+      }
+      ensure_huurder_profile: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      expire_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      filename_prefix: {
+        Args: { name: string }
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["gebruiker_rol"]
+      }
+      is_admin: {
+        Args: { user_id: string }
         Returns: boolean
       }
-      create_huurder_profile: {
+      is_beoordelaar_or_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      update_user_role: {
         Args: {
-          user_id: string
-          user_email: string
-          user_naam: string
-          user_telefoon?: string
+          new_role: Database["public"]["Enums"]["gebruiker_rol"]
+          target_user_id: string
         }
-        Returns: undefined
+        Returns: boolean
+      }
+      validate_children_ages: {
+        Args: { ages: number[] }
+        Returns: boolean
       }
       zoek_huurders: {
         Args: {
-          in_city?: string | null
-          min_budget?: number | null
-          max_budget?: number | null
-          huisdieren?: boolean | null
-          roken?: boolean | null
+          huisdieren: boolean
+          in_city: string
+          max_budget: number
+          min_budget: number
+          roken: boolean
         }
-        Returns: Tables<'actieve_huurders'>[]
+        Returns: {
+          abonnement_status:
+            | Database["public"]["Enums"]["abonnement_status"]
+            | null
+          email: string | null
+          huisdieren: boolean | null
+          id: string | null
+          locatie_voorkeur: string[] | null
+          max_huur: number | null
+          roken: boolean | null
+        }[]
       }
     }
     Enums: {
-      abonnement_status: "actief" | "gepauzeerd" | "geannuleerd" | "verlopen"
+      aanvraag_status: "wachtend" | "geaccepteerd" | "afgewezen" | "ingetrokken"
+      abonnement_status:
+        | "actief"
+        | "gepauzeerd"
+        | "geannuleerd"
+        | "verlopen"
+        | "wachtend"
       document_status: "wachtend" | "goedgekeurd" | "afgekeurd"
       document_type:
         | "identiteit"
@@ -889,6 +1042,7 @@ export type Database = {
         | "profiel_bekeken"
         | "nieuwe_match"
         | "systeem"
+      woning_status: "actief" | "inactief" | "verhuurd"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -896,21 +1050,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -928,14 +1086,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -951,14 +1111,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -974,14 +1136,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -989,14 +1153,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
@@ -1004,7 +1170,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      abonnement_status: ["actief", "gepauzeerd", "geannuleerd", "verlopen"],
+      aanvraag_status: ["wachtend", "geaccepteerd", "afgewezen", "ingetrokken"],
+      abonnement_status: [
+        "actief",
+        "gepauzeerd",
+        "geannuleerd",
+        "verlopen",
+        "wachtend",
+      ],
       document_status: ["wachtend", "goedgekeurd", "afgekeurd"],
       document_type: [
         "identiteit",
@@ -1021,6 +1194,7 @@ export const Constants = {
         "nieuwe_match",
         "systeem",
       ],
+      woning_status: ["actief", "inactief", "verhuurd"],
     },
   },
 } as const

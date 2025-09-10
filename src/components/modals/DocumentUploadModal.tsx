@@ -79,6 +79,7 @@ const documentTypes = [
 const DocumentUploadModal = ({
   open,
   onOpenChange,
+  onUploadComplete,
 }: DocumentUploadModalProps) => {
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -292,6 +293,10 @@ const DocumentUploadModal = ({
         );
         // Refresh existing documents after successful upload
         await loadExistingDocuments();
+        // Notify parent so dashboard/documents state can refresh immediately
+        if (onUploadComplete) {
+          await onUploadComplete([result.data]);
+        }
         return result.data;
       } else {
         throw result.error || new Error("Upload mislukt");

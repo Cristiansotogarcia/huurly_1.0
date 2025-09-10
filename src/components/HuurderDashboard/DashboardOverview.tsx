@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Calendar,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 
 interface DashboardOverviewProps {

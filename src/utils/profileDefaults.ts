@@ -60,6 +60,7 @@ export const getDefaultProfileValues = (
     storage_berging: false,
     storage_garage: false,
     storage_schuur: false,
+    storage_needed: false,
 
     // Step 4: Lifestyle
     hasPets: false,
@@ -72,6 +73,8 @@ export const getDefaultProfileValues = (
     borgsteller_naam: '',
     borgsteller_relatie: '',
     borgsteller_telefoon: '',
+    borgsteller_email: '',
+    borgsteller_adres: '',
     borgsteller_inkomen: undefined,
 
     // Step 6: References & History

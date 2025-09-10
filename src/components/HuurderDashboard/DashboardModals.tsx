@@ -17,12 +17,15 @@ interface DashboardModalsProps {
   onDocumentUploadComplete: (documents: any[]) => Promise<void>;
   user?: any;
   tenantProfile?: any;
+  profilePictureUrl?: string | null;
 }
 
 const getInitialFormData = (
   tenantProfile?: any,
   user?: any,
+  profilePictureUrl?: string | null,
 ): Partial<ProfileFormData> | undefined => {
+
   if (!tenantProfile && !user) return undefined;
 
   const nameParts = user?.name?.split(" ") || [""];
@@ -31,36 +34,48 @@ const getInitialFormData = (
     nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
   return {
-    first_name: tenantProfile?.firstName || firstNameFromUser || "",
-    last_name: tenantProfile?.lastName || lastNameFromUser || "",
+    first_name: tenantProfile?.firstName || tenantProfile?.voornaam || firstNameFromUser || "",
+    last_name: tenantProfile?.lastName || tenantProfile?.achternaam || lastNameFromUser || "",
     date_of_birth: tenantProfile?.dateOfBirth
       ? convertFromISODate(tenantProfile.dateOfBirth)
+      : tenantProfile?.geboortedatum
+      ? convertFromISODate(tenantProfile.geboortedatum)
       : "",
-    phone: tenantProfile?.phone || "",
-    sex: tenantProfile?.personalInfo?.sex || "zeg_ik_liever_niet",
-    nationality: tenantProfile?.personalInfo?.nationality || "Nederlandse",
-    marital_status: tenantProfile?.personalInfo?.maritalStatus || "single",
-    has_children: tenantProfile?.hasChildren || false,
-    number_of_children: tenantProfile?.numberOfChildren || 0,
-    children_ages: tenantProfile?.childrenAges || [],
+    phone: tenantProfile?.phone || tenantProfile?.telefoon || "",
+    sex: tenantProfile?.personalInfo?.sex || tenantProfile?.geslacht || "zeg_ik_liever_niet",
+    nationality: tenantProfile?.personalInfo?.nationality || tenantProfile?.nationaliteit || "Nederlandse",
+    marital_status: tenantProfile?.personalInfo?.maritalStatus || tenantProfile?.burgerlijke_staat || "single",
+    has_children: tenantProfile?.hasChildren || tenantProfile?.heeft_kinderen || false,
+    number_of_children: tenantProfile?.numberOfChildren || tenantProfile?.aantal_kinderen || 0,
+    children_ages: tenantProfile?.childrenAges || tenantProfile?.kinderen_leeftijden || [],
+    
+    // Add missing household composition fields
+    number_of_housemates: tenantProfile?.numberOfHousemates || tenantProfile?.aantal_huisgenoten || 0,
+    current_living_situation: tenantProfile?.currentLivingSituation || tenantProfile?.huidige_woonsituatie || 'anders',
 
     profession:
       tenantProfile?.profession ||
       tenantProfile?.workAndIncome?.profession ||
+      tenantProfile?.beroep ||
       "",
-    employer: tenantProfile?.workAndIncome?.employer || "",
+    employer: tenantProfile?.workAndIncome?.employer || tenantProfile?.werkgever || "",
     employment_status:
-      tenantProfile?.workAndIncome?.employmentStatus || "full-time",
-    work_contract_type: tenantProfile?.workAndIncome?.contractType || "",
+      tenantProfile?.workAndIncome?.employmentStatus || tenantProfile?.dienstverband || tenantProfile?.werkstatus || "full-time",
+    work_contract_type: tenantProfile?.workAndIncome?.contractType || tenantProfile?.contract_type || tenantProfile?.typeArbeidscontract || "",
     monthly_income:
       tenantProfile?.workAndIncome?.monthlyIncome ??
-      (tenantProfile?.income || 0),
+      tenantProfile?.income ??
+      tenantProfile?.inkomen ??
+      tenantProfile?.maandinkomen ??
+      0,
     inkomensbewijs_beschikbaar:
       tenantProfile?.incomeProofAvailable ??
-      (tenantProfile?.workAndIncome?.incomeProofAvailable || false),
-    work_from_home: tenantProfile?.workAndIncome?.workFromHome || false,
-    extra_income: tenantProfile?.extraIncome || 0,
-    extra_income_description: tenantProfile?.extraIncomeDescription || "",
+      tenantProfile?.workAndIncome?.incomeProofAvailable ??
+      tenantProfile?.inkomensbewijs_beschikbaar ??
+      false,
+    work_from_home: tenantProfile?.workAndIncome?.workFromHome || tenantProfile?.thuiswerken || false,
+    extra_income: tenantProfile?.extraIncome || tenantProfile?.extra_inkomen || 0,
+    extra_income_description: tenantProfile?.extraIncomeDescription || tenantProfile?.extra_inkomen_beschrijving || "",
 
     has_partner: tenantProfile?.hasPartner || false,
     partner_name: tenantProfile?.partnerName || "",
@@ -71,6 +86,8 @@ const getInitialFormData = (
     borgsteller_naam: tenantProfile?.guarantorName || "",
     borgsteller_relatie: tenantProfile?.guarantorRelationship || "",
     borgsteller_telefoon: tenantProfile?.guarantorPhone || "",
+    borgsteller_email: tenantProfile?.guarantorDetails?.email || tenantProfile?.guarantorEmail || "",
+    borgsteller_adres: tenantProfile?.guarantorDetails?.address || tenantProfile?.guarantorAddress || "",
     borgsteller_inkomen: tenantProfile?.guarantorIncome || 0,
 
     preferred_city: tenantProfile?.preferredLocations || [],
@@ -125,9 +142,9 @@ const getInitialFormData = (
 
     references_available: tenantProfile?.referencesAvailable || false,
     rental_history_years: tenantProfile?.rentalHistoryYears || 0,
-    reason_for_moving: tenantProfile?.reasonForMoving || "",
+    reason_for_moving: tenantProfile?.housingPreferences?.reasonForMoving || "",
 
-    profilePictureUrl: tenantProfile?.profilePicture || "",
+    profilePictureUrl: profilePictureUrl || tenantProfile?.profilePicture || tenantProfile?.profiel_foto || tenantProfile?.profielfotoUrl || tenantProfile?.profilePictureUrl || "",
     bio: tenantProfile?.bio || "",
     motivation: tenantProfile?.motivation || "",
   };
@@ -144,10 +161,11 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   onDocumentUploadComplete,
   user,
   tenantProfile,
+  profilePictureUrl,
 }) => {
   const initialData = useMemo(
-    () => getInitialFormData(tenantProfile, user),
-    [tenantProfile, user],
+    () => getInitialFormData(tenantProfile, user, profilePictureUrl),
+    [tenantProfile, user, profilePictureUrl],
   );
   
   const { openModal, isMobile } = useModalRouter();

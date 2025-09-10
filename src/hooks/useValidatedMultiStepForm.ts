@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { UseFormGetValues } from 'react-hook-form';
 import { z } from 'zod';
 import { stepSchemas, getFieldLabel } from '@/components/modals/stepValidationSchemas';
@@ -53,22 +53,20 @@ export function useValidatedMultiStepForm(
     }
   };
 
-  const validateCurrentStep = (): ValidationError[] => {
+  const validateCurrentStep = useCallback((): ValidationError[] => {
     const formData = getValues();
-    const errors = validateStep(currentStep, formData);
-    console.log(`🔥 Validation errors for step ${currentStep}:`, errors);
-    return errors;
-  };
+    return validateStep(currentStep, formData);
+  }, [currentStep, getValues]);
 
-  const getStepValidationErrors = (stepIndex: number): ValidationError[] => {
+  const getStepValidationErrors = useCallback((stepIndex: number): ValidationError[] => {
     const formData = getValues();
     return validateStep(stepIndex, formData);
-  };
+  }, [getValues]);
 
-  const canNavigateToStep = (stepIndex: number): boolean => {
+  const canNavigateToStep = useCallback((stepIndex: number): boolean => {
     // Always allow going backwards
     if (stepIndex <= currentStep) return true;
-    
+
     // Check if all previous steps with required fields are valid
     const formData = getValues();
     for (let i = 0; i < stepIndex; i++) {
@@ -77,53 +75,25 @@ export function useValidatedMultiStepForm(
         return false;
       }
     }
-    
+
     return true;
-  };
+  }, [currentStep, getValues]);
 
   const nextStep = (): boolean => {
-    
-    // Force a fresh read of form data to ensure we have the latest values
-    const formData = getValues();
-    
-    // Special handling for Step 2 (index 1) - Employment step
-    if (currentStep === 1) {
-      
-      // Manual validation for debugging
-      const missingFields = [];
-      if (!formData.profession || formData.profession.trim() === '') {
-        missingFields.push('profession (Beroep)');
-      }
-      // Employer is now optional, so we don't check it
-      if (!formData.employment_status || formData.employment_status.trim() === '') {
-        missingFields.push('employment_status (Status)');
-      }
-      if (!formData.monthly_income || formData.monthly_income <= 0) {
-        missingFields.push('monthly_income (Maandinkomen)');
-      }
-      
-      if (missingFields.length > 0) {
-        // Validation failed - errors will be handled by the form
-        return false;
-      } else {
-        // Validation passed - continue to next step
-      }
-    }
-    
+    console.log('🔥🔥🔥 NEXT STEP CALLED - Current step:', currentStep, 'Total steps:', totalSteps);
     const errors = validateCurrentStep();
-    console.log(`🔥 nextStep: errors.length = ${errors.length}`);
-    
+    console.log('🔥🔥🔥 Validation errors:', errors);
+
     if (errors.length > 0) {
-      console.log('🔥 nextStep: Validation failed, returning false');
+      console.log('🔥🔥🔥 Validation failed - not proceeding to next step');
       return false; // Validation failed
     }
 
+    console.log('🔥🔥🔥 Validation passed - proceeding to next step');
     setCurrentStep(i => {
       if (i >= totalSteps - 1) return i;
-      console.log(`🔥 nextStep: Moving from step ${i} to ${i + 1}`);
       return i + 1;
     });
-    console.log('🔥 nextStep: Validation passed, returning true');
     return true; // Validation passed
   };
 
@@ -135,12 +105,19 @@ export function useValidatedMultiStepForm(
   };
 
   const goTo = (index: number): boolean => {
+    console.log('🔥🔥🔥 GO TO STEP CALLED:', index, 'Current step:', currentStep, 'Can navigate:', canNavigateToStep(index));
     if (!canNavigateToStep(index)) {
+      console.log('🔥🔥🔥 CANNOT NAVIGATE TO STEP:', index);
       return false;
     }
+    console.log('🔥🔥🔥 NAVIGATING TO STEP:', index);
     setCurrentStep(index);
+    console.log('🔥🔥🔥 STEP CHANGED TO:', index, 'Is last step:', index === totalSteps - 1);
     return true;
   };
+
+  const isFirstStep = useMemo(() => currentStep === 0, [currentStep]);
+  const isLastStep = useMemo(() => currentStep === totalSteps - 1, [currentStep, totalSteps]);
 
   return {
     currentStep,
@@ -148,8 +125,8 @@ export function useValidatedMultiStepForm(
     nextStep,
     prevStep,
     goTo,
-    isFirstStep: currentStep === 0,
-    isLastStep: currentStep === totalSteps - 1,
+    isFirstStep,
+    isLastStep,
     validateCurrentStep,
     canNavigateToStep,
     getStepValidationErrors,

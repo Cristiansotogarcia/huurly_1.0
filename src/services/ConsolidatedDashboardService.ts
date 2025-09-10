@@ -36,6 +36,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
       email: userRow.email,
       phone: userRow.telefoon || '',
       dateOfBirth: rawTenant.geboortedatum || '',
+      age: rawTenant.leeftijd || undefined,
       profession: rawTenant.beroep || '',
       income: rawTenant.inkomen || 0,
       bio: rawTenant.beschrijving || '',
@@ -44,21 +45,55 @@ export class ConsolidatedDashboardService extends DatabaseService {
       coverPhoto: rawTenant.cover_foto || undefined,
       isLookingForPlace: rawTenant.profiel_zichtbaar ?? false,
       // Expose commonly used flat fields for components expecting them
-      preferredLocations: Array.isArray(rawTenant.locatie_voorkeur)
-        ? rawTenant.locatie_voorkeur.map((locationString: string) => {
+      preferredLocations: (() => {
+        try {
+          // First check if it's already an array
+          if (Array.isArray(rawTenant.locatie_voorkeur)) {
+            return rawTenant.locatie_voorkeur.map((locationString: string) => {
+              try {
+                // Attempt to parse the string as a JSON object (LocationData)
+                const parsedLocation = JSON.parse(locationString);
+                // Ensure it has a name, otherwise fall back to the string itself
+                return parsedLocation.name ? parsedLocation : { name: locationString };
+              } catch (error) {
+                // If parsing fails, it's likely a plain string (old data or fallback)
+                return { name: locationString };
+              }
+            });
+          }
+
+          // If it's a string, try to parse it as JSON first (handles PostgreSQL text column with JSON)
+          if (typeof rawTenant.locatie_voorkeur === 'string') {
             try {
-              // Attempt to parse the string as a JSON object (LocationData)
-              const parsedLocation = JSON.parse(locationString);
-              // Ensure it has a name, otherwise fall back to the string itself
-              return parsedLocation.name ? parsedLocation : { name: locationString };
+              const parsedArray = JSON.parse(rawTenant.locatie_voorkeur);
+              if (Array.isArray(parsedArray)) {
+                return parsedArray.map((locationString: string) => {
+                  try {
+                    // Attempt to parse each item as a JSON object
+                    const parsedLocation = JSON.parse(locationString);
+                    return parsedLocation.name ? parsedLocation : { name: locationString };
+                  } catch (error) {
+                    // If parsing fails, treat as plain string
+                    return { name: locationString };
+                  }
+                });
+              } else {
+                // Single string wrapped in JSON
+                return [{ name: parsedArray }];
+              }
             } catch (error) {
-              // If parsing fails, it's likely a plain string (old data or fallback)
-              return { name: locationString };
+              // If JSON parsing fails, treat as plain string
+              return [{ name: rawTenant.locatie_voorkeur }];
             }
-          })
-        : rawTenant.locatie_voorkeur // Handle single string case if not an array
-          ? [{ name: rawTenant.locatie_voorkeur }]
-          : [],
+          }
+
+          // Handle null/undefined case
+          return [];
+        } catch (error) {
+          console.error('Error parsing locatie_voorkeur:', error);
+          return [];
+        }
+      })(),
       maxRent: rawTenant.max_huur || 0,
       minRooms: rawTenant.min_kamers || undefined,
       maxRooms: rawTenant.max_kamers || undefined,
@@ -66,11 +101,25 @@ export class ConsolidatedDashboardService extends DatabaseService {
       preferredMoveDate: rawTenant.voorkeur_verhuisdatum || undefined,
       description: rawTenant.beschrijving || '',
       preferences: {
-        minBudget: rawTenant.min_huur || 0,
+        minBudget: rawTenant.min_budget || 0,
         maxBudget: rawTenant.max_huur || 0,
-        city: Array.isArray(rawTenant.locatie_voorkeur)
-          ? rawTenant.locatie_voorkeur[0]
-          : rawTenant.locatie_voorkeur || '',
+        city: (() => {
+          try {
+            if (Array.isArray(rawTenant.locatie_voorkeur)) {
+              return rawTenant.locatie_voorkeur[0] || '';
+            }
+            if (typeof rawTenant.locatie_voorkeur === 'string') {
+              const parsed = JSON.parse(rawTenant.locatie_voorkeur);
+              if (Array.isArray(parsed)) {
+                return parsed[0] || '';
+              }
+              return parsed || '';
+            }
+            return '';
+          } catch (error) {
+            return rawTenant.locatie_voorkeur || '';
+          }
+        })(),
         bedrooms: rawTenant.min_kamers || 1,
         propertyType: housing.type || 'appartement',
         furnishedPreference: housing.meubilering,
@@ -81,10 +130,11 @@ export class ConsolidatedDashboardService extends DatabaseService {
       moveInDatePreferred: rawTenant.voorkeur_verhuisdatum || undefined,
       moveInDateEarliest: rawTenant.vroegste_verhuisdatum || undefined,
       availabilityFlexible: rawTenant.beschikbaarheid_flexibel || undefined,
-      reasonForMoving: rawTenant.reden_verhuizen || undefined,
+      reasonForMoving: rawTenant.reden_verhuizing || undefined,
       guarantorAvailable: rawTenant.borgsteller_beschikbaar || undefined,
       guarantorName: rawTenant.borgsteller_naam || undefined,
       guarantorPhone: rawTenant.borgsteller_telefoon || undefined,
+      guarantorEmail: rawTenant.borgsteller_email || undefined,
       guarantorIncome: rawTenant.borgsteller_inkomen || undefined,
       guarantorRelationship: rawTenant.borgsteller_relatie || undefined,
       guarantorDetails: rawTenant.borgsteller_details || undefined,
@@ -127,17 +177,31 @@ export class ConsolidatedDashboardService extends DatabaseService {
         profession: rawTenant.beroep || '',
         employer: rawTenant.werkgever || undefined,
         employmentStatus: rawTenant.dienstverband || undefined,
-        contractType: rawTenant.dienstverband || undefined,
+        contractType: rawTenant.contract_type || rawTenant.contracttype || rawTenant.dienstverband || undefined,
         monthlyIncome: rawTenant.inkomen || 0,
         workFromHome: rawTenant.thuiswerken || undefined,
         incomeProofAvailable: rawTenant.inkomensbewijs_beschikbaar || undefined,
       },
       housingPreferences: {
-        minBudget: rawTenant.min_huur || 0,
+        minBudget: rawTenant.min_budget || 0,
         maxBudget: rawTenant.max_huur || 0,
-        city: Array.isArray(rawTenant.locatie_voorkeur)
-          ? rawTenant.locatie_voorkeur[0]
-          : rawTenant.locatie_voorkeur || '',
+        city: (() => {
+          try {
+            if (Array.isArray(rawTenant.locatie_voorkeur)) {
+              return rawTenant.locatie_voorkeur[0] || '';
+            }
+            if (typeof rawTenant.locatie_voorkeur === 'string') {
+              const parsed = JSON.parse(rawTenant.locatie_voorkeur);
+              if (Array.isArray(parsed)) {
+                return parsed[0] || '';
+              }
+              return parsed || '';
+            }
+            return '';
+          } catch (error) {
+            return rawTenant.locatie_voorkeur || '';
+          }
+        })(),
         bedrooms: rawTenant.min_kamers || 1,
         minRooms: rawTenant.min_kamers || undefined,
         maxRooms: rawTenant.max_kamers || undefined,
@@ -150,7 +214,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
         moveInDateEarliest: rawTenant.vroegste_verhuisdatum || undefined,
         moveInDate: rawTenant.datum_beschikbaar || undefined,
         moveInDateFlexible: rawTenant.datum_flexibel || undefined,
-        reasonForMoving: rawTenant.reden_verhuizen || undefined,
+        reasonForMoving: rawTenant.reden_verhuizing || undefined,
       },
       lifestyleAndMotivation: {
         bio: rawTenant.beschrijving || '',
@@ -178,9 +242,8 @@ export class ConsolidatedDashboardService extends DatabaseService {
           profileResult,
           userResult,
           subscriptionResult,
-          profilePictureResult,
+          photoUrlsResult,
           profileViewsResult,
-
         ] = await Promise.allSettled([
           // Get user documents
           supabase
@@ -214,25 +277,6 @@ export class ConsolidatedDashboardService extends DatabaseService {
             .from('profiel_weergaves')
             .select('id', { count: 'exact', head: true })
             .eq('huurder_id', userId),
-
-          // Count viewing invitations
-          // supabase
-          //   .from('bezichtiging_verzoeken')
-          //   .select('id', { count: 'exact', head: true })
-          //   .eq('huurder_id', userId),
-
-          // Count property applications
-          // supabase
-          //   .from('aanvragen')
-          //   .select('id', { count: 'exact', head: true })
-          //   .eq('huurder_id', userId),
-
-          // Count accepted applications
-          // supabase
-          //   .from('aanvragen')
-          //   .select('id', { count: 'exact', head: true })
-          //   .eq('huurder_id', userId)
-          //   .eq('status', 'geaccepteerd')
         ]);
 
         // Process results
@@ -241,24 +285,22 @@ export class ConsolidatedDashboardService extends DatabaseService {
             profileViewsResult.status === 'fulfilled'
               ? profileViewsResult.value.count ?? 0
               : 0,
-
-          applications:
-            0,
-
-          acceptedApplications: 0
+          applications: 0,
+          acceptedApplications: 0,
         };
 
-        const rawDocuments = documentsResult.status === 'fulfilled' && documentsResult.value.data
-          ? documentsResult.value.data
-          : [];
-        
+        const rawDocuments =
+          documentsResult.status === 'fulfilled' && documentsResult.value.data
+            ? documentsResult.value.data
+            : [];
+
         // Type guard to filter documents with a non-null huurder_id
         const isDocumentWithHuurder = (doc: any): doc is any & { huurder_id: string } =>
           doc.huurder_id !== null;
 
         const documents: Document[] = rawDocuments
           .filter(isDocumentWithHuurder)
-          .map(doc => ({
+          .map((doc) => ({
             id: doc.id,
             huurder_id: doc.huurder_id, // Now correctly typed as string
             beoordelaar_id: doc.beoordelaar_id ?? undefined,
@@ -271,25 +313,30 @@ export class ConsolidatedDashboardService extends DatabaseService {
             bijgewerkt_op: doc.bijgewerkt_op,
           }));
 
-        const rawTenant = profileResult.status === 'fulfilled' && profileResult.value.data
-          ? profileResult.value.data
-          : null;
+        const rawTenant =
+          profileResult.status === 'fulfilled' && profileResult.value.data
+            ? profileResult.value.data
+            : null;
 
-        const userRow = userResult.status === 'fulfilled' && userResult.value.data
-          ? userResult.value.data
-          : null;
+        const userRow =
+          userResult.status === 'fulfilled' && userResult.value.data
+            ? userResult.value.data
+            : null;
 
-        const tenantProfile = rawTenant && userRow
-          ? this.mapTenantProfile(rawTenant, userRow)
-          : null;
+        const tenantProfile =
+          rawTenant && userRow ? this.mapTenantProfile(rawTenant, userRow) : null;
 
-        const subscription = subscriptionResult.status === 'fulfilled' && subscriptionResult.value.success && subscriptionResult.value.data?.hasActiveSubscription
-          ? { status: 'active', ...subscriptionResult.value.data }
-          : null;
+        const subscription =
+          subscriptionResult.status === 'fulfilled' &&
+          subscriptionResult.value.success &&
+          subscriptionResult.value.data?.hasActiveSubscription
+            ? { status: 'active', ...subscriptionResult.value.data }
+            : null;
 
-        const photoUrls = profilePictureResult.status === 'fulfilled'
-          ? profilePictureResult.value
-          : { profilePictureUrl: null, coverPhotoUrl: null };
+        const photoUrls =
+          photoUrlsResult.status === 'fulfilled'
+            ? photoUrlsResult.value
+            : { profilePictureUrl: null, coverPhotoUrl: null };
 
         const hasProfile = !!rawTenant;
 
@@ -300,7 +347,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
           subscription,
           profilePictureUrl: photoUrls.profilePictureUrl,
           coverPhotoUrl: photoUrls.coverPhotoUrl,
-          hasProfile
+          hasProfile,
         };
 
         logger.info('Successfully fetched consolidated dashboard data');

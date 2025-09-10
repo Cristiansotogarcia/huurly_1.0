@@ -28,48 +28,46 @@ export default function Step4Housing() {
         <p className="text-gray-600">Vertel ons waar en hoe je wilt wonen</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <FormField
+      <FormField
+        control={control}
+        name="preferred_city"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Gewenste woonplaats *</FormLabel>
+            <FormControl>
+              <LocationSelector
+                value={field.value || []}
+                onChange={field.onChange}
+                placeholder="Zoek naar steden..."
+                error={errors.preferred_city?.message}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="space-y-2">
+        <Label htmlFor="preferred_property_type">Type woning</Label>
+        <Controller
+          name="preferred_property_type"
           control={control}
-          name="preferred_city"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gewenste woonplaats *</FormLabel>
-              <FormControl>
-                <LocationSelector
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  placeholder="Zoek naar steden..."
-                  error={errors.preferred_city?.message}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="appartement">Appartement</SelectItem>
+                <SelectItem value="studio">Studio</SelectItem>
+                <SelectItem value="huis">Huis</SelectItem>
+                <SelectItem value="kamer">Kamer</SelectItem>
+                <SelectItem value="penthouse">Penthouse</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         />
-
-        <div className="space-y-2">
-          <Label htmlFor="preferred_property_type">Type woning</Label>
-          <Controller
-            name="preferred_property_type"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="appartement">Appartement</SelectItem>
-                  <SelectItem value="studio">Studio</SelectItem>
-                  <SelectItem value="huis">Huis</SelectItem>
-                  <SelectItem value="kamer">Kamer</SelectItem>
-                  <SelectItem value="penthouse">Penthouse</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.preferred_property_type && <p className="text-red-500 text-xs">{`${errors.preferred_property_type.message}`}</p>}
-        </div>
+        {errors.preferred_property_type && <p className="text-red-500 text-xs">{`${errors.preferred_property_type.message}`}</p>}
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">

@@ -149,7 +149,7 @@ export class CloudflareR2UploadService {
       console.error('Error updating profiel_foto:', error);
       return { url: null, error: new Error('Kon profielfoto niet opslaan in database.'), success: false };
     }
-    return result;
+    return { ...result, url: customDomainUrl };
   }
 
   async uploadCoverPhoto(file: File, userId: string): Promise<UploadResult> {
@@ -172,7 +172,7 @@ export class CloudflareR2UploadService {
       console.error('Error updating cover_foto:', error);
       return { url: null, error: new Error('Kon coverfoto niet opslaan in database.'), success: false };
     }
-    return result;
+    return { ...result, url: customDomainUrl };
   }
 
   /* NEW: documents ----------------------------------------------------- */

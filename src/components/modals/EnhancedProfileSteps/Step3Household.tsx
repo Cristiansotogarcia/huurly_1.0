@@ -18,6 +18,8 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
   const hasPartner = watch('has_partner');
   const hasChildren = watch('has_children');
   const numberOfChildren = watch('number_of_children') || 0;
+  const numberOfHousemates = watch('number_of_housemates') || 0;
+
   const maritalStatus = watch('marital_status');
 
   // Auto-select partner checkbox when marital status indicates having a partner
@@ -34,6 +36,9 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
     }
     if (hasChildren && numberOfChildren > 0) {
       size += Number(numberOfChildren);
+    }
+    if (numberOfHousemates > 0) {
+      size += Number(numberOfHousemates);
     }
     return size;
   };
@@ -215,7 +220,7 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="number_of_housemates">Aantal huisgenoten</Label>
+          <Label htmlFor="number_of_housemates">Extra huisgenoten</Label>
           <Input
             id="number_of_housemates"
             type="number"
@@ -257,7 +262,7 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
 
       <div className="space-y-4">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <Label className="text-lg font-semibold">Geschat huishoudgrootte</Label>
+          <Label className="text-lg font-semibold">Huishoudgrootte</Label>
           <div className="text-2xl font-bold text-purple-600 mt-2">
             {calculateHouseholdSize()} personen
           </div>

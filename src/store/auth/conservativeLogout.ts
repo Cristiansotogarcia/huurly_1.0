@@ -2,12 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 
-let isSubmittingForm = false;
-
-export const setIsSubmittingForm = (value: boolean) => {
-  isSubmittingForm = value;
-};
-
 export const setupConservativeLogout = (get: any) => {
   let isNavigatingWithinApp = false;
   let isUserInteracting = false;
@@ -107,7 +101,7 @@ export const setupConservativeLogout = (get: any) => {
       }
 
       // Don't logout if user is actively interacting or navigating
-      if (isUserInteracting || isNavigatingWithinApp || isSubmittingForm) {
+      if (isUserInteracting || isNavigatingWithinApp) {
         return;
       }
 

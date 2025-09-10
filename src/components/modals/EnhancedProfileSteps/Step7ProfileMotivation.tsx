@@ -3,11 +3,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, User } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
+import { useMemo } from 'react';
 
 export default function Step7ProfileMotivation() {
   const { register, watch, formState: { errors } } = useFormContext();
+
+  // Memoize watched values to prevent excessive re-renders
   const bio = watch('bio', '');
   const motivation = watch('motivation', '');
+
+  // Memoize character counts to prevent unnecessary calculations
+  const bioLength = useMemo(() => bio.length, [bio]);
+  const motivationLength = useMemo(() => motivation.length, [motivation]);
 
   return (
     <div className="space-y-6">
@@ -34,7 +41,7 @@ export default function Step7ProfileMotivation() {
         </div>
         {errors.bio && <p className="text-red-500 text-xs">{`${errors.bio.message}`}</p>}
         <p className="text-sm text-gray-500">
-          Tekens: {bio.length}/500 (minimaal 50 tekens aanbevolen)
+          Tekens: {bioLength}/500 (minimaal 50 tekens aanbevolen)
         </p>
       </div>
 
@@ -51,7 +58,7 @@ export default function Step7ProfileMotivation() {
         </div>
         {errors.motivation && <p className="text-red-500 text-xs">{`${errors.motivation.message}`}</p>}
         <p className="text-sm text-gray-500">
-          Tekens: {motivation.length}/500 (minimaal 30 tekens aanbevolen)
+          Tekens: {motivationLength}/500 (minimaal 30 tekens aanbevolen)
         </p>
       </div>
 

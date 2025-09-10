@@ -15,6 +15,7 @@ const ProfileFormStepper: React.FC<ProfileFormStepperProps> = ({ steps, currentS
         {steps.map((step, stepIdx) => (
           <li key={step.name} className="md:flex-1">
             <button
+              type="button"
               onClick={() => canNavigateToStep(stepIdx) && goToStep(stepIdx)}
               className={cn(
                 'group flex w-full flex-col border-l-4 py-2 pl-4 transition-colors md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4',

@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, Euro, Phone, User } from 'lucide-react';
+import { Shield, Euro, Phone, User, Mail } from 'lucide-react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl } from '@/components/ui/form';
 
@@ -32,7 +32,7 @@ export default function Step5Guarantor() {
                 <Checkbox checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <Label>Ik heb een borg/garantsteller beschikbaar</Label>
+                <Label>Ik heb een borgsteller beschikbaar</Label>
               </div>
             </FormItem>
           )}
@@ -41,7 +41,7 @@ export default function Step5Guarantor() {
         {guarantorAvailable && (
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
             <div className="space-y-2">
-              <Label htmlFor="borgsteller_naam">Naam garantsteller</Label>
+              <Label htmlFor="borgsteller_naam">Naam borgsteller</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input {...register('borgsteller_naam')} placeholder="Volledige naam" className="pl-10" />
@@ -51,7 +51,7 @@ export default function Step5Guarantor() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="borgsteller_telefoon">Telefoon garantsteller</Label>
+                <Label htmlFor="borgsteller_telefoon">Telefoon borgsteller</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input {...register('borgsteller_telefoon')} placeholder="+31 6 12345678" className="pl-10" />
@@ -60,7 +60,7 @@ export default function Step5Guarantor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="borgsteller_inkomen">Inkomen garantsteller</Label>
+                <Label htmlFor="borgsteller_inkomen">Inkomen borgsteller</Label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input {...register('borgsteller_inkomen', { valueAsNumber: true })} type="number" placeholder="5000" className="pl-10" />
@@ -70,7 +70,7 @@ export default function Step5Guarantor() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="borgsteller_relatie">Relatie tot garantsteller</Label>
+              <Label htmlFor="borgsteller_relatie">Relatie tot borgsteller</Label>
               <Controller
                 name="borgsteller_relatie"
                 control={control}
@@ -90,6 +90,15 @@ export default function Step5Guarantor() {
                 )}
               />
               {errors.borgsteller_relatie && <p className="text-red-500 text-xs">{`${errors.borgsteller_relatie.message}`}</p>}
+
+              <div className="space-y-2">
+                <Label htmlFor="borgsteller_email">Email borgsteller</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input {...register('borgsteller_email')} type="email" placeholder="email@example.com" className="pl-10" />
+                </div>
+                {errors.borgsteller_email && <p className="text-red-500 text-xs">{`${errors.borgsteller_email.message}`}</p>}
+              </div>
             </div>
           </div>
         )}

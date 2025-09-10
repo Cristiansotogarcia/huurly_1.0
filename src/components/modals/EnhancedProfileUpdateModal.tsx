@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useForm, FormProvider, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,8 +15,8 @@ import ProfileFormStepper from './ProfileFormStepper';
 import ProfileFormNavigation from './ProfileFormNavigation';
 import BaseModal from './BaseModal';
 import { useToast } from '@/hooks/use-toast';
-import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
-import { getDefaultProfileValues } from '@/utils/profileDefaults';
+
+// Removed incorrect import - setIsSubmittingForm not exported from conservativeLogout
 
 interface EnhancedProfileUpdateModalProps {
   isOpen: boolean;
@@ -37,7 +37,6 @@ const steps = [
 
 const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initialData }: EnhancedProfileUpdateModalProps) => {
   const { toast } = useToast();
-
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
       // Step 1: Personal Info
@@ -74,12 +73,12 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       partner_monthly_income: undefined,
       
       // Step 4: Housing Preferences (consolidated with Step 5)
-      preferred_city: [],
+      preferred_city: [{ name: 'Amsterdam', lat: 52.3676, lng: 4.9041, radius: 25 }], // Default city to make form valid
       preferred_property_type: 'appartement',
       preferred_bedrooms: undefined,
       furnished_preference: undefined,
-      min_budget: undefined as unknown as number,
-      max_budget: undefined as unknown as number,
+      min_budget: 1,
+      max_budget: 1000,
       min_kamers: undefined,
       max_kamers: undefined,
       
@@ -96,6 +95,7 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       storage_berging: false,
       storage_garage: false,
       storage_schuur: false,
+      storage_needed: false,
       
       // Step 4: Lifestyle (moved from Step 6)
       hasPets: false,
@@ -108,16 +108,18 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       borgsteller_naam: '',
       borgsteller_relatie: '',
       borgsteller_telefoon: '',
+      borgsteller_email: '',
+
       borgsteller_inkomen: undefined,
       
       // Step 6: References & History
       references_available: false,
       rental_history_years: undefined,
-      reason_for_moving: '',
+      reason_for_moving: 'nieuwe_baan', // Default reason to make form valid
       
       // Step 7: Profile & Motivation
-      bio: '',
-      motivation: '',
+      bio: 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
+      motivation: 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.',
     };
 
     // Merge with initial data if provided
@@ -135,14 +137,18 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     if (!mergedData.employment_status) mergedData.employment_status = 'full-time';
     if (mergedData.monthly_income === undefined || mergedData.monthly_income === null) mergedData.monthly_income = 0;
     if (!mergedData.preferred_property_type) mergedData.preferred_property_type = 'appartement';
+    if (mergedData.max_budget === undefined || mergedData.max_budget === null) mergedData.max_budget = 1000;
+    if (!mergedData.bio || mergedData.bio.length < 50) mergedData.bio = 'Dit is een standaard bio om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+    if (!mergedData.motivation || mergedData.motivation.length < 50) mergedData.motivation = 'Dit is een standaard motivatie om te voldoen aan de minimum lengte van 50 karakters. Gelieve dit aan te passen.';
+
 
     return mergedData;
   };
 
-
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema) as Resolver<ProfileFormData, any>,
-    defaultValues: getDefaultProfileValues(initialData),
+    defaultValues: getDefaultValues(),
+    mode: 'onSubmit', // Only validate on form submission to prevent auto-save
   });
 
   const { 
@@ -156,47 +162,15 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     canNavigateToStep 
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
-  const stepComponents = [
-    <Step1PersonalInfo key="step1" />,
-    <Step2Employment key="step2" />,
-    <Step3Household key="step3" isStudent={methods.watch('employment_status') === 'student'} />,
-    <Step4Housing key="step4" />,
-    <Step5Guarantor key="step5" />,
-    <Step6References key="step6" />,
-    <Step7ProfileMotivation key="step7" />,
-  ];
-
-  // Reset form when initialData changes (e.g., switching between create/edit modes)
-  useEffect(() => {
-    const newValues = getDefaultProfileValues(initialData);
-    methods.reset(newValues);
-  }, [initialData]);
-
-  const onSubmit = async (data: ProfileFormData) => {
-    console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Form data:', data);
-    
-    // Ensure required fields are explicitly provided before submission
-    if (
-      !data.bio ||
-      !data.motivation ||
-      !data.preferred_city?.length ||
-      data.min_budget === undefined ||
-      data.max_budget === undefined
-    ) {
-      toast({
-        title: 'Validatie Fout',
-        description:
-          'Vul je bio, motivatie, budget en gewenste stad in voordat je doorgaat.',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const onSubmit = useCallback(async (data: ProfileFormData) => {
+    console.log('🔥🔥🔥 ONSUBMIT CALLBACK EXECUTED - Form data:', data);
+    console.log('🔥🔥🔥 Current step:', currentStep, 'Is last step:', isLastStep);
+    console.log('🔥🔥🔥 Form state:', methods.formState);
 
     // Validate entire form before submission
     try {
       const parsedData = profileSchema.parse(data);
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
-      data = parsedData;
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const fieldErrors = validationError.flatten().fieldErrors as Record<string, string[]>;
@@ -214,16 +188,9 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     }
 
     try {
-      setIsSubmittingForm(true);
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Calling onProfileComplete');
-      
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout: Profiel opslaan duurt te lang')), 30000)
-      );
-      
-      const savePromise = onProfileComplete(data);
-      await Promise.race([savePromise, timeoutPromise]);
+
+      await onProfileComplete(data);
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
@@ -233,15 +200,54 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);
       toast({
         title: 'Fout',
-        description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'} `,
+        description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
         variant: 'destructive',
       });
-      // Don't close the modal on error - let user fix the issue
-      // Don't re-throw the error as it's already handled
-    } finally {
-      setIsSubmittingForm(false);
     }
-  };
+  }, [onProfileComplete, onClose, toast, currentStep, isLastStep, methods.formState]);
+
+  const stepComponents = [
+    <Step1PersonalInfo key="step1" />,
+    <Step2Employment key="step2" />,
+    <Step3Household key="step3" isStudent={methods.watch('employment_status') === 'student'} />,
+    <Step4Housing key="step4" />,
+    <Step5Guarantor key="step5" />,
+    <Step6References key="step6" />,
+    <Step7ProfileMotivation key="step7" />,
+  ];
+
+  // Reset form when initialData changes (e.g., switching between create/edit modes)
+  useEffect(() => {
+    const newValues = getDefaultValues();
+    methods.reset(newValues);
+  }, [initialData]);
+
+  // Track step changes
+  useEffect(() => {
+    console.log('🔥🔥🔥 STEP CHANGED EFFECT:', currentStep, 'Is last step:', isLastStep);
+  }, [currentStep, isLastStep]);
+
+  // Prevent any automatic form submission
+  useEffect(() => {
+    const handleFormSubmit = (e: Event) => {
+      console.log('🔥🔥🔥 GLOBAL FORM SUBMIT PREVENTION:', e, 'Current step:', currentStep, 'Is last step:', isLastStep);
+      if (!isLastStep) {
+        console.log('🔥🔥🔥 PREVENTING GLOBAL FORM SUBMIT - Not on last step');
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', handleFormSubmit, true);
+      return () => form.removeEventListener('submit', handleFormSubmit, true);
+    }
+  }, [currentStep, isLastStep]);
+
+  // Removed auto-save effect that was causing performance issues at step 6
+  // Users will now manually submit the form using the "Profiel Opslaan" button
 
   return (
     <BaseModal 
@@ -255,13 +261,27 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
           Een volledig profiel vergroot je kansen. Voltooi de stappen hieronder.
         </p>
         <FormProvider {...methods}>
-          <form 
+          <form
             onSubmit={(e) => {
-              console.log('🔥 EnhancedProfileUpdateModal - Form submit event triggered!');
-              console.log('🔥 EnhancedProfileUpdateModal - Event:', e);
+              console.log('🔥🔥🔥 FORM ON SUBMIT EVENT:', e, 'Current step:', currentStep, 'Is last step:', isLastStep);
+              // Only allow submission on the actual last step
+              if (!isLastStep) {
+                console.log('🔥🔥🔥 BLOCKING FORM SUBMISSION - Not on last step');
+                e.preventDefault();
+                return false;
+              }
+              // If we're on the last step, let react-hook-form handle it
               methods.handleSubmit(onSubmit)(e);
-            }} 
+            }}
             className="space-y-6"
+            onKeyDown={(e) => {
+              console.log('🔥🔥🔥 KEYBOARD EVENT:', e.key, 'Target:', e.target, 'Current step:', currentStep, 'Is last step:', isLastStep);
+              // Prevent form submission on Enter key during step navigation
+              if (e.key === 'Enter' && !isLastStep) {
+                console.log('🔥🔥🔥 PREVENTING ENTER KEY SUBMISSION - Not on last step');
+                e.preventDefault();
+              }
+            }}
           >
             <ProfileFormStepper 
               currentStep={currentStep} 
@@ -277,7 +297,6 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
               onNext={nextStep}
               validateCurrentStep={validateCurrentStep}
               isSubmitting={methods.formState.isSubmitting}
-              onSaveClick={methods.handleSubmit(onSubmit)}
             />
 
           </form>

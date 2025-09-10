@@ -1,10 +1,10 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Clock } from 'lucide-react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, Controller } from 'react-hook-form';
 import { FormField, FormItem, FormControl } from '@/components/ui/form';
 
 export default function Step6References() {
@@ -57,10 +57,27 @@ export default function Step6References() {
 
       <div className="space-y-2">
         <Label htmlFor="reason_for_moving">Reden voor verhuizing</Label>
-        <Textarea
-          {...register('reason_for_moving')}
-          placeholder="Beschrijf waarom je op zoek bent naar een nieuwe woning (bijv. nieuwe baan, studiebeëindiging, groeiende familie)"
-          className="min-h-[100px]"
+        <Controller
+          name="reason_for_moving"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer reden voor verhuizing" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nieuwe_baan">Nieuwe baan</SelectItem>
+                <SelectItem value="uitbreiding_familie">Uitbreiding familie</SelectItem>
+                <SelectItem value="echtscheiding">Echtscheiding</SelectItem>
+                <SelectItem value="familiehereniging">Familiehereniging</SelectItem>
+                <SelectItem value="studie">Studie</SelectItem>
+                <SelectItem value="pensioen">Pensioen</SelectItem>
+                <SelectItem value="gezondheid">Gezondheid</SelectItem>
+                <SelectItem value="financieel">Financieel</SelectItem>
+                <SelectItem value="anders">Anders</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         />
         {errors.reason_for_moving && <p className="text-red-500 text-xs">{`${errors.reason_for_moving.message}`}</p>}
       </div>

@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client.ts';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
 import { UserRole } from '../types/index.ts';
@@ -37,13 +36,13 @@ export interface CreateTenantProfileData {
   telefoon: string;
   geboortedatum: string;
   beroep: string;
-  maandinkomen: number;
-  bio: string;
+  inkomen: number;
+  beschrijving: string;
   stad: string;
-  minBudget: number;
-  maxBudget: number;
-  slaapkamers: number;
-  woningtype: string;
+  min_budget: number;
+  max_budget: number;
+  voorkeur_slaapkamers: number;
+  voorkeur_woningtype: string;
   motivatie: string;
   isOpZoek?: boolean;
   nationaliteit?: string;
@@ -62,11 +61,7 @@ export interface CreateTenantProfileData {
   vervoersvoorkeur?: string;
   voorkeurMeubilering?: 'gemeubileerd' | 'ongemeubileerd' | 'geen_voorkeur';
   gewensteVoorzieningen?: string[];
-  garantstellerBeschikbaar?: boolean;
-  naamGarantsteller?: string;
-  telefoonGarantsteller?: string;
-  inkomenGarantsteller?: number;
-  relatieGarantsteller?: 'ouder' | 'familie' | 'vriend' | 'werkgever' | 'anders';
+
   inkomensbewijsBeschikbaar?: boolean;
   voorkeurVerhuisdatum?: string;
   vroegsteVerhuisdatum?: string;
@@ -91,6 +86,7 @@ export interface CreateTenantProfileData {
   borgsteller_relatie?: string;
   borgsteller_telefoon?: string;
   borgsteller_inkomen?: number;
+  borgsteller_email?: string;
   voorkeurslocaties?: Array<{
     name: string;
     lat?: number;
@@ -126,7 +122,6 @@ export interface CreateTenantProfileData {
   huisdieren?: boolean;
   huisdier_details?: string;
   rookt_details?: string;
-  min_budget?: number;
   voorkeurs_slaapkamers?: number;
   verhuis_datum_voorkeur?: Date;
   verhuis_datum_vroegst?: Date;
@@ -165,26 +160,27 @@ export class UserService extends DatabaseService {
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    
+
     return age;
   }
+
   /**
    * Validate authentication and refresh session if needed
    */
   private async validateAuthentication(): Promise<void> {
     const authStore = useAuthStore.getState();
-    
+
     // Check if session is valid
     const isValid = await authStore.validateSession();
-    
+
     if (!isValid) {
       logger.warn('Session invalid, attempting refresh...');
       const refreshed = await authStore.refreshSession();
-      
+
       if (!refreshed) {
         logger.error('Session refresh failed, user needs to re-authenticate');
         throw new AuthenticationError('Uw sessie is verlopen. Log opnieuw in om door te gaan.');
@@ -218,7 +214,7 @@ export class UserService extends DatabaseService {
     data: CreateUserProfileData
   ): Promise<DatabaseResponse<Tables<'gebruikers'>>> {
     const sanitizedData = this.sanitizeInput(data);
-    
+
     const validation = this.validateRequiredFields(sanitizedData, ['voornaam', 'achternaam']);
     if (!validation.isValid) {
       return {
@@ -248,15 +244,15 @@ export class UserService extends DatabaseService {
       // Get user email from auth
       const { data: { user } } = await supabase.auth.getUser();
       const email = user?.email;
-      
+
       if (!email) {
         throw new Error('Gebruiker e-mail niet gevonden');
       }
-      
+
       // Determine role from email or use default
       const role = roleMapper.determineRoleFromEmail(email);
       const dbRole = roleMapper.mapRoleToDatabase(role);
-      
+
       const { data, error } = await supabase
         .from('gebruikers')
         .insert({
@@ -273,7 +269,7 @@ export class UserService extends DatabaseService {
       }
 
       await this.createAuditLog('CREATE', 'profiles', data?.id, null, data);
-      
+
       return { data, error: null };
     });
   }
@@ -294,7 +290,7 @@ export class UserService extends DatabaseService {
   }
 
   /**
-   * Create or update tenant profile - unified method
+   * Create new tenant profile
    */
   async createTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
     return this.withAuthGuard(async () => {
@@ -308,132 +304,95 @@ export class UserService extends DatabaseService {
       }
 
       const sanitizedData = this.sanitizeInput(data);
-      
-      console.log('🔥 UserService.createTenantProfile - Received data:', sanitizedData);
 
+      // Validate required fields
       const validation = this.validateRequiredFields(sanitizedData, [
-        'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 
-        'maandinkomen', 'bio', 'stad', 'minBudget', 'maxBudget', 'motivatie'
+        'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep',
+        'beschrijving', 'motivatie'
       ]);
-      
-      console.log('🔥 UserService.createTenantProfile - Validation result:', validation);
-      console.log('🔥 UserService.createTenantProfile - Required fields check:', {
-        voornaam: sanitizedData.voornaam,
-        achternaam: sanitizedData.achternaam,
-        telefoon: sanitizedData.telefoon,
-        geboortedatum: sanitizedData.geboortedatum,
-        beroep: sanitizedData.beroep,
-        maandinkomen: sanitizedData.maandinkomen,
-        bio: sanitizedData.bio,
-        stad: sanitizedData.stad,
-        minBudget: sanitizedData.minBudget,
-        maxBudget: sanitizedData.maxBudget,
-        motivatie: sanitizedData.motivatie
-      });
-      
+
       if (!validation.isValid) {
-        const error = new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`);
-        console.error('🔥 UserService.createTenantProfile - Validation failed:', error.message);
-        console.error('🔥 UserService.createTenantProfile - Missing fields:', validation.missingFields);
         return {
           data: null,
-          error: error,
+          error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
           success: false,
         };
       }
 
       if (!this.isValidPhoneNumber(sanitizedData.telefoon)) {
-        const error = new Error('Ongeldig telefoonnummer');
-        console.error('🔥 UserService.createTenantProfile - Phone validation failed:', error.message);
         return {
           data: null,
-          error: error,
+          error: new Error('Ongeldig telefoonnummer'),
           success: false,
         };
       }
 
       return this.executeQuery(async () => {
-        // 1. Check if tenant profile already exists
+        // Check if profile already exists
         const { data: existingProfile } = await supabase
           .from('huurders')
           .select('id')
           .eq('id', currentUserId)
           .maybeSingle();
 
-        logger.info("Existing tenant profile check:", existingProfile);
-        console.log('🔥 UserService.createTenantProfile - Existing profile:', existingProfile);
+        if (existingProfile) {
+          return {
+            data: null,
+            error: new Error('Profiel bestaat al'),
+            success: false,
+          };
+        }
 
-        // 2. Prepare tenant profile data using actual database column names
-        const tenantProfileData: any = {
+        // Prepare tenant profile data
+        const tenantProfileData = {
           id: currentUserId,
-          
-          // Personal information - FIXED: Added missing mappings and date conversion
           voornaam: sanitizedData.voornaam,
           achternaam: sanitizedData.achternaam,
-          telefoon: sanitizedData.telefoon, // FIXED: Added missing telefoon field
+          telefoon: sanitizedData.telefoon,
           geboortedatum: sanitizedData.geboortedatum ? convertToISODate(sanitizedData.geboortedatum) : null,
           geslacht: sanitizedData.geslacht,
           burgerlijke_staat: sanitizedData.burgerlijke_staat || sanitizedData.burgerlijkeStaat,
           nationaliteit: sanitizedData.nationaliteit,
-          
-          // Employment information - FIXED: Added missing mappings
           beroep: sanitizedData.beroep,
           werkgever: sanitizedData.werkgever,
           dienstverband: sanitizedData.dienstverband || sanitizedData.typeArbeidscontract,
-          
-          // Financial information
           inkomen: sanitizedData.maandinkomen || sanitizedData.inkomen,
-          
-          // Profile information
-          beschrijving: sanitizedData.bio,
-          locatie_voorkeur: [sanitizedData.stad],
-          max_huur: sanitizedData.maxBudget,
-          min_kamers: sanitizedData.slaapkamers || sanitizedData.min_kamers || 1,
-          max_kamers: sanitizedData.slaapkamers ? sanitizedData.slaapkamers + 1 : sanitizedData.max_kamers || 3,
-          
-          // Calculate age from birth date
+          beschrijving: sanitizedData.beschrijving,
+          motivatie: sanitizedData.motivatie,
+          locatie_voorkeur: Array.isArray(sanitizedData.locatie_voorkeur) ? sanitizedData.locatie_voorkeur : (sanitizedData.stad ? [sanitizedData.stad] : null),
+          max_huur: sanitizedData.max_budget,
+          min_budget: sanitizedData.min_budget,
+          min_kamers: sanitizedData.min_kamers || 1,
+          max_kamers: sanitizedData.max_kamers || 3,
           leeftijd: sanitizedData.geboortedatum ? this.calculateAge(sanitizedData.geboortedatum) : null,
-          
-          // Family information - FIXED: Added missing mappings
-          heeft_kinderen: sanitizedData.heeftKinderen || sanitizedData.heeft_kinderen || false,
-          aantal_kinderen: sanitizedData.aantalKinderen || sanitizedData.aantal_kinderen || 0,
-          kinderen_leeftijden: sanitizedData.leeftijdenKinderen || sanitizedData.kinderen_leeftijden || [],
-          aantal_huisgenoten: sanitizedData.aantalHuisgenoten || sanitizedData.aantal_huisgenoten || 0,
-          huidige_woonsituatie: sanitizedData.huidigeWoonsituatie || sanitizedData.huidige_woonsituatie || null,
-          partner: sanitizedData.heeftPartner || sanitizedData.heeft_partner || false,
-          partner_maandinkomen: sanitizedData.partner_inkomen || sanitizedData.partner_monthly_income || null,
-          roken: sanitizedData.roken || sanitizedData.smokes || false,
-          huisdieren: sanitizedData.heeftHuisdieren || sanitizedData.huisdieren || false,
-          
-          // Guarantor information
+          heeft_kinderen: sanitizedData.heeft_kinderen || false,
+          aantal_kinderen: sanitizedData.aantal_kinderen || 0,
+          kinderen_leeftijden: sanitizedData.kinderen_leeftijden || [],
+          aantal_huisgenoten: sanitizedData.aantal_huisgenoten || 0,
+          huidige_woonsituatie: sanitizedData.huidige_woonsituatie,
+          partner: sanitizedData.partner || false,
+          roken: sanitizedData.roken || false,
+          huisdieren: sanitizedData.huisdieren || false,
           borgsteller_beschikbaar: sanitizedData.borgsteller_beschikbaar || false,
-          borgsteller_naam: sanitizedData.borgsteller_naam || null,
-          borgsteller_telefoon: sanitizedData.borgsteller_telefoon || null,
-          borgsteller_inkomen: sanitizedData.borgsteller_inkomen || null,
-          borgsteller_relatie: sanitizedData.borgsteller_relatie || null,
-          borgsteller_details: sanitizedData.borgstellerDetails || sanitizedData.borgsteller_details || null,
+          borgsteller_naam: sanitizedData.borgsteller_naam,
+          borgsteller_telefoon: sanitizedData.borgsteller_telefoon,
+          borgsteller_inkomen: sanitizedData.borgsteller_inkomen,
+          borgsteller_relatie: sanitizedData.borgsteller_relatie,
+          borgsteller_email: sanitizedData.borgsteller_email,
           inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijs_beschikbaar || false,
-          
-          // Timing information - FIXED: Added date conversion
-          voorkeur_verhuisdatum: sanitizedData.voorkeur_verhuisdatum ? convertToISODate(sanitizedData.voorkeur_verhuisdatum) : 
-                                sanitizedData.verhuis_datum_voorkeur ? convertToISODate(sanitizedData.verhuis_datum_voorkeur) : null,
-          vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? convertToISODate(sanitizedData.vroegste_verhuisdatum) : 
-                                sanitizedData.verhuis_datum_vroegst ? convertToISODate(sanitizedData.verhuis_datum_vroegst) : null,
-          beschikbaarheid_flexibel: sanitizedData.beschikbaarheid_flexibel || sanitizedData.beschikbaarheid_flexibel_timing || false,
-          
-          // Direct field mappings for dashboard display
-          huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur || sanitizedData.huurcontractVoorkeur || sanitizedData.lease_duration_preference || null,
-          reden_verhuizing: sanitizedData.reden_verhuizing || sanitizedData.redenVerhuizing || sanitizedData.reason_for_moving || null,
-          
-          // Preferences stored in JSON
+          voorkeur_verhuisdatum: sanitizedData.voorkeur_verhuisdatum ? convertToISODate(sanitizedData.voorkeur_verhuisdatum) : null,
+          vroegste_verhuisdatum: sanitizedData.vroegste_verhuisdatum ? convertToISODate(sanitizedData.vroegste_verhuisdatum) : null,
+          beschikbaarheid_flexibel: sanitizedData.beschikbaarheid_flexibel || false,
+          huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur,
+          reden_verhuizing: sanitizedData.reden_verhuizing,
           woningvoorkeur: {
-            type: sanitizedData.woningtype || 'appartement',
+            type: sanitizedData.voorkeur_woningtype || 'appartement',
             meubilering: sanitizedData.meubilering_voorkeur || 'geen_voorkeur',
-            voorzieningen: sanitizedData.gewensteVoorzieningen || [],
-            wijken: sanitizedData.voorkeurswijken || [],
-            maxReistijd: sanitizedData.maxReistijd || 30,
-            vervoer: sanitizedData.vervoersvoorkeur || 'openbaar_vervoer',
-            slaapkamers_voorkeur: sanitizedData.voorkeurs_slaapkamers,
+            voorzieningen: sanitizedData.gewenste_voorzieningen || [],
+            wijken: sanitizedData.locatie_voorkeur || [],
+            maxReistijd: sanitizedData.max_reistijd || 30,
+            vervoer: sanitizedData.vervoers_voorkeur || 'openbaar_vervoer',
+            slaapkamers_voorkeur: sanitizedData.voorkeur_slaapkamers,
             parkeren: sanitizedData.parkeren_vereist || false,
             opslag: {
               kelder: sanitizedData.opslag_kelder || false,
@@ -441,94 +400,265 @@ export class UserService extends DatabaseService {
               berging: sanitizedData.opslag_berging || false,
               garage: sanitizedData.opslag_garage || false,
               schuur: sanitizedData.opslag_schuur || false,
-              behoeften: sanitizedData.opslag_behoeften
-            },
-            huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur
+            }
           },
-          
-          // Additional profile information
           thuiswerken: sanitizedData.thuiswerken || false,
           extra_inkomen: sanitizedData.extra_inkomen,
           extra_inkomen_beschrijving: sanitizedData.extra_inkomen_beschrijving,
-          
-          // Partner information
-          partner_inkomen: sanitizedData.partner_inkomen || sanitizedData.partner_monthly_income || null,
-          
-          // Lifestyle details
+          partner_inkomen: sanitizedData.partner_inkomen,
           huisdier_details: sanitizedData.huisdier_details,
-          rook_details: sanitizedData.smoking_details,
-          
-          // References and history
+          rook_details: sanitizedData.rook_details,
           verhuurgeschiedenis_jaren: sanitizedData.verhuurgeschiedenis_jaren,
           referenties_beschikbaar: sanitizedData.referenties_beschikbaar || false,
-          
-          // Budget preferences
-          min_budget: sanitizedData.min_budget ?? sanitizedData.min_huur,
-          
-          // Profile media
-          profiel_foto: sanitizedData.profielfotoUrl || sanitizedData.profiel_foto || null,
-          cover_foto: sanitizedData.coverFotoUrl || sanitizedData.cover_foto || null,
-          
-          // Motivation
-          motivatie: sanitizedData.motivatie,
+          profiel_foto: sanitizedData.profiel_foto,
+          cover_foto: sanitizedData.cover_foto,
         };
 
-        // Calculate age from birth date
-        if (sanitizedData.geboortedatum) {
-          tenantProfileData.leeftijd = this.calculateAge(sanitizedData.geboortedatum);
+        const { data, error } = await supabase
+          .from('huurders')
+          .insert(tenantProfileData)
+          .select()
+          .single();
+
+        if (error) {
+          throw this.handleDatabaseError(error);
         }
 
-        let tenantProfile;
-        let isUpdate = false;
-
-        if (existingProfile) {
-          // Update existing profile
-          logger.info("Updating existing tenant profile for user:", currentUserId);
-          console.log("DEBUG: tenantProfileData being sent to Supabase:", JSON.stringify(tenantProfileData, null, 2));
-          isUpdate = true;
-          
-          const { data, error: tenantError } = await supabase
-            .from('huurders')
-            .update(tenantProfileData)
-            .eq('id', currentUserId)
-            .select()
-            .single();
-
-          if (tenantError) {
-            console.error('🔥 UserService.createTenantProfile - Update error:', tenantError);
-            throw this.handleDatabaseError(tenantError);
-          }
-          tenantProfile = data;
-          console.log('🔥 UserService.createTenantProfile - Update successful:', tenantProfile);
-        } else {
-          // Create new profile
-          logger.info("Creating new tenant profile for user:", currentUserId);
-          console.log("DEBUG: tenantProfileData being inserted:", JSON.stringify(tenantProfileData, null, 2));
-          
-          const { data, error: tenantError } = await supabase
-            .from('huurders')
-            .insert(tenantProfileData)
-            .select()
-            .single();
-
-          if (tenantError) {
-            console.error('🔥 UserService.createTenantProfile - Insert error:', tenantError);
-            throw this.handleDatabaseError(tenantError);
-          }
-          tenantProfile = data;
-          console.log('🔥 UserService.createTenantProfile - Insert successful:', tenantProfile);
-        }
-
-        await this.createAuditLog(
-          isUpdate ? 'UPDATE' : 'CREATE', 
-          'tenant_profiles', 
-          currentUserId, 
-          existingProfile, 
-          tenantProfile
-        );
-
-        return { data: tenantProfile, error: null };
+        await this.createAuditLog('CREATE', 'tenant_profiles', currentUserId, null, data);
+        return { data, error: null };
       });
+    });
+  }
+
+  /**
+   * Update existing tenant profile
+   */
+  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
+    console.log('🔥🔥🔥 updateTenantProfile CALLED with data:', data);
+    return this.withAuthGuard(async () => {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return {
+          data: null,
+          error: new AuthenticationError('Niet geautoriseerd'),
+          success: false,
+        };
+      }
+
+      const sanitizedData = this.sanitizeInput(data);
+
+      // Validate required fields
+      const validation = this.validateRequiredFields(sanitizedData, [
+        'voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep',
+        'beschrijving', 'motivatie'
+      ]);
+
+      if (!validation.isValid) {
+        return {
+          data: null,
+          error: new Error(`Verplichte velden ontbreken: ${validation.missingFields.join(', ')}`),
+          success: false,
+        };
+      }
+
+      if (!this.isValidPhoneNumber(sanitizedData.telefoon)) {
+        return {
+          data: null,
+          error: new Error('Ongeldig telefoonnummer'),
+          success: false,
+        };
+      }
+
+      return this.executeQuery(async () => {
+        // Check if profile exists
+        const { data: existingProfile, error: profileCheckError } = await supabase
+          .from('huurders')
+          .select('*')
+          .eq('id', currentUserId)
+          .maybeSingle();
+
+        console.log('🔥 UserService.updateTenantProfile - Profile check result:', { existingProfile, profileCheckError });
+
+        if (profileCheckError) {
+          console.error('🔥 UserService.updateTenantProfile - Profile check error:', profileCheckError);
+          return {
+            data: null,
+            error: new Error(`Profiel controle fout: ${profileCheckError.message}`),
+            success: false,
+          };
+        }
+
+        if (!existingProfile) {
+          console.log('🔥 UserService.updateTenantProfile - Profile does not exist, creating new one');
+          // Try to create the profile instead
+          const createResult = await this.createTenantProfile(sanitizedData as CreateTenantProfileData);
+          console.log('🔥 UserService.updateTenantProfile - Create result:', createResult);
+          return createResult;
+        }
+
+        console.log('🔥 UserService.updateTenantProfile - Profile exists:', existingProfile);
+
+        // Debug: Log what data we're trying to send
+        console.log('🔥 UserService.updateTenantProfile - Attempting to send data:', sanitizedData);
+
+        // Prepare update data - use only confirmed database columns to avoid schema cache issues
+        const tenantProfileData: any = {
+          // Core profile information
+          voornaam: sanitizedData.voornaam,
+          achternaam: sanitizedData.achternaam,
+          telefoon: sanitizedData.telefoon,
+          geboortedatum: sanitizedData.geboortedatum ? convertToISODate(sanitizedData.geboortedatum) : null,
+          geslacht: sanitizedData.geslacht,
+          burgerlijke_staat: sanitizedData.burgerlijkeStaat || sanitizedData.burgerlijke_staat,
+          nationaliteit: sanitizedData.nationaliteit,
+
+          // Employment information
+          beroep: sanitizedData.beroep,
+          werkgever: sanitizedData.werkgever,
+          dienstverband: sanitizedData.typeArbeidscontract || sanitizedData.dienstverband,
+          inkomen: sanitizedData.inkomen || sanitizedData.maandinkomen || 0,
+
+          // Profile description and motivation
+          beschrijving: sanitizedData.beschrijving,
+          motivatie: sanitizedData.motivatie,
+
+          // Housing preferences - using only fields that exist in actual database
+          locatie_voorkeur: Array.isArray(sanitizedData.locatie_voorkeur) ? sanitizedData.locatie_voorkeur : (sanitizedData.stad ? [sanitizedData.stad] : []),
+          max_huur: sanitizedData.max_budget || 0,
+          min_budget: sanitizedData.min_budget || 0,
+          min_kamers: sanitizedData.min_kamers || 1,
+          max_kamers: sanitizedData.max_kamers || 3,
+
+          // Family information
+          heeft_kinderen: sanitizedData.heeft_kinderen || false,
+          aantal_kinderen: sanitizedData.aantal_kinderen || 0,
+          kinderen_leeftijden: sanitizedData.kinderen_leeftijden || [],
+
+          // Household information
+          aantal_huisgenoten: sanitizedData.aantal_huisgenoten || 0,
+          huidige_woonsituatie: sanitizedData.huidige_woonsituatie,
+
+          // Partner information
+          partner: sanitizedData.heeftPartner || sanitizedData.partner || false,
+          partner_naam: sanitizedData.naamPartner || sanitizedData.partner_naam,
+          partner_beroep: sanitizedData.beroepPartner || sanitizedData.partner_beroep,
+          partner_dienstverband: sanitizedData.werkstatusPartner || sanitizedData.partner_dienstverband,
+          partner_inkomen: sanitizedData.partner_inkomen || 0,
+
+          // Additional income
+          extra_inkomen: sanitizedData.extra_inkomen || 0,
+          extra_inkomen_beschrijving: sanitizedData.extra_inkomen_beschrijving,
+
+          // Preferences and habits
+          roken: sanitizedData.roken || false,
+          huisdieren: sanitizedData.huisdieren || false,
+          thuiswerken: sanitizedData.thuiswerken || false,
+
+          // Guarantor information
+          borgsteller_beschikbaar: sanitizedData.borgsteller_beschikbaar || false,
+          borgsteller_naam: sanitizedData.borgsteller_naam,
+          borgsteller_relatie: sanitizedData.borgsteller_relatie,
+          borgsteller_telefoon: sanitizedData.borgsteller_telefoon,
+          borgsteller_inkomen: sanitizedData.borgsteller_inkomen || 0,
+          borgsteller_email: sanitizedData.borgsteller_email,
+
+          // Additional details
+          inkomensbewijs_beschikbaar: sanitizedData.inkomensbewijsBeschikbaar || sanitizedData.inkomensbewijs_beschikbaar || false,
+          voorkeur_verhuisdatum: sanitizedData.voorkeurVerhuisdatum || sanitizedData.voorkeur_verhuisdatum ? convertToISODate(sanitizedData.voorkeurVerhuisdatum || sanitizedData.voorkeur_verhuisdatum) : null,
+          vroegste_verhuisdatum: sanitizedData.vroegsteVerhuisdatum || sanitizedData.vroegste_verhuisdatum ? convertToISODate(sanitizedData.vroegsteVerhuisdatum || sanitizedData.vroegste_verhuisdatum) : null,
+          beschikbaarheid_flexibel: sanitizedData.flexibeleBeschikbaarheid || sanitizedData.beschikbaarheid_flexibel || false,
+          huurcontract_voorkeur: sanitizedData.huurcontract_voorkeur,
+          reden_verhuizing: sanitizedData.redenVerhuizing || sanitizedData.reden_verhuizing,
+          verhuurgeschiedenis_jaren: sanitizedData.verhuurgeschiedenis_jaren || 0,
+          referenties_beschikbaar: sanitizedData.referentiesBeschikbaar || sanitizedData.referenties_beschikbaar || false,
+
+          // Profile images
+          profiel_foto: sanitizedData.profiel_foto || sanitizedData.profielfotoUrl,
+          cover_foto: sanitizedData.cover_foto || sanitizedData.coverFotoUrl,
+
+          // Additional details
+          huisdier_details: sanitizedData.detailsHuisdieren || sanitizedData.huisdier_details,
+          rook_details: sanitizedData.detailsRoken || sanitizedData.rook_details,
+
+          // Storage preferences
+          opslag_kelder: sanitizedData.opslag_kelder || sanitizedData.storage_kelder || false,
+          opslag_zolder: sanitizedData.opslag_zolder || sanitizedData.storage_zolder || false,
+          opslag_berging: sanitizedData.opslag_berging || sanitizedData.storage_berging || false,
+          opslag_garage: sanitizedData.opslag_garage || sanitizedData.storage_garage || false,
+          opslag_schuur: sanitizedData.opslag_schuur || sanitizedData.storage_schuur || false,
+
+          // Update woningvoorkeur JSON to include parking preference
+          woningvoorkeur: {
+            type: sanitizedData.voorkeur_woningtype || 'appartement',
+            meubilering: sanitizedData.meubilering_voorkeur || 'geen_voorkeur',
+            voorzieningen: sanitizedData.gewenste_voorzieningen || [],
+            wijken: sanitizedData.locatie_voorkeur || [],
+            maxReistijd: sanitizedData.max_reistijd || 30,
+            vervoer: sanitizedData.vervoers_voorkeur || 'openbaar_vervoer',
+            slaapkamers_voorkeur: sanitizedData.voorkeur_slaapkamers,
+            parkeren: sanitizedData.parkeren_vereist || sanitizedData.parking_required || false,
+            opslag: {
+              kelder: sanitizedData.opslag_kelder || sanitizedData.storage_kelder || false,
+              zolder: sanitizedData.opslag_zolder || sanitizedData.storage_zolder || false,
+              berging: sanitizedData.opslag_berging || sanitizedData.storage_berging || false,
+              garage: sanitizedData.opslag_garage || sanitizedData.storage_garage || false,
+              schuur: sanitizedData.opslag_schuur || sanitizedData.storage_schuur || false,
+            }
+          },
+        };
+
+        console.log('🔥 UserService.updateTenantProfile - Final data to send:', tenantProfileData);
+
+        console.log('🔥🔥🔥 ABOUT TO EXECUTE SUPABASE UPDATE with data:', tenantProfileData);
+
+        const { data, error } = await supabase
+          .from('huurders')
+          .update(tenantProfileData)
+          .eq('id', currentUserId)
+          .select()
+          .single();
+
+        console.log('🔥🔥🔥 SUPABASE UPDATE RESULT:', { data, error });
+
+        if (error) {
+          console.error('🔥🔥🔥 SUPABASE UPDATE ERROR:', error);
+          throw this.handleDatabaseError(error);
+        }
+
+        console.log('🔥🔥🔥 SUPABASE UPDATE SUCCESS:', data);
+
+        await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, existingProfile, data);
+        return { data, error: null };
+      });
+    });
+  }
+
+  /**
+   * Create or update tenant profile - unified method (legacy compatibility)
+   */
+  async createTenantProfileUnified(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
+    return this.withAuthGuard(async () => {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return {
+          data: null,
+          error: new AuthenticationError('Niet geautoriseerd'),
+          success: false,
+        };
+      }
+
+      // Check if profile exists to determine create vs update
+      const { data: existingProfile } = await supabase
+        .from('huurders')
+        .select('id')
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        return this.updateTenantProfile(data);
+      } else {
+        return this.createTenantProfile(data);
+      }
     });
   }
 
@@ -545,14 +675,6 @@ export class UserService extends DatabaseService {
 
       return { data, error };
     });
-  }
-
-  /**
-   * Update existing tenant profile - now delegates to createTenantProfile
-   */
-  async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
-    // Just call createTenantProfile since it now handles both create and update
-    return this.createTenantProfile(data);
   }
 
   /**
@@ -678,7 +800,7 @@ export class UserService extends DatabaseService {
         const currentNaam = currentData?.naam || '';
         const [currentFirstName, ...currentLastNameParts] = currentNaam.split(' ');
         const currentLastName = currentLastNameParts.join(' ');
-        
+
         const firstName = sanitizedData.voornaam || currentFirstName;
         const lastName = sanitizedData.achternaam || currentLastName;
         updateData.naam = `${firstName} ${lastName}`;
@@ -717,7 +839,7 @@ export class UserService extends DatabaseService {
       return { data, error };
     });
   }
-  
+
   /**
    * Get profile picture URL for a user
    */
@@ -1170,7 +1292,7 @@ export class UserService extends DatabaseService {
     }
 
     const sanitizedData = this.sanitizeInput(data);
-    
+
     const validation = this.validateRequiredFields(sanitizedData, ['email', 'password', 'role', 'voornaam', 'achternaam']);
     if (!validation.isValid) {
       return {

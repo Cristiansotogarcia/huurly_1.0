@@ -18,8 +18,7 @@ import MobileModalPage from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { useHuurder } from '@/hooks/useHuurder';
-import { setIsSubmittingForm } from '@/store/auth/conservativeLogout';
-import { getDefaultProfileValues } from '@/utils/profileDefaults';
+// Removed incorrect import - setIsSubmittingForm not exported from conservativeLogout
 
 const steps = [
   { id: 'step1', name: 'Persoonlijke Info' },
@@ -44,6 +43,8 @@ const ProfileEditPage: React.FC = () => {
   const returnTo = state?.returnTo || '/huurder-dashboard';
   const onProfileComplete = state?.modalData?.onProfileComplete; // Get callback from state
 
+
+
   const getDefaultValues = (): ProfileFormData => {
     const defaults: ProfileFormData = {
       // Step 1: Personal Info
@@ -55,12 +56,12 @@ const ProfileEditPage: React.FC = () => {
       sex: 'zeg_ik_liever_niet',
       nationality: 'Nederlandse',
       marital_status: 'single',
-      
+
       // Children information
       has_children: false,
       number_of_children: 0,
       children_ages: [],
-      
+
       // Step 2: Employment
       profession: '',
       employer: '',
@@ -71,14 +72,14 @@ const ProfileEditPage: React.FC = () => {
       work_from_home: false,
       extra_income: undefined,
       extra_income_description: '',
-      
+
       // Step 3: Household
       has_partner: false,
       partner_name: '',
       partner_profession: '',
       partner_employment_status: '',
       partner_monthly_income: undefined,
-      
+
       // Step 4: Housing Preferences
       preferred_city: [],
       preferred_property_type: 'appartement',
@@ -88,48 +89,48 @@ const ProfileEditPage: React.FC = () => {
       max_budget: undefined as unknown as number,
       min_kamers: undefined,
       max_kamers: undefined,
-      
+
       // Timing fields
       move_in_date_preferred: undefined,
       move_in_date_earliest: undefined,
       availability_flexible: false,
       lease_duration_preference: undefined,
       parking_required: false,
-      
+
       // Storage preferences
       storage_kelder: false,
       storage_zolder: false,
       storage_berging: false,
       storage_garage: false,
       storage_schuur: false,
-      
+      storage_needed: false,
+
       // Step 4: Lifestyle
       hasPets: false,
       pet_details: '',
       smokes: false,
       smoking_details: '',
-      
+
       // Step 5: Guarantor
       borgsteller_beschikbaar: false,
       borgsteller_naam: '',
       borgsteller_relatie: '',
       borgsteller_telefoon: '',
+      borgsteller_email: '',
+      borgsteller_adres: '',
       borgsteller_inkomen: undefined,
-      
+
       // Step 6: References & History
       references_available: false,
       rental_history_years: undefined,
       reason_for_moving: '',
-      
+
       // Step 7: Profile & Motivation
       bio: '',
       motivation: '',
     };
 
-    // Merge with initial data if provided
     const mergedData = initialData ? { ...defaults, ...initialData } : defaults;
-    
-    // Ensure required fields have proper values
     if (!mergedData.first_name) mergedData.first_name = '';
     if (!mergedData.last_name) mergedData.last_name = '';
     if (!mergedData.date_of_birth) mergedData.date_of_birth = '';
@@ -145,9 +146,8 @@ const ProfileEditPage: React.FC = () => {
     return mergedData;
   };
 
-
   const methods = useForm<ProfileFormData>({
-      resolver: zodResolver(profileSchema) as any,
+    resolver: zodResolver(profileSchema) as any,
     defaultValues: getDefaultValues(),
   });
 
@@ -164,8 +164,7 @@ const ProfileEditPage: React.FC = () => {
 
   // Reset form when initialData changes
   useEffect(() => {
-    const newValues = getDefaultValues();
-    methods.reset(newValues);
+    methods.reset(getDefaultValues());
   }, [initialData]);
 
   // Create step components inside the component to access methods
@@ -213,7 +212,7 @@ const ProfileEditPage: React.FC = () => {
       }
     }
 
-    setIsSubmittingForm(true);
+    // Form submission started - removed setIsSubmittingForm call
 
     try {
       const timeoutPromise = new Promise((_, reject) =>
@@ -241,7 +240,7 @@ const ProfileEditPage: React.FC = () => {
       // Don't navigate away on error - let user fix the issue
       // Don't re-throw the error as it's already handled
     } finally {
-      setIsSubmittingForm(false);
+      // Form submission completed - removed setIsSubmittingForm call
     }
   };
 

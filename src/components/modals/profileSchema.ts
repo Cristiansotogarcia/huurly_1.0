@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Location data structure for preferred cities
 const LocationDataSchema = z.object({
-  name: z.string().min(1, 'Stadsnaam is verplicht').optional(),
+  name: z.string().min(1, 'Stadsnaam is verplicht'),
   lat: z.number().optional(),
   lng: z.number().optional(),
   radius: z.number().min(1).max(50, 'Straal moet tussen 1 en 50 km zijn').optional()
@@ -91,6 +91,7 @@ export const profileSchema = z.object({
   storage_berging: z.boolean().default(false),
   storage_garage: z.boolean().default(false),
   storage_schuur: z.boolean().default(false),
+  storage_needed: z.boolean().default(false),
   
   // Lifestyle (consolidated from Step 6)
   hasPets: z.boolean().default(false),
@@ -104,11 +105,15 @@ export const profileSchema = z.object({
   borgsteller_relatie: z.string().optional(),
   borgsteller_telefoon: z.string().optional(),
   borgsteller_inkomen: z.number().min(0).optional(),
+  borgsteller_email: z.string().email({ message: 'Ongeldig emailadres' }).optional(),
+
   
   // References & History
   references_available: z.boolean().default(false),
   rental_history_years: z.number().min(0, 'Huurervaring mag niet negatief zijn').max(50, 'Maximaal 50 jaar ervaring').optional(),
-  reason_for_moving: z.string().min(10, 'Reden voor verhuizing moet minimaal 10 karakters lang zijn').max(300, 'Reden mag maximaal 300 karakters lang zijn').optional(),
+  reason_for_moving: z.enum(['nieuwe_baan', 'uitbreiding_familie', 'echtscheiding', 'familiehereniging', 'studie', 'pensioen', 'gezondheid', 'financieel', 'anders'], {
+    message: 'Selecteer een reden voor verhuizing'
+  }).optional(),
   
   // Profile & Motivation
   profilePictureUrl: z.string().optional(),

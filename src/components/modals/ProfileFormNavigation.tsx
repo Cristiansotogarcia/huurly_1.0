@@ -37,17 +37,6 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
     }
   };
 
-  const handleSave = () => {
-    const errors = validateCurrentStep ? validateCurrentStep() : [];
-    if (errors.length > 0) {
-      setMissingFields(errors.map((e) => e.label));
-      setShowValidationModal(true);
-      return;
-    }
-
-    onSaveClick?.();
-  };
-
   return (
     <>
       <ValidationErrorModal
@@ -79,16 +68,32 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
               className="w-full sm:w-auto"
               disabled={isSubmitting}
             >
-              Volgende
+              {isSubmitting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+                  Controleren...
+                </>
+              ) : (
+                'Volgende'
+              )}
             </Button>
           ) : (
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
-
-              onClick={handleSave}
-
+              onClick={(e) => {
+                console.log('🔥🔥🔥 PROFIEL OPSLAAN BUTTON CLICKED');
+                console.log('🔥🔥🔥 Is submitting:', isSubmitting);
+                console.log('🔥🔥🔥 Is last step:', isLastStep);
+                // Ensure this only triggers on the last step
+                if (!isLastStep) {
+                  console.log('🔥🔥🔥 BLOCKING SUBMIT BUTTON - Not on last step');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }}
             >
               {isSubmitting ? (
                 <>

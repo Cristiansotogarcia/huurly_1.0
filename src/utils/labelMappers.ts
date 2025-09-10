@@ -81,6 +81,8 @@ export const mapFurnishedPreferenceLabel = (value: string | undefined): string =
       return 'Kaal';
     case 'flexibel':
       return 'Flexibel';
+    case 'geen_voorkeur':
+      return 'Geen Voorkeur';
     default:
       return value || 'N.v.t.';
   }
@@ -143,6 +145,54 @@ export const mapMaritalStatusLabel = (value: string | undefined): string => {
     case 'verweduwd':
     case 'widowed':
       return 'Verweduwd';
+    default:
+      return value || 'N.v.t.';
+  }
+};
+
+// Mapper for current living situation (huidige_woonsituatie)
+export const mapCurrentLivingSituationLabel = (value: string | undefined): string => {
+  switch (value) {
+    case 'studentenkamer':
+      return 'Studentenkamer';
+    case 'huurwoning':
+      return 'Huurwoning';
+    case 'koopwoning':
+      return 'Koopwoning';
+    case 'bij_familie':
+      return 'Bij Familie';
+    case 'bij_vrienden':
+      return 'Bij Vrienden';
+    case 'tijdelijk':
+      return 'Tijdelijk';
+    case 'anders':
+      return 'Anders';
+    default:
+      return value || 'N.v.t.';
+  }
+};
+
+// Mapper for reason for moving (reden_verhuizing)
+export const mapReasonForMovingLabel = (value: string | undefined): string => {
+  switch (value) {
+    case 'nieuwe_baan':
+      return 'Nieuwe Baan';
+    case 'uitbreiding_familie':
+      return 'Uitbreiding Familie';
+    case 'echtscheiding':
+      return 'Echtscheiding';
+    case 'familiehereniging':
+      return 'Familiehereniging';
+    case 'studie':
+      return 'Studie';
+    case 'pensioen':
+      return 'Pensioen';
+    case 'gezondheid':
+      return 'Gezondheid';
+    case 'financieel':
+      return 'Financieel';
+    case 'anders':
+      return 'Anders';
     default:
       return value || 'N.v.t.';
   }

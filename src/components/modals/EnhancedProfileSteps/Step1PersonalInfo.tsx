@@ -2,22 +2,16 @@ import { useFormContext, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
+// ProfilePictureUpload removed - users can update profile picture from dashboard
 import { DateInput } from '@/components/ui/DateInput';
 import { User, Phone, Globe } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+// useAuthStore removed - no longer needed without profile picture upload
 import { ProfileFormData } from '../profileSchema';
 
 export default function Step1PersonalInfo() {
-  const { control, register, setValue, watch, formState: { errors } } = useFormContext<ProfileFormData>();
-  const { user } = useAuthStore();
+  const { control, register, formState: { errors } } = useFormContext<ProfileFormData>();
 
-  const profilePictureUrl = watch('profilePictureUrl');
-
-
-  const handleProfilePictureUpload = (url: string) => {
-    setValue('profilePictureUrl', url);
-  };
+  // Profile picture handling removed - users can update from dashboard
 
   return (
     <div className="space-y-6">
@@ -28,18 +22,10 @@ export default function Step1PersonalInfo() {
           </div>
           <h2 className="text-xl font-semibold">Persoonlijke Informatie</h2>
         </div>
-        <p className="text-gray-600">Begin met je basisgegevens en profielfoto</p>
+        <p className="text-gray-600">Begin met je basisgegevens (profielfoto kan je bijwerken via het dashboard)</p>
       </div>
 
-      {/* Profile Picture Upload */}
-      <div className="flex justify-center">
-        <ProfilePictureUpload
-          userId={user?.id || ''}
-          type="profile"
-          currentImageUrl={profilePictureUrl}
-          onImageUploaded={handleProfilePictureUpload}
-        />
-      </div>
+      {/* Profile Picture Upload removed - users can update profile picture from dashboard */}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
