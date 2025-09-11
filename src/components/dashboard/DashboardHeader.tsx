@@ -1,20 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Settings, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { User as UserType } from "@/types";
 
 interface DashboardHeaderProps {
   user: UserType;
   onLogout: () => void;
-  onSettings?: () => void;
 }
 
-const DashboardHeader = ({ 
-  user, 
-  onLogout,
-  onSettings
+const DashboardHeader = ({
+  user,
+  onLogout
 }: DashboardHeaderProps) => {
   const { name, role, hasPayment, subscriptionEndDate, profilePictureUrl } = user;
   
@@ -67,22 +65,10 @@ const DashboardHeader = ({
 
           {/* Right Section - User Profile */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Settings Button */}
-            {onSettings && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onSettings}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            )}
-            
             {/* Logout Button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onLogout}
               className="text-gray-500 hover:text-gray-700"
             >

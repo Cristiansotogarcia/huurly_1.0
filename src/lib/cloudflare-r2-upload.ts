@@ -192,6 +192,83 @@ export class CloudflareR2UploadService {
   }
 
   /* ------------------------------------------------------------------ */
+  /**
+   * Delete a file from Cloudflare R2
+   */
+  async deleteFile(fileUrl: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!fileUrl) {
+        return { success: false, error: 'File URL is required' };
+      }
+
+      // Extract file path from URL
+      const filePath = this.extractFilePathFromUrl(fileUrl);
+      if (!filePath) {
+        return { success: false, error: 'Could not extract file path from URL' };
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !anonKey) {
+        throw new Error('Supabase configuratie ontbreekt');
+      }
+
+      // Determine which edge function to use based on file type
+      const isDocument = filePath.includes('Documents') || fileUrl.includes('documents.huurly.nl');
+      const functionName = isDocument ? 'cloudflare-r2-delete-documents' : 'cloudflare-r2-delete';
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: anonKey,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({ filePath })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Delete failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return { success: result.success || true };
+
+    } catch (error) {
+      console.error('Delete file error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
+   * Delete multiple files from Cloudflare R2
+   */
+  async deleteFiles(fileUrls: string[]): Promise<{ success: boolean; errors: string[] }> {
+    const errors: string[] = [];
+    let allSuccess = true;
+
+    for (const url of fileUrls) {
+      if (!url) continue;
+
+      const result = await this.deleteFile(url);
+      if (!result.success) {
+        allSuccess = false;
+        errors.push(`Failed to delete ${url}: ${result.error}`);
+      }
+    }
+
+    return { success: allSuccess, errors };
+  }
+
+  /* ------------------------------------------------------------------ */
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore.ts';
 import { logger } from '../lib/logger.ts';
 import { roleMapper } from '../lib/auth/roleMapper.ts';
 import { convertToISODate } from '../utils/dateUtils.ts';
+import { cloudflareR2UploadService } from '../lib/cloudflare-r2-upload.ts';
 
 // Authentication error class
 export class AuthenticationError extends Error {
@@ -1096,6 +1097,217 @@ export class UserService extends DatabaseService {
       await this.createAuditLog('DELETE', 'profiles', userId, userData);
 
       return { data: true, error: null };
+    });
+  }
+
+  /**
+   * Delete current user's account (self-deletion)
+   */
+  async deleteOwnAccount(): Promise<DatabaseResponse<{ emailSent: boolean }>> {
+    return this.withAuthGuard(async () => {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return {
+          data: null,
+          error: new AuthenticationError('Niet geautoriseerd'),
+          success: false,
+        };
+      }
+
+      return this.executeQuery(async () => {
+        // Get user data for audit log and email
+        const { data: userData, error: userError } = await supabase
+          .from('gebruikers')
+          .select('*')
+          .eq('id', currentUserId)
+          .single();
+
+        if (userError || !userData) {
+          throw new Error('Gebruiker niet gevonden');
+        }
+
+        // Get tenant profile data to collect file URLs for cleanup
+        const { data: tenantData } = await supabase
+          .from('huurders')
+          .select('profiel_foto, cover_foto')
+          .eq('id', currentUserId)
+          .maybeSingle();
+
+        // Collect all file URLs that need to be deleted from Cloudflare
+        const filesToDelete: string[] = [];
+        if (tenantData?.profiel_foto) filesToDelete.push(tenantData.profiel_foto);
+        if (tenantData?.cover_foto) filesToDelete.push(tenantData.cover_foto);
+
+        // Get all documents for this user
+        const { data: documents } = await supabase
+          .from('documenten')
+          .select('bestand_url')
+          .eq('huurder_id', currentUserId);
+
+        if (documents) {
+          documents.forEach(doc => {
+            if (doc.bestand_url) filesToDelete.push(doc.bestand_url);
+          });
+        }
+
+        // Delete files from Cloudflare
+        if (filesToDelete.length > 0) {
+          logger.info('Deleting files from Cloudflare:', filesToDelete);
+          try {
+            const deleteResult = await cloudflareR2UploadService.deleteFiles(filesToDelete);
+            if (!deleteResult.success) {
+              logger.warn('Some files could not be deleted from Cloudflare:', deleteResult.errors);
+              // Don't fail the entire deletion process if file deletion fails
+              // Just log the warning and continue
+            } else {
+              logger.info('Successfully deleted all files from Cloudflare');
+            }
+          } catch (fileDeleteError) {
+            logger.error('Error deleting files from Cloudflare:', fileDeleteError);
+            // Don't fail the entire deletion process if file deletion fails
+          }
+        }
+
+        // Delete all related data in correct order (to handle foreign key constraints)
+
+        // 1. Delete audit logs (keep some for compliance, but mark as deleted user)
+        await supabase
+          .from('audit_logs')
+          .update({ user_id: null, old_values: { deleted_user_id: currentUserId } })
+          .eq('user_id', currentUserId);
+
+        // 2. Delete notifications
+        await supabase
+          .from('notificaties')
+          .delete()
+          .eq('gebruiker_id', currentUserId);
+
+        // 3. Delete messages (both sent and received)
+        await supabase
+          .from('berichten')
+          .delete()
+          .or(`verzender_id.eq.${currentUserId},ontvanger_id.eq.${currentUserId}`);
+
+        // 4. Delete viewing requests
+        await supabase
+          .from('bezichtiging_verzoeken')
+          .delete()
+          .eq('huurder_id', currentUserId);
+
+        // 5. Delete applications
+        await supabase
+          .from('aanvragen')
+          .delete()
+          .eq('huurder_id', currentUserId);
+
+        // 6. Delete verifications
+        await supabase
+          .from('verificaties')
+          .delete()
+          .eq('huurder_id', currentUserId);
+
+        // 7. Delete documents
+        await supabase
+          .from('documenten')
+          .delete()
+          .eq('huurder_id', currentUserId);
+
+        // 8. Delete subscriptions
+        await supabase
+          .from('abonnementen')
+          .delete()
+          .eq('huurder_id', currentUserId);
+
+        // 9. Delete user roles
+        await supabase
+          .from('gebruiker_rollen')
+          .delete()
+          .eq('user_id', currentUserId);
+
+        // 10. Delete tenant profile
+        await supabase
+          .from('huurders')
+          .delete()
+          .eq('id', currentUserId);
+
+        // 11. Finally delete main user profile
+        const { error: deleteError } = await supabase
+          .from('gebruikers')
+          .delete()
+          .eq('id', currentUserId);
+
+        if (deleteError) {
+          throw this.handleDatabaseError(deleteError);
+        }
+
+        // 12. Delete the auth user completely
+        const { error: authDeleteError } = await supabase.auth.admin.deleteUser(currentUserId);
+        if (authDeleteError) {
+          logger.error('Failed to delete auth user:', authDeleteError);
+          // This is critical - if we can't delete the auth user, we should log it
+          // but not fail the entire process since database data is already deleted
+        } else {
+          logger.info('Successfully deleted auth user:', currentUserId);
+        }
+
+        // Create final audit log entry (before user is deleted)
+        await this.createAuditLog('DELETE', 'profiles', currentUserId, userData, {
+          action: 'self_deletion',
+          email: userData.email,
+          deleted_at: new Date().toISOString(),
+          auth_user_deleted: !authDeleteError
+        });
+
+        // Send confirmation email
+        let emailSent = false;
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+          if (!supabaseUrl || !anonKey) {
+            throw new Error('Supabase configuratie ontbreekt');
+          }
+
+          // Call the send-email Edge Function
+          const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              apikey: anonKey,
+            },
+            body: JSON.stringify({
+              type: 'account_deletion',
+              data: {
+                email: userData.email,
+                user_metadata: {
+                  first_name: userData.naam?.split(' ')[0] || 'gebruiker'
+                }
+              }
+            }),
+          });
+
+          if (emailResponse.ok) {
+            const result = await emailResponse.json();
+            if (result.success) {
+              emailSent = true;
+              logger.info('Account deletion confirmation email sent successfully to:', userData.email);
+            } else {
+              logger.error('Failed to send deletion confirmation email:', result.error);
+            }
+          } else {
+            const errorText = await emailResponse.text();
+            logger.error('Email service error:', errorText);
+          }
+        } catch (emailError) {
+          logger.error('Failed to send deletion confirmation email:', emailError);
+        }
+
+        return {
+          data: { emailSent },
+          error: null
+        };
+      });
     });
   }
 

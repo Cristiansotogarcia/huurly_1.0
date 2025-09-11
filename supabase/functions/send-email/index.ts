@@ -1,10 +1,10 @@
 import { serve } from "http/server";
 import { createClient} from "@supabase/supabase-js";
 import { corsHeaders } from '../_shared/cors.ts';
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+
 serve(async (req) => {
   const origin = req.headers.get('origin')
-  const headers = corsHeaders(origin)
+  const headers = corsHeaders
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers, status: 200 })
   }
@@ -12,27 +12,27 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Alleen POST-verzoeken zijn toegestaan.', uiMessage: 'Alleen POST-verzoeken zijn toegestaan.' }), { status: 400 })
   }
   try {
-    const hookSecret = (Deno.env.get('SEND_EMAIL_HOOK_SECRET') as string)?.replace('v1,whsec_', '')
-    const payload = await req.text()
-    const headersObj = Object.fromEntries(req.headers)
-    const wh = new Webhook(hookSecret)
-    let verified
-    try {
-      verified = wh.verify(payload, headersObj)
-    } catch (verifyErr) {
-      console.error('Webhook verificatie mislukt:', verifyErr)
-      return new Response(JSON.stringify({ error: 'Webhook verificatie mislukt', uiMessage: 'Verificatie van de aanvraag is mislukt.' }), { status: 401 })
+    // For now, we only support direct API calls (not webhooks)
+    const contentType = req.headers.get('content-type')
+    let emailType = ''
+    let email = ''
+    let user = null
+
+    if (contentType?.includes('application/json')) {
+      // Direct API call
+      const body = await req.json()
+      emailType = body.type
+      email = body.data?.email || ''
+      user = {
+        email: email,
+        user_metadata: body.data?.user_metadata || {}
+      }
+    } else {
+      return new Response(JSON.stringify({
+        error: 'Unsupported content type. Only application/json is supported.',
+        uiMessage: 'Niet-ondersteund inhoudstype. Alleen application/json wordt ondersteund.'
+      }), { status: 400, headers })
     }
-    const { user, email_data } = verified
-    // Remove duplicate declarations below
-    // const emailType = payload.type
-    // const email: string = payload.data.email
-    const emailType = email_data?.type
-    const email = user?.email
-    
-    // Handle different email types
-    const emailType = payload.type
-    const email: string = payload.data.email
     
     // Support multiple frontend URLs for different environments
     const getFrontendUrl = () => {
@@ -112,6 +112,18 @@ serve(async (req) => {
           <p>Klik op de onderstaande link om je nieuwe e-mailadres te bevestigen:</p>
           <p><a href="${actionLink}">Bevestig nieuwe e-mailadres</a></p>
           <p>Deze link is 1 uur geldig.</p>
+        `
+        break
+      case 'account_deletion':
+        emailSubject = 'Account Verwijderd - Huurly'
+        emailHtml = `
+          <h2>Account Verwijderd</h2>
+          <p>Beste ${user?.user_metadata?.first_name || 'gebruiker'},</p>
+          <p>Uw account is succesvol verwijderd uit ons systeem.</p>
+          <p>Alle persoonlijke gegevens, inclusief uw profiel, berichten, documenten en bestanden zijn permanent verwijderd.</p>
+          <p>Als u vragen heeft of dit een vergissing was, neem dan contact met ons op.</p>
+          <p>Met vriendelijke groet,<br>Het Huurly Team</p>
+          <p>Dit is een automatische bevestiging. U hoeft niet te reageren op deze e-mail.</p>
         `
         break
       default:

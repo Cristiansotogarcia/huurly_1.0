@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 import { withAuth } from '@/hocs/withAuth';
+import { userService } from '@/services/UserService';
 
 const InstellingenPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -98,26 +99,36 @@ const InstellingenPage: React.FC = () => {
     setIsDeletingAccount(true);
 
     try {
-      // Note: This would typically require a backend endpoint for user deletion
-      // For now, we'll sign out the user and show a message
+      // Use the comprehensive account deletion service
+      const result = await userService.deleteOwnAccount();
+
+      if (result.error) {
+        throw new Error(result.error.message || 'Fout bij verwijderen van account');
+      }
+
+      // Sign out the user from the frontend
       await supabase.auth.signOut();
 
       toast({
         title: 'Account verwijderd',
-        description: 'Je account is succesvol verwijderd.',
+        description: result.data?.emailSent
+          ? 'Je account is succesvol verwijderd. Je ontvangt een bevestigingsmail.'
+          : 'Je account is succesvol verwijderd.',
       });
 
       // Redirect to home page
       navigate('/');
     } catch (error) {
+      console.error('Account deletion error:', error);
       toast({
         title: 'Fout bij verwijderen',
-        description: 'Er is een fout opgetreden bij het verwijderen van je account.',
+        description: error instanceof Error ? error.message : 'Er is een fout opgetreden bij het verwijderen van je account.',
         variant: 'destructive',
       });
     } finally {
       setIsDeletingAccount(false);
       setShowDeleteDialog(false);
+      setDeleteConfirmation('');
     }
   };
 

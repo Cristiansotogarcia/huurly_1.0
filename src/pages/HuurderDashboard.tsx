@@ -33,7 +33,7 @@ import {
 } from "@/utils/labelMappers";
 
 import { Button } from "@/components/ui/button";
-import { FileText, Key } from "lucide-react";
+import { FileText, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface HuurderDashboardProps {
@@ -302,7 +302,6 @@ const buildProfileSections = (
   } = huurderHook;
   // Verwijderde matching, messaging, notifications en navigate hooks
   const {
-    handleSettings,
     handleLogout,
   } = useHuurderActions();
   const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
@@ -441,7 +440,6 @@ const buildProfileSections = (
               subscriptionEndDate: getSubscriptionEndDate(),
               profilePictureUrl: profilePictureUrl ?? undefined,
             }}
-            onSettings={handleSettings}
             onLogout={handleLogout}
           />
         )}
@@ -463,7 +461,7 @@ const buildProfileSections = (
             className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
             onClick={() => navigate("/instellingen")}
             >
-            <Key className="h-8 w-8 mb-3" />
+            <Settings className="h-8 w-8 mb-3" />
             <span className="text-center">Instellingen</span>
             </Button>
             </div>
