@@ -188,7 +188,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
           <Button onClick={onClose} variant="outline">
             Annuleren
           </Button>
-          <Button onClick={handleSubmit} variant="default" disabled={loading}>
+          <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600 text-white" disabled={loading}>
             Gebruiker aanmaken
           </Button>
         </div>
@@ -378,7 +378,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuleren
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={loading}>
               {loading ? 'Gebruiker aanmaken...' : 'Gebruiker aanmaken'}
             </Button>
           </div>

@@ -192,7 +192,7 @@ export default function ProfileModal({ isOpen, onClose, onSuccess }: ProfileModa
           <Button onClick={onClose} variant="outline">
             Annuleren
           </Button>
-          <Button type="submit" form="profile-form" variant="default">
+          <Button type="submit" form="profile-form" className="bg-green-600 hover:bg-green-700">
             Profiel Opslaan
           </Button>
         </div>

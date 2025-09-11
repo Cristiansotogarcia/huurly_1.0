@@ -191,10 +191,6 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
       console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Calling onProfileComplete');
 
       await onProfileComplete(data);
-      toast({
-        title: 'Profiel Opgeslagen',
-        description: 'Je profiel is succesvol opgeslagen.',
-      });
       onClose();
     } catch (error) {
       console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);

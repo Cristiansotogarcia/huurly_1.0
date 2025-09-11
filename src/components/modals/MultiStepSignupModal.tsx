@@ -249,7 +249,7 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
                 Vorige
               </Button>
             )}
-            <Button type="submit" disabled={isLoading} className="ml-auto">
+            <Button type="submit" disabled={isLoading} className="bg-orange-500 hover:bg-orange-600 text-white ml-auto">
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

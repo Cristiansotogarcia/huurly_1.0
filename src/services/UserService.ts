@@ -434,7 +434,6 @@ export class UserService extends DatabaseService {
    * Update existing tenant profile
    */
   async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
-    console.log('🔥🔥🔥 updateTenantProfile CALLED with data:', data);
     return this.withAuthGuard(async () => {
       const currentUserId = await this.getCurrentUserId();
       if (!currentUserId) {
@@ -477,10 +476,7 @@ export class UserService extends DatabaseService {
           .eq('id', currentUserId)
           .maybeSingle();
 
-        console.log('🔥 UserService.updateTenantProfile - Profile check result:', { existingProfile, profileCheckError });
-
         if (profileCheckError) {
-          console.error('🔥 UserService.updateTenantProfile - Profile check error:', profileCheckError);
           return {
             data: null,
             error: new Error(`Profiel controle fout: ${profileCheckError.message}`),
@@ -489,17 +485,10 @@ export class UserService extends DatabaseService {
         }
 
         if (!existingProfile) {
-          console.log('🔥 UserService.updateTenantProfile - Profile does not exist, creating new one');
           // Try to create the profile instead
           const createResult = await this.createTenantProfile(sanitizedData as CreateTenantProfileData);
-          console.log('🔥 UserService.updateTenantProfile - Create result:', createResult);
           return createResult;
         }
-
-        console.log('🔥 UserService.updateTenantProfile - Profile exists:', existingProfile);
-
-        // Debug: Log what data we're trying to send
-        console.log('🔥 UserService.updateTenantProfile - Attempting to send data:', sanitizedData);
 
         // Prepare update data - use only confirmed database columns to avoid schema cache issues
         const tenantProfileData: any = {
@@ -607,10 +596,6 @@ export class UserService extends DatabaseService {
           },
         };
 
-        console.log('🔥 UserService.updateTenantProfile - Final data to send:', tenantProfileData);
-
-        console.log('🔥🔥🔥 ABOUT TO EXECUTE SUPABASE UPDATE with data:', tenantProfileData);
-
         const { data, error } = await supabase
           .from('huurders')
           .update(tenantProfileData)
@@ -618,14 +603,9 @@ export class UserService extends DatabaseService {
           .select()
           .single();
 
-        console.log('🔥🔥🔥 SUPABASE UPDATE RESULT:', { data, error });
-
         if (error) {
-          console.error('🔥🔥🔥 SUPABASE UPDATE ERROR:', error);
           throw this.handleDatabaseError(error);
         }
-
-        console.log('🔥🔥🔥 SUPABASE UPDATE SUCCESS:', data);
 
         await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, existingProfile, data);
         return { data, error: null };
