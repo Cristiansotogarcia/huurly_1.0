@@ -69,7 +69,7 @@ export const profileSchema = z.object({
   partner_monthly_income: z.number().min(0, 'Partner inkomen mag niet negatief zijn').optional(),
   
   // Step 4: Housing Preferences (consolidated with Step 5 & 6)
-  preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht'),
+  preferred_city: z.array(LocationDataSchema).min(1, 'Minimaal één voorkeursstad is verplicht').max(3, 'Maximaal 3 voorkeurssteden zijn toegestaan'),
   preferred_property_type: z.enum(['appartement', 'huis', 'studio', 'kamer', 'penthouse'], { message: 'Woningtype is verplicht' }),
   preferred_bedrooms: z.number().min(1, 'Minimaal 1 slaapkamer').optional(),
   furnished_preference: z.enum(['gemeubileerd', 'ongemeubileerd', 'geen_voorkeur']).optional(),

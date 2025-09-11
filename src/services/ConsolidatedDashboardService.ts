@@ -47,47 +47,66 @@ export class ConsolidatedDashboardService extends DatabaseService {
       // Expose commonly used flat fields for components expecting them
       preferredLocations: (() => {
         try {
-          // First check if it's already an array
-          if (Array.isArray(rawTenant.locatie_voorkeur)) {
-            return rawTenant.locatie_voorkeur.map((locationString: string) => {
-              try {
-                // Attempt to parse the string as a JSON object (LocationData)
-                const parsedLocation = JSON.parse(locationString);
-                // Ensure it has a name, otherwise fall back to the string itself
-                return parsedLocation.name ? parsedLocation : { name: locationString };
-              } catch (error) {
-                // If parsing fails, it's likely a plain string (old data or fallback)
-                return { name: locationString };
+          const locatieVoorkeur = rawTenant.locatie_voorkeur;
+
+          // Handle null/undefined case
+          if (!locatieVoorkeur) return [];
+
+          // If it's already an array of objects (new format)
+          if (Array.isArray(locatieVoorkeur)) {
+            return locatieVoorkeur.map((locationItem: any) => {
+              // If it's already a parsed object with name property
+              if (typeof locationItem === 'object' && locationItem.name) {
+                return locationItem;
               }
-            });
+
+              // If it's a JSON string, parse it
+              if (typeof locationItem === 'string') {
+                try {
+                  const parsed = JSON.parse(locationItem);
+                  return typeof parsed === 'object' && parsed.name ? parsed : { name: locationItem };
+                } catch (error) {
+                  // If parsing fails, treat as plain string
+                  return { name: locationItem };
+                }
+              }
+
+              // Fallback
+              return { name: String(locationItem) };
+            }).filter(loc => loc.name && loc.name.trim() !== '');
           }
 
-          // If it's a string, try to parse it as JSON first (handles PostgreSQL text column with JSON)
-          if (typeof rawTenant.locatie_voorkeur === 'string') {
+          // If it's a single string, try to parse it as JSON array first
+          if (typeof locatieVoorkeur === 'string') {
             try {
-              const parsedArray = JSON.parse(rawTenant.locatie_voorkeur);
-              if (Array.isArray(parsedArray)) {
-                return parsedArray.map((locationString: string) => {
-                  try {
-                    // Attempt to parse each item as a JSON object
-                    const parsedLocation = JSON.parse(locationString);
-                    return parsedLocation.name ? parsedLocation : { name: locationString };
-                  } catch (error) {
-                    // If parsing fails, treat as plain string
-                    return { name: locationString };
+              const parsed = JSON.parse(locatieVoorkeur);
+              if (Array.isArray(parsed)) {
+                return parsed.map((item: any) => {
+                  if (typeof item === 'object' && item.name) {
+                    return item;
                   }
-                });
+                  if (typeof item === 'string') {
+                    try {
+                      const parsedItem = JSON.parse(item);
+                      return typeof parsedItem === 'object' && parsedItem.name ? parsedItem : { name: item };
+                    } catch (error) {
+                      return { name: item };
+                    }
+                  }
+                  return { name: String(item) };
+                }).filter(loc => loc.name && loc.name.trim() !== '');
+              } else if (typeof parsed === 'object' && parsed.name) {
+                return [parsed];
               } else {
-                // Single string wrapped in JSON
-                return [{ name: parsedArray }];
+                return [{ name: parsed }];
               }
             } catch (error) {
-              // If JSON parsing fails, treat as plain string
-              return [{ name: rawTenant.locatie_voorkeur }];
+              // If JSON parsing fails, treat as plain string (legacy format)
+              return [{ name: locatieVoorkeur }];
             }
           }
 
-          // Handle null/undefined case
+          // Fallback for any other format
           return [];
         } catch (error) {
           console.error('Error parsing locatie_voorkeur:', error);
@@ -105,16 +124,57 @@ export class ConsolidatedDashboardService extends DatabaseService {
         maxBudget: rawTenant.max_huur || 0,
         city: (() => {
           try {
-            if (Array.isArray(rawTenant.locatie_voorkeur)) {
-              return rawTenant.locatie_voorkeur[0] || '';
-            }
-            if (typeof rawTenant.locatie_voorkeur === 'string') {
-              const parsed = JSON.parse(rawTenant.locatie_voorkeur);
-              if (Array.isArray(parsed)) {
-                return parsed[0] || '';
+            const locatieVoorkeur = rawTenant.locatie_voorkeur;
+
+            if (!locatieVoorkeur) return '';
+
+            if (Array.isArray(locatieVoorkeur) && locatieVoorkeur.length > 0) {
+              const firstItem = locatieVoorkeur[0];
+              if (typeof firstItem === 'object' && firstItem.name) {
+                return firstItem.name.split(',')[0].trim(); // Extract city name only
               }
-              return parsed || '';
+              if (typeof firstItem === 'string') {
+                try {
+                  const parsed = JSON.parse(firstItem);
+                  return typeof parsed === 'object' && parsed.name
+                    ? parsed.name.split(',')[0].trim()
+                    : firstItem;
+                } catch (error) {
+                  return firstItem;
+                }
+              }
+              return String(firstItem);
             }
+
+            if (typeof locatieVoorkeur === 'string') {
+              try {
+                const parsed = JSON.parse(locatieVoorkeur);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  const firstItem = parsed[0];
+                  if (typeof firstItem === 'object' && firstItem.name) {
+                    return firstItem.name.split(',')[0].trim();
+                  }
+                  if (typeof firstItem === 'string') {
+                    try {
+                      const parsedItem = JSON.parse(firstItem);
+                      return typeof parsedItem === 'object' && parsedItem.name
+                        ? parsedItem.name.split(',')[0].trim()
+                        : firstItem;
+                    } catch (error) {
+                      return firstItem;
+                    }
+                  }
+                  return String(firstItem);
+                }
+                if (typeof parsed === 'object' && parsed.name) {
+                  return parsed.name.split(',')[0].trim();
+                }
+                return parsed;
+              } catch (error) {
+                return locatieVoorkeur;
+              }
+            }
+
             return '';
           } catch (error) {
             return rawTenant.locatie_voorkeur || '';
@@ -187,16 +247,57 @@ export class ConsolidatedDashboardService extends DatabaseService {
         maxBudget: rawTenant.max_huur || 0,
         city: (() => {
           try {
-            if (Array.isArray(rawTenant.locatie_voorkeur)) {
-              return rawTenant.locatie_voorkeur[0] || '';
-            }
-            if (typeof rawTenant.locatie_voorkeur === 'string') {
-              const parsed = JSON.parse(rawTenant.locatie_voorkeur);
-              if (Array.isArray(parsed)) {
-                return parsed[0] || '';
+            const locatieVoorkeur = rawTenant.locatie_voorkeur;
+
+            if (!locatieVoorkeur) return '';
+
+            if (Array.isArray(locatieVoorkeur) && locatieVoorkeur.length > 0) {
+              const firstItem = locatieVoorkeur[0];
+              if (typeof firstItem === 'object' && firstItem.name) {
+                return firstItem.name.split(',')[0].trim(); // Extract city name only
               }
-              return parsed || '';
+              if (typeof firstItem === 'string') {
+                try {
+                  const parsed = JSON.parse(firstItem);
+                  return typeof parsed === 'object' && parsed.name
+                    ? parsed.name.split(',')[0].trim()
+                    : firstItem;
+                } catch (error) {
+                  return firstItem;
+                }
+              }
+              return String(firstItem);
             }
+
+            if (typeof locatieVoorkeur === 'string') {
+              try {
+                const parsed = JSON.parse(locatieVoorkeur);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  const firstItem = parsed[0];
+                  if (typeof firstItem === 'object' && firstItem.name) {
+                    return firstItem.name.split(',')[0].trim();
+                  }
+                  if (typeof firstItem === 'string') {
+                    try {
+                      const parsedItem = JSON.parse(firstItem);
+                      return typeof parsedItem === 'object' && parsedItem.name
+                        ? parsedItem.name.split(',')[0].trim()
+                        : firstItem;
+                    } catch (error) {
+                      return firstItem;
+                    }
+                  }
+                  return String(firstItem);
+                }
+                if (typeof parsed === 'object' && parsed.name) {
+                  return parsed.name.split(',')[0].trim();
+                }
+                return parsed;
+              } catch (error) {
+                return locatieVoorkeur;
+              }
+            }
+
             return '';
           } catch (error) {
             return rawTenant.locatie_voorkeur || '';

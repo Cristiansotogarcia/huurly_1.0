@@ -20,14 +20,14 @@ export function mapProfileFormToDutch(data: ProfileFormData): any {
         : String(data.preferred_city[0]))
     : 'Amsterdam';
 
-  // Map all cities for location preferences
+  // Map all cities for location preferences (store complete location objects including radius)
   const locatie_voorkeur = Array.isArray(data.preferred_city)
     ? data.preferred_city.map(location =>
         typeof location === 'object' && location?.name
-          ? location.name
+          ? JSON.stringify(location) // Store complete location object as JSON
           : String(location)
       ).filter(name => name !== '')
-    : [stad];
+    : [JSON.stringify({ name: stad, lat: null, lng: null, radius: 10 })]; // Default radius for fallback
 
   // Direct field mapping - clean and simple
   return {

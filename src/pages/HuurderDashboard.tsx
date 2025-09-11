@@ -145,12 +145,14 @@ const buildProfileSections = (
             ? tenantProfile.preferredLocations
                 .map((location: any) => {
                   if (location && location.name) {
-                    return location.radius ? `${location.name} (${location.radius}km)` : location.name;
+                    // Extract city name only (remove province after comma)
+                    const cityName = location.name.split(',')[0].trim();
+                    return location.radius ? `${cityName} (${location.radius}km)` : cityName;
                   }
                   return null; // Filter out invalid entries
                 })
                 .filter((name: any) => name && typeof name === 'string' && name.trim() !== '')
-                .join(', ')
+                .join(' - ')
             : 'Geen voorkeur opgegeven',
         },
         { label: "Budget", value: tenantProfile.maxRent },
@@ -459,10 +461,10 @@ const buildProfileSections = (
             </Button>
             <Button
             className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
-            onClick={() => navigate("/reset-password")}
+            onClick={() => navigate("/instellingen")}
             >
             <Key className="h-8 w-8 mb-3" />
-            <span className="text-center">Mijn gebruikersnaam en wachtwoord</span>
+            <span className="text-center">Instellingen</span>
             </Button>
             </div>
             </PhotoSection>

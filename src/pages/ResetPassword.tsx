@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { passwordSchema } from '@/lib/validation';
+import { validatePassword, type PasswordValidation } from '@/utils/password';
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,29 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState('');
   const [isValidToken, setIsValidToken] = useState(false);
   const [isCheckingToken, setIsCheckingToken] = useState(true);
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidation>({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+  });
+
+  // keep validation in sync with the password field
+  useEffect(() => {
+    setPasswordValidation(validatePassword(password));
+  }, [password]);
+
+  const PasswordRequirement = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <li className={`flex items-center space-x-2 ${met ? 'text-green-600' : 'text-gray-600'}`}>
+      {met ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <span className="w-3 h-3 rounded-full border border-gray-400"></span>
+      )}
+      <span>{children}</span>
+    </li>
+  );
 
   useEffect(() => {
     const checkTokenAndSetSession = async () => {
@@ -180,6 +204,16 @@ const ResetPassword: React.FC = () => {
                 disabled={isLoading}
                 minLength={8}
               />
+              <div className="mt-2 text-xs space-y-1">
+                <p className="text-gray-700 font-medium">Wachtwoord moet bevatten:</p>
+                <ul className="space-y-1 ml-2">
+                  <PasswordRequirement met={passwordValidation.minLength}>Minimaal 8 karakters</PasswordRequirement>
+                  <PasswordRequirement met={passwordValidation.hasUppercase}>Minimaal 1 hoofdletter (A-Z)</PasswordRequirement>
+                  <PasswordRequirement met={passwordValidation.hasLowercase}>Minimaal 1 kleine letter (a-z)</PasswordRequirement>
+                  <PasswordRequirement met={passwordValidation.hasNumber}>Minimaal 1 cijfer (0-9)</PasswordRequirement>
+                  <PasswordRequirement met={passwordValidation.hasSpecialChar}>Minimaal 1 speciaal teken</PasswordRequirement>
+                </ul>
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -196,9 +230,9 @@ const ResetPassword: React.FC = () => {
               />
             </div>
             
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               disabled={isLoading}
             >
               {isLoading ? (

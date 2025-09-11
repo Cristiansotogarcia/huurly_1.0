@@ -40,6 +40,7 @@ export default function Step4Housing() {
                 onChange={field.onChange}
                 placeholder="Zoek naar steden..."
                 error={errors.preferred_city?.message}
+                maxSelections={3}
               />
             </FormControl>
             <FormMessage />

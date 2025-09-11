@@ -39,6 +39,7 @@ interface LocationSelectorProps {
   placeholder?: string;
   className?: string;
   error?: string | FieldError | Merge<FieldError, FieldErrorsImpl<any>>;
+  maxSelections?: number;
 }
 
 const LocationSelector: React.FC<LocationSelectorProps> = ({
@@ -46,7 +47,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   onChange,
   placeholder = "Zoek naar steden...",
   className,
-  error
+  error,
+  maxSelections = 10 // Default to 10 if not specified
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
@@ -194,6 +196,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   // Handle location selection
   const handleLocationSelect = (suggestion: NominatimResult) => {
+    // Check if we've reached the maximum selections
+    if (value.length >= maxSelections) {
+      return;
+    }
+
     const newLocation: LocationData = {
       name: suggestion.display_name,
       lat: parseFloat(suggestion.lat),
@@ -271,10 +278,12 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={() => setShowSuggestions(true)}
-            placeholder={placeholder}
+            placeholder={value.length >= maxSelections ? `Maximum van ${maxSelections} steden bereikt` : placeholder}
+            disabled={value.length >= maxSelections}
             className={cn(
               "pl-10 pr-10",
-              error && "border-red-500"
+              error && "border-red-500",
+              value.length >= maxSelections && "bg-gray-100 cursor-not-allowed"
             )}
           />
           {isLoading && (
@@ -400,9 +409,14 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       )}
 
       {/* Helper Text */}
-      <p className="text-sm text-gray-500">
-        Zoek en selecteer de steden waar je wilt wonen. Je kunt de zoekstraal per stad aanpassen.
-      </p>
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-gray-500">
+          Zoek en selecteer de steden waar je wilt wonen. Je kunt de zoekstraal per stad aanpassen.
+        </p>
+        <p className="text-sm text-gray-500">
+          {value.length}/{maxSelections} steden geselecteerd
+        </p>
+      </div>
     </div>
   );
 };

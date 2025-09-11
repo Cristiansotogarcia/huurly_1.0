@@ -2,13 +2,13 @@
 
 <p>Volg deze link om uw wachtwoord te herstellen:</p>
 <p>
-  <a href="{{ .SiteURL }}/wachtwoord-herstellen?token={{ .Token }}&type=recovery&email={{ .Email }}">
+  <a href="{{ .SiteURL }}/wachtwoord-herstellen?token_hash={{ .TokenHash }}&type=recovery">
     Wachtwoord Herstellen
   </a>
 </p>
 
 <p>Als de link niet werkt, kopieer en plak dan deze URL in uw browser:</p>
-<p>{{ .SiteURL }}/wachtwoord-herstellen?token={{ .Token }}&type=recovery&email={{ .Email }}</p>
+<p>{{ .SiteURL }}/wachtwoord-herstellen?token_hash={{ .TokenHash }}&type=recovery</p>
 
 <p>Deze link is 1 uur geldig.</p>
 
