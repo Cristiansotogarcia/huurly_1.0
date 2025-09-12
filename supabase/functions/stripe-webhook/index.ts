@@ -9,7 +9,7 @@ export const config = {
 };
 
 // Helper function to map Stripe subscription status to Dutch enum values
-const mapStripeStatusToDutch = (stripeStatus: string ): string => {
+const mapStripeStatusToDutch = (stripeStatus: string): string => {
   const statusMap: { [key: string]: string } = {
     'active': 'actief',
     'canceled': 'geannuleerd',
@@ -19,7 +19,7 @@ const mapStripeStatusToDutch = (stripeStatus: string ): string => {
     'trialing': 'actief',
     'unpaid': 'gepauzeerd'
   };
-  
+
   return statusMap[stripeStatus] || 'wachtend';
 };
 
@@ -28,8 +28,8 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
-const stripe = new Stripe(stripeSecretKey, { 
-  apiVersion: "2025-06-30.basil"
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: "2023-10-16"
 });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -38,10 +38,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 // Verbreding van Stripe session object
 type ExtendedSession = Stripe.Checkout.Session & {
   id: string;
-  subscription: string;
+  subscription?: string | null;
   payment_status: string;
   amount_total: number | null;
   currency: string | null;
+  mode: string;
+  customer: string | null;
 };
 
 Deno.serve(async (req) => {
@@ -50,7 +52,7 @@ Deno.serve(async (req) => {
     ...corsHeaders,
     "Content-Type": "application/json"
   };
-  
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: responseHeaders });
   }
@@ -72,9 +74,21 @@ Deno.serve(async (req) => {
 
     let event;
     try {
+      console.log("🔐 Verifying webhook signature...");
+      console.log("📝 Webhook secret available:", !!webhookSecret);
+      console.log("📝 Signature available:", !!signature);
+      console.log("📝 Body length:", body.length);
+
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+      console.log("✅ Webhook signature verified successfully");
+      console.log("📋 Event type:", event.type);
     } catch (err: any) {
-      console.error("❌ Webhook signature verification failed:", err.message);
+      console.error("❌ Webhook signature verification failed:", {
+        message: err.message,
+        type: err.type,
+        code: err.code,
+        stack: err.stack
+      });
       return new Response(`Webhook Error: ${err.message}`, { status: 400, headers: responseHeaders });
     }
 
@@ -83,10 +97,13 @@ Deno.serve(async (req) => {
       const session = event.data.object as ExtendedSession;
       const userId = session.metadata?.user_id;
 
+      console.log("✅ Checkout session completed:", {
         sessionId: session.id,
         userId: userId,
         subscriptionId: session.subscription,
-        paymentStatus: session.payment_status
+        paymentStatus: session.payment_status,
+        mode: session.mode,
+        amountTotal: session.amount_total
       });
 
       if (!userId) {
@@ -94,14 +111,73 @@ Deno.serve(async (req) => {
         return new Response("Missing user ID", { status: 400, headers: responseHeaders });
       }
 
+      // Handle one-time payments (no subscription)
+      if (session.mode === 'payment' && !session.subscription) {
+        console.log("✅ Processing one-time payment");
+
+        if (session.payment_status !== 'paid') {
+          console.error("❌ Payment not completed:", session.payment_status);
+          return new Response("Payment not completed", { status: 400, headers: responseHeaders });
+        }
+
+        // ✅ Voeg eenmalige betaling toe aan abonnementen tabel
+        const paymentData = {
+          huurder_id: userId,
+          status: 'actief', // One-time payment is immediately active
+          stripe_customer_id: session.customer as string,
+          stripe_sessie_id: session.id,
+          start_datum: new Date().toISOString(),
+          eind_datum: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+          bedrag: session.amount_total,
+          currency: session.currency,
+          // Leave stripe_subscription_id as null for one-time payments
+        };
+
+        const { error } = await supabase
+          .from("abonnementen")
+          .upsert(paymentData, { onConflict: "stripe_sessie_id" });
+
+        if (error) {
+          console.error("❌ Failed to insert payment record:", error);
+          return new Response(`Database error: ${error.message}`, { status: 500, headers: responseHeaders });
+        } else {
+          console.log("✅ One-time payment recorded successfully");
+        }
+
+        // ✅ Notificatie maken voor eenmalige betaling
+        const { error: notificationError } = await supabase.from("notificaties").insert({
+          gebruiker_id: userId,
+          type: "payment_success",
+          titel: "Betaling succesvol",
+          inhoud:
+            "Je betaling is ontvangen. Je hebt nu toegang tot alle functies van Huurly.",
+          gelezen: false,
+        });
+
+        if (notificationError) {
+          console.error("❌ Failed to create notification", {
+            userId,
+            error: notificationError,
+          });
+        }
+
+        console.log("✅ One-time payment processing completed");
+        return new Response(JSON.stringify({ received: true }), {
+          headers: responseHeaders,
+          status: 200,
+        });
+      }
+
+      // Handle subscription-based payments (existing logic)
       if (!session.subscription) {
-        console.error("❌ No subscription ID in session");
+        console.error("❌ No subscription ID in session for subscription mode");
         return new Response("Missing subscription ID", { status: 400, headers: responseHeaders });
       }
 
       // ✅ Haal Stripe subscription details op
       const subscription = await stripe.subscriptions.retrieve(session.subscription);
-      
+
+      console.log("✅ Stripe subscription retrieved:", {
         id: subscription.id,
         status: subscription.status,
         mappedStatus: mapStripeStatusToDutch(subscription.status)
@@ -128,8 +204,8 @@ Deno.serve(async (req) => {
         bedrag: session.amount_total,
         currency: session.currency,
       };
-      
-      
+
+
       const { error } = await supabase
         .from("abonnementen")
         .upsert(subscriptionData, { onConflict: "stripe_subscription_id" });
@@ -138,6 +214,7 @@ Deno.serve(async (req) => {
         console.error("❌ Failed to insert abonnement:", error);
         return new Response(`Database error: ${error.message}`, { status: 500, headers: responseHeaders });
       } else {
+        console.log("✅ Abonnement inserted/updated successfully");
       }
 
       // ✅ Notificatie maken
@@ -212,6 +289,7 @@ Deno.serve(async (req) => {
           error,
         });
       } else {
+        console.log("✅ Subscription status updated:", {
           subscriptionId: subscription.id,
           status: subscription.status,
         });

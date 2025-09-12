@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { 
@@ -55,23 +56,57 @@ const Index = () => {
     // 1. They don't have special URL parameters
     // 2. No modals are currently shown
     // 3. We haven't just handled email verification
+    // 4. We're not in an email verification/signup flow
+    // 5. They're not already on their target page
     const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
-    
-    if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current) {
-      switch (user.role) {
-        case 'huurder':
-          navigate('/huurder-dashboard');
-          break;
-        case 'verhuurder':
-          navigate('/verhuurder-dashboard');
-          break;
-        case 'beoordelaar':
-          navigate('/beoordelaar-dashboard');
-          break;
-        case 'beheerder':
-          navigate('/beheerder-dashboard');
-          break;
-      }
+    const currentPath = window.location.pathname;
+    const isEmailVerificationFlow = hash.includes('type=signup') || searchParams.get('type') === 'signup';
+
+    if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current && !isEmailVerificationFlow) {
+      const handleRedirect = async () => {
+        let targetPath = '/';
+        switch (user.role) {
+          case 'huurder':
+            // Check if huurder has active subscription
+            try {
+              const { data, error } = await supabase
+                .from('abonnementen')
+                .select('status')
+                .eq('huurder_id', user.id)
+                .eq('status', 'actief')
+                .maybeSingle();
+
+              if (error) {
+                console.error('Error checking subscription:', error);
+                targetPath = '/payment-onboarding'; // Default to payment if error
+              } else if (data) {
+                targetPath = '/huurder-dashboard'; // Has active subscription
+              } else {
+                targetPath = '/payment-onboarding'; // No active subscription
+              }
+            } catch (error) {
+              console.error('Unexpected error checking subscription:', error);
+              targetPath = '/payment-onboarding'; // Default to payment if error
+            }
+            break;
+          case 'verhuurder':
+            targetPath = '/verhuurder-dashboard';
+            break;
+          case 'beoordelaar':
+            targetPath = '/beoordelaar-dashboard';
+            break;
+          case 'beheerder':
+            targetPath = '/beheerder-dashboard';
+            break;
+        }
+
+        // Only redirect if not already on the target page
+        if (currentPath !== targetPath) {
+          navigate(targetPath);
+        }
+      };
+
+      handleRedirect();
     }
   }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal]);
 
@@ -101,11 +136,11 @@ const Index = () => {
         }}
         onGoToDashboard={() => {
           setShowEmailVerificationSuccessModal(false);
-          // Navigate to dashboard based on user role
+          // Navigate to payment onboarding for huurders, dashboard for others
           if (user && isAuthenticated) {
             switch (user.role) {
               case 'huurder':
-                navigate('/huurder-dashboard');
+                navigate('/payment-onboarding');
                 break;
               case 'verhuurder':
                 navigate('/verhuurder-dashboard');

@@ -77,25 +77,23 @@ export const getStripe = (): Promise<Stripe | null> => {
   return stripePromise;
 };
 
-// Subscription plans configuration
-export const SUBSCRIPTION_PLANS = {
+// Payment plans configuration
+export const PAYMENT_PLANS = {
   huurder: {
-    halfyearly: {
+    onetime: {
       priceId: STRIPE_CONFIG.huurderPriceId,
-      name: 'Huurder Halfjaarlijks',
-      price: 53.72, // Display price (excluding BTW)
-      priceWithTax: 65, // Actual charge price (including 21% BTW)
+      name: 'Huurder Eenmalige Betaling',
+      price: 25, // Price including BTW
+      priceWithTax: 25, // Same as price (BTW included)
       currency: 'eur',
-      interval: '6 maanden',
-      taxRate: 0.21, // 21% BTW
+      interval: 'eenmalig',
+      taxRate: 0, // BTW included in price
       features: [
-        'Zoeken naar woningen',
+        'Vindbaar worden door Verhuurders',
         'Profiel aanmaken',
         'Documenten uploaden',
-        'Bezichtigingen aanvragen',
-        'Matching algoritme',
-        'Premium ondersteuning',
-        'Onbeperkte zoekresultaten'
+        'Bezichtigingen aanbod krijgen',
+        'Premium ondersteuning'
       ]
     }
   },
@@ -161,17 +159,20 @@ export const STRIPE_WEBHOOK_EVENTS = {
 } as const;
 
 // Get plan by role and tier
-// Note: 'basic' maps to 'free' for verhuurder, 'premium' maps to 'halfyearly' for huurder for now.
+// Note: 'basic' maps to 'free' for verhuurder, 'premium' maps to 'onetime' for huurder for now.
 // This can be expanded if more tiers are introduced.
-export const getSubscriptionPlan = (role: 'huurder' | 'verhuurder', tier: 'basic' | 'premium') => {
+export const getPaymentPlan = (role: 'huurder' | 'verhuurder', tier: 'basic' | 'premium') => {
   if (role === 'huurder' && tier === 'premium') {
-    return SUBSCRIPTION_PLANS.huurder.halfyearly;
+    return PAYMENT_PLANS.huurder.onetime;
   }
   if (role === 'verhuurder' && tier === 'basic') {
-    return SUBSCRIPTION_PLANS.verhuurder.free;
+    return PAYMENT_PLANS.verhuurder.free;
   }
   return null;
 };
+
+// Legacy function for backward compatibility
+export const getSubscriptionPlan = getPaymentPlan;
 
 // Log configuration in development
 if (import.meta.env.DEV) { // Use import.meta.env.DEV

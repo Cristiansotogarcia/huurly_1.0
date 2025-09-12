@@ -41,6 +41,7 @@ const InstellingenPage = lazy(() => import('./pages/InstellingenPage'));
 const DocumentUploadPage = lazy(() => import('./pages/mobile/DocumentUploadPage'));
 
 const PaymentPage = lazy(() => import('./pages/mobile/PaymentPage'));
+const PaymentOnboarding = lazy(() => import('./pages/PaymentOnboarding'));
 
 
 
@@ -71,13 +72,21 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Index />} />
-            <Route 
-              path="/huurder-dashboard" 
+            <Route
+              path="/payment-onboarding"
+              element={
+                <ProtectedRoute roles={['huurder']}>
+                  <PaymentOnboarding />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/huurder-dashboard"
               element={
                 <ProtectedRoute roles={['huurder']}>
                   <HuurderDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="/documenten"

@@ -25,7 +25,7 @@ const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessModalProps
             Sluiten
           </Button>
           <Button onClick={onGoToDashboard} variant="default">
-            Naar Dashboard
+            Account Activeren
           </Button>
         </div>
       }
@@ -38,7 +38,7 @@ const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessModalProps
               <div className="text-sm text-green-800">
                 <p className="font-medium">Je account is volledig geactiveerd!</p>
                 <p className="text-green-700 mt-1">
-                  Om volledig vindbaar te worden voor verhuurders en voorop te lopen in de zoektocht naar je ideale woning, heb je een halfjaarlijks abonnement nodig.
+                  Om volledig vindbaar te worden voor verhuurders en voorop te lopen in de zoektocht naar je ideale woning, moet je je account activeren.
                 </p>
               </div>
             </div>
@@ -57,7 +57,7 @@ const EmailVerificationSuccessModal: React.FC<EmailVerificationSuccessModalProps
           </div>
           
           <p className="text-xs text-gray-500 text-center">
-            Welkom bij Huurly! Start je halfjaarlijks abonnement en kom voorop te staan.
+            Welkom bij Huurly! Activeer je account en kom voorop te staan.
           </p>
         </div>
       </UnifiedModal>

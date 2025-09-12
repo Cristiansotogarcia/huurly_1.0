@@ -4,7 +4,7 @@ import { stripeCheckoutService } from './payment/StripeCheckoutService';
 import { subscriptionService, SubscriptionStatus } from './payment/SubscriptionService';
 import { paymentWebhookService } from './payment/PaymentWebhookService';
 import { pricingService } from './payment/PricingService';
-import { SUBSCRIPTION_PLANS, formatPrice } from '../lib/stripe-config';
+import { PAYMENT_PLANS, formatPrice } from '../lib/stripe-config';
 import { DatabaseResponse } from '../lib/database';
 
 export class PaymentService {
@@ -43,7 +43,7 @@ export class PaymentService {
   // Pricing Operations
   getPricingInfo(role: 'huurder' | 'verhuurder') {
     if (role === 'huurder') {
-      const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
+      const plan = PAYMENT_PLANS.huurder.onetime;
       return {
         displayPrice: formatPrice(plan.price),
         actualPrice: formatPrice(plan.priceWithTax),
@@ -54,7 +54,7 @@ export class PaymentService {
         priceId: plan.priceId,
       };
     }
-    
+
     return pricingService.getPricingInfo(role);
   }
 

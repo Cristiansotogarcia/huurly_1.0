@@ -82,9 +82,9 @@ const PaymentSuccess = () => {
             updateUser({ hasPayment: true });
           }
 
-          // Redirect immediately
+          // Redirect to dashboard without payment_success parameter to avoid loading issues
           logger.debug("Redirecting to dashboard");
-          navigate("/huurder-dashboard?payment_success=true", { replace: true });
+          navigate("/huurder-dashboard", { replace: true });
         } else {
           // If subscription not active yet, try a few more times
           let attempts = 0;
@@ -105,7 +105,7 @@ const PaymentSuccess = () => {
               });
 
               updateUser({ hasPayment: true });
-              navigate("/huurder-dashboard?payment_success=true", { replace: true });
+              navigate("/huurder-dashboard", { replace: true });
               return;
             }
           }

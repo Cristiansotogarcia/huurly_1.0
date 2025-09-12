@@ -68,41 +68,8 @@ export const useAuth = (): UseAuthReturn => {
         
         login(user);
         
-        // Check if this is an email verification
-        const currentPath = window.location.pathname;
-        const urlHash = window.location.hash;
-        const searchParams = new URLSearchParams(window.location.search);
-        const isEmailVerification = urlHash.includes('type=signup') || searchParams.get('type') === 'signup';
-        
-        // Don't auto-redirect if:
-        // 1. User just logged out (prevent redirect loops)
-        // 2. User is on specific auth pages
-        // 3. This is an email verification (let the modal handle it)
-        // 4. User is on payment page or payment success page
-        const isOnAuthPage = ['/login', '/register'].includes(currentPath);
-        const isOnPaymentPage = currentPath.includes('/payment') || searchParams.has('session_id');
-        const isOnHomePage = currentPath === '/';
-        
-        // Check if user is already on their correct dashboard
-        const expectedDashboard = `/${user.role}-dashboard`;
-        const isOnCorrectDashboard = currentPath === expectedDashboard;
-        
-        const shouldRedirect = !isOnAuthPage && 
-                              !isOnPaymentPage && 
-                              !isEmailVerification && 
-                              !isOnCorrectDashboard &&
-                              (isOnHomePage || currentPath === '/login');
-        
-        if (shouldRedirect) {
-          // Add a small delay to prevent rapid redirects
-          setTimeout(() => {
-            const targetPath = expectedDashboard;
-            // Only redirect if we're not already navigating to the target
-            if (window.location.pathname !== targetPath) {
-              navigate(targetPath, { replace: true });
-            }
-          }, 100);
-        }
+        // Removed redirect logic - let Index.tsx handle redirects with proper subscription checking
+        // This prevents race conditions and flashing dashboards
       } else {
         logout();
       }
@@ -112,7 +79,7 @@ export const useAuth = (): UseAuthReturn => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [login, logout, navigate]);
+  }, [login, logout, navigate, showEmailVerificationSuccessModal]);
 
   const signUp = async (data: SignUpData): Promise<{ success: boolean; user?: User }> => {
     setIsLoading(true);

@@ -143,15 +143,16 @@ export const getRoleErrorMessage = (requiredRole: UserRole): string => {
 
 /**
  * Get default dashboard route for role
+ * For huurder users, redirect to payment onboarding first
  */
 export const getDefaultDashboardRoute = (role: UserRole): string => {
   const routes: Record<UserRole, string> = {
-    huurder: '/huurder-dashboard',
+    huurder: '/payment-onboarding', // Redirect huurders to payment first
     verhuurder: '/verhuurder-dashboard',
     beheerder: '/beheerder-dashboard',
     beoordelaar: '/beoordelaar-dashboard'
   };
-  
+
   return routes[role] || '/';
 };
 

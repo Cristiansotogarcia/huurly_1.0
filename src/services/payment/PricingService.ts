@@ -1,5 +1,5 @@
 
-import { SUBSCRIPTION_PLANS, formatPrice } from '../../lib/stripe-config.ts';
+import { PAYMENT_PLANS, formatPrice } from '../../lib/stripe-config.ts';
 import { DatabaseService, DatabaseResponse } from '../../lib/database.ts';
 import { ErrorHandler } from '../../lib/errors.ts';
 import { logger } from '../../lib/logger.ts';
@@ -7,7 +7,7 @@ import { logger } from '../../lib/logger.ts';
 export class PricingService extends DatabaseService {
   getPricingInfo(role: 'huurder' | 'verhuurder') {
     if (role === 'huurder') {
-      const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
+      const plan = PAYMENT_PLANS.huurder.onetime;
       return {
         displayPrice: formatPrice(plan.price),
         actualPrice: formatPrice(plan.priceWithTax),
@@ -15,10 +15,10 @@ export class PricingService extends DatabaseService {
         taxRate: `${(plan.taxRate * 100).toFixed(0)}%`,
         interval: plan.interval,
         features: plan.features,
-        description: `${formatPrice(plan.price)} per 6 maanden (excl. BTW)\n${formatPrice(plan.priceWithTax)} per 6 maanden (incl. ${(plan.taxRate * 100).toFixed(0)}% BTW)`
+        description: `${formatPrice(plan.price)} eenmalige betaling (BTW inbegrepen)`
       };
     } else {
-      const plan = SUBSCRIPTION_PLANS.verhuurder.free;
+      const plan = PAYMENT_PLANS.verhuurder.free;
       return {
         displayPrice: 'Gratis',
         actualPrice: 'Gratis',

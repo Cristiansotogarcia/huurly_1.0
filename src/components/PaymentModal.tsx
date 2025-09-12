@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { PersistentDialogContent } from "@/components/ui/persistent-dialog";
 import { Button } from "@/components/ui/button";
-import { SUBSCRIPTION_PLANS, formatPrice } from "@/lib/stripe-config";
+import { PAYMENT_PLANS, formatPrice } from "@/lib/stripe-config";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/authStore";
@@ -29,7 +29,7 @@ const PaymentModal = ({
   persistent = false,
 }: PaymentModalProps) => {
   // Pricing information for huurders
-  const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
+  const plan = PAYMENT_PLANS.huurder.onetime;
   const pricingInfo = {
     displayPrice: formatPrice(plan.price),
     actualPrice: formatPrice(plan.priceWithTax),
@@ -47,7 +47,7 @@ const PaymentModal = ({
     if (!user) {
       toast({
         title: "Fout",
-        description: "Je moet ingelogd zijn om een abonnement af te sluiten.",
+        description: "Je moet ingelogd zijn om een betaling te voltooien.",
         variant: "destructive",
       });
       return;
@@ -144,16 +144,16 @@ const PaymentModal = ({
               {persistent ? "Betaling Vereist" : "Premium Toegang Vereist"}
             </h3>
             <p id="payment-modal-description" className="text-gray-600">
-              {persistent 
+              {persistent
                 ? "Je account moet geactiveerd worden met een geldige betaling om toegang te krijgen tot alle functies."
-                : "Om gebruik te maken van alle functies van Huurly, heb je een actief abonnement nodig."
+                : "Om gebruik te maken van alle functies van Huurly, moet je een eenmalige betaling doen."
               }
             </p>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span>Halfjaarlijks abonnement</span>
+              <span>Eenmalige betaling</span>
               <span className="font-bold">{pricingInfo.actualPrice}</span>
             </div>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -179,13 +179,13 @@ const PaymentModal = ({
                   Bezig met verwerken...
                 </>
               ) : (
-                "Abonnement afsluiten"
+                "Betaling voltooien"
               )}
             </Button>
           </div>
 
           <p className="text-xs text-gray-500 text-center">
-            Door je abonnement af te sluiten ga je akkoord met onze voorwaarden.
+            Door je betaling te voltooien ga je akkoord met onze voorwaarden.
             {persistent && " Deze melding verdwijnt automatisch na succesvolle betaling."}
           </p>
         </div>

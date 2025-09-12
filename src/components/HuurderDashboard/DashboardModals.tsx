@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import EnhancedProfileUpdateModal from "@/components/modals/EnhancedProfileUpdateModal";
 import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
-import PaymentModal from "@/components/PaymentModal";
 import { ProfileFormData } from "@/components/modals/profileSchema";
 import { convertFromISODate } from "@/utils/dateUtils";
 import { useModalRouter } from "@/hooks/useModalRouter";
@@ -9,10 +8,8 @@ import { useModalRouter } from "@/hooks/useModalRouter";
 interface DashboardModalsProps {
   showProfileModal: boolean;
   showDocumentModal: boolean;
-  showPaymentModal: boolean;
   setShowProfileModal: (show: boolean) => void;
   setShowDocumentModal: (show: boolean) => void;
-  setShowPaymentModal: (show: boolean) => void;
   onProfileComplete: (profileData: any) => Promise<void>;
   onDocumentUploadComplete: (documents: any[]) => Promise<void>;
   user?: any;
@@ -87,7 +84,7 @@ const getInitialFormData = (
     borgsteller_relatie: tenantProfile?.guarantorRelationship || "",
     borgsteller_telefoon: tenantProfile?.guarantorPhone || "",
     borgsteller_email: tenantProfile?.guarantorDetails?.email || tenantProfile?.guarantorEmail || "",
-    borgsteller_adres: tenantProfile?.guarantorDetails?.address || tenantProfile?.guarantorAddress || "",
+    // borgsteller_adres: tenantProfile?.guarantorDetails?.address || tenantProfile?.guarantorAddress || "",
     borgsteller_inkomen: tenantProfile?.guarantorIncome || 0,
 
     preferred_city: tenantProfile?.preferredLocations || [],
@@ -153,10 +150,8 @@ const getInitialFormData = (
 export const DashboardModals: React.FC<DashboardModalsProps> = ({
   showProfileModal,
   showDocumentModal,
-  showPaymentModal,
   setShowProfileModal,
   setShowDocumentModal,
-  setShowPaymentModal,
   onProfileComplete,
   onDocumentUploadComplete,
   user,
@@ -202,18 +197,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
   }, [showDocumentModal, openModal, onDocumentUploadComplete, setShowDocumentModal]);
 
 
-  // Handle payment modal opening with route-based approach
-  React.useEffect(() => {
-    if (showPaymentModal) {
-      const shouldShowDesktopModal = openModal('payment');
-      if (!shouldShowDesktopModal) {
-        setShowPaymentModal(false);
-      }
-    }
-  }, [showPaymentModal, openModal, setShowPaymentModal]);
-
-
-  
   return (
     <>
       {/* Profile Creation Modal - Only shown on desktop */}
@@ -234,15 +217,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
           onUploadComplete={onDocumentUploadComplete}
         />
       )}
-
-
-      {/* Persistent Payment Modal - cannot be closed without payment */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={(open) => setShowPaymentModal(open)}
-        persistent={true}
-      />
-
     </>
   );
 };

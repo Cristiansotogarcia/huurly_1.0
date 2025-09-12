@@ -1,6 +1,6 @@
 
 import { supabase } from '../../integrations/supabase/client';
-import { getStripe, SUBSCRIPTION_PLANS } from '../../lib/stripe-config';
+import { getStripe, PAYMENT_PLANS } from '../../lib/stripe-config';
 import { DatabaseService, DatabaseResponse } from '../../lib/database';
 import { ErrorHandler } from '../../lib/errors';
 import { logger } from '../../lib/logger';
@@ -18,7 +18,7 @@ export class StripeCheckoutService extends DatabaseService {
 
     return this.executeQuery(async () => {
       try {
-        const plan = SUBSCRIPTION_PLANS.huurder.halfyearly;
+        const plan = PAYMENT_PLANS.huurder.onetime;
         const stripe = await getStripe();
         
         if (!stripe) {

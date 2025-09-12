@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileText, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { logger } from "@/lib/logger";
 
 interface HuurderDashboardProps {
   user: User;
@@ -304,51 +305,54 @@ const buildProfileSections = (
   const {
     handleLogout,
   } = useHuurderActions();
-  const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
+  const { setPaymentFlow } = useAuthStore();
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasPaymentSuccess = urlParams.get("payment_success");
+
   // Calculate profile completeness
-  
+
   const profileSections = useMemo(
     () => buildProfileSections(tenantProfile, user),
     [tenantProfile, user],
   );
 
-  const isSubscribed = subscription && subscription.status === "active";
+  // Check if user is subscribed - if we have payment_success, assume they are subscribed
+  const isSubscribed = (subscription && subscription.status === "active") || !!hasPaymentSuccess;
   const isLoading = isHuurderLoading;
 
-  // Track when initial data has been loaded to prevent modal flash
+  // Simple loading state management - just wait for user data
   useEffect(() => {
-    if (user && !isLoadingSubscription && !hasInitialDataLoaded) {
+    if (user && !hasInitialDataLoaded) {
       setHasInitialDataLoaded(true);
     }
-  }, [user, isLoadingSubscription, hasInitialDataLoaded]);
+  }, [user, hasInitialDataLoaded]);
 
+  // Check subscription status and redirect if needed
   useEffect(() => {
-    // Only show payment modal if user is loaded, initial data has loaded, subscription is not loading, and user is not subscribed
-    if (
-      user &&
-      hasInitialDataLoaded &&
-      !isLoading &&
-      !isLoadingSubscription &&
-      !isSubscribed
-    ) {
-      setShowPaymentModal(true);
-    } else if (user && (isSubscribed || isLoadingSubscription)) {
-      // Close payment modal when user becomes subscribed or while loading
-      setShowPaymentModal(false);
+    if (user && hasInitialDataLoaded && !isLoading) {
+      // If user is not subscribed and not on payment page, redirect
+      if (!isSubscribed) {
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/payment-onboarding') {
+          logger.info('User not subscribed, redirecting to payment onboarding');
+          navigate('/payment-onboarding');
+          return;
+        }
+      }
     }
-  }, [user, isSubscribed, isLoadingSubscription, hasInitialDataLoaded]);
+  }, [user, isSubscribed, hasInitialDataLoaded, isLoading, navigate]);
 
   // Handle payment cancellation redirect
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("payment_canceled")) {
       // Clear payment flow state when payment is cancelled
       setPaymentFlow(false);
@@ -360,19 +364,17 @@ const buildProfileSections = (
       });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [toast, setPaymentFlow]);
+  }, [toast, setPaymentFlow, urlParams]);
 
   // Refresh subscription status when payment is successful
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("payment_success")) {
-      // Clear payment flow state and close modal when payment succeeds
+      // Clear payment flow state when payment succeeds
       setPaymentFlow(false);
-      setShowPaymentModal(false);
       if (refresh) refresh();
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [refresh, setPaymentFlow]);
+  }, [refresh, setPaymentFlow, urlParams]);
 
   // Check subscription expiration warning (2 weeks)
   useEffect(() => {
@@ -420,6 +422,18 @@ const buildProfileSections = (
       setShowDocumentModal(false);
     });
   };
+
+  // Show loading screen only while waiting for user data
+  if (!hasInitialDataLoaded || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dutch-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Account laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -483,10 +497,8 @@ const buildProfileSections = (
       <DashboardModals
         showProfileModal={showProfileModal}
         showDocumentModal={showDocumentModal}
-        showPaymentModal={showPaymentModal}
         setShowProfileModal={setShowProfileModal}
         setShowDocumentModal={setShowDocumentModal}
-        setShowPaymentModal={setShowPaymentModal}
         onProfileComplete={onProfileComplete}
         onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
