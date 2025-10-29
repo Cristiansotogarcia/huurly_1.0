@@ -32,27 +32,27 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
   // Parse the selected value safely
   const parseSelectedDate = (): Date | undefined => {
     if (!selected) return undefined;
-    
+
     try {
       if (selected instanceof Date) {
         return isNaN(selected.getTime()) ? undefined : selected;
       }
-      
+
       if (typeof selected === 'string') {
         if (!selected.trim()) return undefined;
-        
+
         // Handle dd/MM/yyyy format
         if (/^\d{2}\/\d{2}\/\d{4}$/.test(selected)) {
           const [day, month, year] = selected.split('/').map(Number);
           const date = new Date(year, month - 1, day);
           return isNaN(date.getTime()) ? undefined : date;
         }
-        
+
         // Handle ISO format and other date strings
         const date = new Date(selected);
         return isNaN(date.getTime()) ? undefined : date;
       }
-      
+
       return undefined;
     } catch (error) {
       console.warn('Error parsing date:', error);
@@ -62,7 +62,7 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
 
   const safeSelected = parseSelectedDate();
   const safeDate = getSafeDate();
-  
+
   const [currentYear, setCurrentYear] = useState(safeSelected?.getFullYear() ?? safeDate.year);
   const [currentMonth, setCurrentMonth] = useState(safeSelected?.getMonth() ?? safeDate.month);
 
@@ -111,7 +111,7 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
           {safeSelected ? format(safeSelected, "dd/MM/yyyy", { locale: nl }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 bg-white border shadow-lg" align="start">
         <div className="p-3">
           <div className="flex items-center justify-between mb-4">
             <Button variant="outline" size="sm" onClick={() => navigateYear("prev")} type="button">
@@ -149,7 +149,17 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
             setCurrentMonth(date.getMonth());
           }}
           disabled={disabled}
-          className="pointer-events-auto"
+          locale={nl}
+          className="pointer-events-auto bg-white"
+          classNames={{
+            day: "h-9 w-9 rounded-full text-sm text-black hover:bg-gray-200",
+            day_selected: "bg-blue-500 text-white rounded-full hover:bg-blue-600",
+            day_today: "border border-blue-400 text-black",
+            day_outside: "text-gray-400 opacity-50",
+            day_disabled: "text-gray-300 opacity-50",
+            caption_label: "text-sm font-medium text-black",
+            head_cell: "text-gray-500 w-9 text-sm",
+          }}
         />
       </PopoverContent>
     </Popover>

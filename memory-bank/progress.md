@@ -34,9 +34,12 @@
   - Admin panel for system management
 
 ## Current Status
-**Phase**: Implementation  
-**Focus**: Huurder dashboard instellingen page  
-**Priority**: High - Core user account management feature  
+**Phase**: Implementation
+**Focus**: Huurder dashboard instellingen page
+**Priority**: High - Core user account management feature
+**Latest Fix**: Phone number display mapping issue resolved
+**Latest Improvement**: Calendar in step 4 updated to Dutch with better selected date highlighting
+**Latest Fix**: Resolved calendar layout issues - removed custom styling that was causing days to stick together
 
 ## Implementation Plan
 1. **Analysis Phase** (In Progress)

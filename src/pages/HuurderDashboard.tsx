@@ -457,26 +457,36 @@ const buildProfileSections = (
             onLogout={handleLogout}
           />
         )}
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Content Sections - Proper Order */}
-          <div className="max-w-6xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Foto Sectie */}
             <PhotoSection>
-            {/* Quick access buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
+            {/* Quick access buttons - Mobile-first design */}
+            <div className="grid grid-cols-1 gap-3 mt-6 w-full px-2">
             <Button
-            className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
+            className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 text-blue-700 font-semibold shadow-sm transition-all duration-200 border border-blue-200"
             onClick={() => navigate("/documenten")}
             >
-            <FileText className="h-8 w-8 mb-3" />
-            <span className="text-center">Mijn Documenten</span>
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-600 text-white mr-4 flex-shrink-0">
+            <FileText className="h-6 w-6" />
+            </div>
+            <div className="text-left">
+            <div className="font-semibold text-base">Mijn Documenten</div>
+            <div className="text-sm text-blue-600 opacity-75">Beheer je documenten</div>
+            </div>
             </Button>
             <Button
-            className="flex flex-col items-center justify-center w-full h-32 sm:h-28 p-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-blue-700 font-semibold shadow-sm transition-colors"
+            className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150 text-gray-700 font-semibold shadow-sm transition-all duration-200 border border-gray-200"
             onClick={() => navigate("/instellingen")}
             >
-            <Settings className="h-8 w-8 mb-3" />
-            <span className="text-center">Instellingen</span>
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-600 text-white mr-4 flex-shrink-0">
+            <Settings className="h-6 w-6" />
+            </div>
+            <div className="text-left">
+            <div className="font-semibold text-base">Instellingen</div>
+            <div className="text-sm text-gray-600 opacity-75">Account beheren</div>
+            </div>
             </Button>
             </div>
             </PhotoSection>

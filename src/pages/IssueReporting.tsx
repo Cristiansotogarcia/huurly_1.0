@@ -213,17 +213,13 @@ const IssueReporting: React.FC = () => {
         {/* Contact Info */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Andere manieren om contact op te nemen</CardTitle>
+            <CardTitle>Contact</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div>
                 <h4 className="font-medium text-gray-900">E-mail Support</h4>
                 <p className="text-gray-600">support@huurly.nl</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900">Telefonische Support</h4>
-                <p className="text-gray-600">020-1234567 (ma-vr 9:00-17:00)</p>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Responstijd</h4>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { applicationService, CreateApplicationData } from '@/services/ApplicationService';
 
 // Placeholder interfaces until proper types are created
 interface ApplicationFormData {
@@ -78,10 +79,31 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      try {
+        // Create application data for service
+        const applicationData: CreateApplicationData = {
+          woning_id: propertyId,
+          bericht: formData.message
+        };
+
+        // Call the service to persist data
+        const result = await applicationService.createApplication(applicationData);
+
+        if (result.success && result.data) {
+          // Call parent onSubmit with full form data for compatibility
+          onSubmit(formData);
+        } else {
+          // Handle error - could enhance with toast notifications
+          console.error('Failed to submit application:', result.error);
+          setErrors({ message: 'Kon aanvraag niet indienen. Probeer het opnieuw.' });
+        }
+      } catch (error) {
+        console.error('Application submission error:', error);
+        setErrors({ message: 'Er is een fout opgetreden bij het indienen van je aanvraag.' });
+      }
     }
   };
 

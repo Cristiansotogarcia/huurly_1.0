@@ -34,7 +34,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
       firstName,
       lastName,
       email: userRow.email,
-      phone: userRow.telefoon || '',
+      phone: rawTenant.telefoon || userRow.telefoon || '',
       dateOfBirth: rawTenant.geboortedatum || '',
       age: rawTenant.leeftijd || undefined,
       profession: rawTenant.beroep || '',
@@ -226,7 +226,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
       personalInfo: {
         fullName,
         email: userRow.email,
-        phone: userRow.telefoon || '',
+        phone: rawTenant.telefoon || userRow.telefoon || '',
         dateOfBirth: rawTenant.geboortedatum || '',
         age: rawTenant.leeftijd || undefined,
         sex: rawTenant.geslacht || undefined,

@@ -30,6 +30,7 @@ const PropertyManagement = lazy(() => import('./pages/PropertyManagement'));
 
 const Privacybeleid = lazy(() => import('./pages/Privacybeleid'));
 const AlgemeneVoorwaarden = lazy(() => import('./pages/AlgemeneVoorwaarden'));
+const Contact = lazy(() => import('./pages/Contact'));
 const PropertySearch = lazy(() => import('./pages/PropertySearch'));
 const IssueReporting = lazy(() => import('./pages/IssueReporting'));
 const HelpSupport = lazy(() => import('./pages/HelpSupport'));
@@ -190,6 +191,7 @@ const App = () => (
 
             <Route path="/privacybeleid" element={<Privacybeleid />} />
             <Route path="/algemene-voorwaarden" element={<AlgemeneVoorwaarden />} />
+            <Route path="/contact" element={<Contact />} />
             <Route
               path="/property-search"
               element={<PropertySearch />}

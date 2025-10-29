@@ -218,9 +218,16 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>Help centrum</li>
-                <li>Contact</li>
-                <li>Veelgestelde vragen</li>
+                <li>
+                  <Link to="/contact" className="hover:underline">
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/help-support" className="hover:underline">
+                    Veelgestelde vragen
+                  </Link>
+                </li>
                 <li>
                   <Link to="/privacybeleid" className="hover:underline">
                     Privacybeleid

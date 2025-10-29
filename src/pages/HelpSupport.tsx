@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ArrowLeft, Search, Phone, Mail, MessageCircle, FileText, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Search, Mail, MessageCircle, FileText, HelpCircle } from 'lucide-react';
 
 const HelpSupport: React.FC = () => {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ const HelpSupport: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/issue-reporting')}>
             <CardContent className="p-6 text-center">
               <MessageCircle className="w-8 h-8 text-blue-600 mx-auto mb-3" />
@@ -118,15 +118,7 @@ const HelpSupport: React.FC = () => {
               <p className="text-sm text-gray-600 mt-1">Meld een technisch probleem of bug</p>
             </CardContent>
           </Card>
-          
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-6 text-center">
-              <Phone className="w-8 h-8 text-green-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900">Bel Ons</h3>
-              <p className="text-sm text-gray-600 mt-1">020-1234567 (ma-vr 9:00-17:00)</p>
-            </CardContent>
-          </Card>
-          
+
           <Card className="cursor-pointer hover:shadow-md transition-shadow">
             <CardContent className="p-6 text-center">
               <Mail className="w-8 h-8 text-purple-600 mx-auto mb-3" />
@@ -198,15 +190,6 @@ const HelpSupport: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-green-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-gray-900">Telefoon</h4>
-                  <p className="text-gray-600">020-1234567</p>
-                  <p className="text-sm text-gray-500">Maandag t/m vrijdag: 9:00 - 17:00</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-gray-900">E-mail</h4>
@@ -214,7 +197,7 @@ const HelpSupport: React.FC = () => {
                   <p className="text-sm text-gray-500">Responstijd: binnen 24 uur</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <MessageCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
@@ -255,30 +238,7 @@ const HelpSupport: React.FC = () => {
           </Card>
         </div>
 
-        {/* Emergency Contact */}
-        <Card className="mt-6 border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800">Urgente Problemen</CardTitle>
-            <CardDescription className="text-red-600">
-              Voor urgente technische problemen die uw gebruik van het platform blokkeren
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-800 font-medium">24/7 Noodlijn</p>
-                <p className="text-red-600">085-1234567</p>
-              </div>
-              <Button 
-                variant="destructive" 
-                onClick={() => navigate('/issue-reporting')}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Urgent Probleem Melden
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );

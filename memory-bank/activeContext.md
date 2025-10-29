@@ -3,6 +3,9 @@
 ## Current Work Focus
 ✅ COMPLETED: Fixed infinite loading loop after successful payment redirect
 ✅ COMPLETED: Enhanced subscription validation with timeout protection
+✅ COMPLETED: Fixed phone number display mapping issue in profile overview
+✅ COMPLETED: Updated calendar in step 4 to Dutch language with improved selected date highlighting
+✅ COMPLETED: Fixed calendar layout issues - removed problematic custom styling that was causing days to stick together
 
 ## Recent Changes
 - ✅ Created memory bank structure with core documentation files
