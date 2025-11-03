@@ -479,43 +479,44 @@ const buildProfileSections = (
         <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Content Sections - Proper Order */}
           <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
-            {/* Profile Views Statistics Card */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
-                  <Eye className="h-5 w-5" />
-                  Profiel Weergaven
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-blue-600">{profileViews}</span>
-                  <span className="text-gray-600">verhuurders hebben je profiel bekeken</span>
-                </div>
-                {profileViews === 0 && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Tip: Maak je profiel compleet en actueel om meer aandacht van verhuurders te krijgen!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
             {/* Foto Sectie */}
             <PhotoSection>
-            {/* Quick access button - Mobile-first design */}
+            {/* Quick access cards - Mobile-first design */}
             <div className="grid grid-cols-1 gap-3 mt-6 w-full px-2">
-            <Button
-            className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150 text-gray-700 font-semibold shadow-sm transition-all duration-200 border border-gray-200"
-            onClick={() => navigate("/instellingen")}
-            >
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-600 text-white mr-4 flex-shrink-0">
-            <Settings className="h-6 w-6" />
-            </div>
-            <div className="text-left">
-            <div className="font-semibold text-base">Instellingen</div>
-            <div className="text-sm text-gray-600 opacity-75">Account beheren</div>
-            </div>
-            </Button>
+              {/* Profile Views Card */}
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
+                    <Eye className="h-5 w-5" />
+                    Profiel Weergaven
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold text-blue-600">{profileViews}</span>
+                    <span className="text-gray-600">verhuurders hebben je profiel bekeken</span>
+                  </div>
+                  {profileViews === 0 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      Tip: Maak je profiel compleet en actueel om meer aandacht van verhuurders te krijgen!
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Settings Button */}
+              <Button
+              className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150 text-gray-700 font-semibold shadow-sm transition-all duration-200 border border-gray-200"
+              onClick={() => navigate("/instellingen")}
+              >
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-600 text-white mr-4 flex-shrink-0">
+              <Settings className="h-6 w-6" />
+              </div>
+              <div className="text-left">
+              <div className="font-semibold text-base">Instellingen</div>
+              <div className="text-sm text-gray-600 opacity-75">Account beheren</div>
+              </div>
+              </Button>
             </div>
             </PhotoSection>
 
