@@ -115,8 +115,8 @@ ${formData.description}`;
       }
       
     } catch (error) {
-      logger.error('Failed to submit issue report:', error);
       const errorMessage = error instanceof Error ? error.message : 'Er is een fout opgetreden. Probeer het opnieuw.';
+      logger.error('Failed to submit issue report:', errorMessage);
       toast({
         title: 'Fout bij verzenden',
         description: errorMessage,
