@@ -95,8 +95,8 @@ export default function HelpSupportModal({ isOpen, onClose }: HelpSupportModalPr
       icon: Mail,
       title: 'E-mail support',
       description: 'Voor algemene vragen en ondersteuning',
-      action: 'support@huurly.nl',
-      link: 'mailto:support@huurly.nl'
+      action: 'team@huurly.nl',
+      link: 'mailto:team@huurly.nl'
     },
     {
       icon: Phone,

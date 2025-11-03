@@ -111,7 +111,7 @@ const HelpSupport: React.FC = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/issue-reporting')}>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/probleem-melden')}>
             <CardContent className="p-6 text-center">
               <MessageCircle className="w-8 h-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold text-gray-900">Probleem Melden</h3>
@@ -123,7 +123,7 @@ const HelpSupport: React.FC = () => {
             <CardContent className="p-6 text-center">
               <Mail className="w-8 h-8 text-purple-600 mx-auto mb-3" />
               <h3 className="font-semibold text-gray-900">E-mail Support</h3>
-              <p className="text-sm text-gray-600 mt-1">support@huurly.nl</p>
+              <p className="text-sm text-gray-600 mt-1">team@huurly.nl</p>
             </CardContent>
           </Card>
         </div>
@@ -193,7 +193,7 @@ const HelpSupport: React.FC = () => {
                 <Mail className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-gray-900">E-mail</h4>
-                  <p className="text-gray-600">support@huurly.nl</p>
+                  <p className="text-gray-600">team@huurly.nl</p>
                   <p className="text-sm text-gray-500">Responstijd: binnen 24 uur</p>
                 </div>
               </div>
