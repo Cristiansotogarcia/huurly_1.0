@@ -20,6 +20,7 @@ const BeheerderDashboard = lazy(() => import('./pages/BeheerderDashboard'));
 const DatabaseCleanup = lazy(() => import('./pages/admin/DatabaseCleanup'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const Analytics = lazy(() => import('./pages/admin/Analytics'));
+const FacturenBeheer = lazy(() => import('./pages/admin/FacturenBeheer'));
 
 const AuthConfirm = lazy(() => import('./pages/AuthConfirm'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
@@ -39,9 +40,7 @@ const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 
 // Mobile modal pages
 const ProfileEditPage = lazy(() => import('./pages/mobile/ProfileEditPage'));
-const DocumentenPage = lazy(() => import('./pages/DocumentenPage'));
 const InstellingenPage = lazy(() => import('./pages/InstellingenPage'));
-const DocumentUploadPage = lazy(() => import('./pages/mobile/DocumentUploadPage'));
 
 const PaymentPage = lazy(() => import('./pages/mobile/PaymentPage'));
 const PaymentOnboarding = lazy(() => import('./pages/PaymentOnboarding'));
@@ -89,14 +88,6 @@ const App = () => (
               element={
                 <ProtectedRoute roles={['huurder']}>
                   <HuurderDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/documenten"
-              element={
-                <ProtectedRoute roles={['huurder']}>
-                  <DocumentenPage />
                 </ProtectedRoute>
               }
             />
@@ -189,6 +180,14 @@ const App = () => (
               }
             />
             <Route
+              path="/admin/facturen"
+              element={
+                <ProtectedRoute roles={['beheerder']}>
+                  <FacturenBeheer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/abonnement"
               element={
                 <ProtectedRoute roles={['huurder']}>
@@ -221,14 +220,6 @@ const App = () => (
               element={
                 <ProtectedRoute roles={['huurder']}>
                   <ProfileEditPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/mobile/document-upload"
-              element={
-                <ProtectedRoute roles={['huurder']}>
-                  <DocumentUploadPage />
                 </ProtectedRoute>
               }
             />

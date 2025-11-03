@@ -42,7 +42,6 @@ Deno.serve(async (req) => {
       intro: 'Je bent succesvol geregistreerd als huurder op ons platform.',
       nextSteps: [
         'Vul je profiel volledig in met persoonlijke informatie',
-        'Upload je documenten (ID, inkomensverklaring, etc.)',
         'Maak je profiel zichtbaar voor verhuurders',
         'Begin met zoeken naar je ideale woning'
       ],

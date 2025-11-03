@@ -310,7 +310,7 @@ const InstellingenPage: React.FC = () => {
                 <Alert>
                   <AlertDescription>
                     Je kunt een kopie van al je gegevens downloaden in JSON formaat. 
-                    Dit omvat je profiel, berichten, documenten en andere informatie die je hebt gedeeld op Huurly.
+                    Dit omvat je profiel, berichten en andere informatie die je hebt gedeeld op Huurly.
                   </AlertDescription>
                 </Alert>
 
@@ -365,7 +365,7 @@ const InstellingenPage: React.FC = () => {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Waarschuwing:</strong> Deze actie kan niet ongedaan worden gemaakt.
-                    Al je gegevens, inclusief profiel, berichten en documenten zullen permanent worden verwijderd.
+                    Al je gegevens, inclusief profiel en berichten zullen permanent worden verwijderd.
                   </AlertDescription>
                 </Alert>
 

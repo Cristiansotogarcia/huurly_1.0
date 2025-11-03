@@ -34,7 +34,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Settings, Eye } from "lucide-react";
+import { Settings, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
@@ -509,20 +509,8 @@ const buildProfileSections = (
 
             {/* Foto Sectie */}
             <PhotoSection>
-            {/* Quick access buttons - Mobile-first design */}
+            {/* Quick access button - Mobile-first design */}
             <div className="grid grid-cols-1 gap-3 mt-6 w-full px-2">
-            <Button
-            className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 text-blue-700 font-semibold shadow-sm transition-all duration-200 border border-blue-200"
-            onClick={() => navigate("/documenten")}
-            >
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-600 text-white mr-4 flex-shrink-0">
-            <FileText className="h-6 w-6" />
-            </div>
-            <div className="text-left">
-            <div className="font-semibold text-base">Mijn Documenten</div>
-            <div className="text-sm text-blue-600 opacity-75">Beheer je documenten</div>
-            </div>
-            </Button>
             <Button
             className="flex items-center justify-start w-full min-h-[56px] p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150 text-gray-700 font-semibold shadow-sm transition-all duration-200 border border-gray-200"
             onClick={() => navigate("/instellingen")}

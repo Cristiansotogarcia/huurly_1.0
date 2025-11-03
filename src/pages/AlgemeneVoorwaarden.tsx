@@ -7,10 +7,13 @@ const AlgemeneVoorwaarden: React.FC = () => {
         <h1 className="text-3xl font-bold mb-2">Algemene Voorwaarden – Huurly.nl</h1>
         <p className="text-gray-600">Versie: 1 september 2025</p>
         <p className="text-gray-600">Website: www.huurly.nl</p>
+        <p className="text-gray-700 mt-4 font-medium">
+          Huurly is een platform ontwikkeld en eigendom van CSG Online Specialist
+        </p>
       </div>
 
       <div className="bg-gray-50 p-6 rounded-lg mb-6">
-        <h2 className="text-xl font-semibold mb-2">Beheerder:</h2>
+        <h2 className="text-xl font-semibold mb-2">Beheerder en eigenaar:</h2>
         <p>CSG Online Specialist</p>
         <p>Eenmanszaak – KvK-nummer: 92868401</p>
         <p>Vestigingsnummer: 000058446214</p>

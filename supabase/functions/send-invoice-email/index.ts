@@ -1,7 +1,16 @@
 import { corsHeaders } from '../_shared/cors.ts';
+// @ts-ignore - Deno runtime will resolve this correctly
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 Deno.serve(async (req) => {
   const headers = corsHeaders;
+  
+  // Initialize Supabase client for database operations
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false }
+  });
   
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers, status: 200 });
@@ -287,6 +296,49 @@ Deno.serve(async (req) => {
       amount: totalAmount,
       messageId: result.id 
     });
+
+    // Store invoice in database
+    try {
+      // Get user ID from email
+      const { data: userData } = await supabase
+        .from('gebruikers')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (userData) {
+        const { error: dbError } = await supabase
+          .from('facturen')
+          .insert({
+            factuur_nummer: invoiceNumber,
+            factuur_datum: now.toISOString(),
+            gebruiker_id: userData.id,
+            klant_naam: customerName,
+            klant_email: email,
+            bedrag_totaal: totalAmount,
+            bedrag_excl_btw: amountExclBTW,
+            btw_bedrag: btwAmount,
+            btw_percentage: 21.00,
+            valuta: currency,
+            service_beschrijving: serviceDescription,
+            abonnement_type: subscriptionType,
+            transactie_id: transactionId,
+            factuur_html: emailHtml,
+            verzonden: true,
+            verzonden_op: now.toISOString()
+          });
+
+        if (dbError) {
+          console.error('Failed to store invoice in database:', dbError);
+          // Don't fail the request if database storage fails
+        } else {
+          console.log('Invoice stored in database successfully:', invoiceNumber);
+        }
+      }
+    } catch (dbError) {
+      console.error('Error storing invoice:', dbError);
+      // Continue even if database storage fails
+    }
 
     return new Response(
       JSON.stringify({ 

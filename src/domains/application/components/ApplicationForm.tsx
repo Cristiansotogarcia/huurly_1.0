@@ -258,7 +258,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
               <div className="mt-2 text-sm text-blue-700">
                 <ul className="list-disc list-inside space-y-1">
                   <li>Zorg ervoor dat alle informatie correct en volledig is</li>
-                  <li>De verhuurder kan aanvullende documenten opvragen</li>
+                  <li>De verhuurder kan aanvullende informatie opvragen</li>
                   <li>Je ontvangt een bevestiging na het indienen van je aanvraag</li>
                 </ul>
               </div>

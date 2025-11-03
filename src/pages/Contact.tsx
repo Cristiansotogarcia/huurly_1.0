@@ -90,6 +90,9 @@ const Contact: React.FC = () => {
           <p className="text-gray-600 mt-2">
             Heeft u vragen of wilt u meer informatie? Neem contact met ons op.
           </p>
+          <p className="text-gray-700 mt-3 font-medium">
+            Huurly is een platform ontwikkeld door CSG Online Specialist
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

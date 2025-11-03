@@ -66,15 +66,11 @@ export default function HelpSupportModal({ isOpen, onClose }: HelpSupportModalPr
   const faqItems = [
     {
       question: 'Hoe maak ik een sterk profiel?',
-      answer: 'Een compleet profiel met alle documenten, een professionele foto en een uitgebreide motivatie verhoogt je kansen aanzienlijk. Zorg ervoor dat je inkomen en werkgever duidelijk vermeld staan.'
+      answer: 'Een compleet profiel met een professionele foto en een uitgebreide motivatie verhoogt je kansen aanzienlijk. Zorg ervoor dat je inkomen en werkgever duidelijk vermeld staan.'
     },
     {
-      question: 'Wanneer wordt mijn abonnement verlengd?',
-      answer: 'Je abonnement wordt automatisch verlengd op de vervaldatum. Je ontvangt 14 dagen van tevoren een herinnering per e-mail.'
-    },
-    {
-      question: 'Hoe lang duurt documentverificatie?',
-      answer: 'Documentverificatie duurt meestal 1-3 werkdagen. Je ontvangt een melding zodra je documenten zijn beoordeeld.'
+      question: 'Waarom zie ik geen reacties van verhuurders?',
+      answer: 'Zorg ervoor dat je profiel compleet is en je binnen het budget van de verhuurder valt. Een compleet profiel met foto en motivatie maakt het verschil.'
     },
     {
       question: 'Kan ik mijn abonnement opzeggen?',

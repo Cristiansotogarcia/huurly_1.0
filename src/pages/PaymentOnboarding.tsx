@@ -45,7 +45,7 @@ const PaymentOnboarding = () => {
           .maybeSingle();
 
         if (error) {
-          logger.error('Error checking subscription status:', error);
+          logger.error(`Error checking subscription status: ${error.message}`);
           setIsCheckingSubscription(false);
           return;
         }
@@ -68,7 +68,7 @@ const PaymentOnboarding = () => {
         logger.info('User does not have active subscription, proceeding with payment flow');
         setIsCheckingSubscription(false);
       } catch (error) {
-        logger.error('Unexpected error checking subscription:', error);
+        logger.error(`Unexpected error checking subscription: ${error instanceof Error ? error.message : String(error)}`);
         setIsCheckingSubscription(false);
       }
     };
@@ -96,7 +96,7 @@ const PaymentOnboarding = () => {
     try {
       // Set payment flow state BEFORE starting the payment process
       setPaymentFlow(true);
-      logger.info('Payment flow started for user:', user.id);
+      logger.info(`Payment flow started for user: ${user.id}`);
 
       const baseUrl = window.location.origin;
       const result = await paymentService.createCheckoutSession(user.id, baseUrl);
@@ -105,7 +105,7 @@ const PaymentOnboarding = () => {
         // Clear payment flow state on error
         setPaymentFlow(false);
 
-        logger.error('Payment checkout session creation failed:', result.error);
+        logger.error(`Payment checkout session creation failed: ${result.error?.message || 'Unknown error'}`);
         toast({
           title: "Fout",
           description: result.error.message || "Er is een fout opgetreden bij het starten van de betaling.",
@@ -116,7 +116,7 @@ const PaymentOnboarding = () => {
 
       if (result.data?.url) {
         // Use direct URL redirect for simplicity and reliability
-        logger.info('Redirecting to Stripe checkout:', result.data.url);
+        logger.info(`Redirecting to Stripe checkout: ${result.data.url}`);
         window.location.href = result.data.url;
       } else {
         // Clear payment flow state if no URL received
@@ -130,7 +130,7 @@ const PaymentOnboarding = () => {
     } catch (error) {
       // Clear payment flow state on any error
       setPaymentFlow(false);
-      logger.error('Payment initiation error:', error);
+      logger.error(`Payment initiation error: ${error instanceof Error ? error.message : String(error)}`);
       toast({
         title: "Fout",
         description: "Er is een onverwachte fout opgetreden. Probeer het later opnieuw.",
@@ -290,7 +290,6 @@ const PaymentOnboarding = () => {
                 </div>
                 <div className="flex items-start space-x-2">
                   <FileText className="h-4 w-4 text-dutch-blue mt-0.5 flex-shrink-0" />
-                  <span>Upload en beheer al je documenten veilig</span>
                 </div>
                 <div className="flex items-start space-x-2">
                   <Eye className="h-4 w-4 text-dutch-blue mt-0.5 flex-shrink-0" />

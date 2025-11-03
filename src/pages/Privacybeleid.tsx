@@ -67,10 +67,10 @@ const Privacybeleid: React.FC = () => {
           
           <h3 className="text-lg font-medium text-gray-800">Documenten:</h3>
           <ul className="list-disc pl-6 space-y-1">
-            <li>Identiteitsdocumenten</li>
-            <li>Inkomensbewijzen</li>
+            <li>Persoonlijke gegevens voor profiel</li>
+            <li>Werkgeversinformatie</li>
             <li>Referenties</li>
-            <li>Andere verificatiedocumenten</li>
+            <li>Contactgegevens</li>
           </ul>
         </div>
       </section>
@@ -81,7 +81,7 @@ const Privacybeleid: React.FC = () => {
           <p>Wij gebruiken jouw persoonsgegevens voor de volgende doeleinden:</p>
           <ul className="list-disc pl-6 space-y-1 mt-3">
             <li>Het aanbieden en verbeteren van onze matchingdiensten tussen huurders en verhuurders</li>
-            <li>Het verifiëren van jouw identiteit en documenten</li>
+            <li>Het verifiëren van jouw identiteit en informatie</li>
             <li>Het verwerken van betalingen en abonnementen</li>
             <li>Het verzenden van belangrijke updates en notificaties</li>
             <li>Het bieden van klantenservice en ondersteuning</li>

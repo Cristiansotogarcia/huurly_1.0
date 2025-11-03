@@ -16,15 +16,11 @@ const HelpSupport: React.FC = () => {
       questions: [
         {
           question: 'Hoe kan ik mijn profiel aanpassen?',
-          answer: 'Ga naar uw dashboard en klik op "Profiel Bewerken". Hier kunt u al uw persoonlijke gegevens, voorkeuren en documenten bijwerken.'
-        },
-        {
-          question: 'Hoe upload ik documenten?',
-          answer: 'In uw dashboard vindt u de sectie "Documenten". Klik op "Document Toevoegen" en selecteer het juiste documenttype. Ondersteunde formaten zijn PDF, JPG en PNG.'
+          answer: 'Ga naar uw dashboard en klik op "Profiel Bewerken". Hier kunt u al uw persoonlijke gegevens en voorkeuren bijwerken.'
         },
         {
           question: 'Waarom is mijn profiel niet compleet?',
-          answer: 'Een compleet profiel vereist alle persoonlijke gegevens, werkgegevens, inkomensgegevens en de benodigde documenten. Controleer de profielstatus op uw dashboard.'
+          answer: 'Een compleet profiel vereist alle persoonlijke gegevens, werkgegevens en inkomensgegevens. Controleer de profielstatus op uw dashboard.'
         }
       ]
     },
