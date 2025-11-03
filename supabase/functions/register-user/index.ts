@@ -8,7 +8,8 @@ const getCorsHeaders = (origin: string | null) => {
     'http://localhost:5173',
     'http://localhost:3000',
     'https://huurly-1-0.vercel.app',
-    'https://huurly.nl'
+    'https://huurly.nl',
+    'https://www.huurly.nl'
   ];
   
   const isAllowed = origin && allowedOrigins.includes(origin);
