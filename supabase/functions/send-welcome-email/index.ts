@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       nextSteps: [
         'Vul je profiel volledig in met persoonlijke informatie',
         'Maak je profiel zichtbaar voor verhuurders',
-        'Begin met zoeken naar je ideale woning'
+        'Wacht tot verhuurders contact met je opnemen'
       ],
       tip: 'Hoe completer je profiel, hoe groter de kans dat verhuurders contact met je opnemen!'
     } : {
