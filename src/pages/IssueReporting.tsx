@@ -49,30 +49,77 @@ const IssueReporting: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - in real implementation, this would send to support system
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Map priority to Dutch labels
+      const priorityLabels: Record<string, string> = {
+        low: 'Laag - Algemene vraag',
+        medium: 'Gemiddeld - Standaard probleem',
+        high: 'Hoog - Urgent probleem',
+        critical: 'Kritiek - Blokkerende fout'
+      };
+
+      // Map category to Dutch labels
+      const categoryLabels: Record<string, string> = {
+        technical: 'Technisch probleem',
+        account: 'Account & Profiel',
+        payment: 'Betaling & Abonnement',
+        property: 'Woning & Zoeken',
+        application: 'Aanvraag & Documenten',
+        other: 'Overig'
+      };
+
+      // Format message for email
+      const formattedMessage = `CATEGORIE: ${categoryLabels[formData.category] || formData.category}
+
+PRIORITEIT: ${priorityLabels[formData.priority] || formData.priority}
+
+BESCHRIJVING:
+${formData.description}`;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      logger.log('Issue report submitted:', formData);
-      
-      toast({
-        title: 'Probleem gemeld',
-        description: 'Uw probleem is succesvol gemeld. We nemen binnen 24 uur contact met u op.'
+      const response = await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          name: `Probleem Melding - ${categoryLabels[formData.category]}`,
+          email: formData.contactEmail,
+          subject: `[${priorityLabels[formData.priority]}] ${formData.subject}`,
+          message: formattedMessage
+        }),
       });
-      
-      // Reset form
-      setFormData({
-        category: '',
-        subject: '',
-        description: '',
-        priority: 'medium',
-        contactEmail: ''
-      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        logger.log('Issue report submitted successfully');
+        
+        toast({
+          title: 'Probleem gemeld',
+          description: 'Uw probleem is succesvol gemeld. We nemen binnen 24 uur contact met u op.'
+        });
+        
+        // Reset form
+        setFormData({
+          category: '',
+          subject: '',
+          description: '',
+          priority: 'medium',
+          contactEmail: ''
+        });
+      } else {
+        throw new Error(data.uiMessage || 'Er is iets misgegaan bij het verzenden.');
+      }
       
     } catch (error) {
       logger.error('Failed to submit issue report:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Er is een fout opgetreden. Probeer het opnieuw.';
       toast({
         title: 'Fout bij verzenden',
-        description: 'Er is een fout opgetreden. Probeer het opnieuw.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -219,7 +266,7 @@ const IssueReporting: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <h4 className="font-medium text-gray-900">E-mail Support</h4>
-                <p className="text-gray-600">support@huurly.nl</p>
+                <p className="text-gray-600">team@huurly.nl</p>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Responstijd</h4>

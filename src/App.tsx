@@ -208,7 +208,7 @@ const App = () => (
               element={<PropertySearch />}
             />
             <Route
-              path="/issue-reporting"
+              path="/probleem-melden"
               element={<IssueReporting />}
             />
             <Route
