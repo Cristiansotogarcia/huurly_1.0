@@ -311,7 +311,6 @@ const buildProfileSections = (
 
 
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
   const [profileViews, setProfileViews] = useState<number>(0);
   const navigate = useNavigate();
@@ -443,11 +442,6 @@ const buildProfileSections = (
     });
   };
 
-  const onDocumentUploadComplete = async (documents: any[]) => {
-    await handleDocumentUploadComplete(documents, () => {
-      setShowDocumentModal(false);
-    });
-  };
 
   // Show loading screen only while waiting for user data
   if (!hasInitialDataLoaded || isLoading) {
@@ -541,11 +535,8 @@ const buildProfileSections = (
       </div>
       <DashboardModals
         showProfileModal={showProfileModal}
-        showDocumentModal={showDocumentModal}
         setShowProfileModal={setShowProfileModal}
-        setShowDocumentModal={setShowDocumentModal}
         onProfileComplete={onProfileComplete}
-        onDocumentUploadComplete={onDocumentUploadComplete}
         user={user}
         tenantProfile={tenantProfile}
         profilePictureUrl={profilePictureUrl}

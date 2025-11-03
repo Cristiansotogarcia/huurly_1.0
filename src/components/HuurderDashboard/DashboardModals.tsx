@@ -1,17 +1,13 @@
 import React, { useMemo } from "react";
 import EnhancedProfileUpdateModal from "@/components/modals/EnhancedProfileUpdateModal";
-import DocumentUploadModal from "@/components/modals/DocumentUploadModal";
 import { ProfileFormData } from "@/components/modals/profileSchema";
 import { convertFromISODate } from "@/utils/dateUtils";
 import { useModalRouter } from "@/hooks/useModalRouter";
 
 interface DashboardModalsProps {
   showProfileModal: boolean;
-  showDocumentModal: boolean;
   setShowProfileModal: (show: boolean) => void;
-  setShowDocumentModal: (show: boolean) => void;
   onProfileComplete: (profileData: any) => Promise<void>;
-  onDocumentUploadComplete: (documents: any[]) => Promise<void>;
   user?: any;
   tenantProfile?: any;
   profilePictureUrl?: string | null;
@@ -149,11 +145,8 @@ const getInitialFormData = (
 
 export const DashboardModals: React.FC<DashboardModalsProps> = ({
   showProfileModal,
-  showDocumentModal,
   setShowProfileModal,
-  setShowDocumentModal,
   onProfileComplete,
-  onDocumentUploadComplete,
   user,
   tenantProfile,
   profilePictureUrl,
@@ -181,22 +174,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
     }
   }, [showProfileModal, openModal, initialData, onProfileComplete, setShowProfileModal]);
 
-  // Handle document upload modal routing
-  React.useEffect(() => {
-    if (showDocumentModal) {
-      const shouldShowDesktopModal = openModal('documentUpload', {
-        onUploadComplete: onDocumentUploadComplete,
-        returnPath: '/huurder-dashboard'
-      });
-
-      if (!shouldShowDesktopModal) {
-        // On mobile, we navigated to a page, so close the modal state
-        setShowDocumentModal(false);
-      }
-    }
-  }, [showDocumentModal, openModal, onDocumentUploadComplete, setShowDocumentModal]);
-
-
   return (
     <>
       {/* Profile Creation Modal - Only shown on desktop */}
@@ -206,15 +183,6 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
           onClose={() => setShowProfileModal(false)}
           onProfileComplete={onProfileComplete}
           initialData={initialData}
-        />
-      )}
-
-      {/* Document Upload Modal - Only shown on desktop */}
-      {!isMobile && (
-        <DocumentUploadModal
-          open={showDocumentModal}
-          onOpenChange={setShowDocumentModal}
-          onUploadComplete={onDocumentUploadComplete}
         />
       )}
     </>
