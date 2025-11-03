@@ -34,6 +34,14 @@ const Index = () => {
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
 
+    // Check for email verification redirect from AuthConfirm
+    if (searchParams.get('verified') === 'true') {
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // User has just verified their email - they'll need to login via Header
+      return;
+    }
+
     // Check for email verification success - only handle once
     if ((hash.includes('type=signup') || searchParams.get('type') === 'signup')) {
       if (!hasHandledEmailVerification.current) {

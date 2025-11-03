@@ -171,6 +171,27 @@ serve(async (req) => {
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema
     // Role information is already stored in the gebruikers table via the 'rol' column
 
+    // Generate email confirmation link
+    let confirmationUrl = '';
+    try {
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: 'signup',
+        email: email,
+        options: {
+          redirectTo: `${Deno.env.get('SUPABASE_URL').replace('/auth/v1', '')}/auth/confirm`
+        }
+      });
+
+      if (linkError) {
+        console.error('Error generating confirmation link:', linkError);
+      } else if (linkData?.properties?.action_link) {
+        confirmationUrl = linkData.properties.action_link;
+        console.log('Email confirmation link generated successfully');
+      }
+    } catch (linkGenError) {
+      console.error('Unexpected error generating confirmation link:', linkGenError);
+    }
+
     // Send welcome email (non-blocking - don't fail registration if this fails)
     try {
       const welcomeEmailResponse = await fetch(
@@ -184,7 +205,8 @@ serve(async (req) => {
           body: JSON.stringify({
             email,
             firstName,
-            role
+            role,
+            confirmationUrl
           })
         }
       );

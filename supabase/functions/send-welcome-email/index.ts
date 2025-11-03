@@ -16,11 +16,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, firstName, role } = await req.json();
+    const { email, firstName, role, confirmationUrl } = await req.json();
 
-    if (!email || !firstName || !role) {
+    if (!email || !firstName || !role || !confirmationUrl) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, firstName, role' }),
+        JSON.stringify({ error: 'Missing required fields: email, firstName, role, confirmationUrl' }),
         { status: 400, headers }
       );
     }
@@ -107,11 +107,15 @@ Deno.serve(async (req) => {
                             </div>
                             
                             <div style="text-align: center; margin: 30px 0;">
-                                <a href="https://huurly.nl/login" 
+                                <a href="${confirmationUrl}" 
                                    style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-                                    Naar Dashboard
+                                    Bevestig je E-mail Adres
                                 </a>
                             </div>
+                            
+                            <p style="margin: 20px 0; color: #666666; font-size: 14px; text-align: center;">
+                                Na bevestiging kun je direct inloggen en je account activeren.
+                            </p>
                         </td>
                     </tr>
                     

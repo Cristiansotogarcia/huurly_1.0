@@ -1,10 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { getDefaultDashboardRoute } from '@/utils/roleUtils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 
 /**
  * AuthConfirm component handles Supabase auth confirmation flows
@@ -15,7 +13,7 @@ const AuthConfirm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     const handleAuthConfirmation = async () => {
@@ -73,22 +71,17 @@ const AuthConfirm = () => {
 
         // Handle different confirmation types
         if (type === 'email') {
-          // For email verification, show success and redirect to role-specific dashboard
+          // Show success screen, then redirect to homepage with login modal
+          setIsVerified(true);
           toast({
-            title: 'E-mail geverifieerd',
-            description: 'Je e-mailadres is succesvol geverifieerd.',
+            title: 'E-mail succesvol geverifieerd!',
+            description: 'Je kunt nu inloggen met je account.',
           });
           
-          // Wait a moment for user data to be available, then redirect to role-specific dashboard
+          // Redirect to homepage with flag to open login modal
           setTimeout(() => {
-            if (user?.role) {
-              const dashboardRoute = getDefaultDashboardRoute(user.role);
-              navigate(dashboardRoute);
-            } else {
-              // Fallback to home page if user role is not available
-              navigate('/');
-            }
-          }, 500);
+            navigate('/?verified=true');
+          }, 2000);
           return;
         } else if (type === 'invite') {
           // For invitations, redirect to the specified next URL or dashboard
@@ -117,6 +110,31 @@ const AuthConfirm = () => {
     handleAuthConfirmation();
   }, [searchParams, navigate, toast]);
 
+  // Show success screen when email is verified
+  if (isVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-2xl">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="h-10 w-10 text-green-600" />
+            </div>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
+              E-mail Geverifieerd!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Je account is succesvol bevestigd. Je kunt nu inloggen om toegang te krijgen tot je dashboard.
+            </p>
+            <p className="text-sm text-gray-500">
+              Je wordt automatisch doorgestuurd naar de inlogpagina...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen during verification
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8">

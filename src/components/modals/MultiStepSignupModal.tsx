@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +26,6 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
   });
   
   const { signUp } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Password validation state
@@ -90,27 +88,10 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       if (success && user) {
         toast({
           title: "Registratie succesvol!",
-          description: "Er is een e-mail verzonden om je account te bevestigen.",
+          description: "Controleer je e-mail om je account te bevestigen.",
         });
         onClose();
-
-        // Route based on user role
-        switch (user.role) {
-          case 'huurder':
-            navigate('/huurder-dashboard');
-            break;
-          case 'verhuurder':
-            navigate('/verhuurder-dashboard');
-            break;
-          case 'beoordelaar':
-            navigate('/beoordelaar-dashboard');
-            break;
-          case 'beheerder':
-            navigate('/beheerder-dashboard');
-            break;
-          default:
-            navigate('/');
-        }
+        // Stay on homepage - no automatic navigation
       } else {
         // The signUp function in useAuth throws an error on failure, which is caught by the catch block.
         // So if success is false, we can assume an error was thrown and will be handled there.
