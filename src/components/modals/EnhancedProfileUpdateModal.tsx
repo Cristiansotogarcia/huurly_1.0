@@ -163,21 +163,16 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
   const onSubmit = useCallback(async (data: ProfileFormData) => {
-    console.log('🔥🔥🔥 ONSUBMIT CALLBACK EXECUTED - Form data:', data);
-    console.log('🔥🔥🔥 Current step:', currentStep, 'Is last step:', isLastStep);
-    console.log('🔥🔥🔥 Form state:', methods.formState);
 
     // Validate entire form before submission
     try {
-      const parsedData = profileSchema.parse(data);
-      console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Parsed data:', parsedData);
+      profileSchema.parse(data);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const fieldErrors = validationError.flatten().fieldErrors as Record<string, string[]>;
         const errorMessages = Object.entries(fieldErrors)
           .map(([fieldName, errors]) => `${fieldName}: ${errors?.join(', ')}`)
           .join('; ');
-        console.error('🔥 Final Profile Validation Error:', fieldErrors);
         toast({
           title: 'Validatie Fout',
           description: `Er ontbreken nog verplichte velden: ${errorMessages}`,
@@ -188,12 +183,9 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     }
 
     try {
-      console.log('🔥 EnhancedProfileUpdateModal.onSubmit - Calling onProfileComplete');
-
       await onProfileComplete(data);
       onClose();
     } catch (error) {
-      console.error('🔥 EnhancedProfileUpdateModal.onSubmit - Error:', error);
       toast({
         title: 'Fout',
         description: `Er is een fout opgetreden bij het opslaan van je profiel: ${error instanceof Error ? error.message : 'Onbekende fout'}`,
@@ -218,17 +210,10 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
     methods.reset(newValues);
   }, [initialData]);
 
-  // Track step changes
-  useEffect(() => {
-    console.log('🔥🔥🔥 STEP CHANGED EFFECT:', currentStep, 'Is last step:', isLastStep);
-  }, [currentStep, isLastStep]);
-
   // Prevent any automatic form submission
   useEffect(() => {
     const handleFormSubmit = (e: Event) => {
-      console.log('🔥🔥🔥 GLOBAL FORM SUBMIT PREVENTION:', e, 'Current step:', currentStep, 'Is last step:', isLastStep);
       if (!isLastStep) {
-        console.log('🔥🔥🔥 PREVENTING GLOBAL FORM SUBMIT - Not on last step');
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -259,10 +244,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
         <FormProvider {...methods}>
           <form
             onSubmit={(e) => {
-              console.log('🔥🔥🔥 FORM ON SUBMIT EVENT:', e, 'Current step:', currentStep, 'Is last step:', isLastStep);
               // Only allow submission on the actual last step
               if (!isLastStep) {
-                console.log('🔥🔥🔥 BLOCKING FORM SUBMISSION - Not on last step');
                 e.preventDefault();
                 return false;
               }
@@ -271,10 +254,8 @@ const EnhancedProfileUpdateModal = ({ isOpen, onClose, onProfileComplete, initia
             }}
             className="space-y-6"
             onKeyDown={(e) => {
-              console.log('🔥🔥🔥 KEYBOARD EVENT:', e.key, 'Target:', e.target, 'Current step:', currentStep, 'Is last step:', isLastStep);
               // Prevent form submission on Enter key during step navigation
               if (e.key === 'Enter' && !isLastStep) {
-                console.log('🔥🔥🔥 PREVENTING ENTER KEY SUBMISSION - Not on last step');
                 e.preventDefault();
               }
             }}

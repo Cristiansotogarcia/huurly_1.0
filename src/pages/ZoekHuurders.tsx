@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { withAuth } from '@/hocs/withAuth';
 import { User } from '@/types';
-import { computeCompatibility, SearchCriteria } from '@/lib/matching';
 import { favoritesService } from '@/services/FavoritesService';
 import { logger } from '@/lib/logger';
+import { Eye } from 'lucide-react';
 
 interface ZoekHuurdersProps {
   user: User;
 }
 
 const ZoekHuurders: React.FC<ZoekHuurdersProps> = ({ user }) => {
+  const navigate = useNavigate();
   const [city, setCity] = useState('');
   const [minBudget, setMinBudget] = useState<number | undefined>();
   const [maxBudget, setMaxBudget] = useState<number | undefined>();
@@ -28,29 +30,58 @@ const ZoekHuurders: React.FC<ZoekHuurdersProps> = ({ user }) => {
   }, [user.id]);
 
   const handleSearch = async () => {
+    // Since actieve_huurders view is limited, get full tenant data
     const { data, error } = await supabase
-      .from('actieve_huurders')
-      .select('*')
-      .or(`beschrijving.ilike.%${city || ''}%,locatie_voorkeur.cs.{${city || ''}}`);
+      .from('huurders')
+      .select(`
+        id,
+        beroep,
+        beschrijving,
+        locatie_voorkeur,
+        max_huur,
+        huisdieren,
+        roken,
+        beschikbaarheid_flexibel,
+        profielfoto_url,
+        abonnementen!inner(status),
+        gebruikers!inner(naam, profiel_compleet)
+      `)
+      .eq('abonnementen.status', 'actief')
+      .eq('gebruikers.profiel_compleet', true);
 
     if (error) {
-      logger.error('Search error', error);
+      logger.error(`Search error: ${error.message}`);
       setResults([]);
       return;
     }
 
-    const criteria: SearchCriteria = {
-      city: city || undefined,
-      minBudget,
-      maxBudget,
-      lifestyle: { huisdieren: pets, roken: smoking },
-    };
+    // Apply client-side filtering for jobboard simplicity
+    let filtered = Array.isArray(data) ? data : [];
 
-    const enriched = Array.isArray(data) ? data.map((t: any) => ({
-      ...t,
-      compatibility: computeCompatibility(t, criteria),
-    })) : [];
-    setResults(enriched);
+    // Filter by city in locatie_voorkeur array
+    if (city) {
+      filtered = filtered.filter(tenant =>
+        tenant.locatie_voorkeur?.some((loc: string) => loc.toLowerCase().includes(city.toLowerCase()))
+      );
+    }
+
+    // Filter by budget range (tenant max_huur within landlord budget expectations)
+    if (minBudget !== undefined) {
+      filtered = filtered.filter(tenant => tenant.max_huur >= minBudget);
+    }
+    if (maxBudget !== undefined) {
+      filtered = filtered.filter(tenant => tenant.max_huur <= maxBudget);
+    }
+
+    // Filter by lifestyle preferences
+    if (pets !== undefined) {
+      filtered = filtered.filter(tenant => tenant.huisdieren === pets);
+    }
+    if (smoking !== undefined) {
+      filtered = filtered.filter(tenant => tenant.roken === smoking);
+    }
+
+    setResults(filtered);
   };
 
   const handleSave = async (tenantId: string) => {
@@ -102,28 +133,40 @@ const ZoekHuurders: React.FC<ZoekHuurdersProps> = ({ user }) => {
             <thead>
               <tr>
                 <th className="px-3 py-2 text-left text-sm">Naam</th>
+                <th className="px-3 py-2 text-left text-sm">Beroep</th>
                 <th className="px-3 py-2 text-left text-sm">Max Budget</th>
-                <th className="px-3 py-2 text-left text-sm">Compatibiliteit</th>
-                <th></th>
+                <th className="px-3 py-2 text-left text-sm">Plaatsen</th>
+                <th className="px-3 py-2 text-left text-sm">Acties</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {results.map((r) => (
                 <tr key={r.id}>
-                  <td className="px-3 py-2">{r.naam}</td>
+                  <td className="px-3 py-2">{r.gebruikers.naam}</td>
+                  <td className="px-3 py-2">{r.beroep || 'Niet opgegeven'}</td>
                   <td className="px-3 py-2">€{r.max_huur}</td>
-                  <td className="px-3 py-2">{r.compatibility.total}%</td>
+                  <td className="px-3 py-2">{r.locatie_voorkeur?.join(', ') || 'Niet opgegeven'}</td>
                   <td className="px-3 py-2">
-                    {saved.includes(r.id) ? (
-                      <span className="text-green-600">Opgeslagen</span>
-                    ) : (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleSave(r.id)}
-                        className="text-blue-600 hover:underline"
+                        onClick={() => navigate(`/tenant/${r.id}`)}
+                        className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        title="Bekijk volledig profiel"
                       >
-                        Opslaan
+                        <Eye className="h-4 w-4" />
+                        Bekijk
                       </button>
-                    )}
+                      {saved.includes(r.id) ? (
+                        <span className="text-green-600 text-sm">✓ Opgeslagen</span>
+                      ) : (
+                        <button
+                          onClick={() => handleSave(r.id)}
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          Opslaan
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

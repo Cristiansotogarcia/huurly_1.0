@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
 import CookieConsent from "@/components/CookieConsent";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import { StructuredData } from "@/components/SEO/StructuredData";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -25,6 +26,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ManageSubscription = lazy(() => import('./pages/Subscription/ManageSubscription'));
 
 const ZoekHuurders = lazy(() => import('./pages/ZoekHuurders'));
+const TenantProfileDetail = lazy(() => import('./pages/TenantProfileDetail'));
 const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
 const PropertyManagement = lazy(() => import('./pages/PropertyManagement'));
 
@@ -61,6 +63,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <StructuredData />
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center p-8">
             <div className="space-y-4 w-full max-w-md">
@@ -118,6 +121,14 @@ const App = () => (
               element={
                 <ProtectedRoute roles={['verhuurder']}>
                   <ZoekHuurders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/:tenantId"
+              element={
+                <ProtectedRoute roles={['verhuurder']}>
+                  <TenantProfileDetail />
                 </ProtectedRoute>
               }
             />

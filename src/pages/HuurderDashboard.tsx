@@ -33,9 +33,11 @@ import {
 } from "@/utils/labelMappers";
 
 import { Button } from "@/components/ui/button";
-import { FileText, Settings } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Settings, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logger } from "@/lib/logger";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HuurderDashboardProps {
   user: User;
@@ -311,6 +313,7 @@ const buildProfileSections = (
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false);
+  const [profileViews, setProfileViews] = useState<number>(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -335,6 +338,29 @@ const buildProfileSections = (
       setHasInitialDataLoaded(true);
     }
   }, [user, hasInitialDataLoaded]);
+
+  // Fetch profile views count
+  useEffect(() => {
+    const fetchProfileViews = async () => {
+      if (user?.id) {
+        try {
+          const { data, error } = await supabase
+            .from('huurders')
+            .select('profiel_weergaven')
+            .eq('id', user.id)
+            .single();
+
+          if (!error && data) {
+            setProfileViews(data.profiel_weergaven || 0);
+          }
+        } catch (error) {
+          logger.error(`Error fetching profile views: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    };
+
+    fetchProfileViews();
+  }, [user?.id]);
 
   // Check subscription status and redirect if needed
   useEffect(() => {
@@ -460,6 +486,27 @@ const buildProfileSections = (
         <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Content Sections - Proper Order */}
           <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
+            {/* Profile Views Statistics Card */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
+                  <Eye className="h-5 w-5" />
+                  Profiel Weergaven
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-blue-600">{profileViews}</span>
+                  <span className="text-gray-600">verhuurders hebben je profiel bekeken</span>
+                </div>
+                {profileViews === 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Tip: Maak je profiel compleet en actueel om meer aandacht van verhuurders te krijgen!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Foto Sectie */}
             <PhotoSection>
             {/* Quick access buttons - Mobile-first design */}

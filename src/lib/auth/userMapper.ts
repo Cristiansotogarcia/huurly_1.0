@@ -11,7 +11,7 @@ class UserMapper {
    */
   async mapSupabaseUserToUser(supabaseUser: SupabaseUser): Promise<User> {
     try {
-      logger.info('Mapping user with JWT claims:', supabaseUser.id);
+      logger.info(`Mapping user with JWT claims: ${supabaseUser.id}`);
       
       // First try to get role from JWT app_metadata (from custom access token hook)
       let mappedRole = supabaseUser.app_metadata?.primary_role;
@@ -23,11 +23,20 @@ class UserMapper {
         hasPayment = true;
       }
       
-      // If no role in JWT claims, fallback to user metadata or email
+      // If no role in JWT claims, fallback to database lookup, then user metadata or email
       if (!mappedRole) {
-        logger.info('No role in JWT claims, falling back to user metadata or email');
-        const roleFromMeta = supabaseUser.user_metadata?.role || roleMapper.determineRoleFromEmail(supabaseUser.email);
-        mappedRole = roleMapper.mapRoleFromDatabase(roleFromMeta, supabaseUser.email);
+        logger.info('No role in JWT claims, trying database lookup');
+
+        // First try to get role from database
+        const dbRole = await roleMapper.getRoleFromDatabase(supabaseUser.id);
+        if (dbRole) {
+          mappedRole = dbRole;
+        logger.info(`Role found in database: ${mappedRole}`);
+        } else {
+          logger.info('No role in database, falling back to user metadata or email detection');
+          const roleFromMeta = supabaseUser.user_metadata?.role || roleMapper.determineRoleFromEmail(supabaseUser.email);
+          mappedRole = roleMapper.mapRoleFromDatabase(roleFromMeta, supabaseUser.email);
+        }
       }
 
       // Get name from profile or user metadata
@@ -48,7 +57,7 @@ class UserMapper {
         }
       }
 
-      logger.info('Auth mapping - Email:', supabaseUser.email?.substring(0, 5) + '***', 'Role:', mappedRole);
+      logger.info(`Auth mapping - Email: ${supabaseUser.email?.substring(0, 5)}*** Role: ${mappedRole}`);
 
       return {
         id: supabaseUser.id,
@@ -61,7 +70,7 @@ class UserMapper {
         hasPayment,
       };
     } catch (error) {
-      logger.error('Error mapping user:', error);
+      logger.error(`Error mapping user: ${error}`);
       // Fallback mapping in case of any errors
       return {
         id: supabaseUser.id,

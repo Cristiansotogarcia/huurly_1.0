@@ -173,12 +173,9 @@ export const useHuurder = () => {
       throw error;
     }
 
-    console.log('🔥 useHuurder.handleProfileComplete - Received profileData:', profileData);
-
     try {
       const mappedData = mapProfileFormToDutch(profileData);
       
-      console.log('🔥 useHuurder.handleProfileComplete - Mapped data:', mappedData);
       
       // Check if required fields are present in mapped data
       const requiredFields = ['voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 'inkomen', 'beschrijving', 'motivatie', 'stad', 'voorkeur_woningtype', 'min_budget', 'max_budget'];
@@ -190,7 +187,6 @@ export const useHuurder = () => {
         }
         const isMissing = value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
         if (isMissing) {
-          console.error(`🔥 Missing required field: ${field}`, { value: mappedData[field] });
         }
         return isMissing;
       });
@@ -198,12 +194,9 @@ export const useHuurder = () => {
       // Additional validation for preferred_city array (mapped to stad and locatie_voorkeur)
       if (!mappedData.locatie_voorkeur || mappedData.locatie_voorkeur.length === 0) {
         missingFields.push('stad');
-        console.error('🔥 Missing required field: stad (preferred_city)', { locatie_voorkeur: mappedData.locatie_voorkeur });
       }
       
       if (missingFields.length > 0) {
-        console.error('🔥 Missing required fields in mapped data:', missingFields);
-        console.error('🔥 Available fields in mapped data:', Object.keys(mappedData));
         const error = new Error(`Ontbrekende verplichte velden: ${missingFields.join(', ')}`);
         toast({
           title: 'Fout',
@@ -215,26 +208,16 @@ export const useHuurder = () => {
       
       const updateResponse = await userService.updateTenantProfile(mappedData);
       if (updateResponse.success) {
-        console.log('🔥 useHuurder.handleProfileComplete - Profile updated successfully:', updateResponse);
         toast({
           title: 'Profiel bijgewerkt',
           description: 'Je profiel is succesvol bijgewerkt.',
         });
         
-        // Enhanced real-time synchronization
+        // Enhanced real-time synchronization - refresh will properly map all data
         await refresh(); // Wait for refresh to complete
-        
-        // Force re-fetch of profile data to ensure UI consistency
-        if (user?.id) {
-          const profileResponse = await userService.getTenantProfile(user.id);
-          if (profileResponse.success && profileResponse.data) {
-            console.log('🔥 useHuurder.handleProfileComplete - Profile data refreshed:', profileResponse.data);
-          }
-        }
         
         if (callback) callback();
       } else {
-        console.error('🔥 useHuurder.handleProfileComplete - Failed to update profile:', updateResponse);
         const errorMessage = updateResponse.error?.message || 'Onbekende fout bij het bijwerken van het profiel.';
         toast({
           title: 'Fout',
@@ -244,7 +227,6 @@ export const useHuurder = () => {
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('🔥 useHuurder.handleProfileComplete - Error updating profile:', error);
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout.';
       toast({
         title: 'Fout',

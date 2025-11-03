@@ -62,7 +62,8 @@ const Index = () => {
     const currentPath = window.location.pathname;
     const isEmailVerificationFlow = hash.includes('type=signup') || searchParams.get('type') === 'signup';
 
-    if (isAuthenticated && user && !hasActiveModal && !hasHandledEmailVerification.current && !isEmailVerificationFlow) {
+
+    if (isAuthenticated && user && user.role && !hasActiveModal && !hasHandledEmailVerification.current && !isEmailVerificationFlow) {
       const handleRedirect = async () => {
         let targetPath = '/';
         switch (user.role) {

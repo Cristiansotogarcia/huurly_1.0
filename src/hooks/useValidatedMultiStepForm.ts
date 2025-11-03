@@ -80,16 +80,12 @@ export function useValidatedMultiStepForm(
   }, [currentStep, getValues]);
 
   const nextStep = (): boolean => {
-    console.log('🔥🔥🔥 NEXT STEP CALLED - Current step:', currentStep, 'Total steps:', totalSteps);
     const errors = validateCurrentStep();
-    console.log('🔥🔥🔥 Validation errors:', errors);
 
     if (errors.length > 0) {
-      console.log('🔥🔥🔥 Validation failed - not proceeding to next step');
       return false; // Validation failed
     }
 
-    console.log('🔥🔥🔥 Validation passed - proceeding to next step');
     setCurrentStep(i => {
       if (i >= totalSteps - 1) return i;
       return i + 1;
@@ -105,14 +101,10 @@ export function useValidatedMultiStepForm(
   };
 
   const goTo = (index: number): boolean => {
-    console.log('🔥🔥🔥 GO TO STEP CALLED:', index, 'Current step:', currentStep, 'Can navigate:', canNavigateToStep(index));
     if (!canNavigateToStep(index)) {
-      console.log('🔥🔥🔥 CANNOT NAVIGATE TO STEP:', index);
       return false;
     }
-    console.log('🔥🔥🔥 NAVIGATING TO STEP:', index);
     setCurrentStep(index);
-    console.log('🔥🔥🔥 STEP CHANGED TO:', index, 'Is last step:', index === totalSteps - 1);
     return true;
   };
 

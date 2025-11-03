@@ -1,12 +1,13 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardHeader, DashboardContent } from '@/components/dashboard';
 import { LoadingState } from '@/components/states';
 import { useBeheerderDashboard } from '@/hooks/useBeheerderDashboard';
 import { useBeheerderActions } from '@/hooks/useBeheerderActions';
 import UserManagement from '@/components/standard/UserManagement';
+import { CreateUserModal } from '@/components/admin/CreateUserModal';
 import { StatsGrid } from '@/components/standard/StatsGrid';
-import { Users, Home, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Home, FileText, UserPlus } from 'lucide-react';
 import { withAuth } from '@/hocs/withAuth';
 import { User } from '@/types';
 
@@ -15,8 +16,9 @@ interface BeheerderDashboardProps {
 }
 
 const BeheerderDashboard: React.FC<BeheerderDashboardProps> = ({ user }) => {
-  const { stats, users, loading: dataLoading } = useBeheerderDashboard();
+  const { stats, users, loading: dataLoading, refresh } = useBeheerderDashboard();
   const actions = useBeheerderActions();
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   if (dataLoading) {
     return <LoadingState />;
@@ -50,7 +52,16 @@ const BeheerderDashboard: React.FC<BeheerderDashboardProps> = ({ user }) => {
     <div className="flex flex-col h-screen bg-gray-50">
       <DashboardHeader user={user} onLogout={actions.handleLogout} />
       <DashboardContent>
-        <h1 className="text-3xl font-bold text-gray-800">Beheerder Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Beheerder Dashboard</h1>
+          <Button 
+            onClick={() => setShowCreateUserModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Nieuwe Gebruiker
+          </Button>
+        </div>
         <StatsGrid stats={beheerderStats} />
 
         <div className="mt-8">
@@ -60,6 +71,17 @@ const BeheerderDashboard: React.FC<BeheerderDashboardProps> = ({ user }) => {
           </div>
         </div>
       </DashboardContent>
+      
+      <CreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => setShowCreateUserModal(false)}
+        onSuccess={() => {
+          // Refresh the dashboard data after creating a user
+          if (refresh) {
+            refresh();
+          }
+        }}
+      />
     </div>
   );
 };

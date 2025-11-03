@@ -334,7 +334,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
    */
   async getHuurderDashboardData(userId: string): Promise<DatabaseResponse<ConsolidatedDashboardData>> {
     return this.executeQuery(async () => {
-      logger.info('Fetching consolidated dashboard data for user:', userId);
+      logger.info(`Fetching consolidated dashboard data for user: ${userId}`);
 
       try {
         // Execute all queries in parallel for maximum performance
@@ -344,7 +344,6 @@ export class ConsolidatedDashboardService extends DatabaseService {
           userResult,
           subscriptionResult,
           photoUrlsResult,
-          profileViewsResult,
         ] = await Promise.allSettled([
           // Get user documents
           supabase
@@ -372,20 +371,17 @@ export class ConsolidatedDashboardService extends DatabaseService {
 
           // Get profile and cover photo URLs from database
           this.getPhotoUrls(userId),
-
-          // Count profile views
-          supabase
-            .from('profiel_weergaves')
-            .select('id', { count: 'exact', head: true })
-            .eq('huurder_id', userId),
         ]);
+
+        // Get raw tenant data for profile views count
+        const rawTenant =
+          profileResult.status === 'fulfilled' && profileResult.value.data
+            ? profileResult.value.data
+            : null;
 
         // Process results
         const stats: TenantDashboardData = {
-          profileViews:
-            profileViewsResult.status === 'fulfilled'
-              ? profileViewsResult.value.count ?? 0
-              : 0,
+          profileViews: rawTenant?.profiel_weergaven ?? 0,
           applications: 0,
           acceptedApplications: 0,
         };
@@ -413,11 +409,6 @@ export class ConsolidatedDashboardService extends DatabaseService {
             aangemaakt_op: doc.aangemaakt_op,
             bijgewerkt_op: doc.bijgewerkt_op,
           }));
-
-        const rawTenant =
-          profileResult.status === 'fulfilled' && profileResult.value.data
-            ? profileResult.value.data
-            : null;
 
         const userRow =
           userResult.status === 'fulfilled' && userResult.value.data
@@ -455,7 +446,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
         return { data: consolidatedData, error: null };
 
       } catch (error) {
-        logger.error('Error fetching consolidated dashboard data:', error);
+        logger.error(`Error fetching consolidated dashboard data: ${error instanceof Error ? error.message : String(error)}`);
         return { data: null, error: error as Error };
       }
     });
@@ -477,7 +468,7 @@ export class ConsolidatedDashboardService extends DatabaseService {
         coverPhotoUrl: tenant?.cover_foto || null
       };
     } catch (error) {
-      logger.error('Error getting photo URLs:', error);
+      logger.error(`Error getting photo URLs: ${error instanceof Error ? error.message : String(error)}`);
       return { profilePictureUrl: null, coverPhotoUrl: null };
     }
   }

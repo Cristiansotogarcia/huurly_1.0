@@ -1,7 +1,7 @@
 import { supabase } from '../integrations/supabase/client.ts';
 import { DatabaseService, DatabaseResponse, PaginationOptions, SortOptions } from '../lib/database.ts';
 import { UserRole } from '../types/index.ts';
-import { Tables } from '../integrations/supabase/types.ts';
+import type { Tables } from '../lib/database.types.ts';
 import { useAuthStore } from '../store/authStore.ts';
 import { logger } from '../lib/logger.ts';
 import { roleMapper } from '../lib/auth/roleMapper.ts';
@@ -608,6 +608,18 @@ export class UserService extends DatabaseService {
           throw this.handleDatabaseError(error);
         }
 
+        // Also update the gebruikers table with the new name
+        const fullName = `${sanitizedData.voornaam} ${sanitizedData.achternaam}`;
+        const { error: gebruikerError } = await supabase
+          .from('gebruikers')
+          .update({ naam: fullName })
+          .eq('id', currentUserId);
+
+        if (gebruikerError) {
+          logger.warn(`Failed to update gebruikers.naam: ${gebruikerError.message}`);
+          // Don't fail the entire operation if this update fails
+        }
+
         await this.createAuditLog('UPDATE', 'tenant_profiles', currentUserId, existingProfile, data);
         return { data, error: null };
       });
@@ -834,7 +846,7 @@ export class UserService extends DatabaseService {
 
       return tenant?.profiel_foto || null;
     } catch (error) {
-      logger.error('Error fetching profile picture URL:', error);
+      logger.error(`Error fetching profile picture URL: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     }
   }
@@ -1152,18 +1164,18 @@ export class UserService extends DatabaseService {
 
         // Delete files from Cloudflare
         if (filesToDelete.length > 0) {
-          logger.info('Deleting files from Cloudflare:', filesToDelete);
+          logger.info(`Deleting files from Cloudflare: ${JSON.stringify(filesToDelete)}`);
           try {
             const deleteResult = await cloudflareR2UploadService.deleteFiles(filesToDelete);
             if (!deleteResult.success) {
-              logger.warn('Some files could not be deleted from Cloudflare:', deleteResult.errors);
+              logger.warn(`Some files could not be deleted from Cloudflare: ${JSON.stringify(deleteResult.errors)}`);
               // Don't fail the entire deletion process if file deletion fails
               // Just log the warning and continue
             } else {
               logger.info('Successfully deleted all files from Cloudflare');
             }
           } catch (fileDeleteError) {
-            logger.error('Error deleting files from Cloudflare:', fileDeleteError);
+            logger.error(`Error deleting files from Cloudflare: ${fileDeleteError instanceof Error ? fileDeleteError.message : String(fileDeleteError)}`);
             // Don't fail the entire deletion process if file deletion fails
           }
         }
@@ -1243,11 +1255,11 @@ export class UserService extends DatabaseService {
         // 12. Delete the auth user completely
         const { error: authDeleteError } = await supabase.auth.admin.deleteUser(currentUserId);
         if (authDeleteError) {
-          logger.error('Failed to delete auth user:', authDeleteError);
+          logger.error(`Failed to delete auth user: ${authDeleteError.message}`);
           // This is critical - if we can't delete the auth user, we should log it
           // but not fail the entire process since database data is already deleted
         } else {
-          logger.info('Successfully deleted auth user:', currentUserId);
+          logger.info(`Successfully deleted auth user: ${currentUserId}`);
         }
 
         // Create final audit log entry (before user is deleted)
@@ -1297,10 +1309,10 @@ export class UserService extends DatabaseService {
             }
           } else {
             const errorText = await emailResponse.text();
-            logger.error('Email service error:', errorText);
+            logger.error(`Email service error: ${errorText}`);
           }
         } catch (emailError) {
-          logger.error('Failed to send deletion confirmation email:', emailError);
+          logger.error(`Failed to send deletion confirmation email: ${emailError instanceof Error ? emailError.message : String(emailError)}`);
         }
 
         return {

@@ -108,6 +108,12 @@ const VerhuurderDashboard: React.FC<VerhuurderDashboardProps> = ({ user }) => {
       <DashboardContent>
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-800">Verhuurder Dashboard</h1>
+          <button
+            onClick={() => window.location.href = '/huurders-zoeken'}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Huurders Zoeken
+          </button>
         </div>
         <StatsGrid stats={verhuurderStats} />
 

@@ -7,12 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, AlertCircle, Key, Mail, Trash2, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, Key, Mail, Trash2, ArrowLeft, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 import { withAuth } from '@/hocs/withAuth';
 import { userService } from '@/services/UserService';
+import { dataExportService } from '@/services/DataExportService';
 
 const InstellingenPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -32,6 +33,9 @@ const InstellingenPage: React.FC = () => {
 
   // Password reset modal state
   const [showPasswordReset, setShowPasswordReset] = useState(false);
+
+  // Data export state
+  const [isExportingData, setIsExportingData] = useState(false);
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +87,48 @@ const InstellingenPage: React.FC = () => {
       setEmailError('Er is een onverwachte fout opgetreden.');
     } finally {
       setIsUpdatingEmail(false);
+    }
+  };
+
+  const handleDataExport = async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Fout',
+        description: 'Gebruiker niet gevonden.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingData(true);
+
+    try {
+      const result = await dataExportService.exportUserData(user.id);
+
+      if (result.error || !result.data) {
+        throw new Error(result.error?.message || 'Fout bij exporteren van gegevens');
+      }
+
+      // Generate filename with current date
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `huurly-data-export-${dateStr}.json`;
+
+      // Download the data
+      dataExportService.downloadDataAsJson(result.data, filename);
+
+      toast({
+        title: 'Gegevens geëxporteerd',
+        description: 'Je gegevens zijn succesvol gedownload als JSON bestand.',
+      });
+    } catch (error) {
+      console.error('Data export error:', error);
+      toast({
+        title: 'Fout bij exporteren',
+        description: error instanceof Error ? error.message : 'Er is een fout opgetreden bij het exporteren van je gegevens.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingData(false);
     }
   };
 
@@ -245,6 +291,60 @@ const InstellingenPage: React.FC = () => {
                   )}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Data Export Section (GDPR) */}
+          <Card className="border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-blue-600">
+                <Download className="mr-2 h-5 w-5" />
+                Gegevens Exporteren
+              </CardTitle>
+              <CardDescription>
+                Download al je gegevens in JSON formaat (GDPR recht op dataportabiliteit)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    Je kunt een kopie van al je gegevens downloaden in JSON formaat. 
+                    Dit omvat je profiel, berichten, documenten en andere informatie die je hebt gedeeld op Huurly.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Wat wordt geëxporteerd?</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Profielinformatie</li>
+                    <li>• Huurder profiel details</li>
+                    <li>• Abonnement gegevens</li>
+                    <li>• Documenten metadata</li>
+                    <li>• Berichten en communicatie</li>
+                    <li>• Aanvragen en notificaties</li>
+                    <li>• Opgeslagen profielen</li>
+                  </ul>
+                </div>
+
+                <Button
+                  onClick={handleDataExport}
+                  disabled={isExportingData}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isExportingData ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Exporteren...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Gegevens Downloaden
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

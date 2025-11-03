@@ -23,11 +23,6 @@ const AuthConfirm = () => {
       const type = searchParams.get('type');
       const next = searchParams.get('next') || '/';
 
-      console.log('AuthConfirm: Processing confirmation', {
-        token_hash: token_hash ? `${token_hash.substring(0, 10)}...` : null,
-        type,
-        next
-      });
 
       // If no token_hash or type, redirect to error
       if (!token_hash || !type) {
@@ -43,7 +38,7 @@ const AuthConfirm = () => {
 
       try {
         // Verify the OTP token with Supabase
-        const { data, error } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.verifyOtp({
           token_hash,
           type: type as any, // Supabase types this as EmailOtpType
         });
@@ -75,11 +70,6 @@ const AuthConfirm = () => {
           return;
         }
 
-        console.log('AuthConfirm: Token verification successful', {
-          hasSession: !!data.session,
-          hasUser: !!data.user,
-          type
-        });
 
         // Handle different confirmation types
         if (type === 'email') {

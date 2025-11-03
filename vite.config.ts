@@ -7,15 +7,18 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "localhost",
     port: 8080,
     fs: {
       strict: true, // Best practice for security and performance
     },
+    hmr: {
+      port: 8080,
+    },
   },
   preview: {
     port: 8080,
-    host: "::",
+    host: "localhost",
   },
   plugins: [
     react(),

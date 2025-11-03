@@ -1,6 +1,7 @@
 
 import { UserRole } from '../../types/index.ts';
 import { logger } from '../logger.ts';
+import { supabase } from '../../integrations/supabase/client.ts';
 
 class RoleMapper {
   /**
@@ -25,8 +26,8 @@ class RoleMapper {
    * Map database role to frontend role
    */
   mapRoleFromDatabase(dbRole: string, email?: string): UserRole {
-    logger.info('Mapping database role:', dbRole, 'for email:', email);
-    
+    logger.info(`Mapping database role: ${dbRole} for email: ${email}`);
+
     switch (dbRole) {
       case 'huurder':
         return 'huurder';
@@ -49,7 +50,7 @@ class RoleMapper {
             return 'verhuurder';
           }
         }
-        logger.warn('Unknown database role:', dbRole, 'defaulting to huurder');
+        logger.warn(`Unknown database role: ${dbRole} defaulting to huurder`);
         return 'huurder';
     }
   }
@@ -59,22 +60,54 @@ class RoleMapper {
    */
   determineRoleFromEmail(email?: string): UserRole {
     if (!email) return 'huurder';
-    
+
     const lowerEmail = email.toLowerCase();
-    
+
     if (lowerEmail.includes('@beoordelaar.') || lowerEmail.includes('bert@')) {
       return 'beoordelaar';
     }
-    
+
     if (lowerEmail.includes('admin') || lowerEmail.includes('beheerder') || lowerEmail.includes('@huurly.nl')) {
       return 'beheerder';
     }
-    
+
     if (lowerEmail.includes('verhuurder') || lowerEmail.includes('landlord')) {
       return 'verhuurder';
     }
-    
+
     return 'huurder';
+  }
+
+  /**
+   * Look up role from database for a specific user
+   */
+  async getRoleFromDatabase(userId: string): Promise<UserRole | null> {
+    try {
+      logger.info(`Looking up role from database for user: ${userId}`);
+
+      const { data, error } = await supabase
+        .from('gebruikers')
+        .select('rol')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        logger.error(`Error looking up role from database: ${error.message}`);
+        return null;
+      }
+
+      if (data?.rol) {
+        const mappedRole = this.mapRoleFromDatabase(data.rol, userId);
+        logger.info(`Found role in database: ${data.rol} mapped to: ${mappedRole}`);
+        return mappedRole;
+      }
+
+      logger.warn(`No role found in database for user: ${userId}`);
+      return null;
+    } catch (error) {
+      logger.error(`Error querying role from database: ${error}`);
+      return null;
+    }
   }
 }
 

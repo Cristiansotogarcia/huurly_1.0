@@ -83,12 +83,8 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
               onClick={(e) => {
-                console.log('🔥🔥🔥 PROFIEL OPSLAAN BUTTON CLICKED');
-                console.log('🔥🔥🔥 Is submitting:', isSubmitting);
-                console.log('🔥🔥🔥 Is last step:', isLastStep);
                 // Ensure this only triggers on the last step
                 if (!isLastStep) {
-                  console.log('🔥🔥🔥 BLOCKING SUBMIT BUTTON - Not on last step');
                   e.preventDefault();
                   e.stopPropagation();
                   return false;

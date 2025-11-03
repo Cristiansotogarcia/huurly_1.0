@@ -170,6 +170,35 @@ serve(async (req) => {
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema
     // Role information is already stored in the gebruikers table via the 'rol' column
 
+    // Send welcome email (non-blocking - don't fail registration if this fails)
+    try {
+      const welcomeEmailResponse = await fetch(
+        `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-welcome-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({
+            email,
+            firstName,
+            role
+          })
+        }
+      );
+
+      if (!welcomeEmailResponse.ok) {
+        const errorText = await welcomeEmailResponse.text();
+        console.error('Failed to send welcome email:', errorText);
+        // Don't fail registration due to email error
+      } else {
+        console.log('Welcome email sent successfully to:', email);
+      }
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      // Don't fail registration due to email error
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers,

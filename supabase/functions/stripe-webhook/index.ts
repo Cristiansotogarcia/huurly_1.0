@@ -161,6 +161,39 @@ Deno.serve(async (req) => {
           });
         }
 
+        // Send invoice email (non-blocking)
+        try {
+          const { data: userData } = await supabase
+            .from('gebruikers')
+            .select('naam, email')
+            .eq('id', userId)
+            .single();
+
+          if (userData) {
+            await fetch(
+              `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-invoice-email`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+                },
+                body: JSON.stringify({
+                  email: userData.email,
+                  customerName: userData.naam,
+                  amount: session.amount_total,
+                  currency: session.currency,
+                  transactionId: session.id,
+                  subscriptionType: 'onetime'
+                })
+              }
+            );
+            console.log('✅ Invoice email sent for one-time payment');
+          }
+        } catch (emailError) {
+          console.error('❌ Failed to send invoice email:', emailError);
+        }
+
         console.log("✅ One-time payment processing completed");
         return new Response(JSON.stringify({ received: true }), {
           headers: responseHeaders,
@@ -232,6 +265,39 @@ Deno.serve(async (req) => {
           userId,
           error: notificationError,
         });
+      }
+
+      // Send invoice email for subscription (non-blocking)
+      try {
+        const { data: userData } = await supabase
+          .from('gebruikers')
+          .select('naam, email')
+          .eq('id', userId)
+          .single();
+
+        if (userData) {
+          await fetch(
+            `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-invoice-email`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+              },
+              body: JSON.stringify({
+                email: userData.email,
+                customerName: userData.naam,
+                amount: session.amount_total,
+                currency: session.currency,
+                transactionId: session.id,
+                subscriptionType: 'yearly'
+              })
+            }
+          );
+          console.log('✅ Invoice email sent for subscription payment');
+        }
+      } catch (emailError) {
+        console.error('❌ Failed to send invoice email:', emailError);
       }
     }
 
