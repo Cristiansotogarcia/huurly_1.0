@@ -301,7 +301,6 @@ const buildProfileSections = (
     refresh,
     getSubscriptionEndDate,
     handleProfileComplete,
-    handleDocumentUploadComplete,
   } = huurderHook;
   // Verwijderde matching, messaging, notifications en navigate hooks
   const {
