@@ -174,11 +174,14 @@ serve(async (req) => {
     // Generate email confirmation link
     let confirmationUrl = '';
     try {
+      // Use site URL from environment variable, fallback to production domain
+      const siteUrl = Deno.env.get('SITE_URL') || 'https://huurly.nl';
+      
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'signup',
         email: email,
         options: {
-          redirectTo: `${Deno.env.get('SUPABASE_URL').replace('/auth/v1', '')}/auth/confirm`
+          redirectTo: `${siteUrl}/auth/confirm`
         }
       });
 
