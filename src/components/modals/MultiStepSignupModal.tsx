@@ -86,7 +86,12 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       });
 
       if (success && user) {
-        // Don't show toast here - EmailConfirmationModal will be shown via useAuth
+        // Show success toast to inform user about email confirmation
+        toast({
+          title: "Registratie succesvol!",
+          description: "We hebben een bevestigingsmail naar je e-mailadres gestuurd. Controleer je inbox en klik op de link om je account te activeren.",
+          variant: "default",
+        });
         onClose();
         // Stay on homepage - EmailConfirmationModal will appear
       } else {

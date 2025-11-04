@@ -57,10 +57,10 @@ export const getStripe = (): Promise<Stripe | null> => {
     const validation = validateConfig();
     
     if (!validation.isValid) {
-      logger.error('Stripe configuration errors:', {
+      logger.error('Stripe configuration errors: ' + JSON.stringify({
         errors: validation.errors,
         details: validation.details
-      });
+      }));
       
       // In development, show more detailed error
       if (import.meta.env.DEV) { // Use import.meta.env.DEV
@@ -70,7 +70,7 @@ export const getStripe = (): Promise<Stripe | null> => {
       return Promise.resolve(null);
     }
     
-    logger.info('Initializing Stripe with publishable key:', STRIPE_CONFIG.publishableKey.substring(0, 10) + '...');
+    logger.info('Initializing Stripe with publishable key: ' + STRIPE_CONFIG.publishableKey.substring(0, 10) + '...');
     stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
   }
   
@@ -83,15 +83,14 @@ export const PAYMENT_PLANS = {
     onetime: {
       priceId: STRIPE_CONFIG.huurderPriceId,
       name: 'Huurder Eenmalige Betaling',
-      price: 25, // Price including BTW
-      priceWithTax: 25, // Same as price (BTW included)
+      price: 35, // Price including BTW
+      priceWithTax: 35, // Same as price (BTW included)
       currency: 'eur',
       interval: 'eenmalig',
       taxRate: 0, // BTW included in price
       features: [
         'Vindbaar worden door Verhuurders',
         'Profiel aanmaken',
-        'Documenten uploaden',
         'Bezichtigingen aanbod krijgen',
         'Premium ondersteuning'
       ]
@@ -178,18 +177,18 @@ export const getSubscriptionPlan = getPaymentPlan;
 if (import.meta.env.DEV) { // Use import.meta.env.DEV
   const validation = validateConfig();
   if (validation.isValid) {
-    logger.info('✅ Stripe configuration is valid', {
+    logger.info('✅ Stripe configuration is valid: ' + JSON.stringify({
       priceId: STRIPE_CONFIG.huurderPriceId,
       keyPrefix: STRIPE_CONFIG.publishableKey.substring(0, 10) + '...'
-    });
+    }));
   } else {
-    logger.error('❌ Stripe configuration errors:', {
+    logger.error('❌ Stripe configuration errors: ' + JSON.stringify({
       errors: validation.errors,
       details: validation.details,
       env: {
         VITE_STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 'set' : 'missing',
         VITE_STRIPE_HUURDER_PRICE_ID: import.meta.env.VITE_STRIPE_HUURDER_PRICE_ID ? 'set' : 'missing'
       }
-    });
+    }));
   }
 }

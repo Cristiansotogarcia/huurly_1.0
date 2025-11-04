@@ -100,6 +100,12 @@ export const useAuth = (): UseAuthReturn => {
         setSignupEmail(data.email);
         setShowEmailConfirmationModal(true);
         
+        // Show success toast
+        toast({
+          title: "Registratie succesvol",
+          description: "Controleer je e-mail om je account te activeren.",
+        });
+        
         // Explicitly sign out to ensure no session exists until email is verified
         // This is a safety measure even with Supabase email confirmation enabled
         await authService.signOut();
