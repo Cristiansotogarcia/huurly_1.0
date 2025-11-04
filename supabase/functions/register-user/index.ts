@@ -166,60 +166,10 @@ serve(async (req) => {
     // Note: gebruiker_rollen table operations removed as the table doesn't exist in current schema
     // Role information is already stored in the gebruikers table via the 'rol' column
 
-    // Generate email confirmation link
-    let confirmationUrl = '';
-    try {
-      // Use site URL from environment variable, fallback to production domain
-      const siteUrl = Deno.env.get('SITE_URL') || 'https://huurly.nl';
-      
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'signup',
-        email: email,
-        options: {
-          redirectTo: `${siteUrl}/auth/confirm`
-        }
-      });
-
-      if (linkError) {
-        console.error('Error generating confirmation link:', linkError);
-      } else if (linkData?.properties?.action_link) {
-        confirmationUrl = linkData.properties.action_link;
-        console.log('Email confirmation link generated successfully');
-      }
-    } catch (linkGenError) {
-      console.error('Unexpected error generating confirmation link:', linkGenError);
-    }
-
-    // Send welcome email (non-blocking - don't fail registration if this fails)
-    try {
-      const welcomeEmailResponse = await fetch(
-        `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-welcome-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SERVICE_ROLE_KEY')}`
-          },
-          body: JSON.stringify({
-            email,
-            firstName,
-            role,
-            confirmationUrl
-          })
-        }
-      );
-
-      if (!welcomeEmailResponse.ok) {
-        const errorText = await welcomeEmailResponse.text();
-        console.error('Failed to send welcome email:', errorText);
-        // Don't fail registration due to email error
-      } else {
-        console.log('Welcome email sent successfully to:', email);
-      }
-    } catch (emailError) {
-      console.error('Error sending welcome email:', emailError);
-      // Don't fail registration due to email error
-    }
+    // Email sending is now handled by the send-email-hook auth hook
+    // No need to manually send welcome emails here - Supabase will automatically
+    // trigger the hook when a signup occurs
+    console.log('User profile created successfully. Email will be sent via auth hook.');
 
     return new Response(JSON.stringify({ success: true }), {
       headers,
