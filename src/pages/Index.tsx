@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
@@ -27,6 +28,7 @@ const Index = () => {
     handleEmailVerificationSuccess
   } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showSignup, setShowSignup] = useState(false);
   const hasHandledEmailVerification = useRef(false);
 
@@ -38,7 +40,12 @@ const Index = () => {
     if (searchParams.get('verified') === 'true') {
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      // User has just verified their email - they'll need to login via Header
+      // Show toast prompting user to log in
+      toast({
+        title: "E-mail geverifieerd!",
+        description: "Log nu in om door te gaan naar je dashboard.",
+        duration: 6000, // Show for 6 seconds
+      });
       return;
     }
 

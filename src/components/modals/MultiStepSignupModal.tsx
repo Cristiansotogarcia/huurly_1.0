@@ -86,12 +86,9 @@ export const MultiStepSignupModal = ({ isOpen, onClose }: MultiStepSignupModalPr
       });
 
       if (success && user) {
-        toast({
-          title: "Registratie succesvol!",
-          description: "Controleer je e-mail om je account te bevestigen.",
-        });
+        // Don't show toast here - EmailConfirmationModal will be shown via useAuth
         onClose();
-        // Stay on homepage - no automatic navigation
+        // Stay on homepage - EmailConfirmationModal will appear
       } else {
         // The signUp function in useAuth throws an error on failure, which is caught by the catch block.
         // So if success is false, we can assume an error was thrown and will be handled there.
