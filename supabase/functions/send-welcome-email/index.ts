@@ -39,21 +39,24 @@ Deno.serve(async (req) => {
     // Role-specific content
     const roleContent = role === 'huurder' ? {
       greeting: 'Welkom bij Huurly',
-      intro: 'Je bent succesvol geregistreerd als huurder op ons platform.',
+      intro: 'Je bent succesvol geregistreerd als huurder op ons platform. Om te beginnen, bevestig eerst je e-mailadres.',
       nextSteps: [
+        'Bevestig je e-mailadres (klik op de knop hieronder)',
+        'Log in op je account',
+        'Activeer je account via de eenmalige betaling',
         'Vul je profiel volledig in met persoonlijke informatie',
-        'Maak je profiel zichtbaar voor verhuurders',
-        'Wacht tot verhuurders contact met je opnemen'
+        'Maak je profiel zichtbaar voor verhuurders'
       ],
       tip: 'Hoe completer je profiel, hoe groter de kans dat verhuurders contact met je opnemen!'
     } : {
       greeting: 'Welkom bij Huurly',
-      intro: 'Je bent succesvol geregistreerd als verhuurder op ons platform.',
+      intro: 'Je bent succesvol geregistreerd als verhuurder op ons platform. Om te beginnen, bevestig eerst je e-mailadres.',
       nextSteps: [
+        'Bevestig je e-mailadres (klik op de knop hieronder)',
+        'Log in op je account',
         'Vul je bedrijfsinformatie in',
         'Plaats je eerste woning',
-        'Bekijk profielen van geverifieerde huurders',
-        'Vind de perfecte match voor je woning'
+        'Bekijk profielen van geverifieerde huurders'
       ],
       tip: 'Verhuurders met complete woningprofielen ontvangen gemiddeld 3x meer reacties!'
     };
