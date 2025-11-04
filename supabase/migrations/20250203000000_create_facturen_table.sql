@@ -48,12 +48,12 @@ ALTER TABLE public.facturen ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own invoices" ON public.facturen
     FOR SELECT USING (auth.uid() = gebruiker_id);
 
--- Admins (beheerders) can view all invoices
+-- Admins can view all invoices
 CREATE POLICY "Admins can view all invoices" ON public.facturen
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.gebruikers
-            WHERE id = auth.uid() AND rol = 'beheerder'
+            WHERE id = auth.uid() AND rol = 'admin'
         )
     );
 

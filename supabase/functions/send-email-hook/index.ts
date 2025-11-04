@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0'
 
 // Supabase Auth Hook for sending all authentication emails
 // This replaces Supabase's default email system with custom branded emails
@@ -31,7 +32,24 @@ interface AuthHookPayload {
 
 serve(async (req: Request) => {
   try {
-    const payload: AuthHookPayload = await req.json();
+    // Get the webhook secret
+    const hookSecret = Deno.env.get('SEND_EMAIL_HOOK_SECRET') ?? '';
+    
+    if (!hookSecret) {
+      console.error('Missing SEND_EMAIL_HOOK_SECRET environment variable');
+      return new Response(JSON.stringify({ error: 'Webhook not configured' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get payload and headers for verification
+    const payloadText = await req.text();
+    const headers = Object.fromEntries(req.headers);
+    
+    // Verify the webhook signature
+    const wh = new Webhook(hookSecret.replace('v1,whsec_', ''));
+    const payload: AuthHookPayload = wh.verify(payloadText, headers) as AuthHookPayload;
     
     console.log('Auth hook triggered:', {
       actionType: payload.email_action_type,
@@ -55,8 +73,9 @@ serve(async (req: Request) => {
     const firstName = user_metadata?.first_name || 'daar';
     const role = user_metadata?.role || 'huurder';
     
-    // Build confirmation URL
-    const confirmationUrl = `${payload.email_data.site_url}/auth/confirm?token_hash=${payload.email_data.token_hash}&type=${payload.email_action_type}`;
+    // Build confirmation URL - must go through Supabase auth/v1/verify endpoint
+    // This endpoint will verify the token and redirect to your app with a valid session
+    const confirmationUrl = `${payload.email_data.site_url}/auth/v1/verify?token=${payload.email_data.token_hash}&type=${payload.email_action_type}&redirect_to=${payload.email_data.redirect_to}`;
 
     let emailHtml = '';
     let subject = '';
