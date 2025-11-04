@@ -91,7 +91,7 @@ export class AuthService {
 
       return { user: null, error: null };
     } catch (error) {
-      logger.error('Sign up error:', error);
+      logger.error(`Sign up error: ${error}`);
       return { user: null, error: error as AuthError };
     }
   }
@@ -185,7 +185,7 @@ export class AuthService {
       
       return null;
     } catch (error) {
-      logger.error('Error getting current user:', error);
+      logger.error(`Error getting current user: ${error}`);
       return null;
     }
   }
@@ -290,7 +290,7 @@ export class AuthService {
       });
 
       if (error) {
-        logger.error('Reset password error:', error);
+        logger.error(`Reset password error: ${error}`);
         return {
           success: false,
           message: 'Er is een fout opgetreden bij het versturen van de reset e-mail.'
@@ -302,7 +302,7 @@ export class AuthService {
         message: 'Reset e-mail verzonden! Controleer uw inbox.'
       };
     } catch (error) {
-      logger.error('Reset password error:', error);
+      logger.error(`Reset password error: ${error}`);
       return {
         success: false,
         message: 'Er is een onverwachte fout opgetreden.'
@@ -329,7 +329,7 @@ export class AuthService {
       });
 
       if (error) {
-        logger.error('Update password error:', error);
+        logger.error(`Update password error: ${error}`);
         return {
           success: false,
           message: 'Er is een fout opgetreden bij het bijwerken van het wachtwoord.'
@@ -341,7 +341,7 @@ export class AuthService {
         message: 'Wachtwoord succesvol bijgewerkt!'
       };
     } catch (error) {
-      logger.error('Update password error:', error);
+      logger.error(`Update password error: ${error}`);
       return {
         success: false,
         message: 'Er is een onverwachte fout opgetreden.'
