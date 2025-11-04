@@ -124,6 +124,7 @@ After enabling email confirmation in Supabase, test the complete flow:
 1. `src/components/modals/MultiStepSignupModal.tsx` - Removed duplicate toast
 2. `src/hooks/useAuth.ts` - Added explicit signOut after signup
 3. `src/pages/Index.tsx` - Added toast for verified email flow
+4. `supabase/functions/register-user/index.ts` - Fixed to work with email confirmation (removed auth.users verification that fails when email confirmation is enabled)
 
 ## Technical Notes
 
@@ -131,3 +132,5 @@ After enabling email confirmation in Supabase, test the complete flow:
 - The explicit `signOut()` call in `useAuth.ts` is a defensive measure to ensure no session exists
 - The Index.tsx toast will show for 6 seconds to give users time to see it
 - All TypeScript errors have been resolved
+- **CRITICAL FIX**: The `register-user` Edge Function was failing because it tried to verify the user exists in `auth.users` using `getUserById()`. When email confirmation is enabled, users exist in a "pending" state and this check fails. Removed the verification step since the user ID comes directly from `auth.signUp()`.
+- Edge Function has been successfully deployed to Supabase

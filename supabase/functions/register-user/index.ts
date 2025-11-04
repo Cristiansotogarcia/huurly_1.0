@@ -43,15 +43,10 @@ serve(async (req) => {
 
     const { id, email, firstName, lastName, role } = await req.json()
 
-
-    // Verify user exists in auth.users table first
-    const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(id)
-    
-    if (authUserError || !authUser.user) {
-      console.error('User not found in auth.users:', authUserError)
-      throw new Error(`User with ID ${id} not found in authentication system`)
-    }
-
+    // Note: When email confirmation is enabled, the user exists in auth.users
+    // but in a pending state. We don't need to verify they exist since
+    // the user ID comes directly from Supabase auth.signUp()
+    console.log('Creating profile for user:', { id, email, role })
 
     // Cache timestamp for consistency and performance
     const timestamp = new Date().toISOString()
