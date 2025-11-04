@@ -52,9 +52,11 @@ serve(async (req: Request) => {
     const payload: AuthHookPayload = wh.verify(payloadText, headers) as AuthHookPayload;
     
     console.log('Auth hook triggered:', {
-      actionType: payload.email_action_type,
+      actionType: payload.email_data.email_action_type,
       email: payload.user.email,
-      userId: payload.user.id
+      userId: payload.user.id,
+      siteUrl: payload.email_data.site_url,
+      redirectTo: payload.email_data.redirect_to
     });
 
     const resendKey = Deno.env.get('RESEND_API_KEY') ?? '';
@@ -75,13 +77,24 @@ serve(async (req: Request) => {
     
     // Build confirmation URL - must go through Supabase auth/v1/verify endpoint
     // This endpoint will verify the token and redirect to your app with a valid session
-    const confirmationUrl = `${payload.email_data.site_url}/auth/v1/verify?token=${payload.email_data.token_hash}&type=${payload.email_action_type}&redirect_to=${payload.email_data.redirect_to}`;
+    // Note: site_url might already include /auth/v1, so we need to handle that
+    let baseUrl = payload.email_data.site_url;
+    
+    // Remove /auth/v1 suffix if it exists to avoid duplication
+    if (baseUrl.endsWith('/auth/v1')) {
+      baseUrl = baseUrl.slice(0, -8); // Remove '/auth/v1'
+    }
+    
+    const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${payload.email_data.token_hash}&type=${payload.email_data.email_action_type}&redirect_to=${payload.email_data.redirect_to}`;
+    
+    console.log('Base URL:', baseUrl);
+    console.log('Confirmation URL constructed:', confirmationUrl);
 
     let emailHtml = '';
     let subject = '';
 
     // Generate email based on action type
-    switch (payload.email_action_type) {
+    switch (payload.email_data.email_action_type) {
       case 'signup':
         subject = `Welkom bij Huurly, ${firstName}! 🏠`;
         emailHtml = generateSignupEmail(firstName, role, confirmationUrl);
@@ -109,7 +122,7 @@ serve(async (req: Request) => {
         break;
       
       default:
-        console.warn('Unknown email action type:', payload.email_action_type);
+        console.warn('Unknown email action type:', payload.email_data.email_action_type);
         subject = 'Huurly - Bevestiging vereist';
         emailHtml = generateGenericEmail(firstName, confirmationUrl);
     }
@@ -140,7 +153,7 @@ serve(async (req: Request) => {
 
     const result = await emailResponse.json();
     console.log('Auth email sent successfully:', {
-      actionType: payload.email_action_type,
+      actionType: payload.email_data.email_action_type,
       email,
       messageId: result.id
     });
