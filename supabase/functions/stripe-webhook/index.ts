@@ -2,6 +2,7 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendPurchaseEvent } from '../_shared/meta-conversions-api.ts';
 
 // Zorg dat deze function geen Supabase-auth vereist
 export const config = {
@@ -189,6 +190,28 @@ Deno.serve(async (req) => {
               }
             );
             console.log('✅ Invoice email sent for one-time payment');
+
+            // ✅ Send Meta Conversions API Purchase event (non-blocking)
+            try {
+              console.log('📤 Sending Purchase event to Meta Conversions API for one-time payment');
+              const metaResult = await sendPurchaseEvent({
+                eventId: session.id, // Same as Pixel eventID for deduplication
+                email: userData.email,
+                name: userData.naam,
+                amount: session.amount_total || 0,
+                currency: session.currency || 'eur',
+                transactionId: session.id,
+                sourceUrl: 'https://huurly.nl'
+              });
+
+              if (metaResult.success) {
+                console.log('✅ Meta Conversions API: Purchase event sent successfully for one-time payment');
+              } else {
+                console.warn('⚠️ Meta Conversions API: Failed to send Purchase event:', metaResult.error);
+              }
+            } catch (metaError) {
+              console.error('❌ Meta Conversions API: Unexpected error:', metaError);
+            }
           }
         } catch (emailError) {
           console.error('❌ Failed to send invoice email:', emailError);
@@ -295,6 +318,28 @@ Deno.serve(async (req) => {
             }
           );
           console.log('✅ Invoice email sent for subscription payment');
+
+          // ✅ Send Meta Conversions API Purchase event for subscription (non-blocking)
+          try {
+            console.log('📤 Sending Purchase event to Meta Conversions API for subscription');
+            const metaResult = await sendPurchaseEvent({
+              eventId: session.id, // Same as Pixel eventID for deduplication
+              email: userData.email,
+              name: userData.naam,
+              amount: session.amount_total || 0,
+              currency: session.currency || 'eur',
+              transactionId: session.id,
+              sourceUrl: 'https://huurly.nl'
+            });
+
+            if (metaResult.success) {
+              console.log('✅ Meta Conversions API: Purchase event sent successfully for subscription');
+            } else {
+              console.warn('⚠️ Meta Conversions API: Failed to send Purchase event:', metaResult.error);
+            }
+          } catch (metaError) {
+            console.error('❌ Meta Conversions API: Unexpected error:', metaError);
+          }
         }
       } catch (emailError) {
         console.error('❌ Failed to send invoice email:', emailError);
