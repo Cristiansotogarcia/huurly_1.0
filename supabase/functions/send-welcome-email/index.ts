@@ -18,12 +18,15 @@ Deno.serve(async (req) => {
   try {
     const { email, firstName, role, confirmationUrl } = await req.json();
 
-    if (!email || !firstName || !role || !confirmationUrl) {
+    if (!email || !firstName || !role) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, firstName, role, confirmationUrl' }),
+        JSON.stringify({ error: 'Missing required fields: email, firstName, role' }),
         { status: 400, headers }
       );
     }
+
+    // If no confirmation URL provided, show message instead of button
+    const hasConfirmation = confirmationUrl && confirmationUrl.trim() !== '';
 
     const resendKey = Deno.env.get('RESEND_API_KEY') ?? '';
     const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? 'team@huurly.nl';
@@ -109,6 +112,7 @@ Deno.serve(async (req) => {
                                 </p>
                             </div>
                             
+                            ${hasConfirmation ? `
                             <div style="text-align: center; margin: 30px 0;">
                                 <a href="${confirmationUrl}" 
                                    style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
@@ -119,6 +123,21 @@ Deno.serve(async (req) => {
                             <p style="margin: 20px 0; color: #666666; font-size: 14px; text-align: center;">
                                 Na bevestiging kun je direct inloggen en je account activeren.
                             </p>
+                            ` : `
+                            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px 20px; margin: 30px 0; border-radius: 4px;">
+                                <p style="margin: 0; color: #333333; font-size: 14px; line-height: 1.6;">
+                                    <strong>⚠️ Let op:</strong> Je kunt nu direct inloggen op je account! 
+                                    De e-mailbevestiging wordt momenteel geconfigureerd.
+                                </p>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="https://huurly.nl" 
+                                   style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                                    Ga naar Huurly
+                                </a>
+                            </div>
+                            `}
                         </td>
                     </tr>
                     
