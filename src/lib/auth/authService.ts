@@ -50,7 +50,7 @@ export class AuthService {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/?type=signup`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
