@@ -266,33 +266,66 @@ const ProfileEditPage: React.FC = () => {
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <MobileModalPage
-      title={`Stap ${currentStep + 1}: ${steps[currentStep].name}`}
-      onClose={handleClose}
-      className="pb-20"
-    >
+    <div className="h-dvh bg-background flex flex-col">
+      {/* Fixed Header with Back Button and Title */}
+      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="flex items-center justify-between p-3 sm:p-4 pt-safe">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="p-1.5 sm:p-2 hover:bg-accent rounded-md transition-colors shrink-0"
+            >
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-base sm:text-lg font-semibold truncate">
+              Stap {currentStep + 1}: {steps[currentStep].name}
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="p-1.5 sm:p-2 hover:bg-accent rounded-md transition-colors shrink-0"
+          >
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Fixed Progress Stepper */}
+        <div className="px-3 sm:px-4 pb-2">
+          <Progress value={progressPercentage} className="h-1.5" />
+        </div>
+      </div>
+
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
-          {/* Ultra-minimal progress */}
-          <Progress value={progressPercentage} className="h-1 mb-2" />
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4">
+            <div className="max-w-2xl mx-auto pb-4">
+              {stepComponents[currentStep]}
+            </div>
+          </div>
 
-          {/* Content - completely clean */}
-          {stepComponents[currentStep]}
-
-          {/* Sticky navigation */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t p-2.5 sm:p-3 pb-safe shadow-lg">
-            <ProfileFormNavigation
-              isFirstStep={isFirstStep}
-              isLastStep={isLastStep}
-              onBack={prevStep}
-              onNext={nextStep}
-              validateCurrentStep={validateCurrentStep}
-              isSubmitting={methods.formState.isSubmitting}
-            />
+          {/* Fixed Navigation Footer */}
+          <div className="shrink-0 bg-background border-t border-border p-2.5 sm:p-3 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+            <div className="max-w-2xl mx-auto">
+              <ProfileFormNavigation
+                isFirstStep={isFirstStep}
+                isLastStep={isLastStep}
+                onBack={prevStep}
+                onNext={nextStep}
+                validateCurrentStep={validateCurrentStep}
+                isSubmitting={methods.formState.isSubmitting}
+              />
+            </div>
           </div>
         </form>
       </FormProvider>
-    </MobileModalPage>
+    </div>
   );
 };
 
