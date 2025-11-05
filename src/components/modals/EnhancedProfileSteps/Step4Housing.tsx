@@ -71,7 +71,7 @@ export default function Step4Housing() {
         {errors.preferred_property_type && <p className="text-red-500 text-xs">{`${errors.preferred_property_type.message}`}</p>}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="min_kamers">Minimum aantal kamers</Label>
           <Input
@@ -99,7 +99,7 @@ export default function Step4Housing() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="min_budget">Minimum budget</Label>
           <div className="relative">
@@ -140,7 +140,7 @@ export default function Step4Housing() {
           <h3 className="text-lg font-medium">Timing & Beschikbaarheid</h3>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div className="space-y-2">
             <Label htmlFor="move_in_date_preferred">Gewenste inhuurdatum</Label>
             <Controller
@@ -245,7 +245,7 @@ export default function Step4Housing() {
       {/* Storage Preferences - Now as checkboxes */}
       <div className="space-y-4">
         <Label className="text-base font-medium">Opslag wensen</Label>
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField
             control={control}
             name="storage_kelder"

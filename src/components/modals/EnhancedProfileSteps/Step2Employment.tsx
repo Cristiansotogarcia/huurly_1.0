@@ -30,7 +30,7 @@ export default function Step2Employment() {
         <p className="text-gray-600">Vertel ons over je werk en financiële situatie</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="profession">Beroep *</Label>
           <Input

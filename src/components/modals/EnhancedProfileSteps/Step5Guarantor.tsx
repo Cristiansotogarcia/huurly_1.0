@@ -49,7 +49,7 @@ export default function Step5Guarantor() {
               {errors.borgsteller_naam && <p className="text-red-500 text-xs">{`${errors.borgsteller_naam.message}`}</p>}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="borgsteller_telefoon">Telefoon borgsteller</Label>
                 <div className="relative">

@@ -77,7 +77,7 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
 
         {hasPartner && (
           <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="partner_name">Partner naam</Label>
                 <Input
@@ -99,7 +99,7 @@ export default function Step3Household({ isStudent }: Step3HouseholdProps) {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="partner_employment_status">Partner werkstatus</Label>
                 <Controller
