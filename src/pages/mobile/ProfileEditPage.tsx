@@ -286,6 +286,23 @@ const ProfileEditPage: React.FC = () => {
     };
   }, []);
 
+  // Prevent any automatic form submission
+  useEffect(() => {
+    const handleFormSubmit = (e: Event) => {
+      if (!isLastStep) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', handleFormSubmit, true);
+      return () => form.removeEventListener('submit', handleFormSubmit, true);
+    }
+  }, [currentStep, isLastStep]);
+
   return (
     <div className="fixed inset-0 z-50 h-dvh bg-background flex flex-col">
       {/* Fixed Header with Back Button and Title */}
@@ -323,7 +340,24 @@ const ProfileEditPage: React.FC = () => {
       </div>
 
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+        <form
+          onSubmit={(e) => {
+            // Only allow submission on the actual last step
+            if (!isLastStep) {
+              e.preventDefault();
+              return false;
+            }
+            // If we're on the last step, let react-hook-form handle it
+            methods.handleSubmit(onSubmit)(e);
+          }}
+          onKeyDown={(e) => {
+            // Prevent form submission on Enter key during step navigation
+            if (e.key === 'Enter' && !isLastStep) {
+              e.preventDefault();
+            }
+          }}
+          className="flex-1 flex flex-col min-h-0"
+        >
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4">
             <div className="max-w-2xl mx-auto pb-4">
