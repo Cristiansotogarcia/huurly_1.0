@@ -281,22 +281,28 @@ const ProfileEditPage: React.FC = () => {
 
   // Prevent body scroll when this page is active
   useEffect(() => {
-    // Save original overflow value
+    // Save original styles and scroll position
     const originalOverflow = document.body.style.overflow;
     const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+    const scrollY = window.scrollY;
     
-    // Disable body scroll
+    // Disable body scroll and maintain scroll position
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
-    document.body.style.height = '100%';
     
-    // Cleanup: restore original values when component unmounts
+    // Cleanup: restore original values and scroll position
     return () => {
       document.body.style.overflow = originalOverflow;
       document.body.style.position = originalPosition;
-      document.body.style.width = '';
-      document.body.style.height = '';
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      
+      // Restore scroll position
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
