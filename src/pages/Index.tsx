@@ -35,6 +35,7 @@ const Index = () => {
   useEffect(() => {
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
+    const currentPath = window.location.pathname;
 
     // Check for email verification redirect from AuthConfirm
     if (searchParams.get('verified') === 'true') {
@@ -67,16 +68,20 @@ const Index = () => {
       return;
     }
 
-    // Only redirect authenticated users if:
-    // 1. They don't have special URL parameters
-    // 2. No modals are currently shown
-    // 3. We haven't just handled email verification
-    // 4. We're not in an email verification/signup flow
-    // 5. They're not already on their target page
-    const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
-    const currentPath = window.location.pathname;
-    const isEmailVerificationFlow = hash.includes('type=signup') || searchParams.get('type') === 'signup';
+    // Only redirect authenticated users if they're actually on the home page
+    // Don't redirect if they're on any other route (prevents refresh loops)
+    if (currentPath !== '/') {
+      return;
+    }
 
+    // Only redirect authenticated users if:
+    // 1. They're actually on the home page (currentPath === '/')
+    // 2. They don't have special URL parameters
+    // 3. No modals are currently shown
+    // 4. We haven't just handled email verification
+    // 5. We're not in an email verification/signup flow
+    const hasActiveModal = showPaymentSuccessModal || showEmailVerificationSuccessModal || showEmailConfirmationModal;
+    const isEmailVerificationFlow = hash.includes('type=signup') || searchParams.get('type') === 'signup';
 
     if (isAuthenticated && user && user.role && !hasActiveModal && !hasHandledEmailVerification.current && !isEmailVerificationFlow) {
       const handleRedirect = async () => {
@@ -116,15 +121,13 @@ const Index = () => {
             break;
         }
 
-        // Only redirect if not already on the target page
-        if (currentPath !== targetPath) {
-          navigate(targetPath);
-        }
+        // Navigate to appropriate dashboard
+        navigate(targetPath, { replace: true });
       };
 
       handleRedirect();
     }
-  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal]);
+  }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal, toast]);
 
   return (
     <div className="min-h-screen">

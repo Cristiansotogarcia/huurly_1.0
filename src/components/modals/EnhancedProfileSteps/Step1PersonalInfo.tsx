@@ -4,7 +4,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // ProfilePictureUpload removed - users can update profile picture from dashboard
 import { DateInput } from '@/components/ui/DateInput';
-import { User, Phone, Globe } from 'lucide-react';
 // useAuthStore removed - no longer needed without profile picture upload
 import { ProfileFormData } from '../profileSchema';
 
@@ -14,20 +13,8 @@ export default function Step1PersonalInfo() {
   // Profile picture handling removed - users can update from dashboard
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-blue-600" />
-          </div>
-          <h2 className="text-xl font-semibold">Persoonlijke Informatie</h2>
-        </div>
-        <p className="text-gray-600">Begin met je basisgegevens (profielfoto kan je bijwerken via het dashboard)</p>
-      </div>
-
-      {/* Profile Picture Upload removed - users can update profile picture from dashboard */}
-
-      <div className="grid md:grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <div className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="first_name">Voornaam *</Label>
           <Input
@@ -51,43 +38,36 @@ export default function Step1PersonalInfo() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="date_of_birth">Geboortedatum *</Label>
-          <Controller
-            name="date_of_birth"
-            control={control}
-            render={({ field }) => (
-              <DateInput
-                id="date_of_birth"
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="dd/mm/yyyy"
-                required
-              />
-            )}
-          />
-          {errors.date_of_birth && <p className="text-red-500 text-xs">{errors.date_of_birth.message}</p>}
-          <p className="text-xs text-gray-500">Voer je geboortedatum in als dd/mm/yyyy (bijvoorbeeld: 15/03/1990)</p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefoonnummer *</Label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="phone"
-              {...register('phone')}
-              placeholder="+31 6 12345678"
-              className="pl-10"
+      <div className="space-y-2">
+        <Label htmlFor="date_of_birth">Geboortedatum *</Label>
+        <Controller
+          name="date_of_birth"
+          control={control}
+          render={({ field }) => (
+            <DateInput
+              id="date_of_birth"
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="dd/mm/yyyy"
               required
             />
-          </div>
-          {errors.phone && <p className="text-red-500 text-xs">{errors.phone.message}</p>}
-        </div>
+          )}
+        />
+        {errors.date_of_birth && <p className="text-red-500 text-xs">{errors.date_of_birth.message}</p>}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="phone">Telefoonnummer *</Label>
+        <Input
+          id="phone"
+          {...register('phone')}
+          placeholder="+31 6 12345678"
+          required
+        />
+        {errors.phone && <p className="text-red-500 text-xs">{errors.phone.message}</p>}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="sex">Geslacht</Label>
           <Controller
@@ -111,15 +91,11 @@ export default function Step1PersonalInfo() {
 
         <div className="space-y-2">
           <Label htmlFor="nationality">Nationaliteit</Label>
-          <div className="relative">
-            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="nationality"
-              {...register('nationality')}
-              placeholder="Nederlandse"
-              className="pl-10"
-            />
-          </div>
+          <Input
+            id="nationality"
+            {...register('nationality')}
+            placeholder="Nederlandse"
+          />
           {errors.nationality && <p className="text-red-500 text-xs">{errors.nationality.message}</p>}
         </div>
       </div>

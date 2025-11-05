@@ -36,10 +36,29 @@ const ProfileEditPage: React.FC = () => {
   const huurderHook = useHuurder();
   const { handleProfileComplete: defaultHandleProfileComplete } = huurderHook;
   
-  // Get data from navigation state
+  // Get data from navigation state with fallbacks for refresh scenarios
   const state = location.state as any;
   const initialData = state?.modalData?.initialData;
-  const returnTo = state?.returnTo || '/huurder-dashboard';
+  
+  // Determine returnTo with intelligent fallback
+  // If no state (e.g., after refresh), default to dashboard based on user role
+  const getDefaultReturnPath = () => {
+    if (!huurderHook.user) return '/';
+    switch (huurderHook.user.role) {
+      case 'huurder':
+        return '/huurder-dashboard';
+      case 'verhuurder':
+        return '/verhuurder-dashboard';
+      case 'beoordelaar':
+        return '/beoordelaar-dashboard';
+      case 'beheerder':
+        return '/beheerder-dashboard';
+      default:
+        return '/';
+    }
+  };
+  
+  const returnTo = state?.returnTo || getDefaultReturnPath();
   const onProfileComplete = state?.modalData?.onProfileComplete; // Get callback from state
 
 
