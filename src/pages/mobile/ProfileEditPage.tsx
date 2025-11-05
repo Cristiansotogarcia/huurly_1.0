@@ -12,7 +12,6 @@ import Step4Housing from '@/components/modals/EnhancedProfileSteps/Step4Housing'
 import Step5Guarantor from '@/components/modals/EnhancedProfileSteps/Step5Guarantor';
 import Step6References from '@/components/modals/EnhancedProfileSteps/Step6References';
 import Step7ProfileMotivation from '@/components/modals/EnhancedProfileSteps/Step7ProfileMotivation';
-import ProfileFormStepper from '@/components/modals/ProfileFormStepper';
 import ProfileFormNavigation from '@/components/modals/ProfileFormNavigation';
 import MobileModalPage from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
@@ -150,15 +149,13 @@ const ProfileEditPage: React.FC = () => {
     defaultValues: getDefaultValues(),
   });
 
-  const { 
-    currentStep, 
-    nextStep, 
-    prevStep, 
-    isFirstStep, 
-    isLastStep, 
-    goTo, 
-    validateCurrentStep,
-    canNavigateToStep 
+  const {
+    currentStep,
+    nextStep,
+    prevStep,
+    isFirstStep,
+    isLastStep,
+    validateCurrentStep
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
   // Reset form when initialData changes
@@ -249,75 +246,33 @@ const ProfileEditPage: React.FC = () => {
 
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
-  const [showStepper, setShowStepper] = React.useState(false);
-
   return (
     <MobileModalPage
-      title={steps[currentStep].name}
+      title={`Stap ${currentStep + 1}: ${steps[currentStep].name}`}
       onClose={handleClose}
-      className="pb-20" // Extra padding for sticky navigation
-      headerActions={
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {currentStep + 1}/{steps.length}
-          </span>
-        </div>
-      }
+      className="pb-20"
     >
-      <div className="space-y-4">
-        {/* Compact Progress Bar - Always Visible */}
-        <div className="space-y-1">
-          <Progress value={progressPercentage} className="h-1.5" />
-          <button
-            type="button"
-            onClick={() => setShowStepper(!showStepper)}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            {showStepper ? '▼' : '▶'} {showStepper ? 'Verberg' : 'Bekijk'} alle stappen
-          </button>
-        </div>
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-3">
+          {/* Ultra-minimal progress */}
+          <Progress value={progressPercentage} className="h-1" />
 
-        {/* Collapsible Step Navigation */}
-        {showStepper && (
-          <div className="bg-muted/30 border border-border/50 rounded-lg p-3 animate-in slide-in-from-top-2">
-            <ProfileFormStepper 
-              currentStep={currentStep} 
-              steps={steps} 
-              goToStep={goTo}
-              canNavigateToStep={canNavigateToStep}
+          {/* Content - completely clean */}
+          {stepComponents[currentStep]}
+
+          {/* Sticky navigation */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t p-3 pb-safe">
+            <ProfileFormNavigation
+              isFirstStep={isFirstStep}
+              isLastStep={isLastStep}
+              onBack={prevStep}
+              onNext={nextStep}
+              validateCurrentStep={validateCurrentStep}
+              isSubmitting={methods.formState.isSubmitting}
             />
           </div>
-        )}
-
-        {/* Helper Text */}
-        <p className="text-xs text-muted-foreground px-1">
-          Een volledig profiel vergroot je kansen bij verhuurders.
-        </p>
-
-        <FormProvider {...methods}>
-          <form 
-            onSubmit={methods.handleSubmit(onSubmit)} 
-            className="space-y-4"
-          >
-            {/* Current step content - No border, cleaner look */}
-            <div className="space-y-4">
-              {stepComponents[currentStep]}
-            </div>
-
-            {/* Sticky navigation at bottom */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 pb-safe">
-              <ProfileFormNavigation
-                isFirstStep={isFirstStep}
-                isLastStep={isLastStep}
-                onBack={prevStep}
-                onNext={nextStep}
-                validateCurrentStep={validateCurrentStep}
-                isSubmitting={methods.formState.isSubmitting}
-              />
-            </div>
-          </form>
-        </FormProvider>
-      </div>
+        </form>
+      </FormProvider>
     </MobileModalPage>
   );
 };
