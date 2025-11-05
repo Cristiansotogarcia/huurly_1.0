@@ -12,6 +12,53 @@ declare global {
 }
 
 /**
+ * Get Facebook Click ID (fbc) from cookie
+ * This is critical for Event Match Quality in Meta Conversions API
+ */
+export const getFacebookClickId = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  
+  // Try to get _fbc cookie (set by Meta Pixel)
+  const cookies = document.cookie.split(';');
+  const fbcCookie = cookies.find(cookie => cookie.trim().startsWith('_fbc='));
+  
+  if (fbcCookie) {
+    const value = fbcCookie.split('=')[1];
+    return value ? decodeURIComponent(value) : null;
+  }
+  
+  // Try to extract fbclid from URL as fallback
+  const urlParams = new URLSearchParams(window.location.search);
+  const fbclid = urlParams.get('fbclid');
+  
+  if (fbclid) {
+    // Format: fb.1.{timestamp}.{fbclid}
+    const timestamp = Date.now();
+    return `fb.1.${timestamp}.${fbclid}`;
+  }
+  
+  return null;
+};
+
+/**
+ * Get Facebook Browser ID (fbp) from cookie
+ * This is used for attribution tracking
+ */
+export const getFacebookBrowserId = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split(';');
+  const fbpCookie = cookies.find(cookie => cookie.trim().startsWith('_fbp='));
+  
+  if (fbpCookie) {
+    const value = fbpCookie.split('=')[1];
+    return value ? decodeURIComponent(value) : null;
+  }
+  
+  return null;
+};
+
+/**
  * Track user sign up event
  */
 export const trackSignUp = (role: 'huurder' | 'verhuurder') => {

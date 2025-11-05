@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Check, CreditCard, Shield, Users, FileText, Eye, Star } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
+import { getFacebookClickId, getFacebookBrowserId } from "@/lib/analytics/events";
 
 const PaymentOnboarding = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -98,8 +99,14 @@ const PaymentOnboarding = () => {
       setPaymentFlow(true);
       logger.info(`Payment flow started for user: ${user.id}`);
 
+      // Capture Facebook tracking parameters for Event Match Quality
+      const fbc = getFacebookClickId();
+      const fbp = getFacebookBrowserId();
+      
+      logger.info(`📍 Captured tracking parameters: fbc=${fbc ? 'found' : 'not found'}, fbp=${fbp ? 'found' : 'not found'}`);
+
       const baseUrl = window.location.origin;
-      const result = await paymentService.createCheckoutSession(user.id, baseUrl);
+      const result = await paymentService.createCheckoutSession(user.id, baseUrl, { fbc, fbp });
 
       if (result.error) {
         // Clear payment flow state on error

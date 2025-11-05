@@ -22,8 +22,12 @@ export class PaymentService {
   }
 
   // Stripe Checkout Operations
-  async createCheckoutSession(userId: string, baseUrl: string): Promise<DatabaseResponse<{ url: string }>> {
-    return stripeCheckoutService.createCheckoutSession(userId, baseUrl);
+  async createCheckoutSession(
+    userId: string, 
+    baseUrl: string, 
+    trackingData?: { fbc?: string | null; fbp?: string | null }
+  ): Promise<DatabaseResponse<{ url: string }>> {
+    return stripeCheckoutService.createCheckoutSession(userId, baseUrl, trackingData);
   }
 
   // Subscription Operations

@@ -45,6 +45,12 @@ type ExtendedSession = Stripe.Checkout.Session & {
   currency: string | null;
   mode: string;
   customer: string | null;
+  metadata?: {
+    user_id?: string;
+    fbc?: string; // Facebook Click ID for tracking
+    fbp?: string; // Facebook Browser ID for tracking
+    [key: string]: string | undefined;
+  };
 };
 
 Deno.serve(async (req) => {
@@ -57,6 +63,19 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: responseHeaders });
   }
+
+  // Extract client IP and User Agent for Meta Conversions API
+  // These are critical for Event Match Quality
+  const clientIp = req.headers.get("x-forwarded-for")?.split(',')[0].trim() 
+    || req.headers.get("x-real-ip") 
+    || req.headers.get("cf-connecting-ip") // Cloudflare
+    || "unknown";
+  const userAgent = req.headers.get("user-agent") || "unknown";
+  
+  console.log('🌐 Request headers for tracking:', {
+    clientIp: clientIp !== "unknown" ? clientIp : "not found",
+    userAgent: userAgent !== "unknown" ? userAgent.substring(0, 50) + "..." : "not found"
+  });
 
   try {
     const body = await req.text();
@@ -194,6 +213,11 @@ Deno.serve(async (req) => {
             // ✅ Send Meta Conversions API Purchase event (non-blocking)
             try {
               console.log('📤 Sending Purchase event to Meta Conversions API for one-time payment');
+              
+              // Extract tracking parameters from session metadata
+              const fbc = session.metadata?.fbc;
+              const fbp = session.metadata?.fbp;
+              
               const metaResult = await sendPurchaseEvent({
                 eventId: session.id, // Same as Pixel eventID for deduplication
                 email: userData.email,
@@ -201,7 +225,12 @@ Deno.serve(async (req) => {
                 amount: session.amount_total || 0,
                 currency: session.currency || 'eur',
                 transactionId: session.id,
-                sourceUrl: 'https://huurly.nl'
+                sourceUrl: 'https://huurly.nl',
+                // Critical parameters for Event Match Quality improvement
+                fbc: fbc,
+                fbp: fbp,
+                clientIpAddress: clientIp !== "unknown" ? clientIp : undefined,
+                clientUserAgent: userAgent !== "unknown" ? userAgent : undefined
               });
 
               if (metaResult.success) {
@@ -322,6 +351,11 @@ Deno.serve(async (req) => {
           // ✅ Send Meta Conversions API Purchase event for subscription (non-blocking)
           try {
             console.log('📤 Sending Purchase event to Meta Conversions API for subscription');
+            
+            // Extract tracking parameters from session metadata
+            const fbc = session.metadata?.fbc;
+            const fbp = session.metadata?.fbp;
+            
             const metaResult = await sendPurchaseEvent({
               eventId: session.id, // Same as Pixel eventID for deduplication
               email: userData.email,
@@ -329,7 +363,12 @@ Deno.serve(async (req) => {
               amount: session.amount_total || 0,
               currency: session.currency || 'eur',
               transactionId: session.id,
-              sourceUrl: 'https://huurly.nl'
+              sourceUrl: 'https://huurly.nl',
+              // Critical parameters for Event Match Quality improvement
+              fbc: fbc,
+              fbp: fbp,
+              clientIpAddress: clientIp !== "unknown" ? clientIp : undefined,
+              clientUserAgent: userAgent !== "unknown" ? userAgent : undefined
             });
 
             if (metaResult.success) {

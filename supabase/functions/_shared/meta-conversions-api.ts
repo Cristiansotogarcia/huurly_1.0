@@ -35,6 +35,10 @@ interface MetaUserData {
   state?: string;
   zip?: string;
   country?: string;
+  fbc?: string; // Facebook Click ID - NOT hashed
+  fbp?: string; // Facebook Browser ID - NOT hashed
+  clientIpAddress?: string; // IP Address - NOT hashed
+  clientUserAgent?: string; // User Agent - NOT hashed
 }
 
 /**
@@ -122,6 +126,29 @@ export async function sendMetaConversionEvent(
     
     if (event.userData.country) {
       hashedUserData.country = [await sha256Hash(event.userData.country)];
+    }
+
+    // Add unhashed parameters that improve Event Match Quality
+    // These parameters should NOT be hashed according to Meta's documentation
+    
+    if (event.userData.fbc) {
+      hashedUserData.fbc = event.userData.fbc; // Facebook Click ID - NOT hashed
+      console.log('📍 Including fbc (Facebook Click ID):', event.userData.fbc.substring(0, 20) + '...');
+    }
+    
+    if (event.userData.fbp) {
+      hashedUserData.fbp = event.userData.fbp; // Facebook Browser ID - NOT hashed
+      console.log('📍 Including fbp (Facebook Browser ID):', event.userData.fbp.substring(0, 20) + '...');
+    }
+    
+    if (event.userData.clientIpAddress) {
+      hashedUserData.client_ip_address = event.userData.clientIpAddress; // IP Address - NOT hashed
+      console.log('📍 Including client_ip_address:', event.userData.clientIpAddress);
+    }
+    
+    if (event.userData.clientUserAgent) {
+      hashedUserData.client_user_agent = event.userData.clientUserAgent; // User Agent - NOT hashed
+      console.log('📍 Including client_user_agent:', event.userData.clientUserAgent.substring(0, 50) + '...');
     }
 
     // Construct the API payload according to Meta's specs
@@ -217,6 +244,10 @@ export async function sendPurchaseEvent(params: {
   currency: string;
   transactionId: string;
   sourceUrl?: string;
+  fbc?: string; // Facebook Click ID
+  fbp?: string; // Facebook Browser ID
+  clientIpAddress?: string; // Client IP Address
+  clientUserAgent?: string; // Client User Agent
 }): Promise<{ success: boolean; error?: string }> {
   // Parse name into first and last name if provided
   const nameParts = params.name?.split(' ') || [];
@@ -233,7 +264,11 @@ export async function sendPurchaseEvent(params: {
       email: params.email,
       firstName: firstName,
       lastName: lastName,
-      country: 'nl' // Default to Netherlands
+      country: 'nl', // Default to Netherlands
+      fbc: params.fbc,
+      fbp: params.fbp,
+      clientIpAddress: params.clientIpAddress,
+      clientUserAgent: params.clientUserAgent
     },
     customData: {
       currency: params.currency.toUpperCase(),

@@ -6,7 +6,11 @@ import { ErrorHandler } from '../../lib/errors';
 import { logger } from '../../lib/logger';
 
 export class StripeCheckoutService extends DatabaseService {
-  async createCheckoutSession(userId: string, baseUrl: string): Promise<DatabaseResponse<{ url: string }>> {
+  async createCheckoutSession(
+    userId: string, 
+    baseUrl: string,
+    trackingData?: { fbc?: string | null; fbp?: string | null }
+  ): Promise<DatabaseResponse<{ url: string }>> {
     const currentUserId = await this.getCurrentUserId();
     if (!currentUserId || currentUserId !== userId) {
       return {
@@ -30,10 +34,25 @@ export class StripeCheckoutService extends DatabaseService {
           throw new Error('Gebruiker niet gevonden. Log opnieuw in en probeer het nogmaals.');
         }
 
-        logger.info('Sessie aanmaken voor gebruiker:', { userId, email: user.email });
+        logger.info(`Sessie aanmaken voor gebruiker: ${userId}, ${user.email}`);
 
         const successUrl = `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${baseUrl}/huurder-dashboard?payment=cancelled`;
+
+        // Prepare metadata with tracking parameters for Event Match Quality
+        const metadata: Record<string, string> = {
+          user_id: userId,
+        };
+        
+        // Add Facebook tracking parameters if available
+        if (trackingData?.fbc) {
+          metadata.fbc = trackingData.fbc;
+          logger.info('📍 Adding fbc to checkout metadata');
+        }
+        if (trackingData?.fbp) {
+          metadata.fbp = trackingData.fbp;
+          logger.info('📍 Adding fbp to checkout metadata');
+        }
 
         // Create checkout session directly without pre-creating record
         const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -43,16 +62,12 @@ export class StripeCheckoutService extends DatabaseService {
             userEmail: user.email,
             successUrl,
             cancelUrl,
+            metadata, // Pass tracking metadata to Stripe
           },
         });
         
         if (error) {
-          logger.error('Fout bij het aanroepen van create-checkout-session functie:', {
-            error,
-            message: error.message,
-            details: error.details,
-            context: error.context
-          });
+          logger.error('Fout bij het aanroepen van create-checkout-session functie:', error.message || error);
           
           // Provide more specific error messages based on the error
           if (error.message?.includes('environment variables')) {
@@ -67,11 +82,7 @@ export class StripeCheckoutService extends DatabaseService {
         }
 
         if (!data?.url) {
-          logger.error('Geen checkout-URL ontvangen van create-checkout-session', {
-            data,
-            hasData: !!data,
-            dataKeys: data ? Object.keys(data) : []
-          });
+          logger.error(`Geen checkout-URL ontvangen van create-checkout-session. Data keys: ${data ? Object.keys(data).join(', ') : 'none'}`);
           throw new Error('Geen betaallink ontvangen. Probeer het opnieuw of neem contact op met de beheerder.');
         }
 
@@ -80,7 +91,7 @@ export class StripeCheckoutService extends DatabaseService {
         // Return the URL for redirect instead of using Stripe client-side redirect
         return { data: { url: data.url }, error: null };
       } catch (error) {
-        logger.error('Fout bij het aanmaken van de checkout-sessie:', error);
+        logger.error(`Fout bij het aanmaken van de checkout-sessie: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
       }
     });
