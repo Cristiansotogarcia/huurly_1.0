@@ -13,7 +13,6 @@ import Step5Guarantor from '@/components/modals/EnhancedProfileSteps/Step5Guaran
 import Step6References from '@/components/modals/EnhancedProfileSteps/Step6References';
 import Step7ProfileMotivation from '@/components/modals/EnhancedProfileSteps/Step7ProfileMotivation';
 import ProfileFormNavigation from '@/components/modals/ProfileFormNavigation';
-import MobileModalPage from '@/components/modals/MobileModalPage';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { useHuurder } from '@/hooks/useHuurder';
@@ -184,7 +183,7 @@ const ProfileEditPage: React.FC = () => {
   // Track step changes - when moving to last step, disallow submission initially
   useEffect(() => {
     if (currentStep !== previousStepRef.current) {
-      if (isLastStep && !previousStepRef.current === steps.length - 1) {
+      if (isLastStep && previousStepRef.current !== steps.length - 1) {
         // Just transitioned TO the last step - block submission
         allowSubmissionRef.current = false;
       }
@@ -373,13 +372,13 @@ const ProfileEditPage: React.FC = () => {
         >
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4">
-            <div className="max-w-2xl mx-auto pb-4">
+            <div className="max-w-2xl mx-auto pb-24 sm:pb-4">
               {stepComponents[currentStep]}
             </div>
           </div>
 
           {/* Fixed Navigation Footer */}
-          <div className="shrink-0 bg-background border-t border-border p-2.5 sm:p-3 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+          <div className="shrink-0 bg-background border-t border-border p-3 sm:p-3 pb-6 sm:pb-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
             <div className="max-w-2xl mx-auto">
               <ProfileFormNavigation
                 isFirstStep={isFirstStep}
