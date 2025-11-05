@@ -40,29 +40,29 @@ const MobileModalPage: React.FC<MobileModalPageProps> = ({
     <div className="h-dvh bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
-        <div className="flex items-center justify-between p-4 pt-safe">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between p-3 sm:p-4 pt-safe">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="p-2 h-auto"
+              className="p-1.5 sm:p-2 h-auto shrink-0"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <h1 className="text-lg font-semibold truncate">{title}</h1>
+            <h1 className="text-base sm:text-lg font-semibold truncate">{title}</h1>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {headerActions}
             {showCloseButton && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleClose}
-                className="p-2 h-auto"
+                className="p-1.5 sm:p-2 h-auto"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             )}
           </div>
@@ -72,7 +72,7 @@ const MobileModalPage: React.FC<MobileModalPageProps> = ({
       {/* Content */}
       <div className={cn(
         "flex-1 overflow-auto touch-scroll",
-        "p-4 pb-safe",
+        "p-3 sm:p-4 pb-safe",
         className
       )}>
         {children}

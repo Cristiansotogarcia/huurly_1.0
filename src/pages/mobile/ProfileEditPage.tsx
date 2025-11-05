@@ -272,15 +272,15 @@ const ProfileEditPage: React.FC = () => {
       className="pb-20"
     >
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
           {/* Ultra-minimal progress */}
-          <Progress value={progressPercentage} className="h-1" />
+          <Progress value={progressPercentage} className="h-1 mb-2" />
 
           {/* Content - completely clean */}
           {stepComponents[currentStep]}
 
           {/* Sticky navigation */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t p-3 pb-safe">
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t p-2.5 sm:p-3 pb-safe shadow-lg">
             <ProfileFormNavigation
               isFirstStep={isFirstStep}
               isLastStep={isLastStep}
