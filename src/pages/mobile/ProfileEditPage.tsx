@@ -249,46 +249,58 @@ const ProfileEditPage: React.FC = () => {
 
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
+  const [showStepper, setShowStepper] = React.useState(false);
+
   return (
     <MobileModalPage
-      title={`Stap ${currentStep + 1} van ${steps.length}: ${steps[currentStep].name}`}
+      title={steps[currentStep].name}
       onClose={handleClose}
       className="pb-20" // Extra padding for sticky navigation
+      headerActions={
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {currentStep + 1}/{steps.length}
+          </span>
+        </div>
+      }
     >
-      <div className="space-y-6">
-        {/* Progress indicator */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Voortgang</span>
-            <span>{Math.round(progressPercentage)}%</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
+      <div className="space-y-4">
+        {/* Compact Progress Bar - Always Visible */}
+        <div className="space-y-1">
+          <Progress value={progressPercentage} className="h-1.5" />
+          <button
+            type="button"
+            onClick={() => setShowStepper(!showStepper)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            {showStepper ? '▼' : '▶'} {showStepper ? 'Verberg' : 'Bekijk'} alle stappen
+          </button>
         </div>
 
-        {/* Description */}
-        <div className="bg-muted/50 p-4 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            Een volledig profiel vergroot je kansen. Voltooi de stappen hieronder.
-          </p>
-        </div>
+        {/* Collapsible Step Navigation */}
+        {showStepper && (
+          <div className="bg-muted/30 border border-border/50 rounded-lg p-3 animate-in slide-in-from-top-2">
+            <ProfileFormStepper 
+              currentStep={currentStep} 
+              steps={steps} 
+              goToStep={goTo}
+              canNavigateToStep={canNavigateToStep}
+            />
+          </div>
+        )}
+
+        {/* Helper Text */}
+        <p className="text-xs text-muted-foreground px-1">
+          Een volledig profiel vergroot je kansen bij verhuurders.
+        </p>
 
         <FormProvider {...methods}>
           <form 
             onSubmit={methods.handleSubmit(onSubmit)} 
-            className="space-y-6"
+            className="space-y-4"
           >
-            {/* Step navigation - mobile optimized */}
-            <div className="bg-background border rounded-lg p-4">
-              <ProfileFormStepper 
-                currentStep={currentStep} 
-                steps={steps} 
-                goToStep={goTo}
-                canNavigateToStep={canNavigateToStep}
-              />
-            </div>
-
-            {/* Current step content */}
-            <div className="bg-background border rounded-lg p-4">
+            {/* Current step content - No border, cleaner look */}
+            <div className="space-y-4">
               {stepComponents[currentStep]}
             </div>
 
