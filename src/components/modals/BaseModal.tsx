@@ -69,9 +69,9 @@ export const BaseModal: React.FC<BaseModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // On mobile, use full screen; on desktop, use responsive sizing
+  // On mobile, use full screen with dvh; on desktop, use responsive sizing
   const mobileClasses = isMobile 
-    ? 'w-full h-full max-w-none max-h-none m-0 rounded-none'
+    ? 'w-full h-dvh max-w-none max-h-none m-0 rounded-none touch-scroll'
     : `${sizeClasses[size]} ${maxHeight} mx-2 sm:mx-auto`;
   
   const contentPadding = isMobile ? 'p-4' : 'p-3 sm:p-6';
@@ -111,7 +111,7 @@ export const BaseModalActions: React.FC<BaseModalActionsProps> = ({
   }
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col-reverse' : 'flex-col sm:flex-row'} justify-end ${isMobile ? 'pt-4 border-t bg-white sticky bottom-0' : 'pt-3 sm:pt-4 border-t'} ${isMobile ? 'space-y-reverse space-y-3' : 'space-y-2 sm:space-y-0 sm:space-x-2'}`}>
+    <div className={`flex ${isMobile ? 'flex-col-reverse' : 'flex-col sm:flex-row'} justify-end ${isMobile ? 'pt-4 pb-safe border-t bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sticky bottom-0' : 'pt-3 sm:pt-4 border-t'} ${isMobile ? 'space-y-reverse space-y-3' : 'space-y-2 sm:space-y-0 sm:space-x-2'}`}>
       {cancelAction && (
         <Button
           variant="outline"

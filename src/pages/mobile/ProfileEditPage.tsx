@@ -117,13 +117,12 @@ const ProfileEditPage: React.FC = () => {
       borgsteller_relatie: '',
       borgsteller_telefoon: '',
       borgsteller_email: '',
-      borgsteller_adres: '',
       borgsteller_inkomen: undefined,
 
       // Step 6: References & History
       references_available: false,
       rental_history_years: undefined,
-      reason_for_moving: '',
+      reason_for_moving: undefined,
 
       // Step 7: Profile & Motivation
       bio: '',
@@ -294,7 +293,7 @@ const ProfileEditPage: React.FC = () => {
             </div>
 
             {/* Sticky navigation at bottom */}
-            <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 safe-area-inset-bottom">
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 pb-safe">
               <ProfileFormNavigation
                 isFirstStep={isFirstStep}
                 isLastStep={isLastStep}

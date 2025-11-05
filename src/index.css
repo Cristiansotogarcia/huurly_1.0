@@ -7,6 +7,7 @@
   --dutch-blue: #21409a;
   --dutch-orange: #ff6600;
   --dutch-red: #ae1c28;
+  
   /* Base colors for shadcn-ui components */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -28,6 +29,22 @@
   --input: 214.3 31.8% 60%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
+  
+  /* Z-index scale for consistent layering */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+  
+  /* iOS Safe Area Insets - fallback values */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
 @layer base {
@@ -91,6 +108,53 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Safe Area Insets for iOS */
+  .pt-safe {
+    padding-top: max(1rem, var(--safe-area-inset-top));
+  }
+  
+  .pr-safe {
+    padding-right: max(1rem, var(--safe-area-inset-right));
+  }
+  
+  .pb-safe {
+    padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+  }
+  
+  .pl-safe {
+    padding-left: max(1rem, var(--safe-area-inset-left));
+  }
+  
+  .pb-safe-sm {
+    padding-bottom: max(0.5rem, var(--safe-area-inset-bottom));
+  }
+  
+  /* iOS Smooth Scrolling */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Dynamic Viewport Height for Mobile */
+  .min-h-dvh {
+    min-height: 100dvh;
+    min-height: 100vh; /* fallback */
+  }
+  
+  .h-dvh {
+    height: 100dvh;
+    height: 100vh; /* fallback */
+  }
+  
+  /* Performance Optimizations */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .contain-layout {
+    contain: layout style paint;
   }
 }
 

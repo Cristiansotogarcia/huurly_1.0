@@ -37,10 +37,10 @@ const MobileModalPage: React.FC<MobileModalPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="flex items-center justify-between p-4">
+      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="flex items-center justify-between p-4 pt-safe">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -71,8 +71,8 @@ const MobileModalPage: React.FC<MobileModalPageProps> = ({
 
       {/* Content */}
       <div className={cn(
-        "flex-1 overflow-auto",
-        "p-4 pb-safe", // pb-safe for iOS safe area
+        "flex-1 overflow-auto touch-scroll",
+        "p-4 pb-safe",
         className
       )}>
         {children}
