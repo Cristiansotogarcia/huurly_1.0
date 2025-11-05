@@ -45,7 +45,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
         missingFields={missingFields}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-6">
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-2">
         <div className="order-2 sm:order-1">
           {!isFirstStep && (
             <Button
