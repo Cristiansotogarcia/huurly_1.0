@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm, FormProvider, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -177,6 +177,21 @@ const ProfileEditPage: React.FC = () => {
     validateCurrentStep
   } = useValidatedMultiStepForm(steps.length, methods.getValues);
 
+  // Track if we just transitioned to the last step to prevent auto-submission
+  const allowSubmissionRef = useRef(false);
+  const previousStepRef = useRef(currentStep);
+
+  // Track step changes - when moving to last step, disallow submission initially
+  useEffect(() => {
+    if (currentStep !== previousStepRef.current) {
+      if (isLastStep && !previousStepRef.current === steps.length - 1) {
+        // Just transitioned TO the last step - block submission
+        allowSubmissionRef.current = false;
+      }
+      previousStepRef.current = currentStep;
+    }
+  }, [currentStep, isLastStep]);
+
   // Reset form when initialData changes
   useEffect(() => {
     methods.reset(getDefaultValues());
@@ -342,17 +357,15 @@ const ProfileEditPage: React.FC = () => {
       <FormProvider {...methods}>
         <form
           onSubmit={(e) => {
-            // Only allow submission on the actual last step
-            if (!isLastStep) {
-              e.preventDefault();
-              return false;
-            }
-            // If we're on the last step, let react-hook-form handle it
-            methods.handleSubmit(onSubmit)(e);
+            // ALWAYS prevent default form submission
+            // Submission is now handled exclusively through the button onClick
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
           }}
           onKeyDown={(e) => {
-            // Prevent form submission on Enter key during step navigation
-            if (e.key === 'Enter' && !isLastStep) {
+            // Prevent form submission on Enter key
+            if (e.key === 'Enter') {
               e.preventDefault();
             }
           }}
@@ -375,6 +388,11 @@ const ProfileEditPage: React.FC = () => {
                 onNext={nextStep}
                 validateCurrentStep={validateCurrentStep}
                 isSubmitting={methods.formState.isSubmitting}
+                onSubmitClick={() => {
+                  // Manually trigger form submission
+                  allowSubmissionRef.current = true;
+                  methods.handleSubmit(onSubmit)();
+                }}
               />
             </div>
           </div>
