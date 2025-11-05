@@ -265,8 +265,29 @@ const ProfileEditPage: React.FC = () => {
 
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
+  // Prevent body scroll when this page is active
+  useEffect(() => {
+    // Save original overflow value
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    // Cleanup: restore original values when component unmounts
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
   return (
-    <div className="h-dvh bg-background flex flex-col">
+    <div className="fixed inset-0 z-50 h-dvh bg-background flex flex-col">
       {/* Fixed Header with Back Button and Title */}
       <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
         <div className="flex items-center justify-between p-3 sm:p-4 pt-safe">
