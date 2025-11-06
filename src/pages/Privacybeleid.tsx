@@ -1,10 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
+import { PageSEO } from '@/components/SEO/PageSEO';
 
 const Privacybeleid: React.FC = () => {
   return (
-    <div className="min-h-screen">
+    <>
+      <PageSEO
+        title="Privacybeleid"
+        description="Privacybeleid van Huurly. Lees hoe wij omgaan met uw persoonsgegevens en wat uw rechten zijn volgens de AVG."
+        canonical="https://huurly.nl/privacybeleid"
+      />
+      <div className="min-h-screen">
       {/* Simple header with logo for navigation */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -195,6 +202,7 @@ const Privacybeleid: React.FC = () => {
       </section>
       </div>
     </div>
+    </>
   );
 };
 

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Send, Mail, MapPin, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PageSEO } from '@/components/SEO/PageSEO';
 
 const Contact: React.FC = () => {
   const navigate = useNavigate();
@@ -74,7 +75,13 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <PageSEO
+        title="Contact"
+        description="Neem contact op met Huurly. Vragen over ons platform? We helpen u graag verder. E-mail, telefonisch of via ons contactformulier."
+        canonical="https://huurly.nl/contact"
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
@@ -249,6 +256,7 @@ const Contact: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

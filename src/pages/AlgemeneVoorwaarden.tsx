@@ -1,8 +1,15 @@
 import React from 'react';
+import { PageSEO } from '@/components/SEO/PageSEO';
 
 const AlgemeneVoorwaarden: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4 space-y-6">
+    <>
+      <PageSEO
+        title="Algemene Voorwaarden"
+        description="Algemene voorwaarden van Huurly. Lees de gebruiksvoorwaarden, herroepingsrecht en aansprakelijkheid voor gebruik van ons platform."
+        canonical="https://huurly.nl/algemene-voorwaarden"
+      />
+      <div className="max-w-4xl mx-auto py-12 px-4 space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Algemene Voorwaarden – Huurly.nl</h1>
         <p className="text-gray-600">Versie: 1 september 2025</p>
@@ -119,6 +126,7 @@ const AlgemeneVoorwaarden: React.FC = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

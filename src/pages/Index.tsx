@@ -7,6 +7,7 @@ import { MultiStepSignupModal } from '@/components/modals/MultiStepSignupModal';
 import EmailConfirmationModal from '@/components/modals/EmailConfirmationModal';
 import EmailVerificationSuccessModal from '@/components/modals/EmailVerificationSuccessModal';
 import PaymentSuccessModal from '@/components/modals/PaymentSuccessModal';
+import { PageSEO } from '@/components/SEO/PageSEO';
 import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -130,7 +131,13 @@ const Index = () => {
   }, [isAuthenticated, user, navigate, handleEmailVerificationSuccess, showPaymentSuccessModal, showEmailVerificationSuccessModal, showEmailConfirmationModal, toast]);
 
   return (
-    <div className="min-h-screen">
+    <>
+      <PageSEO
+        title="Verlies geen tijd met zoeken, laat de woning jou vinden!"
+        description="Het Nederlandse platform waar verhuurders huurders vinden op basis van geverifieerde profielen. Maak een profiel aan en vind jouw ideale woning of huurder."
+        canonical="https://huurly.nl"
+      />
+      <div className="min-h-screen">
       <Header />
       <Hero onShowSignup={() => setShowSignup(true)} />
       <Features />
@@ -267,6 +274,7 @@ const Index = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

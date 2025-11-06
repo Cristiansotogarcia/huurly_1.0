@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ArrowLeft, Search, Mail, MessageCircle, FileText, HelpCircle } from 'lucide-react';
+import { PageSEO } from '@/components/SEO/PageSEO';
 
 const HelpSupport: React.FC = () => {
   const navigate = useNavigate();
@@ -87,7 +88,13 @@ const HelpSupport: React.FC = () => {
   })).filter(category => category.questions.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <PageSEO
+        title="Help & Support"
+        description="Veelgestelde vragen over Huurly. Vind antwoorden op uw vragen over woningen zoeken, account beheer, abonnementen en technische problemen."
+        canonical="https://huurly.nl/help-support"
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
@@ -237,6 +244,7 @@ const HelpSupport: React.FC = () => {
 
       </div>
     </div>
+    </>
   );
 };
 
