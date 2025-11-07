@@ -39,3 +39,9 @@ testsprite_tests/
 temp-files/
 # TypeScript build output
 tsc_output.txt
+
+# Temporary email system setup files (already deployed manually)
+CRON_SETUP_GUIDE.md
+setup_cron_manual.sql
+setup_cron_manual_v2.sql
+supabase/migrations/20250107000001_setup_email_cron_job.sql
