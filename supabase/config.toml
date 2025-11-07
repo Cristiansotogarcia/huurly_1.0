@@ -319,6 +319,14 @@ backend = "postgres"
 # Disable JWT verification for Stripe webhooks
 verify_jwt = false
 
+[functions.check-email-sequences]
+# Disable JWT verification for cron job
+verify_jwt = false
+
+[functions.unsubscribe]
+# Disable JWT verification for public unsubscribe page
+verify_jwt = false
+
 [experimental]
 # Configures Postgres storage engine to use OrioleDB (S3)
 orioledb_version = ""
