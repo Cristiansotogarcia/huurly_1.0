@@ -252,7 +252,7 @@ COMMENT ON FUNCTION should_send_email(uuid, text, integer) IS 'Checks if a user 
 CREATE OR REPLACE FUNCTION get_unpaid_verified_users()
 RETURNS TABLE (
   id uuid,
-  email text,
+  email varchar(255),  -- Fixed: changed from text to varchar(255) to match auth.users
   email_confirmed_at timestamptz,
   created_at timestamptz,
   raw_user_meta_data jsonb
@@ -264,7 +264,7 @@ BEGIN
   RETURN QUERY
   SELECT 
     u.id,
-    u.email,
+    u.email::varchar(255),  -- Cast to ensure type match
     u.email_confirmed_at,
     u.created_at,
     u.raw_user_meta_data
@@ -282,7 +282,7 @@ $$;
 CREATE OR REPLACE FUNCTION get_paid_incomplete_users()
 RETURNS TABLE (
   id uuid,
-  email text,
+  email varchar(255),  -- Fixed: changed from text to varchar(255) to match auth.users
   created_at timestamptz,
   raw_user_meta_data jsonb,
   profiel_compleet boolean
@@ -294,7 +294,7 @@ BEGIN
   RETURN QUERY
   SELECT 
     u.id,
-    u.email,
+    u.email::varchar(255),  -- Cast to ensure type match
     u.created_at,
     u.raw_user_meta_data,
     COALESCE(g.profiel_compleet, false) as profiel_compleet
