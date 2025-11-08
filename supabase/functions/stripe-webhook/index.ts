@@ -181,6 +181,29 @@ Deno.serve(async (req) => {
           });
         }
 
+        // ✅ Log payment_completed lifecycle event for one-time payment
+        const { error: lifecycleError } = await supabase
+          .from("user_lifecycle_events")
+          .insert({
+            user_id: userId,
+            event_type: "payment_completed",
+            event_data: {
+              payment_type: "one_time",
+              session_id: session.id,
+              amount: session.amount_total,
+              currency: session.currency,
+            },
+          });
+
+        if (lifecycleError) {
+          console.error("❌ Failed to log payment lifecycle event", {
+            userId,
+            error: lifecycleError,
+          });
+        } else {
+          console.log("✅ Payment lifecycle event logged for one-time payment");
+        }
+
         // Send invoice email (non-blocking)
         try {
           const { data: userData } = await supabase
@@ -317,6 +340,30 @@ Deno.serve(async (req) => {
           userId,
           error: notificationError,
         });
+      }
+
+      // ✅ Log payment_completed lifecycle event for subscription
+      const { error: lifecycleError } = await supabase
+        .from("user_lifecycle_events")
+        .insert({
+          user_id: userId,
+          event_type: "payment_completed",
+          event_data: {
+            payment_type: "subscription",
+            subscription_id: subscription.id,
+            session_id: session.id,
+            amount: session.amount_total,
+            currency: session.currency,
+          },
+        });
+
+      if (lifecycleError) {
+        console.error("❌ Failed to log payment lifecycle event", {
+          userId,
+          error: lifecycleError,
+        });
+      } else {
+        console.log("✅ Payment lifecycle event logged for subscription");
       }
 
       // Send invoice email for subscription (non-blocking)
