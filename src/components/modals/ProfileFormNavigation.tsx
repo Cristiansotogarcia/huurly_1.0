@@ -81,11 +81,11 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
             </Button>
           ) : (
             <Button
-              type="button"
+              type="submit"
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
               onClick={() => {
-                // Call the submit callback if provided
+                // Call the submit callback if provided (used by mobile flow)
                 if (onSubmitClick) {
                   onSubmitClick();
                 }
