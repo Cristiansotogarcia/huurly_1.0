@@ -81,7 +81,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
             </Button>
           ) : (
             <Button
-              type="submit"
+              type={onSubmitClick ? 'button' : 'submit'}
               className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
               disabled={isSubmitting}
               onClick={() => {
