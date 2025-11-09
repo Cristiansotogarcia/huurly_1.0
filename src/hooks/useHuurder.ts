@@ -205,11 +205,7 @@ export const useHuurder = () => {
 
       const updateResponse = await userService.updateTenantProfile(mappedData);
       if (updateResponse.success) {
-        toast({
-          title: 'Profiel bijgewerkt',
-          description: 'Je profiel is succesvol bijgewerkt.',
-        });
-
+        // Success toast removed - ProfileEditPage handles success feedback
         // Skip dashboard refresh for now to avoid hanging - data will be refreshed on next page load
         // await refresh(); // Commented out to prevent hanging
 
