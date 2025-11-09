@@ -105,15 +105,21 @@ export const profileSchema = z.object({
   borgsteller_relatie: z.string().optional(),
   borgsteller_telefoon: z.string().optional(),
   borgsteller_inkomen: z.number().min(0).optional(),
-  borgsteller_email: z.string().email({ message: 'Ongeldig emailadres' }).optional(),
+  borgsteller_email: z.preprocess(
+    (val) => val === '' ? undefined : val,
+    z.string().email({ message: 'Ongeldig emailadres' }).optional()
+  ),
 
   
   // References & History
   references_available: z.boolean().default(false),
   rental_history_years: z.number().min(0, 'Huurervaring mag niet negatief zijn').max(50, 'Maximaal 50 jaar ervaring').optional(),
-  reason_for_moving: z.enum(['nieuwe_baan', 'uitbreiding_familie', 'echtscheiding', 'familiehereniging', 'studie', 'pensioen', 'gezondheid', 'financieel', 'anders'], {
-    message: 'Selecteer een reden voor verhuizing'
-  }).optional(),
+  reason_for_moving: z.preprocess(
+    (val) => val === '' ? undefined : val,
+    z.enum(['nieuwe_baan', 'uitbreiding_familie', 'echtscheiding', 'familiehereniging', 'studie', 'pensioen', 'gezondheid', 'financieel', 'anders'], {
+      message: 'Selecteer een reden voor verhuizing'
+    }).optional()
+  ),
   
   // Profile & Motivation
   profilePictureUrl: z.string().optional(),

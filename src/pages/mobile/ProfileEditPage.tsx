@@ -244,20 +244,29 @@ const ProfileEditPage: React.FC = () => {
     // Form submission started - removed setIsSubmittingForm call
 
     try {
+      // Show loading state
+      toast({
+        title: 'Profiel Opslaan',
+        description: 'Je profiel wordt opgeslagen...',
+      } as any);
+
+      // Increased timeout to 90 seconds for complex profile saves
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout: Profiel opslaan duurt te lang')), 30000)
+        setTimeout(() => reject(new Error('Timeout: Profiel opslaan duurt te lang')), 90000)
       );
-      
+
       // Use the callback from navigation state if available, otherwise use default
       const handleProfileComplete = onProfileComplete || defaultHandleProfileComplete;
+
+      // Send full profile data (like it worked before)
       const savePromise = handleProfileComplete(data);
       await Promise.race([savePromise, timeoutPromise]);
-      
+
       toast({
         title: 'Profiel Opgeslagen',
         description: 'Je profiel is succesvol opgeslagen.',
       } as any);
-      
+
       // Navigate back to the original page
       navigate(returnTo, { replace: true });
     } catch (error) {

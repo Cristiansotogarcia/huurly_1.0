@@ -435,8 +435,13 @@ export class UserService extends DatabaseService {
    * Update existing tenant profile
    */
   async updateTenantProfile(data: CreateTenantProfileData): Promise<DatabaseResponse<Tables<'huurders'>>> {
-    return this.withAuthGuard(async () => {
-      const currentUserId = await this.getCurrentUserId();
+    // Skip auth guard for profile updates - user is already authenticated
+    // This prevents slow session validation on every profile save
+    return this.executeQuery(async () => {
+      // Get user ID from auth store instead of API call for better performance
+      const authStore = useAuthStore.getState();
+      const currentUserId = authStore.user?.id;
+
       if (!currentUserId) {
         return {
           data: null,

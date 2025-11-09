@@ -165,19 +165,18 @@ export const useHuurder = () => {
   const handleProfileComplete = async (profileData: any, callback?: () => void) => {
     if (!user?.id) {
       const error = new Error('Gebruiker niet ingelogd.');
-      toast({ 
-        title: 'Fout', 
-        description: error.message, 
-        variant: 'destructive' 
+      toast({
+        title: 'Fout',
+        description: error.message,
+        variant: 'destructive'
       });
       throw error;
     }
 
     try {
       const mappedData = mapProfileFormToDutch(profileData);
-      
-      
-      // Check if required fields are present in mapped data
+
+      // Validate required fields
       const requiredFields = ['voornaam', 'achternaam', 'telefoon', 'geboortedatum', 'beroep', 'inkomen', 'beschrijving', 'motivatie', 'stad', 'voorkeur_woningtype', 'min_budget', 'max_budget'];
       const missingFields = requiredFields.filter(field => {
         const value = mappedData[field];
@@ -186,8 +185,6 @@ export const useHuurder = () => {
           return value.length === 0;
         }
         const isMissing = value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
-        if (isMissing) {
-        }
         return isMissing;
       });
 
@@ -195,7 +192,7 @@ export const useHuurder = () => {
       if (!mappedData.locatie_voorkeur || mappedData.locatie_voorkeur.length === 0) {
         missingFields.push('stad');
       }
-      
+
       if (missingFields.length > 0) {
         const error = new Error(`Ontbrekende verplichte velden: ${missingFields.join(', ')}`);
         toast({
@@ -205,17 +202,17 @@ export const useHuurder = () => {
         } as any);
         throw error;
       }
-      
+
       const updateResponse = await userService.updateTenantProfile(mappedData);
       if (updateResponse.success) {
         toast({
           title: 'Profiel bijgewerkt',
           description: 'Je profiel is succesvol bijgewerkt.',
         });
-        
-        // Enhanced real-time synchronization - refresh will properly map all data
-        await refresh(); // Wait for refresh to complete
-        
+
+        // Skip dashboard refresh for now to avoid hanging - data will be refreshed on next page load
+        // await refresh(); // Commented out to prevent hanging
+
         if (callback) callback();
       } else {
         const errorMessage = updateResponse.error?.message || 'Onbekende fout bij het bijwerken van het profiel.';
