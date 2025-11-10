@@ -288,7 +288,7 @@ const ProfileEditPage: React.FC = () => {
 
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
-  // Prevent body scroll when this page is active
+  // Enhanced mobile scroll prevention with overscroll recovery
   useEffect(() => {
     // Save original styles and scroll position
     const originalOverflow = document.body.style.overflow;
@@ -296,22 +296,70 @@ const ProfileEditPage: React.FC = () => {
     const originalTop = document.body.style.top;
     const originalWidth = document.body.style.width;
     const scrollY = window.scrollY;
-    
-    // Disable body scroll and maintain scroll position
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    
-    // Cleanup: restore original values and scroll position
+
+    // Apply body scroll lock class for consistent behavior
+    document.body.classList.add('body-scroll-lock');
+
+    let isOverscrolled = false;
+    let overscrollStartY = 0;
+
+    // Touch event handlers based on BetterScroll best practices
+    const handleTouchStart = (e: Event) => {
+      const touchEvent = e as TouchEvent;
+      // Record initial touch position for overscroll detection
+      overscrollStartY = touchEvent.touches[0].clientY;
+      isOverscrolled = false;
+    };
+
+    const handleTouchMove = (e: Event) => {
+      const touchEvent = e as TouchEvent;
+      const currentY = touchEvent.touches[0].clientY;
+      const scrollContainer = e.target as HTMLElement;
+
+      // Check if we're at scroll boundaries
+      const isAtTop = scrollContainer.scrollTop <= 0;
+      const isAtBottom = scrollContainer.scrollTop >= scrollContainer.scrollHeight - scrollContainer.clientHeight;
+
+      // Detect overscroll attempts
+      if ((isAtTop && currentY > overscrollStartY) || (isAtBottom && currentY < overscrollStartY)) {
+        if (!isOverscrolled) {
+          isOverscrolled = true;
+          // Prevent default to stop browser's native overscroll behavior
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleTouchEnd = (_e: Event) => {
+      // Reset overscroll state
+      isOverscrolled = false;
+    };
+
+    // Add touch event listeners to the scrollable content area
+    const scrollContainer = document.querySelector('.overflow-y-auto');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    // Cleanup: restore original values and remove event listeners
     return () => {
+      document.body.classList.remove('body-scroll-lock');
       document.body.style.overflow = originalOverflow;
       document.body.style.position = originalPosition;
       document.body.style.top = originalTop;
       document.body.style.width = originalWidth;
-      
+
       // Restore scroll position
       window.scrollTo(0, scrollY);
+
+      // Remove event listeners
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('touchstart', handleTouchStart);
+        scrollContainer.removeEventListener('touchmove', handleTouchMove);
+        scrollContainer.removeEventListener('touchend', handleTouchEnd);
+      }
     };
   }, []);
 
@@ -385,8 +433,8 @@ const ProfileEditPage: React.FC = () => {
           }}
           className="flex-1 flex flex-col min-h-0"
         >
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4">
+          {/* Scrollable Content Area with Enhanced Mobile Scrolling */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4 overscroll-prevent touch-container">
             <div className="max-w-2xl mx-auto pb-8 sm:pb-24">
               {stepComponents[currentStep]}
             </div>
