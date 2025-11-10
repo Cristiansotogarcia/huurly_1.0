@@ -387,7 +387,7 @@ const ProfileEditPage: React.FC = () => {
         >
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4">
-            <div className="max-w-2xl mx-auto pb-24 sm:pb-4">
+            <div className="max-w-2xl mx-auto pb-8 sm:pb-24">
               {stepComponents[currentStep]}
             </div>
           </div>
