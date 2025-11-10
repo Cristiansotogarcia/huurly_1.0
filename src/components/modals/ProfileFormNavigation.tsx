@@ -47,14 +47,14 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
         missingFields={missingFields}
       />
 
-      <div className="flex flex-col-reverse sm:flex-row justify-between gap-2">
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-1 sm:gap-2">
         <div className="order-2 sm:order-1">
           {!isFirstStep && (
             <Button
               type="button"
               variant="outline"
               onClick={onBack}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
               disabled={isSubmitting}
             >
               Terug
@@ -67,7 +67,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
             <Button
               type="button"
               onClick={handleNext}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -82,7 +82,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
           ) : (
             <Button
               type="button"
-              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
               disabled={isSubmitting}
               onClick={() => {
                 // Call the submit callback if provided (used by mobile flow)
