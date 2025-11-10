@@ -10,6 +10,7 @@ export interface UseAuthReturn {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  authChecked: boolean;
   signUp: (data: SignUpData) => Promise<{ success: boolean; user?: User }>;
   signIn: (data: SignInData) => Promise<{ success: boolean; user?: User }>;
   signOut: () => Promise<void>;
@@ -29,12 +30,15 @@ export interface UseAuthReturn {
 }
 
 export const useAuth = (): UseAuthReturn => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: initialUser, isAuthenticated, authChecked, login, logout, updateUser } = useAuthStore();
+
+  // Initialize isLoading based on whether we already have a user (from persisted session)
+  const [isLoading, setIsLoading] = useState(() => !initialUser);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const [showEmailVerificationSuccessModal, setShowEmailVerificationSuccessModal] = useState(false);
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
   const [signupEmail, setSignupEmail] = useState('');
-  const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isSigningOut = useRef(false);
@@ -289,6 +293,7 @@ export const useAuth = (): UseAuthReturn => {
     user,
     isLoading,
     isAuthenticated,
+    authChecked,
     signUp,
     signIn,
     signOut,

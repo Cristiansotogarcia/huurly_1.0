@@ -12,9 +12,16 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, roles, requiredRole }: ProtectedRouteProps) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, authChecked } = useAuth();
 
-  if (isLoading) {
+  // Debug logging
+  console.log('ProtectedRoute:', { user: !!user, isLoading, authChecked, userId: user?.id, userRole: user?.role });
+
+  // If we have a user, auth has been checked. Otherwise wait for authChecked or isLoading.
+  const shouldShowLoading = isLoading || (!user && !authChecked);
+
+  if (shouldShowLoading) {
+    console.log('ProtectedRoute: Showing loading screen', { isLoading, authChecked, hasUser: !!user });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>

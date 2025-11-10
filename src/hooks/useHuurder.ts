@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import { consolidatedDashboardService } from '@/services/ConsolidatedDashboardService';
@@ -8,6 +8,7 @@ import { userService } from '@/services/UserService';
 import { TenantProfile, Subscription, TenantDashboardData } from '@/types';
 import { Document } from '@/types/documents';
 import { mapProfileFormToDutch } from '@/utils/profileDataMapper';
+import { logger } from '@/lib/logger';
 
 export const useHuurder = () => {
   const { user, refresh: refreshAuth, setLoadingSubscription } = useAuthStore();
@@ -28,19 +29,32 @@ export const useHuurder = () => {
   const [isLookingForPlace, setIsLookingForPlace] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  // Prevent concurrent data loading calls - stable ref at component level
+  const isLoadingRef = useRef(false);
+
   const loadDashboardData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
     setIsLoading(true);
     setIsLoadingStats(true);
     setLoadingSubscription(true);
-    
+
+    // Create a timeout promise to prevent infinite loading
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+    });
+
     try {
-      // Single API call to get all dashboard data
-      const response = await consolidatedDashboardService.getHuurderDashboardData(user.id);
-      
+      // Race the API call against the timeout
+      const response = await Promise.race([
+        consolidatedDashboardService.getHuurderDashboardData(user.id),
+        timeoutPromise
+      ]) as any;
+
       if (response.success && response.data) {
         const { stats, documents, tenantProfile: mappedProfile, subscription, profilePictureUrl, coverPhotoUrl, hasProfile } = response.data;
-        
+
         setStats(stats);
         setUserDocuments(Array.isArray(documents) ? documents : []);
         setTenantProfile(mappedProfile);
@@ -51,22 +65,27 @@ export const useHuurder = () => {
 
         // Fetch latest expiration date if subscription is active
         if (subscription && subscription.status === 'active') {
-          const expiration = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
-          if (expiration.success && expiration.data?.expiresAt) {
-            setSubscription(prev => {
-              if (prev) {
-                return { ...prev, end_date: expiration.data!.expiresAt } as Subscription;
-              } else {
-                return {
-                  id: subscription?.id || '',
-                  user_id: user.id,
-                  status: 'active',
-                  start_date: subscription?.start_date || new Date().toISOString(),
-                  end_date: expiration.data!.expiresAt,
-                  stripe_subscription_id: subscription?.stripe_subscription_id || ''
-                } as Subscription;
-              }
-            });
+          try {
+            const expiration = await optimizedSubscriptionService.getSubscriptionExpiration(user.id);
+            if (expiration.success && expiration.data?.expiresAt) {
+              setSubscription(prev => {
+                if (prev) {
+                  return { ...prev, end_date: expiration.data!.expiresAt } as Subscription;
+                } else {
+                  return {
+                    id: subscription?.id || '',
+                    user_id: user.id,
+                    status: 'active',
+                    start_date: subscription?.start_date || new Date().toISOString(),
+                    end_date: expiration.data!.expiresAt,
+                    stripe_subscription_id: subscription?.stripe_subscription_id || ''
+                  } as Subscription;
+                }
+              });
+            }
+          } catch (expirationError) {
+            // Silently ignore expiration fetch errors
+            logger.error({ error: expirationError }, 'Error fetching subscription expiration');
           }
         }
       } else {
@@ -78,21 +97,13 @@ export const useHuurder = () => {
         setProfilePictureUrl(null);
         setCoverPhotoUrl(null);
         setHasProfile(false);
-        
-        toast({ 
-          title: 'Fout', 
-          description: 'Kon dashboard gegevens niet laden.', 
-          variant: 'destructive' 
-        });
+
+        logger.warn('Dashboard data loading failed, using defaults');
       }
     } catch (error) {
-      toast({ 
-        title: 'Fout', 
-        description: 'Kon dashboard gegevens niet laden.', 
-        variant: 'destructive' 
-      });
-      
-      // Set safe defaults
+      logger.error({ error }, 'Dashboard data loading error');
+
+      // Set safe defaults on any error (including timeout)
       setStats({ profileViews: 0, applications: 0, acceptedApplications: 0 });
       setUserDocuments([]);
       setTenantProfile(null);
@@ -100,10 +111,21 @@ export const useHuurder = () => {
       setProfilePictureUrl(null);
       setCoverPhotoUrl(null);
       setHasProfile(false);
+
+      // Only show toast for non-timeout errors to avoid spam
+      if (!(error instanceof Error) || !error.message.includes('timeout')) {
+        toast({
+          title: 'Fout',
+          description: 'Kon dashboard gegevens niet laden. Probeer de pagina te vernieuwen.',
+          variant: 'destructive'
+        });
+      }
     } finally {
+      // Always ensure loading states are cleared
       setIsLoading(false);
       setIsLoadingStats(false);
       setLoadingSubscription(false);
+      isLoadingRef.current = false;
     }
   }, [user?.id, toast]);
 

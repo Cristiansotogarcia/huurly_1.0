@@ -14,5 +14,8 @@ export const createAuthInitializer = (set: any, get: any) => ({
 
     // Set up conservative automatic logout for browser closure only
     setupConservativeLogout(get);
+
+    // Mark auth as checked after initialization
+    set({ authChecked: true });
   },
 });

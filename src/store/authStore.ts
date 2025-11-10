@@ -17,6 +17,7 @@ export const useAuthStore = create<AuthState>()(
       isInPaymentFlow: false,
       paymentFlowStartTime: null,
       isLoadingSubscription: false,
+      authChecked: false,
       
       // Spread all the action methods from the separate modules
       ...createAuthActions(set, get),

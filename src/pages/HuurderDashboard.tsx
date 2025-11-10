@@ -306,7 +306,7 @@ const buildProfileSections = (
   const {
     handleLogout,
   } = useHuurderActions();
-  const { setPaymentFlow } = useAuthStore();
+  const { setPaymentFlow, isLoadingSubscription } = useAuthStore();
 
 
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -362,18 +362,34 @@ const buildProfileSections = (
 
   // Check subscription status and redirect if needed
   useEffect(() => {
-    if (user && hasInitialDataLoaded && !isLoading) {
-      // If user is not subscribed and not on payment page, redirect
-      if (!isSubscribed) {
-        const currentPath = window.location.pathname;
-        if (currentPath !== '/payment-onboarding') {
-          logger.info('User not subscribed, redirecting to payment onboarding');
-          navigate('/payment-onboarding');
-          return;
+    // Only check subscription after a reasonable delay to allow data to load
+    const checkSubscription = () => {
+      if (user && hasInitialDataLoaded && !isLoadingSubscription) {
+        // Wait for subscription data to be loaded before checking status
+        // This prevents race conditions where subscription is still null during initial load
+        const isSubscribed = (subscription && subscription.status === "active") || !!hasPaymentSuccess;
+
+        // If user is not subscribed and not on payment page, redirect
+        if (!isSubscribed) {
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/payment-onboarding') {
+            logger.info('User not subscribed, redirecting to payment onboarding');
+            navigate('/payment-onboarding');
+            return;
+          }
         }
       }
+    };
+
+    // Check immediately if data is already loaded
+    if (user && hasInitialDataLoaded && !isLoading && !isLoadingSubscription) {
+      checkSubscription();
+    } else {
+      // Otherwise, wait a bit and check again
+      const timer = setTimeout(checkSubscription, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [user, isSubscribed, hasInitialDataLoaded, isLoading, navigate]);
+  }, [user, subscription, hasInitialDataLoaded, isLoading, isLoadingSubscription, hasPaymentSuccess, navigate]);
 
   // Handle payment cancellation redirect
   useEffect(() => {
@@ -442,8 +458,9 @@ const buildProfileSections = (
   };
 
 
-  // Show loading screen only while waiting for user data
-  if (!hasInitialDataLoaded || isLoading) {
+  // Show loading screen only while waiting for user authentication
+  // Allow dashboard to render immediately once user is authenticated
+  if (!hasInitialDataLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -522,12 +539,22 @@ const buildProfileSections = (
 
 
             {/* Profiel Overzicht */}
-            <ProfileOverview
-            sections={profileSections}
-            title="Profiel Overzicht"
-            onEdit={() => setShowProfileModal(true)}
-            isCreating={!tenantProfile}
-            />
+            <div className="relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dutch-blue mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Gegevens laden...</p>
+                  </div>
+                </div>
+              )}
+              <ProfileOverview
+                sections={profileSections}
+                title="Profiel Overzicht"
+                onEdit={() => setShowProfileModal(true)}
+                isCreating={!tenantProfile}
+              />
+            </div>
             {/* Quick access cards */}
             {/* Duplicate quick access cards removed */}
           </div>

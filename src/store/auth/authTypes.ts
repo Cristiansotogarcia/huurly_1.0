@@ -10,6 +10,7 @@ export interface AuthState {
   isInPaymentFlow: boolean;
   paymentFlowStartTime: number | null;
   isLoadingSubscription: boolean;
+  authChecked: boolean;
   login: (user: User) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
