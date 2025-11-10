@@ -393,7 +393,7 @@ const ProfileEditPage: React.FC = () => {
           </div>
 
           {/* Fixed Navigation Footer */}
-          <div className="shrink-0 bg-background border-t border-border p-2 sm:p-3 pb-4 sm:pb-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          <div className="shrink-0 bg-background border-t border-border p-1 sm:p-3 pb-2 sm:pb-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
             <div className="max-w-2xl mx-auto">
               <ProfileFormNavigation
                 isFirstStep={isFirstStep}

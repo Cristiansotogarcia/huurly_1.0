@@ -54,7 +54,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
               type="button"
               variant="outline"
               onClick={onBack}
-              className="w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
+              className="w-full sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-base h-8 sm:h-10"
               disabled={isSubmitting}
             >
               Terug
@@ -67,7 +67,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
             <Button
               type="button"
               onClick={handleNext}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-base h-8 sm:h-10"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -82,7 +82,7 @@ const ProfileFormNavigation: React.FC<ProfileFormNavigationProps> = ({
           ) : (
             <Button
               type="button"
-              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-base h-8 sm:h-10"
               disabled={isSubmitting}
               onClick={() => {
                 // Call the submit callback if provided (used by mobile flow)
